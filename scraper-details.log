@@ -1,0 +1,8 @@
+Starting Detailed Fund Scraper...
+Navigating to: https://www.kap.org.tr/tr/fon-bilgileri/genel/mac-marmara-capital-portfoy-hisse-senedi-tl-fonu-hisse-senedi-yogun-fon
+Page loaded.
+Clicked 'Bildirimler'. Waiting 10s for AJAX...
+Saved page HTML to kap-page.html
+Saved text to kap-text.txt
+NOT FOUND: 'Portföy Dağılım Raporu' text not in body.
+Browser closed.

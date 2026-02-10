@@ -1,0 +1,191 @@
+Starting scraper...
+Launching browser...
+Browser launched.
+Navigating to KAP...
+Page loaded.
+Page Title: KAP
+Screenshot saved.
+Browser closed.
+Starting scraper...
+Navigating to KAP...
+Inputs found: [
+  {
+    "id": "all-search",
+    "name": "",
+    "placeholder": "Arama Yapınız...",
+    "class": "lg:w-full w-full lg:h-auto h-9 text-dark block border-0 focus:border-0 focus:ring-0 placeholder:opacity-40 placeholder:text-text-color font-light lg:text-base text-sm",
+    "type": "text"
+  },
+  {
+    "id": "",
+    "name": "as_fid",
+    "placeholder": "",
+    "class": "",
+    "type": "hidden"
+  },
+  {
+    "id": "disclosureIndex",
+    "name": "notification-checkbox",
+    "placeholder": "",
+    "class": "disabled:bg-light-gray disabled:cursor-not-allowed lg:w-22 lg:h-22 w-15 h-15 financial__statements--table--check cursor-pointer text-danger bg-white border border-gray-300 rounded focus:outline-none focus:ring-0 focus:ring-offset-0 shadow-none lg:mb-0 mb-3",
+    "type": "checkbox"
+  },
+  {
+    "id": "search-input",
+    "name": "",
+    "placeholder": "Şirket/Fon Ünvanı",
+    "class": " border-0 text-dark text-sm lg:mr-2 block px-4 py-2 w-full placeholder-dark focus:border-transparent focus:ring-transparent  relative lg:hover:border lg:border lg:focus:ring-kap-gray lg:focus:border-kap-gray lg:border-transparent lg:hover:border-kap-gray lg:transition-border lg:ease-in-out lg:duration-300 rounded-lg h-full",
+    "type": "text"
+  },
+  {
+    "id": "checkbox-all-search",
+    "name": "checkbox-table",
+    "placeholder": "",
+    "class": "lg:w-15 lg:h-15 w-15 h-15 py-0 financial__statements--table--masterCheckbox cursor-pointer text-danger bg-white border border-gray-300 rounded focus:outline-none focus:ring-0 focus:ring-offset-0 shadow-none",
+    "type": "checkbox"
+  },
+  {
+    "id": "search-input",
+    "name": "",
+    "placeholder": "Şirket Ünvanı",
+    "class": " border-0 text-dark text-sm block p-4 lg:py-4 py-3 w-full placeholder-dark rounded-md focus:border-transparent focus:ring-transparent  relative lg:hover:border lg:border lg:focus:ring-kap-gray lg:focus:border-kap-gray lg:border-transparent lg:hover:border-kap-gray lg:transition-border lg:ease-in-out lg:duration-300 lg:rounded-md",
+    "type": "text"
+  },
+  {
+    "id": "search-input",
+    "name": "",
+    "placeholder": "Şirket Ünvanı",
+    "class": "border-0 text-dark text-sm lg:mr-2 rounded-lg block p-4 lg:py-3 py-3 w-full placeholder-dark focus:border-transparent focus:ring-transparent relative lg:hover:border lg:border lg:focus:ring-kap-gray lg:focus:border-kap-gray lg:border-transparent lg:hover:border-kap-gray lg:transition-border lg:ease-in-out lg:duration-300",
+    "type": "text"
+  }
+]
+Found search input by placeholder.
+Typed 'MAC'.
+Suggestions not found in content.
+Starting scraper...
+Navigating to KAP...
+Found search input (#all-search).
+Typed 'MAC'.
+Pressing Enter...
+Error: Navigation timeout of 30000 ms exceeded
+TimeoutError: Navigation timeout of 30000 ms exceeded
+    at new Deferred (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:60:34)
+    at Deferred.create (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:21:16)
+    at new LifecycleWatcher (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\LifecycleWatcher.js:73:60)
+    at CdpFrame.waitForNavigation (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:197:29)
+    at CdpFrame.<anonymous> (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\decorators.js:109:27)
+    at CdpPage.waitForNavigation (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Page.js:611:43)
+    at run (D:\Salih KAVAKCI\Yeni klasör\final\final-web\kap-scraper.js:42:20)
+Starting scraper (Direct Navigation)...
+Navigating to: https://www.kap.org.tr/tr/fon-bilgileri/genel/mac-marmara-capital-portfoy-hisse-senedi-tl-fonu-hisse-senedi-yogun-fon
+Page loaded.
+Page Title: KAP
+Warning: 'MARMARA CAPITAL' not found in content.
+Error: page.$x is not a function
+TypeError: page.$x is not a function
+    at run (D:\Salih KAVAKCI\Yeni klasör\final\final-web\kap-scraper.js:40:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+Starting scraper (Search Strategy)...
+Navigating to KAP...
+Found search input.
+Typed 'MAC'.
+Suggestions did not appear.
+Browser closed.
+Starting scraper (Network Sniffing)...
+Navigating to KAP...
+Typing 'MAC'...
+Request: https://www.kap.org.tr/tr/api/home-data/banners
+Request: https://www.kap.org.tr/tr/api/disclosure/list/main
+Request: https://www.kap.org.tr/tr/api/popup
+Request: https://www.kap.org.tr/tr/api/ca/allCa/2026/2
+Request: https://www.kap.org.tr/tr/api/home-data/announcements
+Request: https://www.kap.org.tr/tr/api/home-data/guidelines
+Request: https://www.kap.org.tr/f999356d440e70614b1bb17741fce2e01a9725bb
+Request: https://www.google-analytics.com/g/collect?v=2&tid=G-L21W6S1YS4&gtm=45je6290v9219346816za200zd9219346816&_p=1770746920904&gcd=13l3l3l3l1l1&npa=0&dma=0&cid=514427323.1770746922&ul=tr-tr&sr=800x600&uaa=&uab=&uafvl=&uamb=0&uam=&uap=&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938465~115938468~116185181~116185182~116988315&dp=%2Ftr&sid=1770746921&sct=1&seg=0&dl=https%3A%2F%2Fwww.kap.org.tr%2Ftr&dt=KAP&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=7816
+Request: https://www.kap.org.tr/tr/api/menu/about-pdp
+Request: https://www.kap.org.tr/tr/api/menu/about-pdp
+Request: https://www.kap.org.tr/tr/api/menu/footer
+Browser closed.
+Starting scraper (API Discovery)...
+Navigating to Home to set cookies...
+Navigating to API: https://www.kap.org.tr/tr/api/member-disclosure
+API Response Length: 0
+Empty response.
+Browser closed.
+Starting scraper (Keyboard Navigation Strategy)...
+Navigating to KAP...
+Found search input.
+Typed 'MAC'.
+Pressing ArrowDown...
+Pressing Enter...
+Error: Navigation timeout of 30000 ms exceeded
+TimeoutError: Navigation timeout of 30000 ms exceeded
+    at new Deferred (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:60:34)
+    at Deferred.create (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:21:16)
+    at new LifecycleWatcher (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\LifecycleWatcher.js:73:60)
+    at CdpFrame.waitForNavigation (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:197:29)
+    at CdpFrame.<anonymous> (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\decorators.js:109:27)
+    at CdpPage.waitForNavigation (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Page.js:611:43)
+    at run (D:\Salih KAVAKCI\Yeni klasör\final\final-web\kap-scraper.js:41:20)
+Starting scraper for fund: MAC
+Navigating to KAP...
+Error: net::ERR_NAME_NOT_RESOLVED at https://www.kap.org.tr
+Error: net::ERR_NAME_NOT_RESOLVED at https://www.kap.org.tr
+    at navigate (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:184:27)
+    at async Deferred.race (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:36:20)
+    at async CdpFrame.goto (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:150:25)
+    at async CdpPage.goto (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Page.js:580:20)
+    at async run (D:\Salih KAVAKCI\Yeni klasör\final\final-web\kap-scraper.js:24:9)
+Starting scraper for fund: MAC
+Navigating to KAP...
+Error: net::ERR_NAME_NOT_RESOLVED at https://www.kap.org.tr
+Error: net::ERR_NAME_NOT_RESOLVED at https://www.kap.org.tr
+    at navigate (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:184:27)
+    at async Deferred.race (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:36:20)
+    at async CdpFrame.goto (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:150:25)
+    at async CdpPage.goto (D:\Salih KAVAKCI\Yeni klasör\final\final-web\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Page.js:580:20)
+    at async run (D:\Salih KAVAKCI\Yeni klasör\final\final-web\kap-scraper.js:24:9)
+Starting scraper for fund: MAC
+Navigating to KAP...
+Page loaded successfully.
+Found search input.
+Typed 'MAC'.
+Pressing ArrowDown...
+Pressing Enter...
+Navigation step finished. Current URL: https://www.kap.org.tr/tr/bildirim-sorgu-sonuc?srcbar=Y&cmp=Y&cat=6&slf=ALL
+Page Title: KAP
+Success! Likely on the fund page.
+Could not find 'Portföy Dağılım Raporu' text directly visible.
+Browser closed.
+Starting scraper for fund: MAC
+Navigating to KAP...
+Page loaded successfully.
+Found search input.
+Typed 'MAC'.
+Pressing ArrowDown...
+Pressing Enter...
+Navigation step finished. Current URL: https://www.kap.org.tr/tr/bildirim-sorgu-sonuc?srcbar=Y&cmp=Y&cat=6&slf=ALL
+Page Title: KAP
+Landed on search results page. Looking for fund link...
+Could not find a direct fund link on the results page.
+Available links: ["https://www.kap.org.tr/tr/bildirim-sorgu-sonuc?srcbar=Y&cmp=Y&cat=6&slf=ALL#","https://www.mkk.com.tr/","https://www.kap.org.tr/en/bildirim-sorgu-sonuc?srcbar=Y&cmp=Y&cat=6&slf=ALL","https://www.kap.org.tr/tr","https://www.kap.org.tr/tr/beklenen-bildirim-sorgu","https://www.kap.org.tr/tr/bildirim-sorgu","https://www.kap.org.tr/tr/kalem-karsilastirma","https://www.kap.org.tr/tr/bist-sirketler","https://www.kap.org.tr/tr/sirketler/YK","https://www.kap.org.tr/tr/sirketler/PYS"]
+Success! Likely on the fund page.
+Could not find 'Portföy Dağılım Raporu' text directly visible.
+Browser closed.
+Starting scraper for fund: MAC
+Navigating to KAP Home...
+Page loaded successfully.
+Typed 'MAC'.
+No specific suggestion found to click. Pressing Enter...
+Waiting for navigation...
+Current URL: https://www.kap.org.tr/tr?as_fid=65e2a9fce8869c16acb169fa9cc267eb9cfc55df
+Success! We are on the fund page.
+Report link not found directly. Might need to click 'Bildirimler' tab.
+Browser closed.
+Starting scraper for fund: MAC
+Navigating to KAP Home...
+Page loaded successfully.
+Typed 'MAC'.
+Trying ArrowDown + Enter strategy...
+Current URL: https://www.kap.org.tr/tr
+Browser closed.
