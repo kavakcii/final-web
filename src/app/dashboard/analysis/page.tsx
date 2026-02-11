@@ -473,7 +473,7 @@ export default function AnalysisPage() {
                 </motion.div>
             )}
 
-            {/* AI Summary Section - NEW */}
+            {/* AI Summary Section - Original Location */}
             {aiAnalysisData?.summary && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -497,12 +497,6 @@ export default function AnalysisPage() {
                     </div>
                 </motion.div>
             )}
-
-
-
-
-
-
 
             {/* Upcoming/AI Scenarios Section */}
             {
