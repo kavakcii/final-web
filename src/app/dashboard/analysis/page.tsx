@@ -372,35 +372,51 @@ export default function AnalysisPage() {
                 </motion.div>
             )}
 
-            {/* AI Analysis Loading State (Secondary) - Shows if TEFAS is loaded but AI is still processing */}
-            {isAnalyzing && tefasData && !aiAnalysisData && (
-                 <div className="flex flex-col items-center justify-center py-8 text-slate-400 border border-slate-200 border-dashed rounded-xl mb-8 bg-slate-50">
-                    <Loader2 className="w-6 h-6 animate-spin mb-3 text-blue-500" />
-                    <p className="text-sm font-medium text-slate-600">Yapay Zeka analizi hazırlanıyor...</p>
-                    <p className="text-xs mt-1 text-slate-400">Piyasa haberleri ve senaryolar taranıyor</p>
-                </div>
-            )}
-
-            {/* Top Holdings Section (AI Generated) */}
+            {/* Top Holdings Section (Detailed Card) */}
             {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-lg border border-slate-200 mb-6 px-4 py-3 shadow-sm w-fit max-w-full"
+                    className="bg-white rounded-xl shadow-lg border border-slate-200 mb-8 overflow-hidden"
                 >
-                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                        <div className="flex items-center gap-2 text-blue-600 border-r border-slate-200 pr-4 shrink-0">
-                            <Coins className="w-4 h-4" />
-                            <span className="text-sm font-bold whitespace-nowrap">Öne Çıkanlar</span>
+                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                <Coins className="w-5 h-5" />
+                            </div>
+                            <h3 className="font-bold text-slate-800 text-lg">Fon Varlık Dağılımı</h3>
                         </div>
-                        <div className="flex flex-wrap gap-1 text-sm text-slate-700 items-center">
-                            {aiAnalysisData.topHoldings.slice(0, 5).map((holding: any, idx: number) => (
-                                <span key={idx} className="font-medium whitespace-nowrap">
-                                    {holding.symbol}
-                                    {idx < Math.min(aiAnalysisData.topHoldings.length, 5) - 1 && (
-                                        <span className="text-slate-300 mx-2">|</span>
-                                    )}
-                                </span>
+                        <span className="text-xs font-medium text-slate-500 bg-slate-200 px-3 py-1 rounded-full">
+                            En Büyük {aiAnalysisData.topHoldings.length} Varlık
+                        </span>
+                    </div>
+
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {aiAnalysisData.topHoldings.map((holding: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors text-sm">
+                                        {idx + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className="font-bold text-slate-800">{holding.symbol}</span>
+                                            <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                                {holding.percent}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs text-slate-500 truncate" title={holding.name}>
+                                            {holding.name}
+                                        </div>
+                                        {/* Simple Progress Bar Visual */}
+                                        <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-blue-500 rounded-full opacity-80" 
+                                                style={{ width: holding.percent.replace('%', '').replace(',', '.') + '%' }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
