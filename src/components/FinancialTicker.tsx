@@ -129,10 +129,10 @@ export function FinancialTicker() {
                 </div>
             )}
 
-            <div className={`flex items-center space-x-8 px-6 py-3 w-full overflow-x-auto no-scrollbar ${!isEditing ? '' : 'opacity-0'}`} style={{ animation: 'none' }}>
+            <div className={`flex items-center justify-evenly px-4 py-3 w-full ${!isEditing ? '' : 'opacity-0'}`}>
                 {data.length === 0 && !loading && <span className="text-xs text-slate-500 w-full text-center">Takip listesi boş. Düzenlemek için sağdaki ayar ikonuna tıklayın.</span>}
 
-                {data.map((quote) => {
+                {data.map((quote, index) => {
                     const isPositive = quote.regularMarketChangePercent >= 0;
                     const name = SYMBOL_NAMES[quote.symbol] || quote.shortName || quote.symbol;
 
@@ -143,12 +143,13 @@ export function FinancialTicker() {
                     }
 
                     return (
-                        <div key={quote.symbol} className="flex items-center space-x-2 min-w-max">
-                            <span className="text-xs font-medium text-slate-400">{name}</span>
-                            <span className="text-sm font-bold text-white">
+                        <div key={quote.symbol} className="flex items-center gap-2">
+                            {index > 0 && <div className="w-px h-4 bg-white/10 -ml-1 hidden md:block" />}
+                            <span className="text-[11px] font-medium text-slate-400 whitespace-nowrap">{name}</span>
+                            <span className="text-sm font-bold text-white whitespace-nowrap">
                                 {price?.toFixed(2)}
                             </span>
-                            <div className={`flex items-center text-xs font-semibold ${isPositive ? "text-green-400" : "text-red-400"}`}>
+                            <div className={`flex items-center text-xs font-semibold whitespace-nowrap ${isPositive ? "text-green-400" : "text-red-400"}`}>
                                 {isPositive ? <ArrowUp className="w-3 h-3 mr-0.5" /> : <ArrowDown className="w-3 h-3 mr-0.5" />}
                                 %{Math.abs(quote.regularMarketChangePercent || 0).toFixed(2)}
                             </div>
