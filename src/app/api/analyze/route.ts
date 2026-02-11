@@ -149,11 +149,40 @@ export async function POST(req: Request) {
     } catch (error) {
         console.error("AI Analysis Error:", error);
         
-        // Fallback for demo/error cases if API fails
+        // Fallback for demo/error cases if API fails - RETURN MOCK DATA instead of just error
+        // This ensures the user always sees the structure they expect, even if the AI service is temporarily unavailable.
+        const mockData = {
+            summary: "Piyasa verilerine şu an erişilemiyor ancak genel piyasa beklentileri ışığında, mevcut belirsizlik ortamının varlık fiyatlamaları üzerinde baskı oluşturmaya devam etmesi beklenebilir.",
+            analysis: [
+                {
+                    id: 1,
+                    title: "Küresel Piyasa Görünümü ve Risk İştahı",
+                    date: new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) + " Görünümü",
+                    description: "Küresel piyasalardaki volatilite ve merkez bankalarının faiz politikalarındaki belirsizlik, yatırımcıların risk iştahını etkilemektedir.",
+                    scenarios: [
+                        {
+                            condition: "Piyasa Koşulları İyileşirse",
+                            impact: "Risk iştahının artmasıyla birlikte değerlemelerde yukarı yönlü bir ivmelenme görülebilir.",
+                            sentiment: "positive",
+                            assetsAffected: []
+                        },
+                        {
+                            condition: "Belirsizlik Devam Ederse",
+                            impact: "Yatırımcıların güvenli limanlara yönelmesiyle volatilitenin yüksek kalması muhtemeldir.",
+                            sentiment: "negative",
+                            assetsAffected: []
+                        }
+                    ],
+                    relatedAssets: []
+                }
+            ],
+            topHoldings: []
+        };
+
         return NextResponse.json({ 
-            success: false, 
-            error: "Analiz oluşturulurken bir hata oluştu veya API anahtarı eksik.",
-            // Optional: Provide mock data here if needed for resiliency
-        }, { status: 500 });
+            success: true, 
+            data: mockData,
+            isMock: true
+        });
     }
 }

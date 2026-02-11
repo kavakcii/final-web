@@ -414,6 +414,14 @@ export default function AnalysisPage() {
                 </div>
             )}
 
+            {/* Error Display */}
+            {error && !isAnalyzing && (
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-200 mb-8">
+                    <AlertTriangle className="w-5 h-5 shrink-0" />
+                    <p>{error}</p>
+                </div>
+            )}
+
             {/* Top Holdings Section (Detailed Card) */}
             {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
                 <motion.div
@@ -498,7 +506,7 @@ export default function AnalysisPage() {
 
             {/* Upcoming/AI Scenarios Section */}
             {
-                displayEvents.length > 0 && (
+                displayEvents.length > 0 ? (
                     <div className="space-y-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400">
@@ -588,6 +596,15 @@ export default function AnalysisPage() {
                             ))}
                         </div>
                     </div>
+                ) : (
+                    /* Show fallback message only if analysis data exists but no scenarios found */
+                    aiAnalysisData && (
+                        <div className="p-8 text-center bg-slate-800/50 rounded-xl border border-white/10">
+                            <Info className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+                            <h3 className="text-white font-medium">Bu varlık için şu an detaylı senaryo bulunamadı.</h3>
+                            <p className="text-slate-400 text-sm mt-1">Lütfen daha sonra tekrar deneyin veya farklı bir varlık arayın.</p>
+                        </div>
+                    )
                 )
             }
 
