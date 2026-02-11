@@ -201,10 +201,10 @@ export default function AnalysisPage() {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const res = await fetch('/api/news');
+                const res = await fetch('/api/market-news');
                 const data = await res.json();
                 if (data.success) {
-                    setNews(data.news);
+                    setNews(data.data);
                 }
             } catch (error) {
                 console.error("News fetch failed", error);
@@ -290,12 +290,12 @@ export default function AnalysisPage() {
     // For now, let's hide static past events if we have a custom search, as they won't match.
     const filteredAnalysis = selectedAsset && !aiAnalysisData
         ? ANALYSIS_DATA.filter(item => item.relatedAssets.includes(selectedAsset))
-        : !selectedAsset ? ANALYSIS_DATA : [];
+        : [];
 
     // Use AI data if available, otherwise fallback to static events
     const displayEvents = (aiAnalysisData?.analysis || (Array.isArray(aiAnalysisData) ? aiAnalysisData : [])) || (selectedAsset
         ? UPCOMING_EVENTS.filter(item => item.relatedAssets.includes(selectedAsset))
-        : UPCOMING_EVENTS);
+        : []); // Don't show static upcoming events by default
 
     const selectedAssetName = selectedAsset || "Bir Varlık Seçin (Örn: Altın)";
 
@@ -583,7 +583,7 @@ export default function AnalysisPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
-                                    {calendarEvents.slice(0, 5).map((event: any, idx: number) => (
+                                    {calendarEvents.slice(0, 10).map((event: any, idx: number) => (
                                         <tr key={idx} className={`transition-colors ${idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
                                             <td className="px-6 py-4 font-bold text-slate-900">{event.time}</td>
                                             <td className="px-6 py-4 text-slate-600">{event.country}</td>
@@ -603,6 +603,48 @@ export default function AnalysisPage() {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Market News Section */}
+            {!selectedAsset && news.length > 0 && (
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Newspaper className="w-5 h-5 text-blue-400" />
+                        Piyasa Haberleri (Son Dakika)
+                    </h2>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {news.map((item: any, idx: number) => (
+                            <motion.a
+                                key={idx}
+                                href={item.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group flex flex-col h-full"
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md border border-blue-100">
+                                        {item.source}
+                                    </span>
+                                    <span className="text-xs text-slate-400 flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        {new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                </div>
+                                <h3 className="text-slate-800 font-bold mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                    {item.title}
+                                </h3>
+                                <div className="flex-1"></div>
+                                <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
+                                    <span className="text-xs text-slate-500 font-medium">Haberin devamı</span>
+                                    <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                </div>
+                            </motion.a>
+                        ))}
                     </div>
                 </div>
             )}
@@ -695,24 +737,24 @@ export default function AnalysisPage() {
             )}
 
             {/* Upcoming/AI Scenarios Section */}
-            <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400">
-                        <Calendar className="w-6 h-6" />
+            {displayEvents.length > 0 && (
+                <div className="space-y-6">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400">
+                            <Calendar className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-white">
+                                {aiAnalysisData ? "Yapay Zeka Destekli Gelecek Senaryoları" : "Yaklaşan Kritik Gelişmeler ve Senaryolar"}
+                            </h2>
+                            <p className="text-slate-400 text-sm">
+                                {aiAnalysisData
+                                    ? "Seçtiğiniz varlık için belirlenen kritik faktörler ve olası etkileri."
+                                    : "Piyasaların radarındaki olaylar ve olası senaryolar."}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-white">
-                            {aiAnalysisData ? "Yapay Zeka Destekli Gelecek Senaryoları" : "Yaklaşan Kritik Gelişmeler ve Senaryolar"}
-                        </h2>
-                        <p className="text-slate-400 text-sm">
-                            {aiAnalysisData
-                                ? "Seçtiğiniz varlık için belirlenen kritik faktörler ve olası etkileri."
-                                : "Piyasaların radarındaki olaylar ve olası senaryolar."}
-                        </p>
-                    </div>
-                </div>
 
-                {displayEvents.length > 0 ? (
                     <div className="grid gap-6">
                         {displayEvents.map((event: any) => (
                             <motion.div
@@ -765,74 +807,8 @@ export default function AnalysisPage() {
                             </motion.div>
                         ))}
                     </div>
-                ) : (
-                    <div className="bg-slate-900/50 border border-white/10 rounded-xl p-8 text-center text-slate-400">
-                        {isAnalyzing ? (
-                            <div className="flex flex-col items-center gap-3">
-                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                                <p>Yapay zeka analiz yapıyor, lütfen bekleyin...</p>
-                            </div>
-                        ) : error ? (
-                            <div className="flex flex-col items-center gap-3 text-red-400">
-                                <AlertTriangle className="w-8 h-8" />
-                                <p>{error}</p>
-                            </div>
-                        ) : (
-                            "Görüntülenecek senaryo bulunamadı."
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Market News Section */}
-            <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-green-500/20 rounded-xl text-green-400">
-                        <Newspaper className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-white">Güncel Piyasa Haberleri</h2>
-                        <p className="text-slate-400 text-sm">
-                            Piyasaları etkileyen en son gelişmeler ve haber başlıkları.
-                        </p>
-                    </div>
                 </div>
-
-                {loadingNews ? (
-                    <div className="flex justify-center py-12">
-                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                    </div>
-                ) : news.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {news.slice(0, 6).map((item, idx) => (
-                            <a
-                                key={idx}
-                                href={item.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block bg-slate-900/50 border border-white/10 rounded-xl p-5 hover:border-green-500/30 hover:bg-white/5 transition-all group"
-                            >
-                                <div className="flex justify-between items-start mb-3">
-                                    <span className="text-xs font-medium px-2 py-1 bg-white/5 rounded text-slate-400 border border-white/10">
-                                        {new Date(item.pubDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                    <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-green-400 transition-colors" />
-                                </div>
-                                <h3 className="text-white font-medium mb-2 line-clamp-2 group-hover:text-green-400 transition-colors">
-                                    {item.title}
-                                </h3>
-                                <p className="text-sm text-slate-500 line-clamp-2 mb-3">
-                                    {item.source}
-                                </p>
-                            </a>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-slate-900/50 border border-white/10 rounded-xl p-8 text-center text-slate-400">
-                        Şu anda güncel haber bulunamadı.
-                    </div>
-                )}
-            </div>
+            )}
 
             {/* Correlation Teaser */}
             <div className="mt-8 bg-gradient-to-r from-slate-900 to-slate-800 border border-white/10 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
