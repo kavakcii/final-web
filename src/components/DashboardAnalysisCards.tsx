@@ -35,15 +35,15 @@ export function DashboardAnalysisCards() {
             apiSymbol: 'XAUUSD=X',
             unit: '$',
             analysis: {
-                title: "Fed Politikaları ve Jeopolitik Riskler Arasında Yön Arayışı",
-                summary: "2026 yılı başında Altın (XAUUSD), majör merkez bankalarının faiz indirim döngüleri ve devam eden jeopolitik gerilimler arasında sıkışmış durumda. Yatırımcılar, Fed'in 'bekle-gör' politikasının ne kadar süreceğini ve enflasyon verilerinin kalıcılığını fiyatlamaya çalışıyor. Teknik olarak kritik destek seviyelerinin üzerinde kalıcılık, yukarı yönlü iştahı koruyor.",
+                title: "Dünyadaki Gerginlikler ve Faiz Kararları",
+                summary: "Altın fiyatları şu an iki büyük güç arasında. Bir yanda dünyadaki savaş ve gerginlikler fiyatı yukarı itiyor, diğer yanda bankaların faiz kararları baskı oluşturuyor. Özetle: Faizler düşerse altın değerlenir, faizler yüksek kalırsa fiyatlar bir süre daha yerinde sayabilir.",
                 scenarios: [
                     {
-                        desc: "Reel faizlerin düşmesiyle birlikte Altın'ın fırsat maliyeti azalır ve 2.400$ üzerine doğru yeni bir ivme kazanabilir.",
+                        desc: "Faizler beklenenden önce düşerse, altının getirisi artar ve fiyatı hızla yükselebilir.",
                         type: "positive"
                     },
                     {
-                        desc: "Faiz indirimlerinin ötelenmesi durumunda güçlü Dolar baskısı ile 2.250$ seviyelerine doğru düzeltme görülebilir.",
+                        desc: "Faiz indirimleri ertelenirse, dolar güçlenir ve altın fiyatları bir miktar geri çekilebilir.",
                         type: "negative"
                     }
                 ],
@@ -56,15 +56,15 @@ export function DashboardAnalysisCards() {
             apiSymbol: 'XAGUSD=X',
             unit: '$',
             analysis: {
-                title: "Endüstriyel Talep ve Yeşil Enerji Dönüşümü",
-                summary: "Gümüş, hem değerli metal statüsü hem de güneş enerjisi ve elektrikli araç sektöründeki artan endüstriyel kullanımıyla ayrışmaya devam ediyor. Altın/Gümüş rasyosundaki değişimler, Gümüş'ün potansiyel olarak Altın'dan daha iyi performans gösterebileceği dönemlere işaret ediyor.",
+                title: "Sanayi ve Teknoloji Talebi",
+                summary: "Gümüş sadece bir yatırım aracı değil, aynı zamanda sanayide (güneş panelleri, elektrikli araçlar) kullanılan önemli bir maddedir. Dünya ekonomisi büyüdükçe ve teknoloji geliştikçe gümüşe olan ihtiyaç artar. Bu yüzden gümüş, bazen altından daha hızlı değer kazanabilir.",
                 scenarios: [
                     {
-                        desc: "Çin ve ABD sanayi üretiminin artması, fiziki gümüş talebini artırarak fiyatları yukarı çekecektir.",
+                        desc: "Fabrikaların üretimi artarsa gümüşe olan ihtiyaç artar ve fiyatlar yükselir.",
                         type: "positive"
                     },
                     {
-                        desc: "Ekonomik durgunluk sinyalleri, endüstriyel talebi baskılayarak Gümüş'ü Altın'a kıyasla daha negatif etkileyebilir.",
+                        desc: "Ekonomik durgunluk olursa fabrikalar yavaşlar, bu da gümüş fiyatlarını olumsuz etkiler.",
                         type: "negative"
                     }
                 ],
@@ -77,15 +77,15 @@ export function DashboardAnalysisCards() {
             apiSymbol: 'USDTRY=X',
             unit: '₺',
             analysis: {
-                title: "TCMB Sıkı Duruşu ve Kur Korumalı Mevduat Dengesi",
-                summary: "Dolar/TL kuru, TCMB'nin sıkı para politikası ve enflasyonla mücadele kararlılığı gölgesinde dengeli bir seyir izliyor. Rezerv biriktirme stratejisi ve KKM çıkışları, kur üzerindeki ana belirleyiciler olmaya devam ediyor. Oynaklık düşük seyretse de enflasyon farkı yakından izleniyor.",
+                title: "Merkez Bankası Kontrolü ve Dengeli Seyir",
+                summary: "Dolar şu anda Merkez Bankası'nın sıkı kontrolü altında. Banka, enflasyonu düşürmek için faizleri yüksek tutarak doların aşırı değerlenmesini engelliyor. Yani doların aniden fırlaması istenmiyor. Şu an için dolarda sakin ve dengeli bir hareket bekleniyor.",
                 scenarios: [
                     {
-                        desc: "Kredi notu artışları ve gri listeden çıkış sonrası artan yabancı ilgisi, kurda stabilizasyonu ve reel değerlenmeyi destekler.",
+                        desc: "Yabancı yatırımcıların Türkiye'ye güvenip para getirmesi, doların ateşini düşürür ve sabit tutar.",
                         type: "positive"
                     },
                     {
-                        desc: "Enflasyonda kalıcı düşüş görülmeden yapılacak erken bir gevşeme, kur üzerindeki yukarı yönlü baskıyı artırabilir.",
+                        desc: "Enflasyon düşmezse ve erken faiz indirimi yapılırsa, dolar tekrar yukarı yönlü hareketlenebilir.",
                         type: "negative"
                     }
                 ],
@@ -98,15 +98,15 @@ export function DashboardAnalysisCards() {
             apiSymbol: 'EURTRY=X',
             unit: '₺',
             analysis: {
-                title: "ECB Faiz Kararları ve Euro/Dolar Paritesi Etkisi",
-                summary: "Euro/TL, büyük ölçüde EUR/USD paritesindeki hareketlerden etkileniyor. Avrupa Merkez Bankası'nın (ECB) faiz indirimlerinde Fed'den daha hızlı davranması Euro'yu baskılasa da, Türkiye'nin Avrupa ile olan güçlü ticaret hacmi Euro talebini canlı tutuyor.",
+                title: "Avrupa Ekonomisi ve Ticaret Dengesi",
+                summary: "Euro'nun değeri, Avrupa ekonomisinin gücüne bağlıdır. Türkiye en çok ihracatı Avrupa'ya yaptığı için Euro bizim için önemlidir. Şu an Avrupa'da işler biraz yavaş ilerliyor, bu da Euro'nun dolar karşısında biraz zayıf kalmasına neden oluyor.",
                 scenarios: [
                     {
-                        desc: "Almanya ve Euro Bölgesi PMI verilerinin iyileşmesi, Euro'yu küresel ölçekte güçlendirerek TL karşısında da değer kazandırabilir.",
+                        desc: "Avrupa ekonomisi toparlanırsa Euro değer kazanır ve TL karşısında da güçlenir.",
                         type: "positive"
                     },
                     {
-                        desc: "ABD ekonomisinin Avrupa'dan daha güçlü kalması, EUR/USD paritesini aşağı çekerek Euro/TL'de daha yatay bir seyire neden olabilir.",
+                        desc: "Amerika ekonomisi Avrupa'dan daha güçlü kalmaya devam ederse, Euro yerinde sayabilir.",
                         type: "negative"
                     }
                 ],
