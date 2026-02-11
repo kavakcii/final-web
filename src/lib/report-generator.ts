@@ -144,7 +144,7 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
     
     if (genAI) {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
             
             const assetSummary = performanceData.map(p => 
                 `- ${p.symbol}: %${p.changePercent.toFixed(2)} değişim. (Puan: ${p.score}/10)`
