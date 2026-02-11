@@ -129,7 +129,7 @@ export function FinancialTicker() {
                 </div>
             )}
 
-            <div className={`flex items-center space-x-8 px-6 py-3 w-full ${!isEditing ? 'animate-scroll hover:pause' : 'opacity-0'}`}>
+            <div className={`flex items-center space-x-8 px-6 py-3 w-full overflow-x-auto no-scrollbar ${!isEditing ? '' : 'opacity-0'}`}>
                 {data.length === 0 && !loading && <span className="text-xs text-slate-500 w-full text-center">Takip listesi boş. Düzenlemek için sağdaki ayar ikonuna tıklayın.</span>}
 
                 {data.map((quote) => {

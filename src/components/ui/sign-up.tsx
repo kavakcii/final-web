@@ -265,8 +265,8 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
             // Success
             if (!isLoginMode) {
                 fireSideCanons();
+                setModalStatus('success');
             }
-            setModalStatus('success');
             
             if (onAuthSuccess) {
                 // If it's a login, redirect immediately without confetti delay

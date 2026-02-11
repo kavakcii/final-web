@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { User, Bell, Lock, Shield, CreditCard, Monitor, Save } from 'lucide-react';
+import { User, Bell, Lock, Shield, CreditCard, Monitor, Save, Eye, X, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/components/providers/UserProvider';
@@ -71,6 +71,29 @@ export default function SettingsPage() {
     const { addToast } = useToast();
     const [isSaving, setIsSaving] = useState(false);
     const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
+
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+    const [previewModalOpen, setPreviewModalOpen] = useState(false);
+    const [previewHtml, setPreviewHtml] = useState("");
+
+    const handlePreviewReport = async () => {
+        setIsPreviewLoading(true);
+        try {
+            const res = await fetch('/api/cron/weekly-report', { method: 'POST' });
+            const data = await res.json();
+            if (data.success && data.htmlPreview) {
+                setPreviewHtml(data.htmlPreview);
+                setPreviewModalOpen(true);
+            } else {
+                addToast('Rapor oluşturulamadı.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+            addToast('Bir hata oluştu.', 'error');
+        } finally {
+            setIsPreviewLoading(false);
+        }
+    };
 
     // Profile Photo Logic
     // Profile Photo Logic
@@ -425,6 +448,10 @@ export default function SettingsPage() {
                                     <div className="space-y-0.5">
                                         <Label className="text-base text-white">Haftalık Bülten</Label>
                                         <p className="text-xs text-slate-400">Yapay zeka analizli haftalık piyasa özeti.</p>
+                                        <button onClick={handlePreviewReport} className="text-xs text-blue-400 hover:text-blue-300 mt-1 flex items-center gap-1">
+                                            {isPreviewLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eye className="w-3 h-3" />}
+                                            {isPreviewLoading ? 'Hazırlanıyor...' : 'Önizle'}
+                                        </button>
                                     </div>
                                     <Switch checked={notifications.marketing} onCheckedChange={(c) => setNotifications({ ...notifications, marketing: c })} />
                                 </div>
@@ -521,6 +548,27 @@ export default function SettingsPage() {
 
                 </div>
             </main>
+
+            {/* Preview Modal */}
+            {previewModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                    <div className="bg-white w-full max-w-2xl h-[80vh] rounded-xl overflow-hidden flex flex-col relative shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-center justify-between p-4 border-b bg-white">
+                            <h3 className="text-lg font-bold text-slate-800">E-posta Önizleme</h3>
+                            <button onClick={() => setPreviewModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="flex-1 bg-slate-100 relative">
+                            <iframe 
+                                srcDoc={previewHtml} 
+                                className="w-full h-full border-0 absolute inset-0" 
+                                title="Email Preview"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
