@@ -79,7 +79,14 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                             <h3 style="margin: 0; color: #a78bfa; font-size: 18px; font-weight: 700;">FinAi Robotum Analizi</h3>
                         </div>
                         
-                        <div style="background-color: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
+                        <!-- Market Overview -->
+                        <div style="background-color: rgba(30, 41, 59, 0.6); border: 1px solid #334155; padding: 16px; margin-bottom: 16px; border-radius: 8px;">
+                            <p style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0 0 6px;">🌍 Piyasalar & Trendler</p>
+                            <p style="color: #cbd5e1; font-size: 13px; margin: 0; line-height: 1.5;">${aiAnalysis.generalMarketOverview}</p>
+                        </div>
+                        
+                        <!-- Portfolio Assessment -->
+                        <div style="background-color: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; padding: 12px 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
                             <p style="color: #e2e8f0; font-size: 14px; margin: 0; line-height: 1.6;">${aiAnalysis.portfolioAssessment}</p>
                         </div>
 
