@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Calendar, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Users, Eye, Bell, BellOff } from 'lucide-react';
+import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
@@ -23,7 +23,7 @@ const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
 };
 
 export default function ReportsPage() {
-    const { email: userEmail, userName } = useUser();
+    const { email: userEmail } = useUser();
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -31,13 +31,20 @@ export default function ReportsPage() {
     const [sendResult, setSendResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [lastSent, setLastSent] = useState<string | null>(null);
 
+    // AI Option State
+    const [includeAnalysis, setIncludeAnalysis] = useState(false);
+
     // Load saved preferences
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('portfolioEmailFrequency');
             if (saved) setFrequency(saved as EmailFrequency);
+
             const savedLastSent = localStorage.getItem('portfolioEmailLastSent');
             if (savedLastSent) setLastSent(savedLastSent);
+
+            const savedAnalysis = localStorage.getItem('portfolioIncludeAnalysis');
+            if (savedAnalysis) setIncludeAnalysis(savedAnalysis === 'true');
         }
     }, []);
 
@@ -46,6 +53,14 @@ export default function ReportsPage() {
         setFrequency(freq);
         if (typeof window !== 'undefined') {
             localStorage.setItem('portfolioEmailFrequency', freq);
+        }
+    };
+
+    // Save analysis preference
+    const handleAnalysisChange = (checked: boolean) => {
+        setIncludeAnalysis(checked);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('portfolioIncludeAnalysis', String(checked));
         }
     };
 
@@ -60,7 +75,7 @@ export default function ReportsPage() {
             const res = await fetch('/api/cron/portfolio-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, sendEmail: false }),
+                body: JSON.stringify({ userId: user.id, sendEmail: false, includeAnalysis }),
             });
 
             const data = await res.json();
@@ -87,7 +102,7 @@ export default function ReportsPage() {
             const res = await fetch('/api/cron/portfolio-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, sendEmail: true }),
+                body: JSON.stringify({ userId: user.id, sendEmail: true, includeAnalysis }),
             });
 
             const data = await res.json();
@@ -105,11 +120,9 @@ export default function ReportsPage() {
                 } else if (userResult?.status === 'skipped_no_resend_key') {
                     setSendResult({ type: 'error', message: 'Server tarafında E-posta API anahtarı eksik.' });
                 } else if (userResult?.status?.startsWith('error')) {
-                    // Show the specific error from the API (e.g., domain verification failed)
                     const errorMsg = userResult.status.replace('error: ', '');
                     setSendResult({ type: 'error', message: `Gönderim Başarısız: ${errorMsg}` });
                 } else {
-                    // Fallback
                     setSendResult({ type: 'error', message: 'Bilinmeyen bir durum oluştu. Sonuç alınamadı.' });
                 }
 
@@ -132,11 +145,11 @@ export default function ReportsPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                        <Mail className="w-8 h-8 text-blue-500" />
-                        Portföy E-posta Bildirimi
+                        <Bot className="w-8 h-8 text-purple-500" />
+                        FinAi Robotum
                     </h1>
                     <p className="text-slate-400 mt-2">
-                        Portföyünüzdeki varlıkların haftalık özetini e-posta olarak alın.
+                        Yapay zeka destekli haftalık portföy analizi ve robot bildirimleri.
                     </p>
                 </div>
 
@@ -152,10 +165,10 @@ export default function ReportsPage() {
                     <button
                         onClick={handleSendNow}
                         disabled={isSending}
-                        className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50"
                     >
                         {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        Şimdi Gönder
+                        Analizi Başlat & Gönder
                     </button>
                 </div>
             </div>
@@ -182,13 +195,43 @@ export default function ReportsPage() {
                 {/* Left: Settings */}
                 <div className="lg:col-span-1 space-y-6">
 
+                    {/* AI Analysis Settings */}
+                    <div className="bg-purple-900/20 border border-purple-500/20 rounded-2xl p-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl -z-10 rounded-full" />
+
+                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <BrainCircuit className="w-5 h-5 text-purple-400" />
+                            İçerik Tercihleri
+                        </h3>
+
+                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors cursor-pointer" onClick={() => handleAnalysisChange(!includeAnalysis)}>
+                            <div className="relative flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={includeAnalysis}
+                                    onChange={(e) => handleAnalysisChange(e.target.checked)}
+                                    className="peer h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-purple-600 focus:ring-purple-500/50"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-white text-sm">Detaylı Portföy Analizi</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold border border-purple-500/30">AI</span>
+                                </div>
+                                <p className="text-xs text-slate-400 leading-relaxed">
+                                    Her bir varlık için neden-sonuç ilişkisine dayalı detaylı yorum, puanlama ve gelecek beklentisi.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Frequency Selection */}
                     <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
                         <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                             <Clock className="w-5 h-5 text-blue-400" />
-                            Gönderim Sıklığı
+                            Otomatik Gönderim Sıklığı
                         </h3>
-                        <p className="text-sm text-slate-500 mb-4">Portföy özetinizi ne sıklıkla almak istiyorsunuz?</p>
+                        <p className="text-sm text-slate-500 mb-4">FinAi Robotum analizleri ne sıklıkla göndersin?</p>
                         <div className="space-y-2">
                             {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).map((freq) => (
                                 <button
@@ -215,19 +258,19 @@ export default function ReportsPage() {
                     <div className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border border-white/5 rounded-2xl p-6">
                         <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
                             <Bell className="w-4 h-4 text-blue-400" />
-                            Bildirim Bilgisi
+                            Robot Durumu
                         </h3>
                         <div className="space-y-3 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-slate-500">Alıcı</span>
+                                <span className="text-slate-500">Hedef E-posta</span>
                                 <span className="text-slate-300 font-medium">{userEmail || '—'}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-slate-500">Sıklık</span>
+                                <span className="text-slate-500">Program</span>
                                 <span className="text-blue-400 font-medium">{FREQUENCY_LABELS[frequency]}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-slate-500">Son Gönderim</span>
+                                <span className="text-slate-500">Son Çalışma</span>
                                 <span className="text-slate-300 font-medium">{lastSent || 'Henüz yok'}</span>
                             </div>
                             <div className="flex justify-between">
@@ -237,29 +280,6 @@ export default function ReportsPage() {
                                 </span>
                             </div>
                         </div>
-                    </div>
-
-                    {/* How it works */}
-                    <div className="bg-slate-900/30 border border-white/5 rounded-2xl p-6">
-                        <h3 className="text-white font-semibold mb-3">📌 Nasıl Çalışır?</h3>
-                        <ul className="space-y-2 text-sm text-slate-400">
-                            <li className="flex items-start gap-2">
-                                <span className="text-blue-400 mt-0.5">1.</span>
-                                Portföyünüze hisse ve fon ekleyin
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-blue-400 mt-0.5">2.</span>
-                                Gönderim sıklığını seçin
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-blue-400 mt-0.5">3.</span>
-                                Her dönem otomatik olarak portföy özetiniz e-posta adresinize gönderilir
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-blue-400 mt-0.5">4.</span>
-                                <strong>"Şimdi Gönder"</strong> ile anında test edin
-                            </li>
-                        </ul>
                     </div>
                 </div>
 
@@ -279,11 +299,11 @@ export default function ReportsPage() {
                                         <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                                         <div className="w-3 h-3 rounded-full bg-green-500/60" />
                                     </div>
-                                    <span className="text-slate-400 text-sm font-medium">E-posta Önizleme</span>
+                                    <span className="text-slate-400 text-sm font-medium">FinAi Robot İzleme Ekranı</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <Mail className="w-3.5 h-3.5" />
-                                    {userEmail}
+                                    <Bot className="w-3.5 h-3.5" />
+                                    AI processing completed
                                 </div>
                             </div>
                             <iframe
@@ -295,20 +315,26 @@ export default function ReportsPage() {
                         </motion.div>
                     ) : (
                         <div className="bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center p-12" style={{ height: '600px' }}>
-                            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6">
-                                <Mail className="w-10 h-10 text-slate-600" />
+                            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 relative">
+                                <Bot className="w-10 h-10 text-slate-600" />
+                                {includeAnalysis && (
+                                    <div className="absolute top-0 right-0 w-4 h-4 bg-purple-500 rounded-full animate-pulse border-2 border-slate-800" />
+                                )}
                             </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">E-posta Önizleme</h3>
+                            <h3 className="text-xl font-semibold text-white mb-2">FinAi Robotum</h3>
                             <p className="text-slate-400 max-w-md mx-auto mb-8">
-                                Portföyünüzdeki varlıkların e-posta olarak nasıl görüneceğini görmek için <strong>"Önizle"</strong> butonuna tıklayın.
+                                Portföyünüzü analiz ettirmek ve rapor sonucunu görmek için <strong>"Önizle"</strong> veya <strong>"Analizi Başlat"</strong> butonuna tıklayın.
+                                {includeAnalysis && (
+                                    <span className="block mt-2 text-purple-400 text-sm">✨ Yapay Zeka Detaylı Analizi Aktif</span>
+                                )}
                             </p>
                             <button
                                 onClick={handlePreview}
                                 disabled={isLoading}
-                                className="text-blue-400 hover:text-blue-300 font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                                className="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
                             >
-                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                                Önizlemeyi Oluştur
+                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
+                                Analiz Önizlemesi Oluştur
                             </button>
                         </div>
                     )}

@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { analyzePortfolioWithAI, PortfolioAIAnalysis } from '@/lib/ai-portfolio-analyzer';
+import { generateWeeklyReport, Asset } from '@/lib/report-generator';
 
-// Lazy-init admin client (avoids build-time crash when env is missing)
+// Lazy-init admin client
 let _supabaseAdmin: SupabaseClient | null = null;
 function getSupabaseAdmin(): SupabaseClient {
     if (!_supabaseAdmin) {
@@ -20,15 +22,13 @@ interface PortfolioAsset {
     avg_cost: number;
 }
 
-function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[]): string {
+function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], aiAnalysis: PortfolioAIAnalysis | null = null): string {
     const stockAssets = assets.filter(a => a.asset_type === 'STOCK');
     const fundAssets = assets.filter(a => a.asset_type === 'FUND');
     const otherAssets = assets.filter(a => !['STOCK', 'FUND'].includes(a.asset_type));
 
     const today = new Date();
-    const dateStr = today.toLocaleDateString('tr-TR', {
-        year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const dateStr = today.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay() + 1);
     const weekEnd = new Date(weekStart);
@@ -44,6 +44,58 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[]):
                 <td style="padding: 12px 16px; border-bottom: 1px solid #1e293b; color: #94a3b8; font-size: 14px; text-align: right;">₺${(a.avg_cost * a.quantity).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
             </tr>
         `).join('');
+    };
+
+    // Render AI Analysis Section if available
+    const renderAISection = () => {
+        if (!aiAnalysis) return '';
+
+        const renderAssetAnalysisRows = () => {
+            return aiAnalysis.assetAnalyses.map(analysis => `
+                <div style="background-color: #0d1b2a; border: 1px solid #1e293b; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="color: #3b82f6; font-weight: 700; font-size: 16px;">${analysis.symbol}</span>
+                        <span style="background-color: ${analysis.trend === 'up' ? 'rgba(34, 197, 94, 0.2)' : analysis.trend === 'down' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)'}; color: ${analysis.trend === 'up' ? '#22c55e' : analysis.trend === 'down' ? '#ef4444' : '#94a3b8'}; padding: 4px 8px; border-radius: 9999px; font-size: 11px; font-weight: 700;">
+                            Puan: ${analysis.score}/10
+                        </span>
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 13px; margin: 0 0 8px; line-height: 1.5;">${analysis.reason}</p>
+                    <div style="border-top: 1px solid #1e293b; padding-top: 8px; margin-top: 8px;">
+                         <p style="color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.4;">
+                            <strong style="color: #60a5fa;">💡 Beklenti:</strong> ${analysis.outlook}
+                         </p>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        return `
+            <!-- AI ANALYSIS SECTION -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; margin-top: 10px;">
+                <tr>
+                    <td style="background: linear-gradient(135deg, #1e1b4b, #0f172a); border-radius: 12px; padding: 24px; border: 1px solid rgba(124, 58, 237, 0.3);">
+                        <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                            <span style="font-size: 20px; margin-right: 10px;">🤖</span>
+                            <h3 style="margin: 0; color: #a78bfa; font-size: 18px; font-weight: 700;">FinAi Robotum Analizi</h3>
+                        </div>
+                        
+                        <div style="background-color: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; padding: 12px 16px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
+                            <p style="color: #e2e8f0; font-size: 14px; margin: 0; line-height: 1.6;">${aiAnalysis.portfolioAssessment}</p>
+                        </div>
+
+                        <h4 style="color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Varlık Detayları</h4>
+                        ${renderAssetAnalysisRows()}
+
+                        <div style="margin-top: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px;">
+                            <p style="color: #fbbf24; font-size: 12px; font-weight: 700; margin: 0 0 8px; text-transform: uppercase;">⚡ Öneriler</p>
+                            <ul style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 13px;">
+                                ${aiAnalysis.suggestions.map(s => `<li style="margin-bottom: 4px;">${s}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        `;
     };
 
     return `
@@ -80,6 +132,8 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[]):
                                 <p style="color: #64748b; font-size: 14px; margin: 0 0 24px; line-height: 1.6;">
                                     İşte <strong style="color: #94a3b8;">${weekRange}</strong> haftası için portföy özetiniz:
                                 </p>
+
+                                ${renderAISection()}
 
                                 <!-- Stats Summary -->
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
@@ -178,10 +232,8 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[]):
 export async function POST(req: Request) {
     try {
         const body = await req.json().catch(() => ({}));
-        const { userId, sendEmail = false } = body;
+        const { userId, sendEmail = false, includeAnalysis = false } = body;
 
-        // If a specific userId is provided, send to that user only
-        // Otherwise, send to ALL users who have portfolio items
         let targetUsers: { id: string; email: string; name: string }[] = [];
 
         if (userId) {
@@ -217,6 +269,7 @@ export async function POST(req: Request) {
         }
 
         const results: { email: string; status: string; assetCount: number }[] = [];
+        let previewHtml = '';
 
         for (const user of targetUsers) {
             // Get user's portfolio
@@ -230,10 +283,38 @@ export async function POST(req: Request) {
                 continue;
             }
 
-            const emailHtml = generatePortfolioEmailHtml(user.name, assets);
+            // Perform AI Analysis if requested
+            let aiAnalysis: PortfolioAIAnalysis | null = null;
+            if (includeAnalysis) {
+                // Convert to Asset format expected by report generator
+                const reportAssets: Asset[] = assets.map(a => ({
+                    symbol: a.symbol,
+                    amount: a.quantity,
+                    type: a.asset_type === 'FUND' ? 'fund' : 'stock' // Basic mapping
+                }));
+
+                // Get pre-calculated report data (prices, changes)
+                const weeklyReport = await generateWeeklyReport(reportAssets);
+
+                // Now analyze with specific AI agent
+                // Map weeklyReport.assets to the simpler format expected by analyzer
+                const analysisInput = weeklyReport.assets.map(a => ({
+                    symbol: a.symbol,
+                    changePercent: a.changePercent,
+                    type: assets.find(orig => orig.symbol === a.symbol)?.asset_type || 'STOCK'
+                }));
+
+                aiAnalysis = await analyzePortfolioWithAI(analysisInput);
+            }
+
+            const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis);
+
+            // Store preview for the first user
+            if (results.length === 0) {
+                previewHtml = emailHtml;
+            }
 
             if (sendEmail) {
-                // Send email via Resend API if configured
                 const resendKey = process.env.RESEND_API_KEY;
                 if (resendKey) {
                     try {
@@ -246,7 +327,7 @@ export async function POST(req: Request) {
                             body: JSON.stringify({
                                 from: 'FinAl <onboarding@resend.dev>',
                                 to: [user.email],
-                                subject: `📊 FinAl — Bu Hafta Portföyünüzdeki Varlıklar`,
+                                subject: `📊 FinAl — ${includeAnalysis ? 'Detaylı ' : ''}Portföy Analiz Raporunuz`,
                                 html: emailHtml,
                             }),
                         });
@@ -255,7 +336,10 @@ export async function POST(req: Request) {
                             results.push({ email: user.email, status: 'sent', assetCount: assets.length });
                         } else {
                             const errData = await emailRes.json().catch(() => ({}));
-                            results.push({ email: user.email, status: `error: ${errData.message || emailRes.status}`, assetCount: assets.length });
+                            console.error("Resend Error:", errData);
+                            // Capture specific Resend errors (e.g., domain not verified)
+                            const errorMessage = errData.message || errData.name || "Unknown Resend Error";
+                            results.push({ email: user.email, status: `error: ${errorMessage}`, assetCount: assets.length });
                         }
                     } catch (sendErr: any) {
                         results.push({ email: user.email, status: `error: ${sendErr.message}`, assetCount: assets.length });
@@ -265,20 +349,6 @@ export async function POST(req: Request) {
                 }
             } else {
                 results.push({ email: user.email, status: 'preview_only', assetCount: assets.length });
-            }
-        }
-
-        // Return preview for the first user (or requesting user)
-        const firstUser = targetUsers[0];
-        let previewHtml = '';
-        if (firstUser) {
-            const { data: firstAssets } = await getSupabaseAdmin()
-                .from('user_portfolios')
-                .select('symbol, asset_type, quantity, avg_cost')
-                .eq('user_id', firstUser.id);
-
-            if (firstAssets && firstAssets.length > 0) {
-                previewHtml = generatePortfolioEmailHtml(firstUser.name, firstAssets);
             }
         }
 
@@ -300,7 +370,6 @@ export async function POST(req: Request) {
 
 // GET handler for cron jobs (Vercel Cron)
 export async function GET(req: Request) {
-    // Verify cron secret
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
@@ -308,11 +377,11 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Trigger sending to all users
+    // Cron jobs default to including detailed analysis
     const response = await POST(new Request(req.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sendEmail: true })
+        body: JSON.stringify({ sendEmail: true, includeAnalysis: true })
     }));
 
     return response;
