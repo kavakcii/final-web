@@ -13,7 +13,8 @@ import {
     BarChart3,
     User,
     Database,
-    FileText
+    FileText,
+    Newspaper
 } from "lucide-react";
 import { FinancialTicker } from "@/components/FinancialTicker";
 
@@ -93,6 +94,7 @@ function DashboardShell({
                         { icon: Home, label: "Genel Bakış", href: "/dashboard", active: false },
                         { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis", active: false },
                         { icon: Database, label: "Fon Verileri", href: "/dashboard/data", active: false },
+                        { icon: Newspaper, label: "Piyasa Haberleri", href: "/dashboard/news", active: false },
                         { icon: PieChart, label: "Portföyüm", href: "/dashboard/portfolio", active: false },
                         { icon: FileText, label: "Haftalık Bülten", href: "/dashboard/reports", active: false },
                         { icon: Bell, label: "Bildirimler", href: "/dashboard/notifications", active: false },

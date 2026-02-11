@@ -92,18 +92,25 @@ export default function ReportsPage() {
 
             const data = await res.json();
             if (data.success) {
-                const sentCount = data.results?.filter((r: any) => r.status === 'sent').length || 0;
-                const noKeyCount = data.results?.filter((r: any) => r.status === 'skipped_no_resend_key').length || 0;
+                // Check results specifically for the current user
+                const userResult = data.results?.find((r: any) => r.email === userEmail) || data.results?.[0];
 
-                if (noKeyCount > 0) {
-                    setSendResult({ type: 'error', message: 'Resend API anahtarı yapılandırılmamış. .env dosyasına RESEND_API_KEY ekleyin.' });
-                } else if (sentCount > 0) {
+                if (userResult?.status === 'sent') {
                     const now = new Date().toLocaleString('tr-TR');
                     setLastSent(now);
                     localStorage.setItem('portfolioEmailLastSent', now);
-                    setSendResult({ type: 'success', message: `E-posta başarıyla ${userEmail} adresine gönderildi!` });
-                } else {
+                    setSendResult({ type: 'success', message: `E-posta başarıyla ${userResult.email} adresine gönderildi!` });
+                } else if (userResult?.status === 'skipped_no_assets') {
                     setSendResult({ type: 'error', message: 'Portföyünüzde varlık bulunamadı. Önce portföyünüze varlık ekleyin.' });
+                } else if (userResult?.status === 'skipped_no_resend_key') {
+                    setSendResult({ type: 'error', message: 'Server tarafında E-posta API anahtarı eksik.' });
+                } else if (userResult?.status?.startsWith('error')) {
+                    // Show the specific error from the API (e.g., domain verification failed)
+                    const errorMsg = userResult.status.replace('error: ', '');
+                    setSendResult({ type: 'error', message: `Gönderim Başarısız: ${errorMsg}` });
+                } else {
+                    // Fallback
+                    setSendResult({ type: 'error', message: 'Bilinmeyen bir durum oluştu. Sonuç alınamadı.' });
                 }
 
                 if (data.htmlPreview) {
@@ -161,8 +168,8 @@ export default function ReportsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         className={`flex items-center gap-3 p-4 rounded-xl border ${sendResult.type === 'success'
-                                ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                                : 'bg-red-500/10 border-red-500/20 text-red-400'
+                            ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                            : 'bg-red-500/10 border-red-500/20 text-red-400'
                             }`}
                     >
                         {sendResult.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
@@ -188,8 +195,8 @@ export default function ReportsPage() {
                                     key={freq}
                                     onClick={() => handleFrequencyChange(freq)}
                                     className={`w-full flex items-center gap-3 p-3.5 rounded-xl text-left transition-all border ${frequency === freq
-                                            ? 'bg-blue-600/20 border-blue-500/40 text-white'
-                                            : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
+                                        ? 'bg-blue-600/20 border-blue-500/40 text-white'
+                                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
                                         }`}
                                 >
                                     <span className="text-lg">{FREQUENCY_ICONS[freq]}</span>
