@@ -377,42 +377,20 @@ export default function AnalysisPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 mb-8"
+                    className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-5"
                 >
-                    <div className="bg-[#0f172a] px-8 py-4 border-b border-slate-100 flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                            <Coins className="w-6 h-6 text-yellow-400" />
-                            Tahmini Fon Dağılımı (Top 5 Hisse)
-                        </h3>
-                        <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded border border-yellow-500/30">
-                            Yapay Zeka Tahmini
-                        </span>
+                    <div className="flex items-center gap-2 mb-3">
+                        <Coins className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-bold text-slate-800">Fonda Bulunan Başlıca Hisseler</h3>
                     </div>
-                    <div className="p-0">
-                        <table className="w-full text-left">
-                            <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-bold tracking-wider">
-                                <tr>
-                                    <th className="px-6 py-3">Hisse Senedi</th>
-                                    <th className="px-6 py-3">Şirket Adı</th>
-                                    <th className="px-6 py-3 text-right">Tahmini Ağırlık</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {aiAnalysisData.topHoldings.map((holding: any, idx: number) => (
-                                    <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                        <td className="px-6 py-4 font-bold text-slate-800">{holding.symbol}</td>
-                                        <td className="px-6 py-4 text-slate-600">{holding.name}</td>
-                                        <td className="px-6 py-4 text-right font-bold text-blue-600">{holding.percent}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="px-6 py-3 bg-slate-50 border-t border-slate-100">
-                        <p className="text-xs text-slate-400 flex items-center gap-1">
-                            <Info className="w-3 h-3" />
-                            Bu veriler yapay zeka tarafından fon stratejisine göre tahmin edilmiştir. Kesin portföy dağılımı için KAP bildirimlerini kontrol ediniz.
-                        </p>
+                    
+                    <div className="flex flex-wrap gap-3">
+                        {aiAnalysisData.topHoldings.slice(0, 5).map((holding: any, idx: number) => (
+                            <div key={idx} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                                <span className="font-bold text-slate-900">{holding.symbol}</span>
+                                <span className="text-xs text-slate-500 border-l border-slate-300 pl-2">{holding.name}</span>
+                            </div>
+                        ))}
                     </div>
                 </motion.div>
             )}
