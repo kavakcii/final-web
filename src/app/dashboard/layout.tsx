@@ -14,12 +14,13 @@ import {
     User,
     Database,
     FileText,
-    Newspaper
+    Newspaper,
+    Bot
 } from "lucide-react";
 import { FinancialTicker } from "@/components/FinancialTicker";
 
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { UserProvider, useUser } from "@/components/providers/UserProvider";
 import { AuthComponent } from "@/components/ui/sign-up";
 
@@ -31,6 +32,7 @@ function DashboardShell({
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
+    const pathname = usePathname();
 
     // Consume Context
     const { isAuthenticated, userName, avatarUrl } = useUser();
@@ -74,6 +76,17 @@ function DashboardShell({
         );
     }
 
+    const menuItems = [
+        { icon: Home, label: "Ana Sayfa", href: "/dashboard" },
+        { icon: PieChart, label: "Portföyüm", href: "/dashboard/portfolio" },
+        { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis" },
+        { icon: Bot, label: "FinAi Robotum", href: "/dashboard/reports" },
+        { icon: Database, label: "Fon Verileri", href: "/dashboard/data" },
+        { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },
+        { icon: Bell, label: "Bildirimler", href: "/dashboard/notifications" },
+        { icon: Settings, label: "Ayarlar", href: "/dashboard/settings" }
+    ];
+
     return (
         <div className="min-h-screen flex bg-black text-white selection:bg-blue-500/30">
             {/* Sidebar */}
@@ -90,23 +103,17 @@ function DashboardShell({
                 </div>
 
                 <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-                    {[
-                        { icon: Home, label: "Genel Bakış", href: "/dashboard", active: false },
-                        { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis", active: false },
-                        { icon: Database, label: "Fon Verileri", href: "/dashboard/data", active: false },
-                        { icon: Newspaper, label: "Piyasa Haberleri", href: "/dashboard/news", active: false },
-                        { icon: PieChart, label: "Portföyüm", href: "/dashboard/portfolio", active: false },
-                        { icon: FileText, label: "Haftalık Bülten", href: "/dashboard/reports", active: false },
-                        { icon: Bell, label: "Bildirimler", href: "/dashboard/notifications", active: false },
-                        { icon: Settings, label: "Ayarlar", href: "/dashboard/settings" }
-                    ].map((item, idx) => (
-                        <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${item.active ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                            <item.icon className="w-5 h-5 flex-shrink-0" />
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
-                                {item.label}
-                            </span>
-                        </Link>
-                    ))}
+                    {menuItems.map((item, idx) => {
+                        const isActive = pathname === item.href;
+                        return (
+                            <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                <item.icon className="w-5 h-5 flex-shrink-0" />
+                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
+                                    {item.label}
+                                </span>
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 <div className="p-4 border-t border-white/10 shrink-0">
