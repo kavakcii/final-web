@@ -1,9 +1,11 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { ArrowRight, Brain, Filter, TrendingUp, TrendingDown, Scale, Info, Calendar, AlertTriangle, Search, ChevronDown, ExternalLink, Newspaper, Loader2, Building2, Landmark, Coins, DollarSign, Euro } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
+import { DashboardAnalysisCards } from "@/components/DashboardAnalysisCards";
 
 // Supported Assets for Filtering
 const SUPPORTED_ASSETS = [
@@ -19,6 +21,9 @@ const SUPPORTED_ASSETS = [
 
 
 export default function AnalysisPage() {
+    const searchParams = useSearchParams();
+    const queryAsset = searchParams.get('q');
+    
     const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
     const [selectedAssetDetails, setSelectedAssetDetails] = useState<any | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -26,7 +31,6 @@ export default function AnalysisPage() {
     const [aiAnalysisData, setAiAnalysisData] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [tefasData, setTefasData] = useState<any | null>(null);
-    const [marketData, setMarketData] = useState<any>({});
 
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -67,24 +71,16 @@ export default function AnalysisPage() {
     };
 
     useEffect(() => {
-        const fetchMarketData = async () => {
-            try {
-                // Fetch Gold, Silver, USD, Euro
-                const res = await fetch('/api/finance?symbols=XAUUSD=X,XAGUSD=X,USDTRY=X,EURTRY=X');
-                const data = await res.json();
-                if (data.results) {
-                    const map: any = {};
-                    data.results.forEach((r: any) => {
-                        map[r.symbol] = r;
-                    });
-                    setMarketData(map);
-                }
-            } catch (e) {
-                console.error("Market data fetch failed", e);
-            }
-        };
-        fetchMarketData();
+        // Market data fetching is handled by DashboardAnalysisCards now
     }, []);
+
+    useEffect(() => {
+        if (queryAsset && !selectedAsset && !isAnalyzing) {
+            setSearchTerm(queryAsset);
+            // We need to wait for state update or pass it directly
+            handleAnalyze(queryAsset);
+        }
+    }, [queryAsset]);
 
     const handleAnalyze = async (overrideTerm?: string, overrideDetails?: any) => {
         const termToUse = overrideTerm || searchTerm;
@@ -317,68 +313,9 @@ export default function AnalysisPage() {
                 )}
             </div>
 
-            {/* Quick Access List */}
+            {/* Daily Market Insights - Fixed Cards */}
             {!selectedAsset && (
-                <div className="flex flex-col gap-3">
-                    {[
-                        { name: 'Altın', symbol: 'XAUUSD', apiSymbol: 'XAUUSD=X', icon: <Coins className="w-5 h-5 text-yellow-400" />, type: 'COMMODITY', unit: '$' },
-                        { name: 'Gümüş', symbol: 'XAGUSD', apiSymbol: 'XAGUSD=X', icon: <Coins className="w-5 h-5 text-slate-300" />, type: 'COMMODITY', unit: '$' },
-                        { name: 'Dolar', symbol: 'USDTRY', apiSymbol: 'USDTRY=X', icon: <DollarSign className="w-5 h-5 text-green-400" />, type: 'CURRENCY', unit: '₺' },
-                        { name: 'Euro', symbol: 'EURTRY', apiSymbol: 'EURTRY=X', icon: <Euro className="w-5 h-5 text-blue-400" />, type: 'CURRENCY', unit: '₺' }
-                    ].map((item, idx) => {
-                        const data = marketData[item.apiSymbol];
-                        const price = data?.regularMarketPrice;
-                        const change = data?.regularMarketChangePercent;
-                        const isUp = change >= 0;
-
-                        return (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                                onClick={() => {
-                                    setSearchTerm(item.symbol);
-                                    handleAnalyze(item.symbol, { 
-                                        symbol: item.symbol, 
-                                        shortname: item.name,
-                                        quoteType: item.type
-                                    });
-                                }}
-                                className="bg-[#1e293b] px-6 py-4 border-b border-slate-700/50 flex items-center justify-between rounded-xl cursor-pointer hover:bg-slate-800 transition-all group shadow-lg shadow-black/20"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="p-2 rounded-lg bg-slate-900/50 group-hover:bg-slate-900 transition-colors">
-                                        {item.icon}
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                        <h3 className="font-bold text-white text-lg">{item.name}</h3>
-                                        <span className="px-2 py-0.5 rounded bg-white/10 text-white/80 text-xs font-medium">{item.symbol}</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-6">
-                                    {price ? (
-                                        <>
-                                            <div className="text-right">
-                                                <div className="text-xl font-bold text-white tracking-tight">
-                                                    {price.toFixed(2)} <span className="text-sm font-normal text-slate-400">{item.unit}</span>
-                                                </div>
-                                            </div>
-                                            <div className={`flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full ${isUp ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                                                {isUp ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                                                %{Math.abs(change).toFixed(2)}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <Loader2 className="w-5 h-5 text-slate-500 animate-spin" />
-                                    )}
-                                    <ArrowRight className="w-5 h-5 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                                </div>
-                            </motion.div>
-                        );
-                    })}
-                </div>
+                <DashboardAnalysisCards />
             )}
 
             {/* TEFAS Data Card - Modern Navy & White Design */}

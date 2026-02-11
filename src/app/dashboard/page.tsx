@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import TradingViewWidget from "@/components/TradingViewWidget";
 import { TefasChart } from "@/components/TefasChart";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
+import { DashboardAnalysisCards } from "@/components/DashboardAnalysisCards";
 
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated } = useUser();
@@ -92,6 +93,9 @@ export default function Dashboard() {
                     </button>
                 </div>
             </div>
+
+            {/* Market Analysis Cards - Fixed at top */}
+            <DashboardAnalysisCards />
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
