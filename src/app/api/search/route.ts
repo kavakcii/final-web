@@ -18,7 +18,7 @@ export async function GET(request: Request) {
         // but BIST stocks are.
         // For TEFAS funds, we might need a local fallback or specific mapping if Yahoo misses them.
         // However, Yahoo Finance DOES contain many Turkish funds (e.g. TCD.IS, MAC.IS).
-        
+
         const result = await yahooFinance.search(query, {
             newsCount: 0,
             quotesCount: 60 // Increased count to find Turkish assets among global results
@@ -26,23 +26,23 @@ export async function GET(request: Request) {
 
         // Filter function for reusability
         const filterTurkishAssets = (q: any) => {
-             // Ensure the asset is valid and exists on Yahoo Finance
-             if (!q || !q.symbol) return false;
-             if (q.isYahooFinance === false) return false;
+            // Ensure the asset is valid and exists on Yahoo Finance
+            if (!q || !q.symbol) return false;
+            if (q.isYahooFinance === false) return false;
 
-             // STRICT FILTER: Only allow Turkish assets (BIST Stocks & TEFAS Funds)
-             // Criteria:
-             // 1. Symbol ends with '.IS' (Standard for BIST and many Turkish funds on Yahoo)
-             // 2. Exchange is 'IST' (Istanbul Stock Exchange)
-             const symbol = q.symbol.toUpperCase();
-             const isTurkishAsset = symbol.endsWith('.IS') || q.exchange === 'IST';
-             
-             // Type Filter: Only EQUITY, MUTUALFUND, ETF (exclude CURRENCY, CRYPTO, etc. unless user wants them?)
-             // User said: "yabancı fon ve hisse senetleri çıkar sadece türkler olsun" -> Only Turkish Stocks and Funds.
-             const allowedTypes = ['EQUITY', 'MUTUALFUND', 'ETF', 'INDEX']; 
-             const isAllowedType = allowedTypes.includes(q.quoteType);
+            // STRICT FILTER: Only allow Turkish assets (BIST Stocks & TEFAS Funds)
+            // Criteria:
+            // 1. Symbol ends with '.IS' (Standard for BIST and many Turkish funds on Yahoo)
+            // 2. Exchange is 'IST' (Istanbul Stock Exchange)
+            const symbol = q.symbol.toUpperCase();
+            const isTurkishAsset = symbol.endsWith('.IS') || q.exchange === 'IST';
 
-             return isTurkishAsset && isAllowedType;
+            // Type Filter: Only EQUITY, MUTUALFUND, ETF (exclude CURRENCY, CRYPTO, etc. unless user wants them?)
+            // User said: "yabancı fon ve hisse senetleri çıkar sadece türkler olsun" -> Only Turkish Stocks and Funds.
+            const allowedTypes = ['EQUITY', 'MUTUALFUND', 'ETF', 'INDEX'];
+            const isAllowedType = allowedTypes.includes(q.quoteType);
+
+            return isTurkishAsset && isAllowedType;
         };
 
         let quotes = result.quotes.filter(filterTurkishAssets);
@@ -51,16 +51,16 @@ export async function GET(request: Request) {
         // try searching explicitly with .IS suffix to find the Turkish equivalent.
         // E.g. User types "MAC" -> Yahoo returns US stock "MAC". We want "MAC.IS".
         if (quotes.length === 0 && query.length >= 3 && query.length <= 5) {
-             try {
+            try {
                 const resultIS = await yahooFinance.search(`${query}.IS`, {
                     newsCount: 0,
                     quotesCount: 5 // We only need the top matches for the specific code
                 });
                 const quotesIS = resultIS.quotes.filter(filterTurkishAssets);
                 quotes = [...quotes, ...quotesIS];
-             } catch (e) {
-                 // Ignore fallback error
-             }
+            } catch (e) {
+                // Ignore fallback error
+            }
         }
 
         // SYNTHETIC FALLBACK FOR TEFAS FUNDS (When Yahoo fails completely)
@@ -73,35 +73,35 @@ export async function GET(request: Request) {
                 shortname: `${code} - TEFAS Yatırım Fonu`,
                 longname: `TEFAS Yatırım Fonu (${code})`,
                 exchange: 'TEFAS',
-                quoteType: 'MUTUALFUND',
+                quoteType: 'MUTUALFUND' as any,
                 typeDisp: 'Fund',
                 isSynthetic: true
-            });
+            } as any);
         }
 
         quotes = quotes.sort((a: any, b: any) => {
-                // Priority Logic:
-                // 1. Exact match to query (case insensitive)
-                // 2. Contains '.IS' (Turkish market)
-                // 3. Exchange is IST
-                
-                const qUpper = query.toUpperCase();
-                const aSym = a.symbol.toUpperCase();
-                const bSym = b.symbol.toUpperCase();
+            // Priority Logic:
+            // 1. Exact match to query (case insensitive)
+            // 2. Contains '.IS' (Turkish market)
+            // 3. Exchange is IST
 
-                // Exact match priority
-                if (aSym === qUpper || aSym === `${qUpper}.IS`) return -1;
-                if (bSym === qUpper || bSym === `${qUpper}.IS`) return 1;
+            const qUpper = query.toUpperCase();
+            const aSym = a.symbol.toUpperCase();
+            const bSym = b.symbol.toUpperCase();
 
-                // Turkish assets priority
-                const aIsTR = a.symbol.endsWith('.IS') || a.exchange === 'IST';
-                const bIsTR = b.symbol.endsWith('.IS') || b.exchange === 'IST';
-                
-                if (aIsTR && !bIsTR) return -1;
-                if (!aIsTR && bIsTR) return 1;
-                
-                return 0;
-            });
+            // Exact match priority
+            if (aSym === qUpper || aSym === `${qUpper}.IS`) return -1;
+            if (bSym === qUpper || bSym === `${qUpper}.IS`) return 1;
+
+            // Turkish assets priority
+            const aIsTR = a.symbol.endsWith('.IS') || a.exchange === 'IST';
+            const bIsTR = b.symbol.endsWith('.IS') || b.exchange === 'IST';
+
+            if (aIsTR && !bIsTR) return -1;
+            if (!aIsTR && bIsTR) return 1;
+
+            return 0;
+        });
 
         return NextResponse.json({ results: quotes });
     } catch (error: any) {

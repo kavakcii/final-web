@@ -22,11 +22,11 @@ export async function POST(req: Request) {
         // Ancak backend'de yaptığımız önceki map işlemi bu yapıyı bozuyordu.
         // Gelen veriyi olduğu gibi kullanabiliriz veya garantilemek için basit bir map yapabiliriz.
 
-        let chatHistory = [];
+        let chatHistory: any[] = [];
         if (history && Array.isArray(history)) {
             chatHistory = history.map((msg: any) => ({
-                role: msg.role, // 'user' veya 'model' zaten doğru geliyor
-                parts: msg.parts // [{ text: '...' }] zaten doğru geliyor
+                role: msg.role,
+                parts: msg.parts
             }));
         }
 

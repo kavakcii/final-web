@@ -108,7 +108,7 @@ const UPCOMING_EVENTS = [
                 sentiment: "mixed",
                 assetsAffected: ['bist', 'try']
             },
-             {
+            {
                 condition: "Faizlerin Düşürülmesi veya Aynı Kalması",
                 impact: "Faizlerin düşük seyretmesi, enflasyonist beklentilerle birlikte yatırımcıları döviz ve altına yönlendirebilir. Şirketler açısından ise finansman maliyetlerinin düşük kalması, hisse senedi piyasaları için destekleyici bir unsur olarak değerlendirilebilir.",
                 sentiment: "neutral",
@@ -153,7 +153,7 @@ export default function AnalysisPage() {
     const [selectedAssetDetails, setSelectedAssetDetails] = useState<any | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [aiAnalysisData, setAiAnalysisData] = useState<any[] | null>(null);
+    const [aiAnalysisData, setAiAnalysisData] = useState<any | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [news, setNews] = useState<NewsItem[]>([]);
     const [loadingNews, setLoadingNews] = useState(true);
@@ -167,7 +167,7 @@ export default function AnalysisPage() {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (searchTerm.length >= 1) { 
+            if (searchTerm.length >= 1) {
                 fetchSuggestions(searchTerm);
             } else {
                 setSuggestions([]);
@@ -231,7 +231,7 @@ export default function AnalysisPage() {
 
     const handleAnalyze = async (overrideTerm?: string, overrideDetails?: any) => {
         const termToUse = overrideTerm || searchTerm;
-        
+
         if (!termToUse.trim()) return;
 
         setIsAnalyzing(true);
@@ -242,8 +242,8 @@ export default function AnalysisPage() {
 
         // If the search term matches the selected details, use the details. 
         // Otherwise (if user typed manually after selecting), rely on just the term or clear details.
-        const assetContext = overrideDetails || ((selectedAssetDetails && selectedAssetDetails.symbol === termToUse) 
-            ? selectedAssetDetails 
+        const assetContext = overrideDetails || ((selectedAssetDetails && selectedAssetDetails.symbol === termToUse)
+            ? selectedAssetDetails
             : null);
 
         // Fetch TEFAS data if it's a fund
@@ -265,13 +265,13 @@ export default function AnalysisPage() {
             const res = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     assetName: termToUse,
                     assetContext: assetContext
                 })
             });
             const data = await res.json();
-            
+
             if (data.success) {
                 setAiAnalysisData(data.data);
             } else {
@@ -293,7 +293,7 @@ export default function AnalysisPage() {
         : !selectedAsset ? ANALYSIS_DATA : [];
 
     // Use AI data if available, otherwise fallback to static events
-    const displayEvents = (aiAnalysisData?.analysis || (Array.isArray(aiAnalysisData) ? aiAnalysisData : null)) || (selectedAsset 
+    const displayEvents = (aiAnalysisData?.analysis || (Array.isArray(aiAnalysisData) ? aiAnalysisData : [])) || (selectedAsset
         ? UPCOMING_EVENTS.filter(item => item.relatedAssets.includes(selectedAsset))
         : UPCOMING_EVENTS);
 
@@ -303,10 +303,10 @@ export default function AnalysisPage() {
     const groupedSuggestions = suggestions.reduce((acc: any, curr: any) => {
         const type = curr.quoteType || 'OTHER';
         let category = 'Diğer';
-        
+
         if (type === 'EQUITY') category = 'Hisse Senetleri';
         else if (type === 'MUTUALFUND' || type === 'ETF') category = 'Yatırım Fonları';
-        
+
         if (!acc[category]) acc[category] = [];
         acc[category].push(curr);
         return acc;
@@ -316,7 +316,7 @@ export default function AnalysisPage() {
         // Simplified icons to match clean list look
         switch (type) {
             case 'EQUITY': return <Building2 className="w-5 h-5 text-blue-400" />;
-            case 'MUTUALFUND': 
+            case 'MUTUALFUND':
             case 'ETF': return <Landmark className="w-5 h-5 text-green-400" />;
             default: return <TrendingUp className="w-5 h-5 text-slate-400" />;
         }
@@ -343,7 +343,7 @@ export default function AnalysisPage() {
                             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors z-10">
                                 <Search className="w-5 h-5" />
                             </div>
-                            <input 
+                            <input
                                 type="text"
                                 value={searchTerm}
                                 onChange={handleInputChange}
@@ -368,12 +368,12 @@ export default function AnalysisPage() {
                                 }}
                             />
                             {searchTerm && (
-                                <button 
-                                    onClick={() => { 
-                                        setSearchTerm(""); 
-                                        setSelectedAsset(null); 
+                                <button
+                                    onClick={() => {
+                                        setSearchTerm("");
+                                        setSelectedAsset(null);
                                         setSelectedAssetDetails(null);
-                                        setAiAnalysisData(null); 
+                                        setAiAnalysisData(null);
                                         setError(null);
                                         setIsValidSelection(false);
                                     }}
@@ -382,7 +382,7 @@ export default function AnalysisPage() {
                                     ✕
                                 </button>
                             )}
-                            
+
                             {/* Suggestions Dropdown - styled like user request */}
                             <AnimatePresence>
                                 {showSuggestions && suggestions.length > 0 && (
@@ -398,8 +398,8 @@ export default function AnalysisPage() {
                                                     {category}
                                                 </div>
                                                 {items.map((s: any, idx: number) => (
-                                                    <div 
-                                                        key={idx} 
+                                                    <div
+                                                        key={idx}
                                                         className="px-4 py-2 hover:bg-white/10 cursor-pointer text-white flex items-center gap-3 transition-colors group relative"
                                                         onClick={() => {
                                                             setSearchTerm(s.symbol);
@@ -414,7 +414,7 @@ export default function AnalysisPage() {
                                                         <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors shrink-0">
                                                             {getIconForType(s.quoteType)}
                                                         </div>
-                                                        
+
                                                         {/* Info - Clean Row Layout */}
                                                         <div className="flex flex-col min-w-0">
                                                             <div className="flex items-center gap-2">
@@ -430,14 +430,13 @@ export default function AnalysisPage() {
                                 )}
                             </AnimatePresence>
                         </div>
-                        
-                        <button 
+
+                        <button
                             id="analyze-btn"
-                            onClick={handleAnalyze}
+                            onClick={() => handleAnalyze()}
                             disabled={isAnalyzing || !searchTerm.trim()}
-                            className={`px-6 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg ${
-                                searchTerm.trim() ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20 hover:scale-105' : 'bg-slate-800 text-slate-500'
-                            }`}
+                            className={`px-6 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg ${searchTerm.trim() ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/20 hover:scale-105' : 'bg-slate-800 text-slate-500'
+                                }`}
                         >
                             {isAnalyzing ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -452,7 +451,7 @@ export default function AnalysisPage() {
                 </div>
 
                 {selectedAsset && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 flex items-start gap-3"
@@ -467,7 +466,7 @@ export default function AnalysisPage() {
 
             {/* TEFAS Data Card - Modern Navy & White Design */}
             {tefasData && (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 mb-8"
@@ -475,12 +474,12 @@ export default function AnalysisPage() {
                     {/* Header - Navy Blue */}
                     <div className="bg-[#0f172a] px-8 py-6 relative overflow-hidden">
                         {/* Abstract Stripes Pattern */}
-                        <div className="absolute top-0 right-0 w-64 h-full opacity-10" 
+                        <div className="absolute top-0 right-0 w-64 h-full opacity-10"
                             style={{
                                 backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, #ffffff 10px, #ffffff 20px)'
                             }}
                         />
-                        
+
                         <div className="relative z-10 flex justify-between items-center">
                             <div>
                                 <div className="flex items-center gap-3 mb-2">
@@ -507,11 +506,10 @@ export default function AnalysisPage() {
                         {tefasData.details.filter((d: any) => !d.label.includes('Son Fiyat')).map((detail: any, idx: number) => (
                             <div key={idx} className="flex flex-col border-l-2 border-slate-100 pl-4">
                                 <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">{detail.label}</span>
-                                <span className={`text-lg font-bold ${
-                                    detail.label.includes('Getiri') 
-                                        ? detail.value.includes('-') ? 'text-red-600' : 'text-emerald-600'
-                                        : 'text-slate-800'
-                                }`}>
+                                <span className={`text-lg font-bold ${detail.label.includes('Getiri')
+                                    ? detail.value.includes('-') ? 'text-red-600' : 'text-emerald-600'
+                                    : 'text-slate-800'
+                                    }`}>
                                     {detail.value}
                                 </span>
                             </div>
@@ -522,15 +520,15 @@ export default function AnalysisPage() {
 
             {/* Top Holdings Section (AI Generated) */}
             {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-200 mb-8"
                 >
                     <div className="bg-[#0f172a] px-8 py-4 border-b border-slate-100 flex items-center justify-between">
                         <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                             <Coins className="w-6 h-6 text-yellow-400" />
-                             Tahmini Fon Dağılımı (Top 5 Hisse)
+                            <Coins className="w-6 h-6 text-yellow-400" />
+                            Tahmini Fon Dağılımı (Top 5 Hisse)
                         </h3>
                         <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-1 rounded border border-yellow-500/30">
                             Yapay Zeka Tahmini
@@ -592,13 +590,12 @@ export default function AnalysisPage() {
                                             <td className="px-6 py-4 text-slate-800 font-medium">{event.event}</td>
                                             <td className="px-6 py-4 text-slate-500">{event.actual || '-'} / {event.previous}</td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                                    event.impact === 'high' || event.impact === 'critical' ? 'bg-red-100 text-red-700 border border-red-200' :
+                                                <span className={`px-2 py-1 rounded text-xs font-bold ${event.impact === 'high' || event.impact === 'critical' ? 'bg-red-100 text-red-700 border border-red-200' :
                                                     event.impact === 'medium' ? 'bg-orange-100 text-orange-700 border border-orange-200' :
-                                                    'bg-green-100 text-green-700 border border-green-200'
-                                                }`}>
-                                                    {event.impact === 'high' || event.impact === 'critical' ? 'Yüksek' : 
-                                                     event.impact === 'medium' ? 'Orta' : 'Düşük'}
+                                                        'bg-green-100 text-green-700 border border-green-200'
+                                                    }`}>
+                                                    {event.impact === 'high' || event.impact === 'critical' ? 'Yüksek' :
+                                                        event.impact === 'medium' ? 'Orta' : 'Düşük'}
                                                 </span>
                                             </td>
                                         </tr>
@@ -620,7 +617,7 @@ export default function AnalysisPage() {
                     {/* ... (Existing Past Events Mapping) ... */}
                     <div className="grid gap-6">
                         {filteredAnalysis.map((item) => (
-                            <motion.div 
+                            <motion.div
                                 key={item.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -708,7 +705,7 @@ export default function AnalysisPage() {
                             {aiAnalysisData ? "Yapay Zeka Destekli Gelecek Senaryoları" : "Yaklaşan Kritik Gelişmeler ve Senaryolar"}
                         </h2>
                         <p className="text-slate-400 text-sm">
-                            {aiAnalysisData 
+                            {aiAnalysisData
                                 ? "Seçtiğiniz varlık için belirlenen kritik faktörler ve olası etkileri."
                                 : "Piyasaların radarındaki olaylar ve olası senaryolar."}
                         </p>
@@ -718,7 +715,7 @@ export default function AnalysisPage() {
                 {displayEvents.length > 0 ? (
                     <div className="grid gap-6">
                         {displayEvents.map((event: any) => (
-                            <motion.div 
+                            <motion.div
                                 key={event.id}
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -737,16 +734,15 @@ export default function AnalysisPage() {
                                     <p className="text-slate-600 mb-6 leading-relaxed">
                                         {event.description || event.impact}
                                     </p>
-                                    
+
                                     {/* Scenarios if present */}
                                     {event.scenarios && (
                                         <div className="grid md:grid-cols-2 gap-4">
                                             {event.scenarios.map((scenario: any, sIdx: number) => (
                                                 <div key={sIdx} className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-colors">
-                                                    <h4 className={`font-bold mb-2 ${
-                                                        scenario.sentiment === 'positive' ? 'text-emerald-600' : 
+                                                    <h4 className={`font-bold mb-2 ${scenario.sentiment === 'positive' ? 'text-emerald-600' :
                                                         scenario.sentiment === 'negative' ? 'text-red-600' : 'text-amber-600'
-                                                    }`}>
+                                                        }`}>
                                                         {scenario.condition}
                                                     </h4>
                                                     <p className="text-sm text-slate-600">{scenario.impact}</p>
@@ -772,10 +768,10 @@ export default function AnalysisPage() {
                 ) : (
                     <div className="bg-slate-900/50 border border-white/10 rounded-xl p-8 text-center text-slate-400">
                         {isAnalyzing ? (
-                             <div className="flex flex-col items-center gap-3">
+                            <div className="flex flex-col items-center gap-3">
                                 <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
                                 <p>Yapay zeka analiz yapıyor, lütfen bekleyin...</p>
-                             </div>
+                            </div>
                         ) : error ? (
                             <div className="flex flex-col items-center gap-3 text-red-400">
                                 <AlertTriangle className="w-8 h-8" />
@@ -809,10 +805,10 @@ export default function AnalysisPage() {
                 ) : news.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {news.slice(0, 6).map((item, idx) => (
-                            <a 
-                                key={idx} 
-                                href={item.link} 
-                                target="_blank" 
+                            <a
+                                key={idx}
+                                href={item.link}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="block bg-slate-900/50 border border-white/10 rounded-xl p-5 hover:border-green-500/30 hover:bg-white/5 transition-all group"
                             >
@@ -864,8 +860,8 @@ export default function AnalysisPage() {
                     <span className="text-xs font-bold uppercase tracking-wider">Yasal Uyarı</span>
                 </div>
                 <p className="text-xs text-slate-600 max-w-4xl mx-auto leading-relaxed">
-                    Burada yer alan yatırım bilgi, yorum ve tavsiyeleri yatırım danışmanlığı kapsamında değildir. 
-                    Yatırım danışmanlığı hizmeti; aracı kurumlar, portföy yönetim şirketleri, mevduat kabul etmeyen bankalar ile müşteri arasında imzalanacak yatırım danışmanlığı sözleşmesi çerçevesinde sunulmaktadır. 
+                    Burada yer alan yatırım bilgi, yorum ve tavsiyeleri yatırım danışmanlığı kapsamında değildir.
+                    Yatırım danışmanlığı hizmeti; aracı kurumlar, portföy yönetim şirketleri, mevduat kabul etmeyen bankalar ile müşteri arasında imzalanacak yatırım danışmanlığı sözleşmesi çerçevesinde sunulmaktadır.
                     Sadece burada yer alan bilgilere dayanılarak yatırım kararı verilmesi beklentilerinize uygun sonuçlar doğurmayabilir.
                 </p>
             </div>

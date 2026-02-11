@@ -22,13 +22,13 @@ function getTefasCookies(): Promise<string> {
 async function fetchTefasPrices(): Promise<any[]> {
     try {
         const cookieHeader = await getTefasCookies();
-        
+
         // Date logic: Use last weekday
         let targetDate = new Date();
         const day = targetDate.getDay();
         if (day === 0) targetDate.setDate(targetDate.getDate() - 2); // Sunday -> Friday
         else if (day === 6) targetDate.setDate(targetDate.getDate() - 1); // Saturday -> Friday
-        
+
         const dateStr = `${String(targetDate.getDate()).padStart(2, '0')}.${String(targetDate.getMonth() + 1).padStart(2, '0')}.${targetDate.getFullYear()}`;
 
         const payload = {
@@ -46,7 +46,7 @@ async function fetchTefasPrices(): Promise<any[]> {
         };
 
         const postData = new URLSearchParams(payload as any).toString();
-        
+
         return new Promise((resolve) => {
             const options = {
                 method: 'POST',
@@ -59,8 +59,8 @@ async function fetchTefasPrices(): Promise<any[]> {
                 },
                 rejectUnauthorized: false,
                 ciphers: 'DEFAULT@SECLEVEL=1',
-                minVersion: 'TLSv1',
-                secureOptions: require('constants').SSL_OP_LEGACY_SERVER_CONNECT
+                minVersion: 'TLSv1' as any,
+                secureOptions: (require('constants') as any).SSL_OP_LEGACY_SERVER_CONNECT
             };
 
             const req = https.request('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', options, (res) => {
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
 
     const symbols = symbolsParam.split(',');
     const results: any[] = [];
-    
+
     // 1. Identify potential TEFAS funds (3 letters)
     const potentialFunds = symbols.filter(s => s.trim().length === 3 && !s.includes('.'));
     const otherSymbols = symbols.filter(s => !potentialFunds.includes(s));
@@ -127,7 +127,7 @@ export async function GET(request: Request) {
     // 3. Fetch TEFAS for potential funds
     if (potentialFunds.length > 0) {
         const tefasData = await fetchTefasPrices();
-        
+
         potentialFunds.forEach(code => {
             const fund = tefasData.find((f: any) => f.FONKODU === code.toUpperCase());
             if (fund && fund.SONPORTFOYDEGERI && fund.SONPAYADEDI) {

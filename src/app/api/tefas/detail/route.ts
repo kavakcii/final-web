@@ -17,8 +17,8 @@ async function fetchTefasData(endpoint: string, payload: any, cookieHeader: stri
             rejectUnauthorized: false,
             // TLS Legacy Options for TEFAS
             ciphers: 'DEFAULT@SECLEVEL=1',
-            minVersion: 'TLSv1',
-            secureOptions: require('constants').SSL_OP_LEGACY_SERVER_CONNECT
+            minVersion: 'TLSv1' as any,
+            secureOptions: (require('constants') as any).SSL_OP_LEGACY_SERVER_CONNECT
         };
 
         const req = https.request(`https://www.tefas.gov.tr/api/DB/${endpoint}`, options, (res) => {
@@ -82,17 +82,17 @@ export async function POST(request: Request) {
         // Note: BindComparisonFundSizes returns ALL funds. We need to filter.
         // It's heavy to fetch all every time for one fund, but TEFAS API doesn't seem to support single fund filter here easily?
         // Actually, we can try filtering by 'kurucukod' if we knew it, but we only have 'fundCode'.
-        
+
         const data: any = await fetchTefasData('BindComparisonFundSizes', payload, cookieHeader);
-        
+
         let fundData = null;
         if (data && data.data) {
             fundData = data.data.find((f: any) => f.FONKODU === fundCode);
         }
 
         if (!fundData) {
-             // Fallback: Try fetching BindComparisonFundInfo?
-             return NextResponse.json({ error: 'Fund not found or data empty' }, { status: 404 });
+            // Fallback: Try fetching BindComparisonFundInfo?
+            return NextResponse.json({ error: 'Fund not found or data empty' }, { status: 404 });
         }
 
         return NextResponse.json(fundData);
