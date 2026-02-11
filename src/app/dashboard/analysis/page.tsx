@@ -398,6 +398,31 @@ export default function AnalysisPage() {
                 </motion.div>
             )}
 
+            {/* AI Summary Section - NEW */}
+            {aiAnalysisData?.summary && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg border border-blue-500/50 mb-8 p-6 text-white relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+                    <div className="flex items-start gap-4 relative z-10">
+                        <div className="p-3 bg-white/10 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                            <Brain className="w-8 h-8 text-blue-200" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold mb-3 text-blue-100 flex items-center gap-2">
+                                Piyasa Özeti ve Beklentiler
+                                <span className="px-2 py-0.5 rounded-full bg-blue-500/30 text-xs text-blue-200 border border-blue-400/30">Canlı Analiz</span>
+                            </h3>
+                            <p className="text-white text-lg font-medium leading-relaxed">
+                                {aiAnalysisData.summary}
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
 
 
 
@@ -414,11 +439,11 @@ export default function AnalysisPage() {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-white">
-                                    {aiAnalysisData ? "Yapay Zeka Destekli Gelecek Senaryoları" : "Yaklaşan Kritik Gelişmeler ve Senaryolar"}
+                                    {aiAnalysisData ? "Gelecek Senaryoları ve Etki Analizi" : "Yaklaşan Kritik Gelişmeler ve Senaryolar"}
                                 </h2>
                                 <p className="text-slate-400 text-sm">
                                     {aiAnalysisData
-                                        ? "Seçtiğiniz varlık için belirlenen kritik faktörler ve olası etkileri."
+                                        ? "Bu varlığı etkileyen faktörler ve olası sonuçları (Eğer X olursa -> Y olur)."
                                         : "Piyasaların radarındaki olaylar ve olası senaryolar."}
                                 </p>
                             </div>

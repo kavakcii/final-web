@@ -84,6 +84,7 @@ export async function POST(req: Request) {
         
         İstenen JSON Yapısı:
         {
+            "summary": "Varlığın durumunu özetleyen, jargon içermeyen, net sebep-sonuç ilişkisine dayalı 2-3 cümlelik açıklama. (Örn: Faizler düşerse altın değerlenir, aksi halde baskılanır.)",
             "analysis": [
                 {
                     "id": 1,
@@ -107,6 +108,7 @@ export async function POST(req: Request) {
             ]
         }
         
+        NOT: "summary" alanı çok önemlidir. Finansal okuryazarlığı düşük bir kullanıcı için varlığın neyden etkilendiğini BASİTÇE anlatmalıdır. Karmaşık terimler kullanma. "Eğer şu olursa bu olur" mantığını kullan.
         NOT: "topHoldings" alanı eğer bu bir YATIRIM FONU veya ETF ise (Örn: MAC, IPJ, AFT) fonun stratejisine ve bilinen içeriğine göre EN BÜYÜK 5 hisseyi içermelidir. Eğer hisse senedi veya emtia ise bu alan boş dizi [] olabilir.
         Lütfen fon içeriğini tahmin ederken fonun KAP bildirimlerindeki tipik dağılımını veya sektörünü (Örn: Teknoloji fonuysa MSFT, NVDA; Banka fonuysa AKBNK, YKBNK) baz al.
 
