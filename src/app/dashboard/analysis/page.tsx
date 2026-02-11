@@ -377,20 +377,23 @@ export default function AnalysisPage() {
                 <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-xl shadow-sm border border-slate-200 mb-6 p-5"
+                    className="bg-white rounded-lg border border-slate-200 mb-6 px-4 py-3 shadow-sm w-fit max-w-full"
                 >
-                    <div className="flex items-center gap-2 mb-3">
-                        <Coins className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-bold text-slate-800">Fonda Bulunan Başlıca Hisseler</h3>
-                    </div>
-                    
-                    <div className="flex flex-wrap gap-3">
-                        {aiAnalysisData.topHoldings.slice(0, 5).map((holding: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
-                                <span className="font-bold text-slate-900">{holding.symbol}</span>
-                                <span className="text-xs text-slate-500 border-l border-slate-300 pl-2">{holding.name}</span>
-                            </div>
-                        ))}
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <div className="flex items-center gap-2 text-blue-600 border-r border-slate-200 pr-4 shrink-0">
+                            <Coins className="w-4 h-4" />
+                            <span className="text-sm font-bold whitespace-nowrap">Öne Çıkanlar</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 text-sm text-slate-700 items-center">
+                            {aiAnalysisData.topHoldings.slice(0, 5).map((holding: any, idx: number) => (
+                                <span key={idx} className="font-medium whitespace-nowrap">
+                                    {holding.symbol}
+                                    {idx < Math.min(aiAnalysisData.topHoldings.length, 5) - 1 && (
+                                        <span className="text-slate-300 mx-2">|</span>
+                                    )}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 </motion.div>
             )}
