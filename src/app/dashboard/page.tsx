@@ -15,7 +15,7 @@ import { PortfolioService, Asset } from "@/lib/portfolio-service";
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated } = useUser();
     const [myAssets, setMyAssets] = useState<Asset[]>([]);
-    const [selectedAsset, setSelectedAsset] = useState<string>("BIST:XU100");
+    const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
 
     useEffect(() => {
@@ -158,7 +158,7 @@ export default function Dashboard() {
                             <div className="text-center py-10">
                                 <p className="text-sm text-slate-500">Henüz varlık eklemediniz.</p>
                                 <button
-                                    onClick={() => setSelectedAsset("BIST:XU100")}
+                                    onClick={() => setSelectedAsset("FOREKS:XU100")}
                                     className="text-xs text-blue-400 mt-2 hover:underline"
                                 >
                                     Endeksi Göster
@@ -194,10 +194,10 @@ export default function Dashboard() {
 
                         {/* Default selection if no assets or to go back to index */}
                         <div
-                            onClick={() => { setSelectedAsset("BIST:XU100"); setIsTefas(false); }}
+                            onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                             className={cn(
                                 "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border mt-4 opacity-60 hover:opacity-100",
-                                selectedAsset === "BIST:XU100" ? "bg-slate-800 border-white/20" : "bg-transparent border-dashed border-white/10"
+                                selectedAsset === "FOREKS:XU100" ? "bg-slate-800 border-white/20" : "bg-transparent border-dashed border-white/10"
                             )}
                         >
                             <span className="text-xs font-medium text-slate-400">BIST 100 Endeksi</span>

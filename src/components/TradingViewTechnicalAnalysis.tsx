@@ -24,7 +24,7 @@ function TradingViewTechnicalAnalysis() {
               "width": "100%",
               "isTransparent": true,
               "height": "100%",
-              "symbol": "BIST:XU100",
+              "symbol": "FOREKS:XU100",
               "showIntervalTabs": true,
               "displayMode": "single",
               "locale": "tr",
