@@ -244,7 +244,7 @@ export async function POST(req: Request) {
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                from: 'FinAl <bildirim@finai.net.tr>',
+                                from: 'FinAl <onboarding@resend.dev>',
                                 to: [user.email],
                                 subject: `📊 FinAl — Bu Hafta Portföyünüzdeki Varlıklar`,
                                 html: emailHtml,
