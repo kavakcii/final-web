@@ -372,6 +372,48 @@ export default function AnalysisPage() {
                 </motion.div>
             )}
 
+            {/* AI Analysis Loading Skeleton - Visual Feedback while waiting */}
+            {isAnalyzing && !aiAnalysisData && (
+                <div className="space-y-8 animate-pulse">
+                    {/* Holdings Skeleton */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div className="h-16 border-b border-slate-200 bg-slate-50 px-6 py-4 flex items-center gap-3">
+                            <div className="w-8 h-8 bg-slate-200 rounded-lg"></div>
+                            <div className="h-6 bg-slate-200 rounded w-48"></div>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="h-20 bg-slate-50 rounded-xl border border-slate-100"></div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Summary Skeleton */}
+                    <div className="h-40 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 opacity-50"></div>
+
+                    {/* Scenarios Skeleton */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                         <div className="h-16 bg-slate-800 px-6 py-4 flex items-center gap-3">
+                             <div className="h-6 bg-white/20 rounded w-64"></div>
+                         </div>
+                         <div className="p-6 space-y-6">
+                             <div className="h-4 bg-slate-100 rounded w-full"></div>
+                             <div className="h-4 bg-slate-100 rounded w-2/3"></div>
+                             <div className="grid md:grid-cols-2 gap-4 mt-6">
+                                 <div className="h-40 bg-emerald-50/50 border border-emerald-100 rounded-lg p-4">
+                                     <div className="h-6 bg-emerald-100/50 rounded w-32 mb-4"></div>
+                                     <div className="h-20 bg-emerald-100/30 rounded"></div>
+                                 </div>
+                                 <div className="h-40 bg-red-50/50 border border-red-100 rounded-lg p-4">
+                                     <div className="h-6 bg-red-100/50 rounded w-32 mb-4"></div>
+                                     <div className="h-20 bg-red-100/30 rounded"></div>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            )}
+
             {/* Top Holdings Section (Detailed Card) */}
             {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
                 <motion.div
