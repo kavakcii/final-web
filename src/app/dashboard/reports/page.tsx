@@ -12,8 +12,22 @@ export default function ReportsPage() {
     const handleGenerateReport = async () => {
         setIsLoading(true);
         try {
-            // Call our existing API route
-            const res = await fetch('/api/cron/weekly-report', { method: 'POST' });
+            // Call our existing API route with timeout protection
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+            const res = await fetch('/api/cron/weekly-report', { 
+                method: 'POST',
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || `Sunucu hatası: ${res.status}`);
+            }
+
             const data = await res.json();
             
             if (data.success) {
@@ -22,9 +36,13 @@ export default function ReportsPage() {
             } else {
                 alert('Rapor oluşturulamadı: ' + data.error);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            alert('Bir hata oluştu.');
+            if (error.name === 'AbortError') {
+                alert('İşlem zaman aşımına uğradı. Lütfen tekrar deneyin.');
+            } else {
+                alert('Bir hata oluştu: ' + (error.message || 'Bilinmeyen hata'));
+            }
         } finally {
             setIsLoading(false);
         }

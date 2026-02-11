@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { scrapeEconomicCalendar } from '@/lib/calendar-scraper';
 
 export async function GET(request: NextRequest) {
   const API_KEY = process.env.FINNHUB_API_KEY;
 
+  // Try scraping first (User requested "another source")
+  try {
+      console.log("Attempting to scrape economic calendar...");
+      const scrapedEvents = await scrapeEconomicCalendar();
+      if (scrapedEvents.length > 0) {
+          return NextResponse.json({ source: 'investing-scrape', data: scrapedEvents });
+      }
+  } catch (e) {
+      console.error("Scraping attempt failed:", e);
+  }
+
+  // Fallback to Finnhub or Mock
   if (!API_KEY) {
     // Return Mock Data if no key
     return NextResponse.json({

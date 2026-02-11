@@ -150,6 +150,10 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
                 `- ${p.symbol}: %${p.changePercent.toFixed(2)} değişim. (Puan: ${p.score}/10)`
             ).join('\n');
 
+            // Limit assets to avoid token limits if too many
+            const limitedAssetSummary = assetSummary.length > 2000 ? assetSummary.substring(0, 2000) + "...(devamı var)" : assetSummary;
+
+
             const prompt = `
             Sen kişisel bir finans asistanısın. Kullanıcı için HAFTALIK PORTFÖY RAPORU hazırlıyorsun.
             
@@ -159,7 +163,7 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
             - Genel Puan: ${portfolioScore}/10
             
             VARLIK PERFORMANSLARI:
-            ${assetSummary}
+            ${limitedAssetSummary}
             
             GÖREVİN:
             1. "Geçen Hafta Ne Oldu?": Piyasaları (BIST, Altın, Döviz) ve bu portföyü etkileyen ana olayları özetle. (Genel piyasa bilginle yorumla).
