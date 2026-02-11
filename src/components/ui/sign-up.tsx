@@ -157,7 +157,8 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
-                setModalStatus('success');
+                // Directly redirect without showing success modal
+                router.push("/dashboard");
             }
         };
         checkSession();
@@ -263,26 +264,10 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
             }
 
             // Success
-            if (!isLoginMode) {
-                fireSideCanons();
-                setModalStatus('success');
-            }
-            
             if (onAuthSuccess) {
-                // If it's a login, redirect immediately without confetti delay
-                if (isLoginMode) {
-                    onAuthSuccess();
-                    router.push("/dashboard");
-                } else {
-                    // For registration, show success modal/confetti briefly then redirect
-                    setTimeout(() => {
-                        onAuthSuccess();
-                        router.push("/dashboard");
-                    }, 2000);
-                }
-            } else {
-                 router.push("/dashboard");
+                onAuthSuccess();
             }
+            router.push("/dashboard");
 
         } catch (error: any) {
             console.error("Auth error:", error);
