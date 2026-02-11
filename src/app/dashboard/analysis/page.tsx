@@ -372,6 +372,15 @@ export default function AnalysisPage() {
                 </motion.div>
             )}
 
+            {/* AI Analysis Loading State (Secondary) - Shows if TEFAS is loaded but AI is still processing */}
+            {isAnalyzing && tefasData && !aiAnalysisData && (
+                 <div className="flex flex-col items-center justify-center py-8 text-slate-400 border border-slate-200 border-dashed rounded-xl mb-8 bg-slate-50">
+                    <Loader2 className="w-6 h-6 animate-spin mb-3 text-blue-500" />
+                    <p className="text-sm font-medium text-slate-600">Yapay Zeka analizi hazırlanıyor...</p>
+                    <p className="text-xs mt-1 text-slate-400">Piyasa haberleri ve senaryolar taranıyor</p>
+                </div>
+            )}
+
             {/* Top Holdings Section (AI Generated) */}
             {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
                 <motion.div

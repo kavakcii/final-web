@@ -108,14 +108,13 @@ export async function POST(req: Request) {
             ]
         }
         
-        NOT: "summary" alanı çok önemlidir. Finansal okuryazarlığı düşük bir kullanıcı için varlığın neyden etkilendiğini BASİTÇE anlatmalıdır. Karmaşık terimler kullanma. "Eğer şu olursa bu olur" mantığını kullan.
-        NOT: "topHoldings" alanı eğer bu bir YATIRIM FONU veya ETF ise (Örn: MAC, IPJ, AFT) fonun stratejisine ve bilinen içeriğine göre EN BÜYÜK 5 hisseyi içermelidir. Eğer hisse senedi veya emtia ise bu alan boş dizi [] olabilir.
-        Lütfen fon içeriğini tahmin ederken fonun KAP bildirimlerindeki tipik dağılımını veya sektörünü (Örn: Teknoloji fonuysa MSFT, NVDA; Banka fonuysa AKBNK, YKBNK) baz al.
-
+        NOT: "summary" alanı çok önemlidir. Finansal okuryazarlığı düşük bir kullanıcı için varlığın neyden etkilendiğini BASİTÇE anlatmalıdır.
+        NOT: "topHoldings" alanı eğer bu bir YATIRIM FONU veya ETF ise (Örn: MAC, IPJ, AFT) ve içeriği hakkında bilgin varsa doldur. Eğer bilmiyorsan veya bu bir hisse senedi/emtia ise boş dizi [] bırak.
+        
         Kurallar:
         1. Analizler SPK kurallarına uygun, tarafsız ve yatırım tavsiyesi içermeyen bir dille yazılmalı.
         2. "Kesin yükselir/düşer" yerine "olumlu etkilenebilir", "baskı görebilir" gibi ifadeler kullan.
-        3. En az 2, en fazla 4 farklı faktör (obje) üret.
+        3. En az 2, en fazla 4 farklı faktör (obje) üret. Mutlaka analiz (analysis) dizisini doldur.
         4. Varlığın tam ismini başlıkta veya açıklamada mutlaka geçir (Örn: "IPJ (Elektrikli Araçlar Fonu) için...").
         5. Türkçe yanıt ver.
         6. Eğer güncel haberler varsa, analizlerinde bu haberlere atıfta bulun (Örn: "Son gelişmelere göre...").
