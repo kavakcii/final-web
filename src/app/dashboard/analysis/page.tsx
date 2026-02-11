@@ -475,13 +475,20 @@ export default function AnalysisPage() {
                                         {event.scenarios && (
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 {event.scenarios.map((scenario: any, sIdx: number) => (
-                                                    <div key={sIdx} className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-blue-300 transition-colors">
-                                                        <h4 className={`font-bold mb-2 ${scenario.sentiment === 'positive' ? 'text-emerald-600' :
-                                                            scenario.sentiment === 'negative' ? 'text-red-600' : 'text-amber-600'
+                                                    <div key={sIdx} className={`rounded-lg p-4 border transition-colors ${scenario.sentiment === 'positive'
+                                                            ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
+                                                            : scenario.sentiment === 'negative'
+                                                                ? 'bg-red-50 border-red-200 hover:border-red-300'
+                                                                : 'bg-slate-50 border-slate-200 hover:border-blue-300'
+                                                        }`}>
+                                                        <h4 className={`font-bold mb-2 ${scenario.sentiment === 'positive' ? 'text-emerald-800' :
+                                                            scenario.sentiment === 'negative' ? 'text-red-800' : 'text-slate-800'
                                                             }`}>
                                                             {scenario.condition}
                                                         </h4>
-                                                        <p className="text-sm text-slate-600">{scenario.impact}</p>
+                                                        <p className={`text-sm ${scenario.sentiment === 'positive' ? 'text-emerald-700' :
+                                                            scenario.sentiment === 'negative' ? 'text-red-700' : 'text-slate-600'
+                                                            }`}>{scenario.impact}</p>
                                                     </div>
                                                 ))}
                                             </div>
