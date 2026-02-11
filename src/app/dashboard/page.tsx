@@ -6,9 +6,43 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
+import { cn } from "@/lib/utils";
+
+import TradingViewWidget from "@/components/TradingViewWidget";
+import { TefasChart } from "@/components/TefasChart";
+import { PortfolioService, Asset } from "@/lib/portfolio-service";
 
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated } = useUser();
+    const [myAssets, setMyAssets] = useState<Asset[]>([]);
+    const [selectedAsset, setSelectedAsset] = useState<string>("BIST:XU100");
+    const [isTefas, setIsTefas] = useState(false);
+
+    useEffect(() => {
+        const loadAssets = async () => {
+            try {
+                const assets = await PortfolioService.getAssets();
+                setMyAssets(assets);
+                // If user has assets, maybe select the first one?
+                // For now, let's keep XU100 as default but allow selection.
+            } catch (e) {
+                console.error("Failed to load assets for dashboard", e);
+            }
+        };
+        if (isAuthenticated) loadAssets();
+    }, [isAuthenticated]);
+
+    const handleAssetSelect = (symbol: string, type: string) => {
+        if (type === 'FUND') {
+            setSelectedAsset(symbol);
+            setIsTefas(true);
+        } else {
+            // For stocks, TradingView needs BIST: prefix usually
+            const cleanSymbol = symbol.replace('.IS', '').replace('.is', '');
+            setSelectedAsset(`BIST:${cleanSymbol}`);
+            setIsTefas(false);
+        }
+    };
 
     // DASHBOARD CONTENT
     const stats = [
@@ -32,9 +66,9 @@ export default function Dashboard() {
         },
         {
             title: "Açık Pozisyonlar",
-            value: "8",
-            change: "-1",
-            isPositive: false,
+            value: myAssets.length.toString(),
+            change: "Aktif",
+            isPositive: true,
             icon: BarChart2,
             gradient: "from-orange-500/20 to-red-500/20",
             border: "border-orange-500/20"
@@ -89,51 +123,91 @@ export default function Dashboard() {
                 ))}
             </div>
 
-            {/* Placeholder Content for Charts/Lists */}
+            {/* Interactive Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Chart Area */}
-                <div className="lg:col-span-2 bg-slate-900/50 border border-white/10 rounded-2xl p-6 min-h-[400px]">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-semibold text-white">Piyasa Analizi</h2>
+                <div className="lg:col-span-2 bg-slate-900/50 border border-white/10 rounded-2xl p-6">
+                    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
+                        <div>
+                            <h2 className="text-lg font-semibold text-white">Piyasa Analizi</h2>
+                            <p className="text-xs text-slate-500 mt-1">Görüntülenen: <span className="text-blue-400 font-bold">{selectedAsset}</span></p>
+                        </div>
                         <div className="flex gap-2">
                             {['1G', '1H', '1A', '1Y'].map((period) => (
-                                <button key={period} className="px-3 py-1 text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-md transition-colors">
+                                <button key={period} className="px-3 py-1 text-xs font-medium text-slate-400 hover:text-white hover:bg-white/5 rounded-md transition-colors border border-white/5">
                                     {period}
                                 </button>
                             ))}
                         </div>
                     </div>
-                    <div className="h-[300px] flex items-center justify-center text-slate-500 border-2 border-dashed border-white/5 rounded-xl">
-                        Grafik Alanı (TradingView Entegrasyonu)
+
+                    <div className="h-[400px] w-full">
+                        {isTefas ? (
+                            <TefasChart fundCode={selectedAsset} height={400} />
+                        ) : (
+                            <TradingViewWidget symbol={selectedAsset} height={400} />
+                        )}
                     </div>
                 </div>
 
-                {/* Recent Activity */}
-                <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6">
-                    <h2 className="text-lg font-semibold text-white mb-6">Son İşlemler</h2>
-                    <div className="space-y-4">
-                        {[
-                            { name: "THYAO", type: "Alış", price: "284.50", amount: "₺14,225", time: "10:42" },
-                            { name: "GARAN", type: "Satış", price: "64.20", amount: "₺8,560", time: "09:15" },
-                            { name: "ASELS", type: "Alış", price: "52.10", amount: "₺5,210", time: "Dün" },
-                        ].map((item, i) => (
-                            <div key={i} className="flex items-center justify-between p-3 hover:bg-white/5 rounded-lg transition-colors cursor-pointer group">
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full ${item.type === 'Alış' ? 'bg-green-500' : 'bg-red-500'}`} />
-                                    <div>
-                                        <p className="text-sm font-medium text-white">{item.name}</p>
-                                        <p className="text-xs text-slate-400">{item.type}</p>
+                {/* Asset Quick Select (from Portfolio) */}
+                <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 flex flex-col">
+                    <h2 className="text-lg font-semibold text-white mb-6">Varlıklarım</h2>
+                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                        {myAssets.length === 0 ? (
+                            <div className="text-center py-10">
+                                <p className="text-sm text-slate-500">Henüz varlık eklemediniz.</p>
+                                <button
+                                    onClick={() => setSelectedAsset("BIST:XU100")}
+                                    className="text-xs text-blue-400 mt-2 hover:underline"
+                                >
+                                    Endeksi Göster
+                                </button>
+                            </div>
+                        ) : (
+                            myAssets.map((asset, i) => (
+                                <div
+                                    key={i}
+                                    onClick={() => handleAssetSelect(asset.symbol, asset.type)}
+                                    className={cn(
+                                        "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border",
+                                        selectedAsset.includes(asset.symbol.replace('.IS', ''))
+                                            ? "bg-blue-600/20 border-blue-500/50"
+                                            : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/10"
+                                    )}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-blue-400 border border-white/5">
+                                            {asset.symbol.substring(0, 2)}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-white">{asset.symbol}</p>
+                                            <p className="text-[10px] text-slate-500">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <ArrowUpRight className="w-4 h-4 text-slate-600" />
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-medium text-white">{item.amount}</p>
-                                    <p className="text-xs text-slate-400">{item.price} • {item.time}</p>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
+
+                        {/* Default selection if no assets or to go back to index */}
+                        <div
+                            onClick={() => { setSelectedAsset("BIST:XU100"); setIsTefas(false); }}
+                            className={cn(
+                                "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border mt-4 opacity-60 hover:opacity-100",
+                                selectedAsset === "BIST:XU100" ? "bg-slate-800 border-white/20" : "bg-transparent border-dashed border-white/10"
+                            )}
+                        >
+                            <span className="text-xs font-medium text-slate-400">BIST 100 Endeksi</span>
+                            <Activity className="w-4 h-4 text-slate-500" />
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     );
 }
+
+

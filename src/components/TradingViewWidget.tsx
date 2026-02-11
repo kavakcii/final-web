@@ -2,12 +2,16 @@
 
 import React, { useEffect, useRef, memo } from 'react';
 
-function TradingViewWidget() {
+interface TradingViewWidgetProps {
+    symbol?: string;
+    height?: number | string;
+}
+
+function TradingViewWidget({ symbol = "BIST:XU100", height = 400 }: TradingViewWidgetProps) {
     const container = useRef<HTMLDivElement>(null);
 
     useEffect(
         () => {
-            // Clean up previous script if any (though React usually handles refs well, strict mode can cause dupes)
             if (container.current) {
                 container.current.innerHTML = "";
 
@@ -22,9 +26,9 @@ function TradingViewWidget() {
                 script.innerHTML = `
             {
               "autosize": true,
-              "symbol": "BIST:XU100",
+              "symbol": "${symbol}",
               "interval": "D",
-              "timezone": "Etc/UTC",
+              "timezone": "Europe/Istanbul",
               "theme": "dark",
               "style": "1",
               "locale": "tr",
@@ -36,11 +40,15 @@ function TradingViewWidget() {
                 container.current.appendChild(script);
             }
         },
-        []
+        [symbol]
     );
 
     return (
-        <div className="tradingview-widget-container h-[600px] w-full bg-black/50 rounded-xl overflow-hidden border border-white/10" ref={container}>
+        <div
+            className="tradingview-widget-container w-full bg-black/50 rounded-xl overflow-hidden border border-white/10"
+            ref={container}
+            style={{ height: typeof height === 'number' ? `${height}px` : height }}
+        >
             <div className="tradingview-widget-container__widget h-full w-full"></div>
         </div>
     );

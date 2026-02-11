@@ -34,6 +34,7 @@
     "puppeteer": "^24.37.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "three": "^0.182.0",
     "yahoo-finance2": "^3.13.0"
