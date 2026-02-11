@@ -3,7 +3,10 @@ import YahooFinance from 'yahoo-finance2';
 import { fetchTefasData, TefasFundData } from './tefas';
 
 const yahooFinance = new YahooFinance();
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+// Initialize Gemini safely
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export interface Asset {
     symbol: string;
@@ -137,34 +140,45 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
     const portfolioScore = calculateScore(portfolioChange);
 
     // 4. AI Analysis
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    let aiSummary = "Yapay zeka analizi için API anahtarı yapılandırılmamış. Lütfen .env dosyasını kontrol edin.";
     
-    const assetSummary = performanceData.map(p => 
-        `- ${p.symbol}: %${p.changePercent.toFixed(2)} değişim. (Puan: ${p.score}/10)`
-    ).join('\n');
+    if (genAI) {
+        try {
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            
+            const assetSummary = performanceData.map(p => 
+                `- ${p.symbol}: %${p.changePercent.toFixed(2)} değişim. (Puan: ${p.score}/10)`
+            ).join('\n');
 
-    const prompt = `
-    Sen kişisel bir finans asistanısın. Kullanıcı için HAFTALIK PORTFÖY RAPORU hazırlıyorsun.
-    
-    PORTFÖY DURUMU:
-    - Toplam Değer: ${totalValue.toFixed(2)} TL
-    - Haftalık Değişim: %${portfolioChange.toFixed(2)}
-    - Genel Puan: ${portfolioScore}/10
-    
-    VARLIK PERFORMANSLARI:
-    ${assetSummary}
-    
-    GÖREVİN:
-    1. "Geçen Hafta Ne Oldu?": Piyasaları (BIST, Altın, Döviz) ve bu portföyü etkileyen ana olayları özetle. (Genel piyasa bilginle yorumla).
-    2. "Portföy Yorumu": Kullanıcının varlıklarının performansını değerlendir. Neden düştü veya çıktı?
-    3. "Gelecek Hafta Beklentisi": Kısa bir cümle ile önümüzdeki hafta için neye dikkat etmeli?
-    
-    Üslup: Samimi, bilgilendirici ve profesyonel. Türkçe yaz.
-    Çıktı formatı: HTML etiketleri kullanmadan (sadece paragraf boşlukları ile) düz metin olarak yaz.
-    `;
+            const prompt = `
+            Sen kişisel bir finans asistanısın. Kullanıcı için HAFTALIK PORTFÖY RAPORU hazırlıyorsun.
+            
+            PORTFÖY DURUMU:
+            - Toplam Değer: ${totalValue.toFixed(2)} TL
+            - Haftalık Değişim: %${portfolioChange.toFixed(2)}
+            - Genel Puan: ${portfolioScore}/10
+            
+            VARLIK PERFORMANSLARI:
+            ${assetSummary}
+            
+            GÖREVİN:
+            1. "Geçen Hafta Ne Oldu?": Piyasaları (BIST, Altın, Döviz) ve bu portföyü etkileyen ana olayları özetle. (Genel piyasa bilginle yorumla).
+            2. "Portföy Yorumu": Kullanıcının varlıklarının performansını değerlendir. Neden düştü veya çıktı?
+            3. "Gelecek Hafta Beklentisi": Kısa bir cümle ile önümüzdeki hafta için neye dikkat etmeli?
+            
+            Üslup: Samimi, bilgilendirici ve profesyonel. Türkçe yaz.
+            Çıktı formatı: HTML etiketleri kullanmadan (sadece paragraf boşlukları ile) düz metin olarak yaz.
+            `;
 
-    const result = await model.generateContent(prompt);
-    const aiSummary = result.response.text();
+            const result = await model.generateContent(prompt);
+            aiSummary = result.response.text();
+        } catch (error) {
+            console.error("AI Analysis Failed:", error);
+            aiSummary = "Yapay zeka analizi şu anda yapılamıyor. Lütfen daha sonra tekrar deneyin.";
+        }
+    } else {
+        console.warn("GEMINI_API_KEY is missing. Skipping AI analysis.");
+    }
 
     return {
         portfolioScore,

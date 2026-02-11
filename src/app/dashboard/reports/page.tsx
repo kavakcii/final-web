@@ -57,7 +57,7 @@ export default function ReportsPage() {
                     ) : (
                         <>
                             <Sparkles className="w-5 h-5" />
-                            <span>Yeni Rapor Oluştur</span>
+                            <span>Yeni Talimat Oluştur</span>
                         </>
                     )}
                 </button>
