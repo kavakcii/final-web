@@ -89,14 +89,20 @@ export async function POST(req: Request) {
                 {
                     "id": 1,
                     "title": "Faktör Başlığı (Örn: Lityum ve Batarya Maliyetleri - IPJ için)",
-                    "date": "Zaman Dilimi (Örn: Güncel, 2026-2027 Beklentisi)",
+                    "date": "Zaman Görünümü (Örn: Şubat 2026 Görünümü, 2025 Sonu Beklentisi)",
                     "description": "Faktörün genel açıklaması ve fonun içeriğiyle ilişkisi.",
                     "scenarios": [
                         {
-                            "condition": "Olası Senaryo Durumu (Örn: Lityum fiyatları düşerse)",
-                            "impact": "Bu durumun varlık üzerindeki etkisi (Örn: Elektrikli araç üreticilerinin kar marjı artar, fon pozitif etkilenir).",
+                            "condition": "Olası Senaryo Başlığı (Örn: Faizler Düşerse)",
+                            "impact": "Detaylı açıklama (Örn: Elektrikli araç üreticilerinin kar marjı artar, fon pozitif etkilenir).",
                             "sentiment": "positive" | "negative" | "neutral",
                             "assetsAffected": ["İlgili diğer varlıklar", "TSLA", "NIO"]
+                        },
+                         {
+                            "condition": "Olası Senaryo Başlığı (Örn: Faiz İndirimi Ertelenirse)",
+                            "impact": "Detaylı açıklama (Örn: Dolar güçlenir ve altın fiyatları bir miktar geri çekilebilir).",
+                            "sentiment": "positive" | "negative" | "neutral",
+                            "assetsAffected": []
                         }
                     ],
                     "relatedAssets": ["TSLA", "NIO", "LIT"]
@@ -108,6 +114,8 @@ export async function POST(req: Request) {
             ]
         }
         
+        NOT: "scenarios" dizisi içinde MÜMKÜNSE bir adet "positive" ve bir adet "negative" senaryo üretmeye çalış. Böylece kullanıcı hem iyi hem kötü ihtimali görebilsin.
+        NOT: "date" alanı "Ay Yıl Görünümü" formatında olsun (Örn: "Şubat 2026 Görünümü").
         NOT: "summary" alanı çok önemlidir. Finansal okuryazarlığı düşük bir kullanıcı için varlığın neyden etkilendiğini BASİTÇE anlatmalıdır.
         NOT: "topHoldings" alanı eğer bu bir YATIRIM FONU veya ETF ise (Örn: MAC, IPJ, AFT) ve içeriği hakkında bilgin varsa doldur. Eğer bilmiyorsan veya bu bir hisse senedi/emtia ise boş dizi [] bırak.
         

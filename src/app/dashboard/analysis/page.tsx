@@ -501,6 +501,12 @@ export default function AnalysisPage() {
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 {event.scenarios.map((scenario: any, sIdx: number) => {
                                                     const sentiment = scenario.sentiment?.toLowerCase() || 'neutral';
+                                                    
+                                                    // Fixed titles based on sentiment to match user preference
+                                                    let title = "Nötr Beklenti";
+                                                    if (sentiment === 'positive') title = "Pozitif Beklenti";
+                                                    if (sentiment === 'negative') title = "Negatif Beklenti";
+
                                                     return (
                                                         <div key={sIdx} className={`rounded-lg p-4 border transition-colors ${sentiment === 'positive'
                                                                 ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
@@ -511,11 +517,14 @@ export default function AnalysisPage() {
                                                             <h4 className={`font-bold mb-2 ${sentiment === 'positive' ? 'text-emerald-800' :
                                                                 sentiment === 'negative' ? 'text-red-800' : 'text-slate-800'
                                                                 }`}>
-                                                                {scenario.condition}
+                                                                {title}
                                                             </h4>
-                                                            <p className={`text-sm ${sentiment === 'positive' ? 'text-emerald-700' :
+                                                            <p className={`text-sm leading-relaxed ${sentiment === 'positive' ? 'text-emerald-700' :
                                                                 sentiment === 'negative' ? 'text-red-700' : 'text-slate-600'
-                                                                }`}>{scenario.impact}</p>
+                                                                }`}>
+                                                                <span className="font-semibold block mb-1 text-black/60">{scenario.condition}</span>
+                                                                {scenario.impact}
+                                                            </p>
                                                         </div>
                                                     );
                                                 })}
