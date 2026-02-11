@@ -1,0 +1,11 @@
+[33mcommit 458eac4fb47ee40b917a827feaa57c9c518c29f4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: kavakcii <kavakciisalih@gmail.com>
+Date:   Wed Feb 11 20:50:31 2026 +0300
+
+    style:compact-fund-holdings
+
+[33mcommit 70bc4271fceecd918b33a705af21a5fc29b647dc[m
+Author: kavakcii <kavakciisalih@gmail.com>
+Date:   Wed Feb 11 20:46:12 2026 +0300
+
+    simplify-holdings-display
