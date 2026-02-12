@@ -85,6 +85,7 @@ export default function MarketPage() {
                 title: "Agresif Büyüme Portföyü",
                 persona: "Cesur Kaşif 🦁",
                 desc: "Risk almaktan korkmayan, uzun vadeli ve yüksek getiri hedefleyen bir yatırımcısınız.",
+                reasoning: "Yüksek risk toleransınız ve uzun vade hedefiniz nedeniyle portföyün ağırlığı (%60) büyüme potansiyeli yüksek **Hisse Senetlerine** verildi. Bu varlık sınıfı uzun vadede en yüksek getiriyi sunar. %20'lik **Fon** kısmı sektörel çeşitlilik sağlarken, %10 **Altın** ve **Nakit** ise piyasa düzeltmelerinde 'dipten alım' fırsatı yaratmak ve sigorta görevi görmek için eklendi.",
                 allocation: [
                     { name: "Hisse Senetleri", value: 60, color: "#3b82f6" },
                     { name: "Yatırım Fonları", value: 20, color: "#6366f1" },
@@ -97,6 +98,7 @@ export default function MarketPage() {
                 title: "Dengeli Portföy",
                 persona: "Stratejik Mimar 🦉",
                 desc: "Hem kazanmak hem de korumak isteyen, akılcı ve planlı bir yatırımcısınız.",
+                reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **Hisse Senedi** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **Tahvil** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
                 allocation: [
                     { name: "Hisse Senetleri", value: 40, color: "#3b82f6" },
                     { name: "Tahvil / Bono", value: 30, color: "#22c55e" },
@@ -109,6 +111,7 @@ export default function MarketPage() {
                 title: "Koruyucu Portföy",
                 persona: "Güvenli Liman 🐢",
                 desc: "Önceliği elindekini korumak olan, riskten kaçınan temkinli bir yatırımcısınız.",
+                reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**Tahvil** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **Hisse (Temettü)** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
                 allocation: [
                     { name: "Tahvil / Bono", value: 50, color: "#22c55e" },
                     { name: "Altın", value: 30, color: "#eab308" },
@@ -257,25 +260,38 @@ export default function MarketPage() {
                                 </h3>
                                 <div className="w-full h-[300px]">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <RechartsPie
-                                            data={recommendation?.allocation}
-                                            cx="50%"
-                                            cy="50%"
-                                            innerRadius={80}
-                                            outerRadius={110}
-                                            paddingAngle={5}
-                                            dataKey="value"
-                                            stroke="none"
-                                        >
-                                            {recommendation?.allocation.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                            ))}
+                                        <RechartsPie width={400} height={300}>
+                                            <Pie
+                                                data={recommendation?.allocation}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={80}
+                                                outerRadius={110}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                                stroke="none"
+                                            >
+                                                {recommendation?.allocation.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
                                             <Tooltip 
                                                 contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                                 itemStyle={{ color: '#fff' }}
                                             />
                                         </RechartsPie>
                                     </ResponsiveContainer>
+                                </div>
+                                <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/5">
+                                    <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                                        <Zap className="w-4 h-4" />
+                                        Neden Bu Dağılım?
+                                    </h4>
+                                    <p className="text-sm text-slate-300 leading-relaxed">
+                                        {recommendation?.reasoning.split("**").map((part, i) => 
+                                            i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
+                                        )}
+                                    </p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 w-full mt-4">
                                     {recommendation?.allocation.map((item, idx) => (
