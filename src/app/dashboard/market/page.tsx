@@ -16,24 +16,20 @@ export default function MarketPage() {
         {
             id: 1,
             question: "Bu yatırıma ayırdığınız bütçeyi ne zaman nakde çevirmeyi planlıyorsunuz?",
-            emoji: "⏳",
             options: [
                 { 
                     label: "Kısa Vade (0-1 Yıl)", 
                     desc: "Önümüzdeki 6-12 ay içinde ev, araba alımı veya borç ödemesi gibi somut bir harcama planım var. Paraya her an erişebilmeliyim.", 
-                    icon: "🏃",
                     score: 1 
                 },
                 { 
                     label: "Orta Vade (1-3 Yıl)", 
                     desc: "3-5 yıllık bir perspektifim var. Çocuğumun eğitimi veya gelecekteki bir iş girişimi için birikim yapıyorum, acil nakit ihtiyacım yok.", 
-                    icon: "🚶",
                     score: 2 
                 },
                 { 
                     label: "Uzun Vade (3+ Yıl)", 
                     desc: "Bu para emeklilik veya 10 yıl üzeri servet inşası için. Kısa vadeli dalgalanmalar umurumda değil, bileşik getirinin gücüne inanıyorum.", 
-                    icon: "🧘",
                     score: 3 
                 }
             ]
@@ -41,24 +37,20 @@ export default function MarketPage() {
         {
             id: 2,
             question: "Portföyünüzün değeri, küresel bir kriz nedeniyle bir ay içinde %25 eridi. İlk tepkiniz ne olur?",
-            emoji: "📉",
             options: [
                 { 
                     label: "Panik ve Satış", 
                     desc: "Uykularım kaçar. Daha fazla zarar etmemek için kalan paramı hemen çekip vadeli mevduata veya nakde dönerim.", 
-                    icon: "😰",
                     score: 1 
                 },
                 { 
                     label: "Temkinli Bekleyiş", 
                     desc: "Endişelenirim ama hemen satış yapmam. Durumu analiz eder, eğer düşüşün sebebi geçiciyse beklerim.", 
-                    icon: "🤔",
                     score: 2 
                 },
                 { 
                     label: "Alım Fırsatı", 
                     desc: "Harika bir alım fırsatı! Düşen fiyatlardan maliyet düşürmek için portföye ekleme yaparım. Krizler zenginleşme fırsatıdır.", 
-                    icon: "🤑",
                     score: 3 
                 }
             ]
@@ -66,24 +58,20 @@ export default function MarketPage() {
         {
             id: 3,
             question: "Finansal piyasalar ve yatırım araçları konusundaki bilgi seviyenizi nasıl tanımlarsınız?",
-            emoji: "🧠",
             options: [
                 { 
                     label: "Başlangıç Seviyesi", 
                     desc: "Mevduat faizi ve altın dışında pek bir tecrübem yok. Karmaşık terimler (VİOP, Eurobond, Fon Sepeti) bana yabancı geliyor.", 
-                    icon: "👶",
                     score: 1 
                 },
                 { 
                     label: "Orta Seviye", 
                     desc: "Hisse senetlerini, yatırım fonlarını biliyorum. Temel düzeyde piyasa takibi yapıyorum ve portföy çeşitlendirmesinin önemini kavradım.", 
-                    icon: "🎓",
                     score: 2 
                 },
                 { 
                     label: "İleri Seviye", 
                     desc: "Bilanço okuyabilirim, teknik analizden anlarım. Türev araçlar veya yabancı borsalar hakkında fikrim var, aktif portföy yönetimi yapabilirim.", 
-                    icon: "👨‍💼",
                     score: 3 
                 }
             ]
@@ -91,24 +79,20 @@ export default function MarketPage() {
         {
             id: 4,
             question: "Aşağıdaki senaryolardan hangisi sizin yatırım karakterinizi en iyi yansıtır?",
-            emoji: "⚖️",
             options: [
                 { 
                     label: "Düşük Risk - Güvenli Liman", 
                     desc: "Enflasyonun biraz üzerinde getiri yeterli. Ana paramın erimesi veya eksiye düşmesi benim için asla kabul edilemez.", 
-                    icon: "🛡️",
                     score: 1 
                 },
                 { 
                     label: "Dengeli - Makul Büyüme", 
                     desc: "Piyasa ortalamasında bir getiri hedefliyorum. Bazı yıllar %5-10 zarar etmeyi göze alabilirim, yeter ki uzun vadede reel kazanç sağlayayım.", 
-                    icon: "⚖️",
                     score: 2 
                 },
                 { 
                     label: "Yüksek Risk - Maksimum Getiri", 
                     desc: "Portföyümü ikiye, üçe katlamak istiyorum. Bunun için ana paramın yarısını kaybetme riskini bile göze alarak agresif hisse veya kripto yatırımları yapabilirim.", 
-                    icon: "🚀",
                     score: 3 
                 }
             ]
@@ -116,25 +100,37 @@ export default function MarketPage() {
         {
             id: 5,
             question: "Bu yatırımdan düzenli bir nakit akışına (aylık/yıllık ödeme) ihtiyacınız var mı?",
-            emoji: "💸",
             options: [
                 { 
                     label: "Evet, Gelir Şart", 
                     desc: "Bu yatırımdan elde edeceğim temettü veya faiz geliri ile faturalarımı veya taksitlerimi ödeyeceğim.", 
-                    icon: "🏦",
                     score: 1 
                 },
                 { 
                     label: "Kısmen, İyi Olur", 
                     desc: "Düzenli gelir olsa güzel olur ama zorunlu değil. Bazen harcamalarım için kullanabilirim.", 
-                    icon: "🤷",
                     score: 2 
                 },
                 { 
                     label: "Hayır, Büyüme Odaklıyım", 
                     desc: "Hiçbir nakit akışına ihtiyacım yok. Tüm getirinin tekrar yatırıma dönüşüp (bileşik getiri) kartopu gibi büyümesini istiyorum.", 
-                    icon: "❄️",
                     score: 3 
+                }
+            ]
+        },
+        {
+            id: 6,
+            question: "Yatırımlarınızda Faiz Hassasiyetiniz (İslami Finans) var mı?",
+            options: [
+                { 
+                    label: "Evet, Faiz Hassasiyetim Var", 
+                    desc: "Yatırımlarımın İslami finans ilkelerine (Katılım esasları) uygun olması şart. Faizli enstrümanları (Tahvil, Mevduat vb.) tercih etmem.", 
+                    score: 0 // Special flag
+                },
+                { 
+                    label: "Hayır, Yok", 
+                    desc: "Yasal olan her türlü finansal enstrümana (Tahvil, Eurobond, Mevduat) yatırım yapabilirim. Benim için önemli olan getiridir.", 
+                    score: 1 
                 }
             ]
         }
@@ -151,51 +147,69 @@ export default function MarketPage() {
 
     const getPortfolioRecommendation = () => {
         let totalScore = 0;
-        Object.values(answers).forEach(score => {
-            totalScore += parseInt(score);
+        let isIslamic = false;
+
+        Object.entries(answers).forEach(([qIndex, score]) => {
+            const s = parseInt(score);
+            totalScore += s;
+            // Question 6 (index 5) checks for interest sensitivity
+            // Score 0 means "Yes, I have interest sensitivity"
+            if (parseInt(qIndex) === 5 && s === 0) {
+                isIslamic = true;
+            }
         });
 
-        // Max Score: 15 (5 questions * 3)
-        // Min Score: 5 (5 questions * 1)
-        
+        // Helper to adjust names for Islamic finance
+        const adjustForIslamic = (items: any[]) => {
+            if (!isIslamic) return items;
+            return items.map(item => {
+                if (item.name === "Tahvil / Bono") return { ...item, name: "Kira Sertifikaları (Sukuk)" };
+                if (item.name === "Hisse Senetleri") return { ...item, name: "Katılım Hisseleri" };
+                if (item.name === "Hisse (Temettü)") return { ...item, name: "Katılım Temettü Hisseleri" };
+                if (item.name === "Yatırım Fonları") return { ...item, name: "Katılım Fonları" };
+                if (item.name === "Nakit") return { ...item, name: "Katılım Hesabı" };
+                return item;
+            });
+        };
+
         if (totalScore >= 13) {
             return {
                 title: "Agresif Büyüme Portföyü",
-                persona: "Cesur Kaşif 🦁",
+                persona: "Cesur Kaşif",
                 desc: "Risk almaktan korkmayan, uzun vadeli ve yüksek getiri hedefleyen bir yatırımcısınız.",
-                reasoning: "Yüksek risk toleransınız ve uzun vade hedefiniz nedeniyle portföyün ağırlığı (%60) büyüme potansiyeli yüksek **Hisse Senetlerine** verildi. Bu varlık sınıfı uzun vadede en yüksek getiriyi sunar. %20'lik **Fon** kısmı sektörel çeşitlilik sağlarken, %10 **Altın** ve **Nakit** ise piyasa düzeltmelerinde 'dipten alım' fırsatı yaratmak ve sigorta görevi görmek için eklendi.",
-                allocation: [
+                reasoning: "Yüksek risk toleransınız ve uzun vade hedefiniz nedeniyle portföyün ağırlığı (%60) büyüme potansiyeli yüksek **" + (isIslamic ? "Katılım Hisselerine" : "Hisse Senetlerine") + "** verildi. Bu varlık sınıfı uzun vadede en yüksek getiriyi sunar. %20'lik **" + (isIslamic ? "Katılım Fonu" : "Fon") + "** kısmı sektörel çeşitlilik sağlarken, %10 **Altın** ve **" + (isIslamic ? "Katılım Hesabı" : "Nakit") + "** ise piyasa düzeltmelerinde 'dipten alım' fırsatı yaratmak ve sigorta görevi görmek için eklendi.",
+                allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 60, color: "#3b82f6" },
                     { name: "Yatırım Fonları", value: 20, color: "#6366f1" },
                     { name: "Emtia / Altın", value: 10, color: "#eab308" },
                     { name: "Nakit", value: 10, color: "#64748b" }
-                ]
+                ])
             };
         } else if (totalScore >= 9) {
             return {
                 title: "Dengeli Portföy",
-                persona: "Stratejik Mimar 🦉",
+                persona: "Stratejik Mimar",
                 desc: "Hem kazanmak hem de korumak isteyen, akılcı ve planlı bir yatırımcısınız.",
-                reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **Hisse Senedi** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **Tahvil** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
-                allocation: [
+                reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **" + (isIslamic ? "Katılım Hissesi" : "Hisse Senedi") + "** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
+                allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 40, color: "#3b82f6" },
                     { name: "Tahvil / Bono", value: 30, color: "#22c55e" },
                     { name: "Altın", value: 20, color: "#eab308" },
                     { name: "Nakit", value: 10, color: "#64748b" }
-                ]
+                ])
             };
         } else {
             return {
                 title: "Koruyucu Portföy",
-                persona: "Güvenli Liman 🐢",
+                persona: "Güvenli Liman",
                 desc: "Önceliği elindekini korumak olan, riskten kaçınan temkinli bir yatırımcısınız.",
-                reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**Tahvil** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **Hisse (Temettü)** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
-                allocation: [
+                reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **" + (isIslamic ? "Katılım Hissesi" : "Hisse (Temettü)") + "** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
+                allocation: adjustForIslamic([
                     { name: "Tahvil / Bono", value: 50, color: "#22c55e" },
                     { name: "Altın", value: 30, color: "#eab308" },
                     { name: "Hisse (Temettü)", value: 10, color: "#3b82f6" },
                     { name: "Nakit", value: 10, color: "#64748b" }
-                ]
+                ])
             };
         }
     };
@@ -228,17 +242,14 @@ export default function MarketPage() {
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 text-left">
                             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                                <div className="text-3xl mb-3">🎯</div>
                                 <h3 className="font-bold text-white">Hedef Odaklı</h3>
                                 <p className="text-xs text-slate-400 mt-1">Hayallerinize giden en kısa yol.</p>
                             </div>
                             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                                <div className="text-3xl mb-3">🛡️</div>
                                 <h3 className="font-bold text-white">Güvenli</h3>
                                 <p className="text-xs text-slate-400 mt-1">Risk toleransınıza %100 uyumlu.</p>
                             </div>
                             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
-                                <div className="text-3xl mb-3">⚡</div>
                                 <h3 className="font-bold text-white">Hızlı</h3>
                                 <p className="text-xs text-slate-400 mt-1">Karmaşık terimler yok, sadece sonuç.</p>
                             </div>
@@ -264,7 +275,6 @@ export default function MarketPage() {
                         <div className="mb-8">
                             <div className="flex justify-between text-xs font-bold text-slate-400 mb-3 uppercase tracking-wider">
                                 <span>Adım {currentQuestion + 1} / {questions.length}</span>
-                                <span>{questions[currentQuestion].emoji}</span>
                             </div>
                             <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
                                 <motion.div 
@@ -290,9 +300,6 @@ export default function MarketPage() {
                                     onClick={() => handleAnswer(opt.score)}
                                     className="w-full text-left p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 transition-all group flex items-center gap-4 hover:scale-[1.02] active:scale-[0.98]"
                                 >
-                                    <div className="text-4xl bg-white/5 p-3 rounded-xl group-hover:bg-blue-500/20 transition-colors">
-                                        {opt.icon}
-                                    </div>
                                     <div className="flex-1">
                                         <div className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">
                                             {opt.label}
