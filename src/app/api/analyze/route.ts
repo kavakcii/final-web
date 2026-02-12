@@ -3,8 +3,17 @@ import { NextResponse } from "next/server";
 import YahooFinance from 'yahoo-finance2';
 import { fetchTefasData } from "../../../lib/tefas";
 
-const yahooFinance = new YahooFinance();
-// yahooFinance.suppressNotices(['yahooSurvey']);
+// Initialize Yahoo Finance robustly
+let yahooFinance: any = YahooFinance;
+// Check if it's a class (constructor) and needs instantiation
+// The error "Call new YahooFinance() first" indicates we likely got the class.
+if (typeof yahooFinance === 'function' || (yahooFinance?.prototype && yahooFinance?.prototype?.search)) {
+    try {
+        yahooFinance = new yahooFinance();
+    } catch (e) {
+        console.warn("Failed to instantiate YahooFinance, assuming instance:", e);
+    }
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -20,7 +29,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Asset name is required" }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // Auto-detect TEFAS Fund if context is missing
         let enhancedContext = assetContext;

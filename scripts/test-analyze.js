@@ -1,7 +1,7 @@
 
 async function testAnalyze() {
     try {
-        const response = await fetch('http://localhost:3000/api/analyze', {
+        const response = await fetch('http://localhost:3004/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
