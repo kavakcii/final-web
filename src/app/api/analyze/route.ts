@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Asset name is required" }, { status: 400 });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
         // Auto-detect TEFAS Fund if context is missing
         let enhancedContext = assetContext;
@@ -129,59 +129,61 @@ export async function POST(req: Request) {
         const today = new Date().toLocaleDateString('tr-TR');
 
         const prompt = `
-        Sen uzman bir finansal analistsin. Kullanıcının girdiği varlık (${assetName}) için detaylı bir analiz yapman gerekiyor.
-        
-        BUGÜNÜN TARİHİ: ${today} (Analizlerini bu tarihe göre yap, eski yılları "geçmiş" olarak değerlendir).
-        
+        Sen 20 yıllık deneyime sahip, dünyanın önde gelen fonlarında çalışmış kıdemli bir Portföy Yöneticisi ve Stratejistsin.
+        Görevin: Kullanıcının sorduğu yatırım varlığı (${assetName}) için derinlemesine, profesyonel ve stratejik bir analiz raporu hazırlamak.
+
+        BUGÜNÜN TARİHİ: ${today} (Tüm analizlerin bu tarihteki piyasa koşullarına göre olmalı).
+
+        VARLIK BİLGİLERİ:
         ${contextInfo}
 
+        GÜNCEL HABERLER VE VERİLER:
         ${newsContext}
 
-        ÖNEMLİ: Eğer kullanıcı 3-4 harfli bir kod girdiyse (Örn: IPJ, ALC, TCD, AFT) ve yukarıda detay verilmediyse, bunun bir "TEFAS Yatırım Fonu" veya "Borsa İstanbul Hisse Senedi" olduğunu varsay.
-        1. Önce bu kodun hangi fona veya şirkete ait olduğunu tespit et. (Örn: IPJ -> İş Portföy Elektrikli Araçlar Karma Fon, TCD -> Tacirler Değişken Fon vb.)
-        2. Sonra bu fonun/şirketin yatırım yaptığı sektörü veya temayı (Örn: Elektrikli Araçlar, Teknoloji, Altın, Bankacılık) baz alarak faktör analizi yap.
-        
-        Bu varlığı etkileyen ana faktörleri (Örn: Sektörel gelişmeler, Döviz kurları, Mevsimsellik, Makroekonomik veriler, Faiz kararları vb.) belirle.
-        
-        Aşağıdaki TEKİL JSON formatını eksiksiz doldurarak yanıt ver. Sadece saf JSON döndür, markdown veya ek açıklama kullanma.
-        
-        İstenen JSON Yapısı:
+        YÖNERGELER:
+        1. **KİMLİK TESPİTİ**: Eğer sembol 3 harfli ise (Örn: TCD, IPJ) ve bağlam yoksa, bunun %99 ihtimalle bir "TEFAS Yatırım Fonu" olduğunu varsay. Fonun tam adını ve yatırım stratejisini (Hisse, Altın, Eurobond vb.) belirle.
+        2. **DERİN ANALİZ**: Asla "Piyasalardaki dalgalanma etkileyebilir" gibi genel cümleler kurma. "FED'in faiz indirimi beklentisinin %25'e düşmesi, bu fonun taşıdığı teknoloji hisselerini baskılayabilir" gibi SPESİFİK neden-sonuç ilişkileri kur.
+        3. **OLASI SENARYOLAR (KRİTİK)**: Yatırımcılar için en değerli kısım "Ne olursa ne olur?" kısmıdır. Her analiz maddesi için MUTLAKA en az 2 farklı senaryo yaz.
+           - Örn: "Merkez Bankası faizi sabit tutarsa -> Bankacılık hisseleri pozitif ayrışır."
+           - Örn: "Altın onsu 2600$ altına inerse -> Bu fonun NAV değeri %3-5 geri çekilebilir."
+
+        ÇIKTI FORMATI (JSON):
+        Aşağıdaki JSON formatını EKSİKSİZ doldur. Sadece saf JSON döndür. Markdown yok.
+
         {
-            "summary": "Varlığın durumunu özetleyen, jargon içermeyen, net sebep-sonuç ilişkisine dayalı 2-3 cümlelik açıklama.",
+            "summary": "Yatırımcıya özel, net, eyleme geçirilebilir özet (2-3 cümle).",
             "analysis": [
                 {
                     "id": 1,
-                    "title": "Analiz Başlığı (Örn: Faiz Kararları ve Kur Etkisi)",
-                    "date": "Zaman Görünümü (Örn: Şubat 2026)",
-                    "description": "Faktörün detaylı açıklaması.",
+                    "title": "Analiz Başlığı (Örn: TCMB Faiz Kararı Etkisi)",
+                    "date": "Vade (Örn: Önümüzdeki 3 Ay)",
+                    "description": "Detaylı durum analizi. Neden önemli?",
                     "scenarios": [
                         {
-                            "condition": "Olası Senaryo (Örn: Faiz Artarsa)",
-                            "impact": "Detaylı etki analizi.",
+                            "condition": "Faizler 500 baz puan artarsa",
+                            "impact": "Fonun içerdiği tahviller değer kaybeder, hisse tarafı baskılanır.",
                             "sentiment": "negative",
-                            "assetsAffected": ["İlgili Semboller"]
+                            "assetsAffected": ["BIST100", "Tahvil"]
                         },
                         {
-                            "condition": "Olası Senaryo (Örn: Faiz Sabit Kalırsa)",
-                            "impact": "Detaylı etki analizi.",
+                            "condition": "Faizler sabit kalırsa",
+                            "impact": "Belirsizlik azalır, fonun bankacılık hisseleri ralli yapabilir.",
                             "sentiment": "positive",
-                            "assetsAffected": []
+                            "assetsAffected": ["XBANK"]
                         }
                     ],
-                    "relatedAssets": ["İlgili Semboller"]
+                    "relatedAssets": ["AKBNK", "GARAN"]
                 }
             ],
             "topHoldings": [
-                 { "symbol": "THYAO", "name": "Türk Hava Yolları", "percent": "%8.5 (Tahmini)" }
+                 { "symbol": "KOD", "name": "Varlık İsmi", "percent": "%Tahmini" }
             ]
         }
-        
+
         KURALLAR:
-        1. "analysis" dizisi içinde EN AZ 2, EN FAZLA 4 farklı faktör objesi oluştur.
-        2. Her faktörün içinde "scenarios" dizisine MUTLAKA en az 2 senaryo (Biri pozitif, biri negatif veya nötr) ekle.
-        3. "scenarios" kısmı ASLA boş kalmamalıdır. Kullanıcı için en değerli kısım burasıdır.
-        4. Yanıtın tamamı geçerli bir JSON olmalıdır.
-        5. Varlığın türüne (Fon, Hisse, Altın vb.) uygun spesifik yorumlar yap.
+        - "analysis" dizisinde EN AZ 2, EN FAZLA 4 madde olsun.
+        - Her maddenin "scenarios" dizisi DOLU OLMALIDIR. Boş senaryo kabul edilemez.
+        - Dil: Profesyonel, akıcı Türkçe.
         `;
 
         const result = await model.generateContent(prompt);

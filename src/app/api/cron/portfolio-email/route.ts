@@ -25,7 +25,7 @@ interface PortfolioAsset {
     avg_cost: number;
 }
 
-function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], aiAnalysis: PortfolioAIAnalysis | null = null): string {
+function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], aiAnalysis: PortfolioAIAnalysis | null = null, includePortfolioDetails: boolean = true): string {
     const stockAssets = assets.filter(a => a.asset_type === 'STOCK');
     const fundAssets = assets.filter(a => a.asset_type === 'FUND');
     const otherAssets = assets.filter(a => !['STOCK', 'FUND'].includes(a.asset_type));
@@ -158,6 +158,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
 
                                 ${renderAISection()}
 
+                                ${includePortfolioDetails ? `
                                 <!-- Stats Summary -->
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                                     <tr>
@@ -218,6 +219,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                     ${renderAssetRows(otherAssets)}
                                 </table>
                                 ` : ''}
+                                ` : ''}
 
                                 <!-- CTA -->
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px auto 0;">
@@ -255,7 +257,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
 export async function POST(req: Request) {
     try {
         const body = await req.json().catch(() => ({}));
-        const { userId, sendEmail = false, includeAnalysis = false } = body;
+        const { userId, sendEmail = false, includeAnalysis = false, includePortfolioDetails = true } = body;
 
         let targetUsers: { id: string; email: string; name: string }[] = [];
 
@@ -330,7 +332,7 @@ export async function POST(req: Request) {
                 aiAnalysis = await analyzePortfolioWithAI(analysisInput);
             }
 
-            const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis);
+            const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis, includePortfolioDetails);
 
             // Store preview for the first user
             if (results.length === 0) {
