@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import YahooFinance from 'yahoo-finance2';
+import { fetchTefasData } from "../../../lib/tefas";
 
 const yahooFinance = new YahooFinance();
 // yahooFinance.suppressNotices(['yahooSurvey']);
@@ -17,15 +18,44 @@ export async function POST(req: Request) {
 
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
+        // Auto-detect TEFAS Fund if context is missing
+        let enhancedContext = assetContext;
+        
+        // Check if it looks like a TEFAS code (3 uppercase letters) and no context provided
+        if (!enhancedContext && /^[A-Z]{3}$/.test(assetName)) {
+            try {
+                // Fetch recent TEFAS data to find this fund
+                const today = new Date();
+                const fundDataList = await fetchTefasData(today);
+                const foundFund = fundDataList.find(f => f.FONKODU === assetName);
+
+                if (foundFund) {
+                    console.log(`Found TEFAS fund: ${assetName} -> ${foundFund.FONUNVAN}`);
+                    enhancedContext = {
+                        symbol: assetName,
+                        longname: foundFund.FONUNVAN,
+                        exchange: "TEFAS",
+                        typeDisp: "Yatırım Fonu",
+                        // Infer more specific type from name
+                        quoteType: foundFund.FONUNVAN.includes("Hisse") ? "EQUITY" : 
+                                  foundFund.FONUNVAN.includes("Borçlanma") ? "BOND" : 
+                                  foundFund.FONUNVAN.includes("Altın") ? "GOLD" : "MUTUALFUND"
+                    };
+                }
+            } catch (err) {
+                console.warn("Failed to auto-fetch TEFAS info:", err);
+            }
+        }
+
         // Fetch real-time news
         let newsContext = "";
         try {
-            let searchSymbol = assetContext?.symbol || assetName;
+            let searchSymbol = enhancedContext?.symbol || assetName;
             
             // If it's a known TEFAS fund (synthetic or explicit), try to find relevant news
             // Searching just "ALC" gives Alcon. Searching "ALC Fon" might be better.
-            if (assetContext?.exchange === 'TEFAS' || assetContext?.isSynthetic) {
-                 searchSymbol = `${assetContext.symbol} Yatırım Fonu`;
+            if (enhancedContext?.exchange === 'TEFAS' || enhancedContext?.isSynthetic) {
+                 searchSymbol = `${enhancedContext.symbol} Yatırım Fonu`;
             }
 
             const newsResult = await yahooFinance.search(searchSymbol, { newsCount: 5 });
@@ -49,13 +79,13 @@ export async function POST(req: Request) {
 
         // Build context string if available
         let contextInfo = "";
-        if (assetContext) {
+        if (enhancedContext) {
             contextInfo = `
             Kullanıcı bu varlığı listeden seçti. Detayları:
-            - Sembol: ${assetContext.symbol}
-            - Tam İsim: ${assetContext.longname || assetContext.shortname || "Bilinmiyor"}
-            - Borsa/Piyasa: ${assetContext.exchDisp || assetContext.exchange || "Bilinmiyor"}
-            - Tip: ${assetContext.typeDisp || assetContext.quoteType || "Bilinmiyor"}
+            - Sembol: ${enhancedContext.symbol}
+            - Tam İsim: ${enhancedContext.longname || enhancedContext.shortname || "Bilinmiyor"}
+            - Borsa/Piyasa: ${enhancedContext.exchDisp || enhancedContext.exchange || "Bilinmiyor"}
+            - Tip: ${enhancedContext.typeDisp || enhancedContext.quoteType || "Bilinmiyor"}
             
             Lütfen analizi GENEL bir sembol analizi yerine, YUKARIDAKİ TAM İSİM ve DETAYLARA sahip varlığa ÖZEL olarak yap.
             Örneğin eğer bu bir "Elektrikli Araçlar Fonu" ise, içindeki hisseleri (Tesla, BYD vb.) ve sektörü düşün.
