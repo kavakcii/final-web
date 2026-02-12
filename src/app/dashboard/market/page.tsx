@@ -270,14 +270,34 @@ export default function MarketPage() {
                                                 paddingAngle={5}
                                                 dataKey="value"
                                                 stroke="none"
+                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
+                                                    const RADIAN = Math.PI / 180;
+                                                    const radius = outerRadius + 25;
+                                                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                    
+                                                    return (
+                                                        <text 
+                                                            x={x} 
+                                                            y={y} 
+                                                            fill="white" 
+                                                            textAnchor={x > cx ? 'start' : 'end'} 
+                                                            dominantBaseline="central"
+                                                            className="text-xs font-bold"
+                                                        >
+                                                            {`${name} %${(percent * 100).toFixed(0)}`}
+                                                        </text>
+                                                    );
+                                                }}
                                             >
                                                 {recommendation?.allocation.map((entry, index) => (
-                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
                                                 ))}
                                             </Pie>
                                             <Tooltip 
-                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                                itemStyle={{ color: '#fff' }}
+                                                contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
+                                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                                formatter={(value: number) => [`%${value}`, 'Oran']}
                                             />
                                         </RechartsPie>
                                     </ResponsiveContainer>
