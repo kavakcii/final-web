@@ -40,38 +40,37 @@ export async function analyzePortfolioWithAI(assets: { symbol: string, changePer
         ).join('\n');
 
         const prompt = `
-        Sen dünyanın en iyi finansal analisti ve portföy yöneticisisin. Tarih: ${today}.
+        Sen kıdemli bir Finansal Stratejist ve Yatırım Dedektifisin. Tarih: ${today}.
         
         GÖREVİN:
-        Aşağıdaki portföydeki varlıkları tek tek incele ve neden yükselip düştüklerini **neden-sonuç ilişkisi** kurarak açıkla.
-        Sadece "yükseldi" deme, "neden" yükseldiğini finansal, sektörel veya makroekonomik sebeplerle ilişkilendir.
+        Kullanıcının portföyündeki varlıkları incele ve her bir hareketin (yükseliş/düşüş) altındaki **GERÇEK NEDENİ** bul.
         
         PORTFÖY:
         ${assetSummary}
 
-        KURALLAR:
-        1. **Neden-Sonuç İlişkisi Şart:** Her analizde mutlaka "X olduğu için Y oldu" yapısını kullan. (Örn: "Merkez Bankası'nın faiz kararı beklentisiyle bankacılık endeksi baskılandı, bu yüzden AKBNK düştü.")
-        2. **Puanlama:** 1 ile 10 arasında hisseye puan ver. (1: Çok Kötü, 10: Mükemmel). Puanı sadece değişime göre değil, şirketin/fonun potansiyeline göre ver.
-        3. **Fon Analizi:** Eğer varlık bir FON ise (örn: IPJ, TTE), fonun içeriğini (Teknoloji, Altın, Eurobond vb.) tahmin et ve o sektörün durumuna göre yorum yap.
-        4. **Samimi ve Profesyonel:** Kullanıcıya doğrudan hitap et.
+        ANALİZ KURALLARI (Çok Önemli):
+        1. **NEDEN-SONUÇ ZİNCİRİ:** Asla "hisse düştü çünkü satış geldi" deme. Şunu de: "Fed'in faiz kararından sonra küresel risk iştahı azaldı, bu da özellikle teknoloji hisselerini baskıladı ve X hissesinin düşmesine neden oldu."
+        2. **MAKRO & MİKRO:** Yorumlarında TCMB kararları, Enflasyon verileri, Bilanço beklentileri, Sektörel haberler (Örn: Havacılık için petrol fiyatları, Bankalar için regülasyonlar) gibi SOMUT verilere atıfta bulun.
+        3. **FONLAR:** Fonların (Örn: TTE, IPJ) içeriğini tahmin et (İzahnamesine göre Teknoloji mi, Kıymetli Maden mi?) ve o dayanak varlığın performansına göre analiz yap.
+        4. **PUANLAMA (1-10):** Hissenin temeli sağlamsa ama konjonktürden dolayı düştüyse puanını çok kırma (6-7 ver). Şirket kötüyse 1-3 ver.
 
-        İSTENEN ÇIKTI (JSON FORMATINDA):
+        İSTENEN ÇIKTI (SADECE JSON):
         {
-            "generalMarketOverview": "BIST100, Altın ve Dolar piyasalarının güncel durumu ve haftalık özeti.",
-            "portfolioAssessment": "Portföyün çeşitliliği, risk seviyesi ve genel performansı hakkında eleştirel yorum.",
+            "generalMarketOverview": "BIST100, Dolar/TL, Altın ve Küresel piyasalardaki haftalık ana trendlerin özeti. (Sert ve net ol).",
+            "portfolioAssessment": "Portföyün risk dağılımı nasıl? Sektörel çeşitlilik var mı? Çok mu riskli? (Eleştirel ol).",
             "assetAnalyses": [
                 {
-                    "symbol": "THYAO",
-                    "score": 8,
+                    "symbol": "ASELS",
+                    "score": 9,
                     "trend": "up",
-                    "reason": "Petrol fiyatlarındaki düşüş havacılık maliyetlerini azalttığı için kârlılık beklentisi arttı.",
-                    "impact": "Turizm sezonunun açılmasıyla yolcu sayısındaki artış beklentisi hisseyi yukarı taşıdı.",
-                    "outlook": "Petrol fiyatları yatay seyrederse yükseliş trendi korunabilir."
+                    "reason": "Artan jeopolitik riskler ve yeni savunma sanayi ihracat anlaşmaları şirketin gelecekteki nakit akışını güçlendirdi.",
+                    "impact": "Savunma sanayi endeksindeki pozitif ayrışma, hissenin endeks üstü getiri sağlamasına neden oldu.",
+                    "outlook": "Yeni iş anlaşmaları gelmeye devam ederse yükseliş ivmesi korunabilir."
                 }
             ],
             "suggestions": [
-                "Enerji sektörü riskli görünüyor, savunma sanayine ağırlık verilebilir.",
-                "Portföyde altın oranı artırılarak risk dağıtılabilir."
+                "Portföyde enerji sektörü çok ağırlıklı, bunu perakende veya bankacılık ile dengeleyebilirsin.",
+                "Altın fonu ekleyerek kur riskini hedge etmeni öneririm."
             ]
         }
 

@@ -3,6 +3,9 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { analyzePortfolioWithAI, PortfolioAIAnalysis } from '@/lib/ai-portfolio-analyzer';
 import { generateWeeklyReport, Asset } from '@/lib/report-generator';
 
+export const maxDuration = 60; // Increase timeout for AI processing
+export const dynamic = 'force-dynamic';
+
 // Lazy-init admin client
 let _supabaseAdmin: SupabaseClient | null = null;
 function getSupabaseAdmin(): SupabaseClient {
