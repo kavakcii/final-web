@@ -9,8 +9,12 @@ const yahooFinance = new YahooFinance();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
+    let assetName = "Varlık";
+
     try {
-        const { assetName, assetContext } = await req.json();
+        const body = await req.json();
+        assetName = body.assetName;
+        const assetContext = body.assetContext;
 
         if (!assetName) {
             return NextResponse.json({ error: "Asset name is required" }, { status: 400 });
@@ -20,7 +24,7 @@ export async function POST(req: Request) {
 
         // Auto-detect TEFAS Fund if context is missing
         let enhancedContext = assetContext;
-        
+
         // Check if it looks like a TEFAS code (3 uppercase letters)
         // We ALWAYS check TEFAS if the name matches the pattern, even if context is present,
         // to ensure we get the official/correct name (overriding potentially stale or wrong context).
@@ -33,7 +37,7 @@ export async function POST(req: Request) {
 
                 if (foundFund) {
                     console.log(`Found TEFAS fund: ${assetName} -> ${foundFund.FONUNVAN}`);
-                    
+
                     let quoteType = "MUTUALFUND";
                     let typeDisp = "Yatırım Fonu";
                     const name = foundFund.FONUNVAN.toUpperCase();
@@ -77,21 +81,21 @@ export async function POST(req: Request) {
         let newsContext = "";
         try {
             let searchSymbol = enhancedContext?.symbol || assetName;
-            
+
             // If it's a known TEFAS fund (synthetic or explicit), try to find relevant news
             // Searching just "ALC" gives Alcon. Searching "ALC Fon" might be better.
             if (enhancedContext?.exchange === 'TEFAS' || enhancedContext?.isSynthetic) {
-                 searchSymbol = `${enhancedContext.symbol} Yatırım Fonu`;
+                searchSymbol = `${enhancedContext.symbol} Yatırım Fonu`;
             }
 
             const newsResult = await yahooFinance.search(searchSymbol, { newsCount: 5 });
-            
+
             if (newsResult.news && newsResult.news.length > 0) {
                 const newsItems = newsResult.news.map((n: any) => {
                     const time = n.providerPublishTime ? new Date(n.providerPublishTime * 1000).toLocaleDateString('tr-TR') : 'Güncel';
                     return `- [${time}] ${n.title} (${n.publisher})`;
                 }).join('\n');
-                
+
                 newsContext = `
                 SON DAKİKA GELİŞMELERİ VE HABERLER (Analizini MUTLAKA bu gerçek verilere dayandır):
                 ${newsItems}
@@ -193,11 +197,11 @@ export async function POST(req: Request) {
 
         // Clean up markdown code blocks if present
         let jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        
+
         // Attempt to find the first '{' and last '}' to extract the JSON object
         const firstBrace = jsonStr.indexOf('{');
         const lastBrace = jsonStr.lastIndexOf('}');
-        
+
         if (firstBrace !== -1 && lastBrace !== -1) {
             jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
@@ -207,7 +211,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ success: true, data });
     } catch (error) {
         console.error("AI Analysis Error:", error);
-        
+
         // Fallback for demo/error cases if API fails - RETURN MOCK DATA instead of just error
         // This ensures the user always sees the structure they expect, even if the AI service is temporarily unavailable.
         const mockData = {
@@ -238,8 +242,8 @@ export async function POST(req: Request) {
             topHoldings: []
         };
 
-        return NextResponse.json({ 
-            success: true, 
+        return NextResponse.json({
+            success: true,
             data: mockData,
             isMock: false // Hide mock status from frontend to prevent error banners
         });
