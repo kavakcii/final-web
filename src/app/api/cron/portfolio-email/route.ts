@@ -73,11 +73,14 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
         };
 
         if (!aiAnalysis) {
+            // Check for specific error log if needed (passed via another way, but here let's be generic or debug)
+            const debugInfo = process.env.NODE_ENV === 'development' ? "(Check Server Console for Details)" : "";
+
             return `
                 <!-- AI ANALYSIS ERROR -->
                 <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; margin-bottom: 24px; border-radius: 8px; text-align: center;">
                     <p style="color: #fca5a5; font-size: 14px; margin: 0; font-weight: 500;">⚠️ Yapay Zeka Analizi Oluşturulamadı</p>
-                    <p style="color: #cbd5e1; font-size: 12px; margin: 4px 0 0;">Servis şu an yanıt vermiyor veya yapılandırma eksik. Lütfen daha sonra tekrar deneyin.</p>
+                    <p style="color: #cbd5e1; font-size: 12px; margin: 4px 0 0;">Servis şu an yanıt vermiyor. ${debugInfo}</p>
                 </div>
             `;
         }
