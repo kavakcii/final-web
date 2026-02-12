@@ -1,51 +1,103 @@
 import { NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
 
+export const dynamic = 'force-dynamic';
+
+interface NewsItem {
+  title: string;
+  link: string;
+  pubDate: string;
+  source: string;
+  description: string;
+}
+
+const SOURCES = [
+  {
+    name: 'Google News Ekonomi',
+    url: 'https://news.google.com/rss/search?q=ekonomi+OR+finans+OR+borsa+OR+dolar+OR+enflasyon&hl=tr&gl=TR&ceid=TR:tr',
+    parser: (item: any) => ({
+      title: item.title,
+      link: item.link,
+      pubDate: item.pubDate,
+      source: item.source ? (typeof item.source === 'string' ? item.source : item.source['#text']) : 'Google News',
+      description: item.description || ''
+    })
+  },
+  {
+    name: 'Bloomberg HT',
+    url: 'https://www.bloomberght.com/rss',
+    parser: (item: any) => ({
+      title: item.title,
+      link: item.link,
+      pubDate: item.pubDate,
+      source: 'Bloomberg HT',
+      description: item.description || ''
+    })
+  },
+  {
+    name: 'Investing.com TR', // investing.com bazen blocklayabilir, dikkatli olalım. Alternatif: TradingView veya Foreks
+    url: 'https://tr.investing.com/rss/news_25.rss', // Hisse Senedi Haberleri
+    parser: (item: any) => ({
+      title: item.title,
+      link: item.link,
+      pubDate: item.pubDate,
+      source: 'Investing.com',
+      description: item.description || ''
+    })
+  }
+];
+
 export async function GET() {
   try {
-    // Google News RSS Feed for "Ekonomi" (Economy) in Turkey
-    // You can customize the query (q=) to be more specific if needed, e.g., "finans", "borsa"
-    const RSS_URL = "https://news.google.com/rss/search?q=ekonomi+OR+finans+OR+piyasa&hl=tr&gl=TR&ceid=TR:tr";
-
-    const response = await fetch(RSS_URL);
-    const xmlData = await response.text();
-
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_"
     });
-    
-    const parsedData = parser.parse(xmlData);
-    
-    // Navigate to the items in the RSS feed
-    // RSS structure: rss -> channel -> item[]
-    const items = parsedData.rss?.channel?.item || [];
 
-    // Limit to 10-15 latest news
-    const newsItems = items.slice(0, 15).map((item: any) => {
-      // Extract source if available (Google News often puts source in <source> tag or title)
-      let source = 'Google News';
-      if (item.source) {
-          if (typeof item.source === 'string') {
-              source = item.source;
-          } else if (item.source['#text']) {
-              source = item.source['#text'];
+    const allNews: NewsItem[] = [];
+    const seenLinks = new Set<string>();
+
+    // Fetch all sources in parallel
+    const results = await Promise.allSettled(
+      SOURCES.map(async (source) => {
+        try {
+          const response = await fetch(source.url, { next: { revalidate: 300 } }); // 5 min cache
+          if (!response.ok) throw new Error(`Failed to fetch ${source.name}`);
+          const xmlData = await response.text();
+          const parsed = parser.parse(xmlData);
+          const items = parsed.rss?.channel?.item || [];
+
+          // Normalize single item to array if needed
+          const itemList = Array.isArray(items) ? items : [items];
+
+          return itemList.map(source.parser);
+        } catch (err) {
+          console.error(`Error fetching ${source.name}:`, err);
+          return [];
+        }
+      })
+    );
+
+    // Aggregate results
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        for (const item of result.value) {
+          // Basic deduplication
+          if (!seenLinks.has(item.link)) {
+            seenLinks.add(item.link);
+            allNews.push(item);
           }
+        }
       }
-      
-      return {
-        title: item.title,
-        link: item.link,
-        pubDate: item.pubDate, // e.g., "Tue, 10 Feb 2026 14:30:00 GMT"
-        source: source,
-        description: item.description
-      };
-    });
+    }
 
-    return NextResponse.json({ success: true, news: newsItems });
-    
+    // Sort by date (newest first)
+    allNews.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+    return NextResponse.json({ success: true, news: allNews.slice(0, 30) });
+
   } catch (error) {
-    console.error("News fetch error:", error);
+    console.error("News aggregator error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch news" },
       { status: 500 }

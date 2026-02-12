@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import YahooFinance from 'yahoo-finance2';
+import { fetchTefasData } from '../../../lib/tefas';
 
 const yahooFinance = new YahooFinance();
 // yahooFinance.suppressNotices(['yahooSurvey']);
@@ -63,20 +64,65 @@ export async function GET(request: Request) {
             }
         }
 
-        // SYNTHETIC FALLBACK FOR TEFAS FUNDS (When Yahoo fails completely)
-        // If we still have 0 results, and the query is exactly 3 letters (common for TEFAS funds like ALC, MAC, TCD),
-        // we create a "Synthetic" result so the user can at least select it.
-        if (quotes.length === 0 && query.length === 3) {
+        // SYNTHETIC FALLBACK FOR TEFAS FUNDS (When Yahoo fails completely OR query is 3 letters)
+        // We now proactively check real TEFAS data for 3-letter codes to give accurate suggestions.
+        if (query.length === 3) {
             const code = query.toUpperCase();
-            quotes.push({
-                symbol: code,
-                shortname: `${code} - TEFAS Yatırım Fonu`,
-                longname: `TEFAS Yatırım Fonu (${code})`,
-                exchange: 'TEFAS',
-                quoteType: 'MUTUALFUND' as any,
-                typeDisp: 'Fund',
-                isSynthetic: true
-            } as any);
+            
+            // Check if we already have this code from Yahoo (and it's a Turkish asset)
+            const exists = quotes.some((q: any) => q.symbol === code || q.symbol === `${code}.IS`);
+            
+            // Even if it exists, Yahoo might have wrong name. Let's fetch TEFAS to be sure.
+            try {
+                // We use a recent date. TEFAS fetch is cached/optimized usually? 
+                // We should be careful not to slow down search too much.
+                // But fetchTefasData scrapes the whole list once.
+                const today = new Date();
+                const tefasFunds = await fetchTefasData(today);
+                const foundFund = tefasFunds.find(f => f.FONKODU === code);
+
+                if (foundFund) {
+                    // Remove existing generic/Yahoo result if it's less accurate
+                    // quotes = quotes.filter(q => q.symbol !== code && q.symbol !== `${code}.IS`);
+                    
+                    // Add the official TEFAS result
+                    // We add it to the TOP
+                    quotes.unshift({
+                        symbol: code,
+                        shortname: foundFund.FONUNVAN,
+                        longname: foundFund.FONUNVAN, // Official Full Name
+                        exchange: 'TEFAS',
+                        quoteType: 'MUTUALFUND' as any,
+                        typeDisp: 'Yatırım Fonu',
+                        isSynthetic: true, // Marked as synthetic so we know it came from our custom logic
+                        score: 999 // High priority
+                    } as any);
+                } else if (!exists) {
+                    // If not found in TEFAS list and not in Yahoo, add generic fallback
+                    quotes.push({
+                        symbol: code,
+                        shortname: `${code} - TEFAS Yatırım Fonu`,
+                        longname: `TEFAS Yatırım Fonu (${code})`,
+                        exchange: 'TEFAS',
+                        quoteType: 'MUTUALFUND' as any,
+                        typeDisp: 'Fund',
+                        isSynthetic: true
+                    } as any);
+                }
+            } catch (err) {
+                console.warn("TEFAS Search Error:", err);
+                 if (!exists) {
+                    quotes.push({
+                        symbol: code,
+                        shortname: `${code} - TEFAS Yatırım Fonu`,
+                        longname: `TEFAS Yatırım Fonu (${code})`,
+                        exchange: 'TEFAS',
+                        quoteType: 'MUTUALFUND' as any,
+                        typeDisp: 'Fund',
+                        isSynthetic: true
+                    } as any);
+                }
+            }
         }
 
         quotes = quotes.sort((a: any, b: any) => {

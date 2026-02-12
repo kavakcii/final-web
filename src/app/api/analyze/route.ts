@@ -21,8 +21,10 @@ export async function POST(req: Request) {
         // Auto-detect TEFAS Fund if context is missing
         let enhancedContext = assetContext;
         
-        // Check if it looks like a TEFAS code (3 uppercase letters) and no context provided
-        if (!enhancedContext && /^[A-Z]{3}$/.test(assetName)) {
+        // Check if it looks like a TEFAS code (3 uppercase letters)
+        // We ALWAYS check TEFAS if the name matches the pattern, even if context is present,
+        // to ensure we get the official/correct name (overriding potentially stale or wrong context).
+        if (/^[A-Z]{3}$/.test(assetName)) {
             try {
                 // Fetch recent TEFAS data to find this fund
                 const today = new Date();
@@ -31,15 +33,39 @@ export async function POST(req: Request) {
 
                 if (foundFund) {
                     console.log(`Found TEFAS fund: ${assetName} -> ${foundFund.FONUNVAN}`);
+                    
+                    let quoteType = "MUTUALFUND";
+                    let typeDisp = "Yatırım Fonu";
+                    const name = foundFund.FONUNVAN.toUpperCase();
+
+                    // Better classification logic based on FONUNVAN
+                    if (name.includes("HİSSE") || name.includes("HISSE")) {
+                        quoteType = "EQUITY";
+                        typeDisp = "Hisse Senedi Fonu";
+                        if (name.includes("KAR PAYI") || name.includes("TEMETTÜ") || name.includes("TEMETTU")) {
+                            typeDisp = "Temettü (Kar Payı) Ödeyen Hisse Fonu";
+                        }
+                    } else if (name.includes("ALTIN") || name.includes("KIYMETLİ MADEN")) {
+                        quoteType = "GOLD";
+                        typeDisp = "Altın/Kıymetli Maden Fonu";
+                    } else if (name.includes("BORÇLANMA") || name.includes("BORCLANMA")) {
+                        quoteType = "BOND";
+                        typeDisp = "Borçlanma Araçları Fonu";
+                    } else if (name.includes("KATILIM")) {
+                        typeDisp = "Katılım Fonu (Faizsiz)";
+                    } else if (name.includes("DEĞİŞKEN") || name.includes("DEGISKEN")) {
+                        typeDisp = "Değişken Fon";
+                    } else if (name.includes("SERBEST")) {
+                        typeDisp = "Serbest Fon";
+                    }
+
+                    // Force update context with authoritative data
                     enhancedContext = {
                         symbol: assetName,
                         longname: foundFund.FONUNVAN,
                         exchange: "TEFAS",
-                        typeDisp: "Yatırım Fonu",
-                        // Infer more specific type from name
-                        quoteType: foundFund.FONUNVAN.includes("Hisse") ? "EQUITY" : 
-                                  foundFund.FONUNVAN.includes("Borçlanma") ? "BOND" : 
-                                  foundFund.FONUNVAN.includes("Altın") ? "GOLD" : "MUTUALFUND"
+                        typeDisp: typeDisp,
+                        quoteType: quoteType
                     };
                 }
             } catch (err) {
@@ -88,6 +114,9 @@ export async function POST(req: Request) {
             - Tip: ${enhancedContext.typeDisp || enhancedContext.quoteType || "Bilinmiyor"}
             
             Lütfen analizi GENEL bir sembol analizi yerine, YUKARIDAKİ TAM İSİM ve DETAYLARA sahip varlığa ÖZEL olarak yap.
+            
+            ÖNEMLİ TİP BİLGİSİ: Bu fonun türü "${enhancedContext.typeDisp}" olarak belirlenmiştir. Analizinde bu türe özgü faktörleri (Örn: Temettü fonuysa temettü verimi ve nakit akışı; Katılım fonuysa faizsizlik prensipleri; Teknoloji fonuysa NASDAQ/Nasdaq performansı vb.) MUTLAKA vurgula.
+            
             Örneğin eğer bu bir "Elektrikli Araçlar Fonu" ise, içindeki hisseleri (Tesla, BYD vb.) ve sektörü düşün.
             Eğer bir "BIST 30 Hissesi" ise, Türkiye ekonomisi ve şirket bilançosunu düşün.
             `;
@@ -105,7 +134,7 @@ export async function POST(req: Request) {
         ${newsContext}
 
         ÖNEMLİ: Eğer kullanıcı 3-4 harfli bir kod girdiyse (Örn: IPJ, ALC, TCD, AFT) ve yukarıda detay verilmediyse, bunun bir "TEFAS Yatırım Fonu" veya "Borsa İstanbul Hisse Senedi" olduğunu varsay.
-        1. Önce bu kodun hangi fona veya şirkete ait olduğunu tespit et. (Örn: IPJ -> İş Portföy Elektrikli Araçlar Karma Fon, ALC -> Albaraka Portföy Katılım Fonu vb.)
+        1. Önce bu kodun hangi fona veya şirkete ait olduğunu tespit et. (Örn: IPJ -> İş Portföy Elektrikli Araçlar Karma Fon, TCD -> Tacirler Değişken Fon vb.)
         2. Sonra bu fonun/şirketin yatırım yaptığı sektörü veya temayı (Örn: Elektrikli Araçlar, Teknoloji, Altın, Bankacılık) baz alarak faktör analizi yap.
         
         Bu varlığı etkileyen ana faktörleri (Örn: Sektörel gelişmeler, Döviz kurları, Mevsimsellik, Makroekonomik veriler, Faiz kararları vb.) belirle.
@@ -147,7 +176,7 @@ export async function POST(req: Request) {
         NOT: "scenarios" dizisi içinde MÜMKÜNSE bir adet "positive" ve bir adet "negative" senaryo üretmeye çalış. Böylece kullanıcı hem iyi hem kötü ihtimali görebilsin.
         NOT: "date" alanı "Ay Yıl Görünümü" formatında olsun (Örn: "Şubat 2026 Görünümü").
         NOT: "summary" alanı çok önemlidir. Finansal okuryazarlığı düşük bir kullanıcı için varlığın neyden etkilendiğini BASİTÇE anlatmalıdır.
-        NOT: "topHoldings" alanı eğer bu bir YATIRIM FONU veya ETF ise (Örn: MAC, IPJ, AFT) ve içeriği hakkında bilgin varsa doldur. Eğer bilmiyorsan veya bu bir hisse senedi/emtia ise boş dizi [] bırak.
+        NOT: "topHoldings" alanı ÇOK ÖNEMLİDİR. Eğer bu bir YATIRIM FONU ise, internetteki verilerden, KAP bildirimlerinden veya fonun genel stratejisinden (Örn: Teknoloji fonuysa MSFT, NVDA; Banka fonuysa AKBNK, YKBNK) yola çıkarak TAHMİNİ DAĞILIMI mutlaka doldur. Eğer kesin veri yoksa, fonun izahnamesindeki stratejiye göre "Tahmini" etiketiyle en muhtemel 3-5 hisseyi yaz.
         
         Kurallar:
         1. Analizler SPK kurallarına uygun, tarafsız ve yatırım tavsiyesi içermeyen bir dille yazılmalı.
