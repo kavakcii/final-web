@@ -33,6 +33,8 @@ export default function ReportsPage() {
 
     // AI Option State
     const [includeAnalysis, setIncludeAnalysis] = useState(false);
+    // New Option: Include Portfolio Table
+    const [includePortfolioDetails, setIncludePortfolioDetails] = useState(true);
 
     // Load saved preferences
     useEffect(() => {
@@ -45,6 +47,9 @@ export default function ReportsPage() {
 
             const savedAnalysis = localStorage.getItem('portfolioIncludeAnalysis');
             if (savedAnalysis) setIncludeAnalysis(savedAnalysis === 'true');
+
+            const savedDetails = localStorage.getItem('portfolioIncludeDetails');
+            if (savedDetails) setIncludePortfolioDetails(savedDetails === 'true');
         }
     }, []);
 
@@ -56,11 +61,17 @@ export default function ReportsPage() {
         }
     };
 
-    // Save analysis preference
     const handleAnalysisChange = (checked: boolean) => {
         setIncludeAnalysis(checked);
         if (typeof window !== 'undefined') {
             localStorage.setItem('portfolioIncludeAnalysis', String(checked));
+        }
+    };
+
+    const handleDetailsChange = (checked: boolean) => {
+        setIncludePortfolioDetails(checked);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('portfolioIncludeDetails', String(checked));
         }
     };
 
@@ -75,7 +86,7 @@ export default function ReportsPage() {
             const res = await fetch('/api/cron/portfolio-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, sendEmail: false, includeAnalysis }),
+                body: JSON.stringify({ userId: user.id, sendEmail: false, includeAnalysis, includePortfolioDetails }),
             });
 
             const data = await res.json();
@@ -102,7 +113,7 @@ export default function ReportsPage() {
             const res = await fetch('/api/cron/portfolio-email', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.id, sendEmail: true, includeAnalysis }),
+                body: JSON.stringify({ userId: user.id, sendEmail: true, includeAnalysis, includePortfolioDetails }),
             });
 
             const data = await res.json();
@@ -204,7 +215,7 @@ export default function ReportsPage() {
                             İçerik Tercihleri
                         </h3>
 
-                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors cursor-pointer" onClick={() => handleAnalysisChange(!includeAnalysis)}>
+                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors cursor-pointer mb-3" onClick={() => handleAnalysisChange(!includeAnalysis)}>
                             <div className="relative flex items-center">
                                 <input
                                     type="checkbox"
@@ -223,122 +234,142 @@ export default function ReportsPage() {
                                 </p>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Frequency Selection */}
-                    <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-blue-400" />
-                            Otomatik Gönderim Sıklığı
-                        </h3>
-                        <p className="text-sm text-slate-500 mb-4">FinAi Robotum analizleri ne sıklıkla göndersin?</p>
-                        <div className="space-y-2">
-                            {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).map((freq) => (
-                                <button
-                                    key={freq}
-                                    onClick={() => handleFrequencyChange(freq)}
-                                    className={`w-full flex items-center gap-3 p-3.5 rounded-xl text-left transition-all border ${frequency === freq
-                                        ? 'bg-blue-600/20 border-blue-500/40 text-white'
-                                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
-                                        }`}
-                                >
-                                    <span className="text-lg">{FREQUENCY_ICONS[freq]}</span>
-                                    <div className="flex-1">
-                                        <span className="text-sm font-medium">{FREQUENCY_LABELS[freq]}</span>
-                                    </div>
-                                    {frequency === freq && (
-                                        <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                                    )}
-                                </button>
-                            ))}
+                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => handleDetailsChange(!includePortfolioDetails)}>
+                            <div className="relative flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={includePortfolioDetails}
+                                    onChange={(e) => handleDetailsChange(e.target.checked)}
+                                    className="peer h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500/50"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="font-medium text-white text-sm">Portföy Varlık Tablosu</span>
+                                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30">Tablo</span>
+                                </div>
+                                <p className="text-xs text-slate-400 leading-relaxed">
+                                    Portföyünüzdeki varlıkların listesi, anlık fiyatları, toplam tutar ve kar/zarar durumu.
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Email Info */}
-                    <div className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border border-white/5 rounded-2xl p-6">
-                        <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                            <Bell className="w-4 h-4 text-blue-400" />
-                            Robot Durumu
-                        </h3>
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Hedef E-posta</span>
-                                <span className="text-slate-300 font-medium">{userEmail || '—'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Program</span>
-                                <span className="text-blue-400 font-medium">{FREQUENCY_LABELS[frequency]}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Son Çalışma</span>
-                                <span className="text-slate-300 font-medium">{lastSent || 'Henüz yok'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Durum</span>
-                                <span className={`font-medium flex items-center gap-1 ${frequency !== 'none' ? 'text-green-400' : 'text-slate-500'}`}>
-                                    {frequency !== 'none' ? <><Bell className="w-3 h-3" /> Aktif</> : <><BellOff className="w-3 h-3" /> Pasif</>}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-                {/* Right: Preview */}
-                <div className="lg:col-span-2">
-                    {previewHtml ? (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-slate-900/30 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col"
-                            style={{ height: '800px' }}
-                        >
-                            <div className="bg-slate-800/50 border-b border-white/5 p-4 flex justify-between items-center">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex gap-1.5">
-                                        <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                                        <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                                    </div>
-                                    <span className="text-slate-400 text-sm font-medium">FinAi Robot İzleme Ekranı</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <Bot className="w-3.5 h-3.5" />
-                                    AI processing completed
-                                </div>
-                            </div>
-                            <iframe
-                                srcDoc={previewHtml}
-                                className="w-full flex-1 border-0"
-                                title="Email Preview"
-                                style={{ background: '#0a0e1a' }}
-                            />
-                        </motion.div>
-                    ) : (
-                        <div className="bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center p-12" style={{ height: '600px' }}>
-                            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 relative">
-                                <Bot className="w-10 h-10 text-slate-600" />
-                                {includeAnalysis && (
-                                    <div className="absolute top-0 right-0 w-4 h-4 bg-purple-500 rounded-full animate-pulse border-2 border-slate-800" />
-                                )}
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">FinAi Robotum</h3>
-                            <p className="text-slate-400 max-w-md mx-auto mb-8">
-                                Portföyünüzü analiz ettirmek ve rapor sonucunu görmek için <strong>"Önizle"</strong> veya <strong>"Analizi Başlat"</strong> butonuna tıklayın.
-                                {includeAnalysis && (
-                                    <span className="block mt-2 text-purple-400 text-sm">✨ Yapay Zeka Detaylı Analizi Aktif</span>
-                                )}
-                            </p>
+                {/* Note: Frequency selection is disabled here as requested by user? Or keeping it? User said "bunu işaretlemeden bana diğer içerik türlerinden birini seçtiğimde bunu yapmasın" - implies content toggle. Frequency is separate. */}
+                <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
+                    <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-blue-400" />
+                        Otomatik Gönderim Sıklığı
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-4">FinAi Robotum analizleri ne sıklıkla göndersin?</p>
+                    <div className="space-y-2">
+                        {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).map((freq) => (
                             <button
-                                onClick={handlePreview}
-                                disabled={isLoading}
-                                className="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                                key={freq}
+                                onClick={() => handleFrequencyChange(freq)}
+                                className={`w-full flex items-center gap-3 p-3.5 rounded-xl text-left transition-all border ${frequency === freq
+                                    ? 'bg-blue-600/20 border-blue-500/40 text-white'
+                                    : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
+                                    }`}
                             >
-                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
-                                Analiz Önizlemesi Oluştur
+                                <span className="text-lg">{FREQUENCY_ICONS[freq]}</span>
+                                <div className="flex-1">
+                                    <span className="text-sm font-medium">{FREQUENCY_LABELS[freq]}</span>
+                                </div>
+                                {frequency === freq && (
+                                    <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                                )}
                             </button>
-                        </div>
-                    )}
+                        ))}
+                    </div>
                 </div>
+
+                {/* Email Info */}
+                <div className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border border-white/5 rounded-2xl p-6">
+                    <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-blue-400" />
+                        Robot Durumu
+                    </h3>
+                    <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Hedef E-posta</span>
+                            <span className="text-slate-300 font-medium">{userEmail || '—'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Program</span>
+                            <span className="text-blue-400 font-medium">{FREQUENCY_LABELS[frequency]}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Son Çalışma</span>
+                            <span className="text-slate-300 font-medium">{lastSent || 'Henüz yok'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-500">Durum</span>
+                            <span className={`font-medium flex items-center gap-1 ${frequency !== 'none' ? 'text-green-400' : 'text-slate-500'}`}>
+                                {frequency !== 'none' ? <><Bell className="w-3 h-3" /> Aktif</> : <><BellOff className="w-3 h-3" /> Pasif</>}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right: Preview */}
+            <div className="lg:col-span-2">
+                {previewHtml ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-slate-900/30 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col"
+                        style={{ height: '800px' }}
+                    >
+                        <div className="bg-slate-800/50 border-b border-white/5 p-4 flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="flex gap-1.5">
+                                    <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                                    <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                                </div>
+                                <span className="text-slate-400 text-sm font-medium">FinAi Robot İzleme Ekranı</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <Bot className="w-3.5 h-3.5" />
+                                AI processing completed
+                            </div>
+                        </div>
+                        <iframe
+                            srcDoc={previewHtml}
+                            className="w-full flex-1 border-0"
+                            title="Email Preview"
+                            style={{ background: '#0a0e1a' }}
+                        />
+                    </motion.div>
+                ) : (
+                    <div className="bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center p-12" style={{ height: '600px' }}>
+                        <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 relative">
+                            <Bot className="w-10 h-10 text-slate-600" />
+                            {includeAnalysis && (
+                                <div className="absolute top-0 right-0 w-4 h-4 bg-purple-500 rounded-full animate-pulse border-2 border-slate-800" />
+                            )}
+                        </div>
+                        <h3 className="text-xl font-semibold text-white mb-2">FinAi Robotum</h3>
+                        <p className="text-slate-400 max-w-md mx-auto mb-8">
+                            Portföyünüzü analiz ettirmek ve rapor sonucunu görmek için <strong>"Önizle"</strong> veya <strong>"Analizi Başlat"</strong> butonuna tıklayın.
+                            {includeAnalysis && (
+                                <span className="block mt-2 text-purple-400 text-sm">✨ Yapay Zeka Detaylı Analizi Aktif</span>
+                            )}
+                        </p>
+                        <button
+                            onClick={handlePreview}
+                            disabled={isLoading}
+                            className="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                        >
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
+                            Analiz Önizlemesi Oluştur
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
