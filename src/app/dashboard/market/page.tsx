@@ -1,5 +1,6 @@
 "use client";
 
+// Vercel Deploy Trigger: v2 - Fixed Pie Chart
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, ChevronRight, PieChart, ShieldCheck, Target, Zap, RotateCcw, Trophy, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
