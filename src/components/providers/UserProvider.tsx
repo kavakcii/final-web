@@ -23,6 +23,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const [email, setEmail] = useState<string | null>(null);
     const [userMetadata, setUserMetadata] = useState<any>(null);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    
+    // Use a ref to track if auth check has completed to avoid closure staleness in timeout
+    const isAuthCheckCompleted = React.useRef(false);
 
     useEffect(() => {
         // Load persisted state if any from localStorage (basic persistence)
@@ -37,6 +40,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 if (error) {
                     console.error("Supabase session error:", error);
                     setIsAuthenticated(false);
+                    isAuthCheckCompleted.current = true;
                     return;
                 }
 
@@ -65,9 +69,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 } else {
                     setIsAuthenticated(false);
                 }
+                isAuthCheckCompleted.current = true;
             } catch (err) {
                 console.error("Auth check internal error:", err);
                 setIsAuthenticated(false);
+                isAuthCheckCompleted.current = true;
             }
         };
         checkAuth();
@@ -106,11 +112,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 setAvatarUrl(null);
                 localStorage.removeItem('user_avatar_url');
             }
+            isAuthCheckCompleted.current = true;
         });
 
         // Safety timeout: If auth check hangs for more than 5s, fallback to false
         const safetyTimeout = setTimeout(() => {
-            if (isAuthenticated === null) {
+            if (!isAuthCheckCompleted.current) {
                 console.warn("Auth check timed out, falling back to unauthenticated state.");
                 setIsAuthenticated(false);
             }
