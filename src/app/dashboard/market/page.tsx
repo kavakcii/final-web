@@ -15,58 +15,133 @@ export default function MarketPage() {
     const questions = [
         {
             id: 1,
-            question: "Yatırım hedefiniz nedir?",
-            emoji: "🎯",
+            question: "Bu yatırıma ayırdığınız bütçeyi ne zaman nakde çevirmeyi planlıyorsunuz?",
+            emoji: "⏳",
             options: [
-                { label: "Sermaye Koruma", desc: "Paramın değerini korumak önceliğim.", icon: "🛡️" },
-                { label: "Dengeli Büyüme", desc: "Hem büyüme hem koruma istiyorum.", icon: "⚖️" },
-                { label: "Agresif Büyüme", desc: "Maksimum getiri için riske hazırım.", icon: "🚀" }
+                { 
+                    label: "Kısa Vade (0-1 Yıl)", 
+                    desc: "Önümüzdeki 6-12 ay içinde ev, araba alımı veya borç ödemesi gibi somut bir harcama planım var. Paraya her an erişebilmeliyim.", 
+                    icon: "🏃",
+                    score: 1 
+                },
+                { 
+                    label: "Orta Vade (1-3 Yıl)", 
+                    desc: "3-5 yıllık bir perspektifim var. Çocuğumun eğitimi veya gelecekteki bir iş girişimi için birikim yapıyorum, acil nakit ihtiyacım yok.", 
+                    icon: "🚶",
+                    score: 2 
+                },
+                { 
+                    label: "Uzun Vade (3+ Yıl)", 
+                    desc: "Bu para emeklilik veya 10 yıl üzeri servet inşası için. Kısa vadeli dalgalanmalar umurumda değil, bileşik getirinin gücüne inanıyorum.", 
+                    icon: "🧘",
+                    score: 3 
+                }
             ]
         },
         {
             id: 2,
-            question: "Yatırım süreniz ne kadar?",
-            emoji: "⏳",
+            question: "Portföyünüzün değeri, küresel bir kriz nedeniyle bir ay içinde %25 eridi. İlk tepkiniz ne olur?",
+            emoji: "📉",
             options: [
-                { label: "0–1 Yıl", desc: "Kısa vadeli düşünüyorum.", icon: "🏃" },
-                { label: "1–3 Yıl", desc: "Orta vadeli hedeflerim var.", icon: "🚶" },
-                { label: "3+ Yıl", desc: "Uzun vadeli yatırımcıyım.", icon: "🧘" }
+                { 
+                    label: "Panik ve Satış", 
+                    desc: "Uykularım kaçar. Daha fazla zarar etmemek için kalan paramı hemen çekip vadeli mevduata veya nakde dönerim.", 
+                    icon: "😰",
+                    score: 1 
+                },
+                { 
+                    label: "Temkinli Bekleyiş", 
+                    desc: "Endişelenirim ama hemen satış yapmam. Durumu analiz eder, eğer düşüşün sebebi geçiciyse beklerim.", 
+                    icon: "🤔",
+                    score: 2 
+                },
+                { 
+                    label: "Alım Fırsatı", 
+                    desc: "Harika bir alım fırsatı! Düşen fiyatlardan maliyet düşürmek için portföye ekleme yaparım. Krizler zenginleşme fırsatıdır.", 
+                    icon: "🤑",
+                    score: 3 
+                }
             ]
         },
         {
             id: 3,
-            question: "Risk toleransınız?",
-            emoji: "🎢",
+            question: "Finansal piyasalar ve yatırım araçları konusundaki bilgi seviyenizi nasıl tanımlarsınız?",
+            emoji: "🧠",
             options: [
-                { label: "Düşük", desc: "Kaybetmeye tahammülüm yok.", icon: "🧊" },
-                { label: "Orta", desc: "Makul dalgalanmaları kabul ederim.", icon: "🌊" },
-                { label: "Yüksek", desc: "Büyük düşüşler beni korkutmaz.", icon: "🔥" }
+                { 
+                    label: "Başlangıç Seviyesi", 
+                    desc: "Mevduat faizi ve altın dışında pek bir tecrübem yok. Karmaşık terimler (VİOP, Eurobond, Fon Sepeti) bana yabancı geliyor.", 
+                    icon: "👶",
+                    score: 1 
+                },
+                { 
+                    label: "Orta Seviye", 
+                    desc: "Hisse senetlerini, yatırım fonlarını biliyorum. Temel düzeyde piyasa takibi yapıyorum ve portföy çeşitlendirmesinin önemini kavradım.", 
+                    icon: "🎓",
+                    score: 2 
+                },
+                { 
+                    label: "İleri Seviye", 
+                    desc: "Bilanço okuyabilirim, teknik analizden anlarım. Türev araçlar veya yabancı borsalar hakkında fikrim var, aktif portföy yönetimi yapabilirim.", 
+                    icon: "👨‍💼",
+                    score: 3 
+                }
             ]
         },
         {
             id: 4,
-            question: "Piyasa dalgalanmalarına tepkiniz?",
-            emoji: "😱",
+            question: "Aşağıdaki senaryolardan hangisi sizin yatırım karakterinizi en iyi yansıtır?",
+            emoji: "⚖️",
             options: [
-                { label: "Çok Endişeli", desc: "Hemen satıp çıkmak isterim.", icon: "😰" },
-                { label: "Biraz Endişeli", desc: "Takip ederim ama panik yapmam.", icon: "🤔" },
-                { label: "Rahat", desc: "Fırsat olarak görürüm.", icon: "😎" }
+                { 
+                    label: "Düşük Risk - Güvenli Liman", 
+                    desc: "Enflasyonun biraz üzerinde getiri yeterli. Ana paramın erimesi veya eksiye düşmesi benim için asla kabul edilemez.", 
+                    icon: "🛡️",
+                    score: 1 
+                },
+                { 
+                    label: "Dengeli - Makul Büyüme", 
+                    desc: "Piyasa ortalamasında bir getiri hedefliyorum. Bazı yıllar %5-10 zarar etmeyi göze alabilirim, yeter ki uzun vadede reel kazanç sağlayayım.", 
+                    icon: "⚖️",
+                    score: 2 
+                },
+                { 
+                    label: "Yüksek Risk - Maksimum Getiri", 
+                    desc: "Portföyümü ikiye, üçe katlamak istiyorum. Bunun için ana paramın yarısını kaybetme riskini bile göze alarak agresif hisse veya kripto yatırımları yapabilirim.", 
+                    icon: "🚀",
+                    score: 3 
+                }
             ]
         },
         {
             id: 5,
-            question: "Deneyim seviyeniz?",
-            emoji: "🧠",
+            question: "Bu yatırımdan düzenli bir nakit akışına (aylık/yıllık ödeme) ihtiyacınız var mı?",
+            emoji: "💸",
             options: [
-                { label: "Yeni", desc: "Daha önce hiç yatırım yapmadım.", icon: "👶" },
-                { label: "Orta", desc: "Temel bilgilere sahibim.", icon: "🧑‍🎓" },
-                { label: "İleri", desc: "Piyasaları yakından takip ederim.", icon: "👨‍💼" }
+                { 
+                    label: "Evet, Gelir Şart", 
+                    desc: "Bu yatırımdan elde edeceğim temettü veya faiz geliri ile faturalarımı veya taksitlerimi ödeyeceğim.", 
+                    icon: "🏦",
+                    score: 1 
+                },
+                { 
+                    label: "Kısmen, İyi Olur", 
+                    desc: "Düzenli gelir olsa güzel olur ama zorunlu değil. Bazen harcamalarım için kullanabilirim.", 
+                    icon: "🤷",
+                    score: 2 
+                },
+                { 
+                    label: "Hayır, Büyüme Odaklıyım", 
+                    desc: "Hiçbir nakit akışına ihtiyacım yok. Tüm getirinin tekrar yatırıma dönüşüp (bileşik getiri) kartopu gibi büyümesini istiyorum.", 
+                    icon: "❄️",
+                    score: 3 
+                }
             ]
         }
     ];
 
-    const handleAnswer = (answer: string) => {
-        setAnswers({ ...answers, [currentQuestion]: answer });
+    const handleAnswer = (score: number) => {
+        setAnswers({ ...answers, [currentQuestion]: score.toString() });
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(curr => curr + 1);
         } else {
@@ -75,13 +150,15 @@ export default function MarketPage() {
     };
 
     const getPortfolioRecommendation = () => {
-        let score = 0;
-        Object.values(answers).forEach(a => {
-            if (a.includes("Agresif") || a.includes("3+") || a.includes("Yüksek") || a.includes("Rahat") || a.includes("İleri")) score += 2;
-            else if (a.includes("Dengeli") || a.includes("1–3") || a.includes("Orta")) score += 1;
+        let totalScore = 0;
+        Object.values(answers).forEach(score => {
+            totalScore += parseInt(score);
         });
 
-        if (score >= 8) {
+        // Max Score: 15 (5 questions * 3)
+        // Min Score: 5 (5 questions * 1)
+        
+        if (totalScore >= 13) {
             return {
                 title: "Agresif Büyüme Portföyü",
                 persona: "Cesur Kaşif 🦁",
@@ -94,7 +171,7 @@ export default function MarketPage() {
                     { name: "Nakit", value: 10, color: "#64748b" }
                 ]
             };
-        } else if (score >= 4) {
+        } else if (totalScore >= 9) {
             return {
                 title: "Dengeli Portföy",
                 persona: "Stratejik Mimar 🦉",
@@ -210,7 +287,7 @@ export default function MarketPage() {
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.1 }}
-                                    onClick={() => handleAnswer(opt.label)}
+                                    onClick={() => handleAnswer(opt.score)}
                                     className="w-full text-left p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 transition-all group flex items-center gap-4 hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <div className="text-4xl bg-white/5 p-3 rounded-xl group-hover:bg-blue-500/20 transition-colors">
@@ -220,7 +297,7 @@ export default function MarketPage() {
                                         <div className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">
                                             {opt.label}
                                         </div>
-                                        <div className="text-sm text-slate-400 mt-1 font-medium">
+                                        <div className="text-sm text-slate-400 mt-1 font-medium leading-snug">
                                             {opt.desc}
                                         </div>
                                     </div>
