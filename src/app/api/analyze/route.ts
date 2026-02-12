@@ -143,52 +143,45 @@ export async function POST(req: Request) {
         
         Bu varlığı etkileyen ana faktörleri (Örn: Sektörel gelişmeler, Döviz kurları, Mevsimsellik, Makroekonomik veriler, Faiz kararları vb.) belirle.
         
-        Her bir faktör için aşağıdaki JSON formatında bir çıktı üret. Sadece saf JSON döndür, markdown veya ek açıklama kullanma.
+        Aşağıdaki TEKİL JSON formatını eksiksiz doldurarak yanıt ver. Sadece saf JSON döndür, markdown veya ek açıklama kullanma.
         
         İstenen JSON Yapısı:
         {
-            "summary": "Varlığın durumunu özetleyen, jargon içermeyen, net sebep-sonuç ilişkisine dayalı 2-3 cümlelik açıklama. (Örn: Faizler düşerse altın değerlenir, aksi halde baskılanır.)",
+            "summary": "Varlığın durumunu özetleyen, jargon içermeyen, net sebep-sonuç ilişkisine dayalı 2-3 cümlelik açıklama.",
             "analysis": [
                 {
                     "id": 1,
-                    "title": "Faktör Başlığı (Örn: Lityum ve Batarya Maliyetleri - IPJ için)",
-                    "date": "Zaman Görünümü (Örn: Şubat 2026 Görünümü, 2025 Sonu Beklentisi)",
-                    "description": "Faktörün genel açıklaması ve fonun içeriğiyle ilişkisi.",
+                    "title": "Analiz Başlığı (Örn: Faiz Kararları ve Kur Etkisi)",
+                    "date": "Zaman Görünümü (Örn: Şubat 2026)",
+                    "description": "Faktörün detaylı açıklaması.",
                     "scenarios": [
                         {
-                            "condition": "Olası Senaryo Başlığı (Örn: Faizler Düşerse)",
-                            "impact": "Detaylı açıklama (Örn: Elektrikli araç üreticilerinin kar marjı artar, fon pozitif etkilenir).",
-                            "sentiment": "positive" | "negative" | "neutral",
-                            "assetsAffected": ["İlgili diğer varlıklar", "TSLA", "NIO"]
+                            "condition": "Olası Senaryo (Örn: Faiz Artarsa)",
+                            "impact": "Detaylı etki analizi.",
+                            "sentiment": "negative",
+                            "assetsAffected": ["İlgili Semboller"]
                         },
-                         {
-                            "condition": "Olası Senaryo Başlığı (Örn: Faiz İndirimi Ertelenirse)",
-                            "impact": "Detaylı açıklama (Örn: Dolar güçlenir ve altın fiyatları bir miktar geri çekilebilir).",
-                            "sentiment": "positive" | "negative" | "neutral",
+                        {
+                            "condition": "Olası Senaryo (Örn: Faiz Sabit Kalırsa)",
+                            "impact": "Detaylı etki analizi.",
+                            "sentiment": "positive",
                             "assetsAffected": []
                         }
                     ],
-                    "relatedAssets": ["TSLA", "NIO", "LIT"]
+                    "relatedAssets": ["İlgili Semboller"]
                 }
             ],
             "topHoldings": [
-                 { "symbol": "THYAO", "name": "Türk Hava Yolları", "percent": "%8.5 (Tahmini)" },
-                 { "symbol": "KCHOL", "name": "Koç Holding", "percent": "%6.2 (Tahmini)" }
+                 { "symbol": "THYAO", "name": "Türk Hava Yolları", "percent": "%8.5 (Tahmini)" }
             ]
         }
         
-        NOT: "scenarios" dizisi içinde MÜMKÜNSE bir adet "positive" ve bir adet "negative" senaryo üretmeye çalış. Böylece kullanıcı hem iyi hem kötü ihtimali görebilsin.
-        NOT: "date" alanı "Ay Yıl Görünümü" formatında olsun (Örn: "Şubat 2026 Görünümü").
-        NOT: "summary" alanı çok önemlidir. Finansal okuryazarlığı düşük bir kullanıcı için varlığın neyden etkilendiğini BASİTÇE anlatmalıdır.
-        NOT: "topHoldings" alanı ÇOK ÖNEMLİDİR. Eğer bu bir YATIRIM FONU ise, internetteki verilerden, KAP bildirimlerinden veya fonun genel stratejisinden (Örn: Teknoloji fonuysa MSFT, NVDA; Banka fonuysa AKBNK, YKBNK) yola çıkarak TAHMİNİ DAĞILIMI mutlaka doldur. Eğer kesin veri yoksa, fonun izahnamesindeki stratejiye göre "Tahmini" etiketiyle en muhtemel 3-5 hisseyi yaz.
-        
-        Kurallar:
-        1. Analizler SPK kurallarına uygun, tarafsız ve yatırım tavsiyesi içermeyen bir dille yazılmalı.
-        2. "Kesin yükselir/düşer" yerine "olumlu etkilenebilir", "baskı görebilir" gibi ifadeler kullan.
-        3. En az 2, en fazla 4 farklı faktör (obje) üret. Mutlaka analiz (analysis) dizisini doldur.
-        4. Varlığın tam ismini başlıkta veya açıklamada mutlaka geçir (Örn: "IPJ (Elektrikli Araçlar Fonu) için...").
-        5. Türkçe yanıt ver.
-        6. Eğer güncel haberler varsa, analizlerinde bu haberlere atıfta bulun (Örn: "Son gelişmelere göre...").
+        KURALLAR:
+        1. "analysis" dizisi içinde EN AZ 2, EN FAZLA 4 farklı faktör objesi oluştur.
+        2. Her faktörün içinde "scenarios" dizisine MUTLAKA en az 2 senaryo (Biri pozitif, biri negatif veya nötr) ekle.
+        3. "scenarios" kısmı ASLA boş kalmamalıdır. Kullanıcı için en değerli kısım burasıdır.
+        4. Yanıtın tamamı geçerli bir JSON olmalıdır.
+        5. Varlığın türüne (Fon, Hisse, Altın vb.) uygun spesifik yorumlar yap.
         `;
 
         const result = await model.generateContent(prompt);
