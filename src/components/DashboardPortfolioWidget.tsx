@@ -53,7 +53,10 @@ export function DashboardPortfolioWidget() {
 
         if (totalScore >= 13) {
             return {
-                title: "Agresif Büyüme",
+                title: "Agresif Büyüme Portföyü",
+                persona: "Cesur Kaşif",
+                desc: "Risk almaktan korkmayan, uzun vadeli ve yüksek getiri hedefleyen bir yatırımcısınız.",
+                reasoning: "Yüksek risk toleransınız ve uzun vade hedefiniz nedeniyle portföyün ağırlığı (%60) büyüme potansiyeli yüksek **" + (isIslamic ? "Katılım Hisselerine" : "Hisse Senetlerine") + "** verildi. Bu varlık sınıfı uzun vadede en yüksek getiriyi sunar. %20'lik **" + (isIslamic ? "Katılım Fonu" : "Fon") + "** kısmı sektörel çeşitlilik sağlarken, %10 **Altın** ve **" + (isIslamic ? "Katılım Hesabı" : "Nakit") + "** ise piyasa düzeltmelerinde 'dipten alım' fırsatı yaratmak ve sigorta görevi görmek için eklendi.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 60, color: "#3b82f6" },
                     { name: "Yatırım Fonları", value: 20, color: "#6366f1" },
@@ -64,6 +67,9 @@ export function DashboardPortfolioWidget() {
         } else if (totalScore >= 9) {
             return {
                 title: "Dengeli Portföy",
+                persona: "Stratejik Mimar",
+                desc: "Hem kazanmak hem de korumak isteyen, akılcı ve planlı bir yatırımcısınız.",
+                reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **" + (isIslamic ? "Katılım Hissesi" : "Hisse Senedi") + "** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 40, color: "#3b82f6" },
                     { name: "Tahvil / Bono", value: 30, color: "#22c55e" },
@@ -74,6 +80,9 @@ export function DashboardPortfolioWidget() {
         } else {
             return {
                 title: "Koruyucu Portföy",
+                persona: "Güvenli Liman",
+                desc: "Önceliği elindekini korumak olan, riskten kaçınan temkinli bir yatırımcısınız.",
+                reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **" + (isIslamic ? "Katılım Hissesi" : "Hisse (Temettü)") + "** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
                 allocation: adjustForIslamic([
                     { name: "Tahvil / Bono", value: 50, color: "#22c55e" },
                     { name: "Altın", value: 30, color: "#eab308" },
@@ -136,22 +145,24 @@ export function DashboardPortfolioWidget() {
                             <PieChart className="w-5 h-5" />
                         </div>
                         <span className="text-green-400 font-bold text-sm">Analiz Tamamlandı</span>
+                        <div className="text-xs font-medium text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                            {recommendation.persona}
+                        </div>
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-white mb-2">Portföyünüz Hazır!</h3>
-                    <p className="text-slate-400 text-sm mb-6">
-                        Risk profilinize uygun <strong>{recommendation.title}</strong> dağılımı oluşturuldu. Detaylı analiz ve fon önerileri için raporu inceleyin.
+                    <h3 className="text-2xl font-bold text-white mb-2">{recommendation.title}</h3>
+                    <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                        {recommendation.desc}
                     </p>
+                    
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 mb-6 text-xs text-slate-300 leading-relaxed">
+                        <strong className="text-white block mb-1">Neden bu dağılım?</strong>
+                        {recommendation.reasoning.split("**").map((part: string, i: number) => 
+                            i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
+                        )}
+                    </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                        <Link 
-                            href="/dashboard/market" 
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm transition-all hover:scale-105 shadow-lg shadow-blue-900/30"
-                        >
-                            Raporu Gör
-                            <ArrowUpRight className="w-4 h-4" />
-                        </Link>
-                        
                         <button 
                             onClick={() => {
                                 localStorage.removeItem("portfolio_answers");
@@ -160,7 +171,7 @@ export function DashboardPortfolioWidget() {
                             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium text-sm transition-all border border-white/10"
                         >
                             <RotateCcw className="w-4 h-4" />
-                            Tekrarla
+                            Testi Tekrarla
                         </button>
                     </div>
                 </div>
