@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit } from 'lucide-react';
+import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
@@ -12,7 +12,7 @@ const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
     weekly: 'Her Hafta (Pazartesi)',
     biweekly: 'İki Haftada Bir',
     monthly: 'Ayda Bir',
-    none: 'Kapalı',
+    none: 'Kapalı (Gönderim İptal)',
 };
 
 const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
@@ -23,7 +23,7 @@ const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
 };
 
 export default function ReportsPage() {
-    const { email: userEmail } = useUser();
+    const { email: userEmail, user } = useUser();
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [previewHtml, setPreviewHtml] = useState<string | null>(null);
@@ -34,56 +34,89 @@ export default function ReportsPage() {
     // Content Options
     const [includeAnalysis, setIncludeAnalysis] = useState(false);
     const [includePortfolioDetails, setIncludePortfolioDetails] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Load saved preferences
+    // Load saved preferences from Supabase Metadata
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const savedFreq = localStorage.getItem('portfolioEmailFrequency');
-            if (savedFreq) setFrequency(savedFreq as EmailFrequency);
+        const loadPreferences = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && user.user_metadata?.report_settings) {
+                const settings = user.user_metadata.report_settings;
+                // Only override if settings exist, otherwise default to weekly/true
+                if (settings.frequency) setFrequency(settings.frequency);
+                if (settings.includeAnalysis !== undefined) setIncludeAnalysis(settings.includeAnalysis);
+                if (settings.includePortfolioDetails !== undefined) setIncludePortfolioDetails(settings.includePortfolioDetails);
+            }
 
-            const savedLastSent = localStorage.getItem('portfolioEmailLastSent');
-            if (savedLastSent) setLastSent(savedLastSent);
-
-            const savedAnalysis = localStorage.getItem('portfolioIncludeAnalysis');
-            if (savedAnalysis) setIncludeAnalysis(savedAnalysis === 'true');
-
-            const savedDetails = localStorage.getItem('portfolioIncludeDetails');
-            if (savedDetails) setIncludePortfolioDetails(savedDetails === 'true');
-        }
+            // Also check localStorage for last sent time (client-side only info)
+            if (typeof window !== 'undefined') {
+                const savedLastSent = localStorage.getItem('portfolioEmailLastSent');
+                if (savedLastSent) setLastSent(savedLastSent);
+            }
+        };
+        loadPreferences();
     }, []);
 
-    // Save frequency preference
-    const handleFrequencyChange = (freq: EmailFrequency) => {
-        setFrequency(freq);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('portfolioEmailFrequency', freq);
+    // Save preferences to Supabase
+    const savePreferencesToSupabase = async (newSettings: any) => {
+        setIsSaving(true);
+        try {
+            // Merge current state with new settings
+            const updatedSettings = {
+                frequency: newSettings.frequency !== undefined ? newSettings.frequency : frequency,
+                includeAnalysis: newSettings.includeAnalysis !== undefined ? newSettings.includeAnalysis : includeAnalysis,
+                includePortfolioDetails: newSettings.includePortfolioDetails !== undefined ? newSettings.includePortfolioDetails : includePortfolioDetails,
+                updatedAt: new Date().toISOString()
+            };
+
+            const { error } = await supabase.auth.updateUser({
+                data: { report_settings: updatedSettings }
+            });
+
+            if (error) throw error;
+
+            // Also save to localStorage for fallback/offline
+            if (typeof window !== 'undefined') {
+                if (newSettings.frequency) localStorage.setItem('portfolioEmailFrequency', newSettings.frequency);
+                if (newSettings.includeAnalysis !== undefined) localStorage.setItem('portfolioIncludeAnalysis', String(newSettings.includeAnalysis));
+                if (newSettings.includePortfolioDetails !== undefined) localStorage.setItem('portfolioIncludeDetails', String(newSettings.includePortfolioDetails));
+            }
+
+        } catch (err) {
+            console.error("Ayarlar kaydedilemedi:", err);
+            setSendResult({ type: 'error', message: 'Ayarlar kaydedilirken hata oluştu.' });
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    // Save content preferences
+    // Handler wrappers
+    const handleFrequencyChange = (freq: EmailFrequency) => {
+        setFrequency(freq);
+        savePreferencesToSupabase({ frequency: freq });
+    };
+
     const handleAnalysisChange = (checked: boolean) => {
         setIncludeAnalysis(checked);
 
-        // Kullanıcı isteği: AI seçilirse tablo otomatik kapansın (Sadece yorum odaklı)
+        // Auto-disable table if AI is enabled (User Request)
+        let newDetails = includePortfolioDetails;
         if (checked) {
             setIncludePortfolioDetails(false);
-            if (typeof window !== 'undefined') localStorage.setItem('portfolioIncludeDetails', 'false');
+            newDetails = false;
         }
 
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('portfolioIncludeAnalysis', String(checked));
-        }
+        savePreferencesToSupabase({ includeAnalysis: checked, includePortfolioDetails: newDetails });
     };
 
     const handleDetailsChange = (checked: boolean) => {
         setIncludePortfolioDetails(checked);
+        savePreferencesToSupabase({ includePortfolioDetails: checked });
+    };
 
-        // Eğer tablo da kapatılırsa ve AI zaten kapalıysa, en az biri açık kalsın mı? 
-        // Şimdilik kullanıcıya bırakıyoruz, ikisini de kapatırsa boş mail uyarısı alabilir.
-
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('portfolioIncludeDetails', String(checked));
-        }
+    const handleCancelInstruction = () => {
+        setFrequency('none');
+        savePreferencesToSupabase({ frequency: 'none' });
     };
 
     // Generate preview
@@ -139,7 +172,6 @@ export default function ReportsPage() {
 
             const data = await res.json();
             if (data.success) {
-                // Check results specifically for the current user
                 const userResult = data.results?.find((r: any) => r.email === userEmail) || data.results?.[0];
 
                 if (userResult?.status === 'sent') {
@@ -169,6 +201,19 @@ export default function ReportsPage() {
         } finally {
             setIsSending(false);
         }
+    };
+
+    // GENERATE INSTRUCTION SUMMARY TEXT
+    const getInstructionSummary = () => {
+        if (frequency === 'none') return "Otomatik rapor gönderimi şu an kapalı.";
+
+        let contentText = "";
+        if (includeAnalysis && includePortfolioDetails) contentText = "yapay zeka analizi ve detaylı portföy tablosu";
+        else if (includeAnalysis) contentText = "sadece yapay zeka analizi";
+        else if (includePortfolioDetails) contentText = "sadece portföy varlık tablosu";
+        else contentText = "boş bir şablon (içerik seçilmedi)";
+
+        return `${FREQUENCY_LABELS[frequency]} olarak ${contentText} içeren rapor gönderilecek.`;
     };
 
     return (
@@ -227,12 +272,48 @@ export default function ReportsPage() {
                 {/* Left: Settings */}
                 <div className="lg:col-span-1 space-y-6">
 
+                    {/* NEW: ACTIVE INSTRUCTION CARD */}
+                    <div className={`border rounded-2xl p-6 relative overflow-hidden transition-all ${frequency !== 'none'
+                            ? 'bg-green-900/10 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]'
+                            : 'bg-slate-900/40 border-slate-700/30'
+                        }`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className={`text-lg font-bold flex items-center gap-2 ${frequency !== 'none' ? 'text-green-400' : 'text-slate-400'}`}>
+                                <ListChecks className="w-5 h-5" />
+                                {frequency !== 'none' ? 'Aktif Talimat' : 'Talimat Yok'}
+                            </h3>
+                            {isSaving && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
+                        </div>
+
+                        <p className="text-sm text-slate-300 mb-6 leading-relaxed font-medium">
+                            {getInstructionSummary()}
+                        </p>
+
+                        {frequency !== 'none' && (
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleCancelInstruction}
+                                    className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg border border-red-500/20 transition-colors flex items-center gap-1.5"
+                                >
+                                    <BellOff className="w-3 h-3" />
+                                    Otomatik Gönderimi İptal Et
+                                </button>
+                            </div>
+                        )}
+
+                        {frequency === 'none' && (
+                            <p className="text-xs text-slate-500">
+                                Rapor almak için aşağıdan sıklık ve içerik seçiniz.
+                            </p>
+                        )}
+                    </div>
+
                     {/* Content Preferences */}
                     <div className="bg-purple-900/20 border border-purple-500/20 rounded-2xl p-6 relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl -z-10 rounded-full" />
 
                         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <BrainCircuit className="w-5 h-5 text-purple-400" />
+                            <Settings2 className="w-5 h-5 text-purple-400" />
                             İçerik Tercihleri
                         </h3>
 
@@ -258,19 +339,24 @@ export default function ReportsPage() {
                         </div>
 
                         {/* Portfolio Details Option */}
-                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 rounded-xl border border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => handleDetailsChange(!includePortfolioDetails)}>
+                        <div className={`flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer ${includeAnalysis
+                                ? 'bg-slate-900/20 border-white/5 opacity-60 cursor-not-allowed'
+                                : 'bg-slate-900/40 border-white/5 hover:border-blue-500/30'
+                            }`} onClick={() => !includeAnalysis && handleDetailsChange(!includePortfolioDetails)}>
+
                             <div className="relative flex items-center">
                                 <input
                                     type="checkbox"
                                     checked={includePortfolioDetails}
-                                    onChange={(e) => handleDetailsChange(e.target.checked)}
-                                    className="peer h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500/50"
+                                    onChange={(e) => !includeAnalysis && handleDetailsChange(e.target.checked)}
+                                    disabled={includeAnalysis}
+                                    className="peer h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500/50 disabled:opacity-50"
                                 />
                             </div>
                             <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="font-medium text-white text-sm">Portföy Varlık Tablosu</span>
-                                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px] font-bold border border-blue-500/30">Tablo</span>
+                                    {includeAnalysis && <span className="text-[10px] text-yellow-500 font-bold ml-auto">AI ile Kapalı</span>}
                                 </div>
                                 <p className="text-xs text-slate-400 leading-relaxed">
                                     Portföyünüzdeki varlıkların listesi, anlık fiyatları, toplam tutar ve kar/zarar durumu.
@@ -282,7 +368,7 @@ export default function ReportsPage() {
                     {/* Frequency Selection */}
                     <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
                         <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                            <Clock className="w-5 h-5 text-blue-400" />
+                            <CalendarClock className="w-5 h-5 text-blue-400" />
                             Otomatik Gönderim Sıklığı
                         </h3>
                         <p className="text-sm text-slate-500 mb-4">FinAi Robotum analizleri ne sıklıkla göndersin?</p>
@@ -320,18 +406,8 @@ export default function ReportsPage() {
                                 <span className="text-slate-300 font-medium">{userEmail || '—'}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-slate-500">Program</span>
-                                <span className="text-blue-400 font-medium">{FREQUENCY_LABELS[frequency]}</span>
-                            </div>
-                            <div className="flex justify-between">
                                 <span className="text-slate-500">Son Çalışma</span>
                                 <span className="text-slate-300 font-medium">{lastSent || 'Henüz yok'}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Durum</span>
-                                <span className={`font-medium flex items-center gap-1 ${frequency !== 'none' ? 'text-green-400' : 'text-slate-500'}`}>
-                                    {frequency !== 'none' ? <><Bell className="w-3 h-3" /> Aktif</> : <><BellOff className="w-3 h-3" /> Pasif</>}
-                                </span>
                             </div>
                         </div>
                     </div>

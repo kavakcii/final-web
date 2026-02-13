@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 export default function MarketPage() {
+    const [isLoading, setIsLoading] = useState(true);
     const [testStarted, setTestStarted] = useState(false);
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -27,6 +28,7 @@ export default function MarketPage() {
                 console.error("Failed to load saved answers", e);
             }
         }
+        setIsLoading(false);
     }, []);
 
     const questions = [
@@ -236,6 +238,14 @@ export default function MarketPage() {
     };
 
     const recommendation = showResults ? getPortfolioRecommendation() : null;
+
+    if (isLoading) {
+        return (
+            <div className="p-6 h-full flex flex-col items-center justify-center min-h-[600px] overflow-hidden">
+                <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 h-full flex flex-col items-center justify-center min-h-[600px] overflow-hidden">
