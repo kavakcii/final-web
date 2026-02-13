@@ -59,8 +59,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                 <p style="color: #64748b; font-size: 14px; margin: 0 0 24px; line-height: 1.6;">
                                     Zamanladığınız raporunuz hazır:
                                 </p>
-                                <!-- AI Content Placeholder Render -->
-                                ${aiAnalysis ? '<!-- AI Analysis Here -->' : ''}
                                 ${includePortfolioDetails ? `
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                                     <tr>
@@ -143,26 +141,30 @@ export async function POST(req: Request) {
                         if (inst.frequency === 'none') continue;
 
                         if (isCron) {
-                            // 1. Time Check (Always check if current hour matches preferred hour)
-                            // inst.preferredTime is "HH:mm"
+                            // 1. Time Check
                             const preferredHour = inst.preferredTime ? parseInt(inst.preferredTime.split(':')[0]) : 9;
                             if (currentHour !== preferredHour) continue;
 
                             // 2. Day/Date Check
                             let shouldSend = false;
                             if (inst.frequency === 'weekly') {
-                                const preferredDay = inst.preferredDay !== undefined ? inst.preferredDay : 1; // Default Monday
+                                const preferredDay = inst.preferredDay !== undefined ? inst.preferredDay : 1;
                                 if (currentDay === preferredDay) shouldSend = true;
                             } else if (inst.frequency === 'biweekly') {
                                 if (currentDate === 1 || currentDate === 15) shouldSend = true;
-                            } else if (inst.frequency === 'monthly') {
-                                if (currentDate === 1) shouldSend = true;
-                            } else if (inst.frequency === 'quarterly') {
-                                if (currentDate === 1 && [0, 3, 6, 9].includes(currentMonth)) shouldSend = true;
-                            } else if (inst.frequency === 'semiannually') {
-                                if (currentDate === 1 && [0, 6].includes(currentMonth)) shouldSend = true;
-                            } else if (inst.frequency === 'annually') {
-                                if (currentDate === 1 && currentMonth === 0) shouldSend = true;
+                            } else {
+                                // For monthly, quarterly, semiannually, annually
+                                const preferredDate = inst.preferredDate !== undefined ? inst.preferredDate : 1;
+
+                                if (inst.frequency === 'monthly') {
+                                    if (currentDate === preferredDate) shouldSend = true;
+                                } else if (inst.frequency === 'quarterly') {
+                                    if (currentDate === preferredDate && [0, 3, 6, 9].includes(currentMonth)) shouldSend = true;
+                                } else if (inst.frequency === 'semiannually') {
+                                    if (currentDate === preferredDate && [0, 6].includes(currentMonth)) shouldSend = true;
+                                } else if (inst.frequency === 'annually') {
+                                    if (currentDate === preferredDate && currentMonth === 0) shouldSend = true;
+                                }
                             }
 
                             if (!shouldSend) continue;
@@ -190,7 +192,6 @@ export async function POST(req: Request) {
             const { data: assets } = await getSupabaseAdmin().from('user_portfolios').select('symbol, asset_type, quantity, avg_cost').eq('user_id', user.id);
             if (!assets || assets.length === 0) continue;
 
-            // ... generation logic ...
             const emailHtml = generatePortfolioEmailHtml(user.name, assets, null, user.preferences?.includePortfolioDetails);
             if (!firstPreview) firstPreview = emailHtml;
 

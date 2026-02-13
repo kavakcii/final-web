@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2, Plus, ArrowRight, X, ChevronRight, Save, Trash2 } from 'lucide-react';
+import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2, Plus, ArrowRight, X, ChevronRight, Save, Trash2, CalendarDays } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
@@ -14,7 +14,8 @@ interface ReportInstruction {
     frequency: EmailFrequency;
     includeAnalysis: boolean;
     includePortfolioDetails: boolean;
-    preferredDay?: number; // 0-6
+    preferredDay?: number; // 0-6 (for weekly)
+    preferredDate?: number; // 1-28 (for monthly/quarterly/etc)
     preferredTime?: string; // "HH:mm"
     createdAt: string;
 }
@@ -50,6 +51,7 @@ const DAYS = [
 ];
 
 const TIMES = ['09:00', '15:00', '18:00', '21:00'];
+const MONTH_DATES = Array.from({ length: 28 }, (_, i) => i + 1);
 
 export default function ReportsPage() {
     const { email: userEmail } = useUser();
@@ -72,6 +74,7 @@ export default function ReportsPage() {
     const [tempAnalysis, setTempAnalysis] = useState(false);
     const [tempDetails, setTempDetails] = useState(true);
     const [tempDay, setTempDay] = useState<number>(1);
+    const [tempDate, setTempDate] = useState<number>(1);
     const [tempTime, setTempTime] = useState<string>('09:00');
 
     // Load saved preferences from Supabase Metadata
@@ -92,6 +95,7 @@ export default function ReportsPage() {
                             includeAnalysis: old.includeAnalysis || false,
                             includePortfolioDetails: old.includePortfolioDetails ?? true,
                             preferredDay: 1,
+                            preferredDate: 1,
                             preferredTime: '09:00',
                             createdAt: old.updatedAt || new Date().toISOString()
                         };
@@ -121,6 +125,7 @@ export default function ReportsPage() {
                 includeAnalysis: tempAnalysis,
                 includePortfolioDetails: tempDetails,
                 preferredDay: tempFreq === 'weekly' ? tempDay : undefined,
+                preferredDate: (tempFreq === 'monthly' || tempFreq === 'quarterly' || tempFreq === 'semiannually' || tempFreq === 'annually') ? tempDate : undefined,
                 preferredTime: tempTime,
                 createdAt: new Date().toISOString()
             };
@@ -181,6 +186,7 @@ export default function ReportsPage() {
         setTempAnalysis(false);
         setTempDetails(true);
         setTempDay(1);
+        setTempDate(1);
         setTempTime('09:00');
     };
 
@@ -193,6 +199,7 @@ export default function ReportsPage() {
         setTempAnalysis(inst.includeAnalysis);
         setTempDetails(inst.includePortfolioDetails);
         setTempDay(inst.preferredDay ?? 1);
+        setTempDate(inst.preferredDate ?? 1);
         setTempTime(inst.preferredTime ?? '09:00');
     };
 
@@ -262,6 +269,8 @@ export default function ReportsPage() {
             setIsSending(false);
         }
     };
+
+    const isDateRequired = ['monthly', 'quarterly', 'semiannually', 'annually'].includes(tempFreq);
 
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
@@ -335,15 +344,14 @@ export default function ReportsPage() {
                                                 <h4 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">{inst.label}</h4>
                                                 <div className="flex flex-wrap items-center gap-2 mt-1">
                                                     <span className="text-[10px] bg-white/5 text-slate-400 px-2 py-0.5 rounded-full border border-white/5">
-                                                        {FREQUENCY_LABELS[inst.frequency]} {inst.frequency === 'weekly' && inst.preferredDay !== undefined && `(${DAYS.find(d => d.id === inst.preferredDay)?.label})`}
+                                                        {FREQUENCY_LABELS[inst.frequency]}
+                                                        {inst.frequency === 'weekly' && inst.preferredDay !== undefined && ` (${DAYS.find(d => d.id === inst.preferredDay)?.label})`}
+                                                        {['monthly', 'quarterly', 'semiannually', 'annually'].includes(inst.frequency) && inst.preferredDate !== undefined && ` (Ayın ${inst.preferredDate}. günü)`}
                                                     </span>
                                                     {inst.preferredTime && (
                                                         <span className="text-[10px] bg-white/5 text-slate-400 px-2 py-0.5 rounded-full border border-white/5 flex items-center gap-1">
                                                             <Clock className="w-2.5 h-2.5" /> {inst.preferredTime}
                                                         </span>
-                                                    )}
-                                                    {inst.includeAnalysis && (
-                                                        <span className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/10">AI Analiz</span>
                                                     )}
                                                 </div>
                                             </div>
@@ -362,7 +370,7 @@ export default function ReportsPage() {
                         </AnimatePresence>
                     </div>
 
-                    {/* WIZARD (Visible when adding/editing) */}
+                    {/* WIZARD */}
                     <AnimatePresence>
                         {isEditing && (
                             <motion.div
@@ -406,14 +414,14 @@ export default function ReportsPage() {
                                                 <input type="checkbox" checked={tempAnalysis} onChange={(e) => { setTempAnalysis(e.target.checked); if (e.target.checked) setTempDetails(false); }} className="mt-1" />
                                                 <div>
                                                     <span className="block font-bold text-white text-xs">Yapay Zeka Analizi</span>
-                                                    <span className="text-[10px] text-slate-500">Piyasa neden-sonuç yorumları.</span>
+                                                    <span className="text-[10px] text-slate-500">Piyasa yorumları.</span>
                                                 </div>
                                             </label>
                                             <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/30' : tempAnalysis ? 'opacity-40 cursor-not-allowed bg-slate-900' : 'bg-slate-900 border-white/5'}`}>
                                                 <input type="checkbox" checked={tempDetails} disabled={tempAnalysis} onChange={(e) => setTempDetails(e.target.checked)} className="mt-1" />
                                                 <div>
                                                     <span className="block font-bold text-white text-xs">Portföy Tablosu</span>
-                                                    <span className="text-[10px] text-slate-500">Varlık listesi ve maliyetler.</span>
+                                                    <span className="text-[10px] text-slate-500">Varlık listesi.</span>
                                                 </div>
                                             </label>
                                         </div>
@@ -445,11 +453,7 @@ export default function ReportsPage() {
                                                 <label className="text-[10px] font-bold text-slate-500 uppercase block tracking-widest">Hangi Gün?</label>
                                                 <div className="flex flex-wrap gap-1.5">
                                                     {DAYS.map((day) => (
-                                                        <button
-                                                            key={day.id}
-                                                            onClick={() => setTempDay(day.id)}
-                                                            className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${tempDay === day.id ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-slate-900 border-white/5 text-slate-400 hover:border-white/20'}`}
-                                                        >
+                                                        <button key={day.id} onClick={() => setTempDay(day.id)} className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${tempDay === day.id ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-slate-900 border-white/5 text-slate-400'}`}>
                                                             {day.label}
                                                         </button>
                                                     ))}
@@ -457,15 +461,31 @@ export default function ReportsPage() {
                                             </motion.div>
                                         )}
 
+                                        {isDateRequired && (
+                                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase block tracking-widest flex items-center gap-2">
+                                                    <CalendarDays className="w-3 h-3" /> Ayın Kaçıncı Günü Gönderilsin?
+                                                </label>
+                                                <div className="grid grid-cols-7 gap-1">
+                                                    {MONTH_DATES.map((date) => (
+                                                        <button
+                                                            key={date}
+                                                            onClick={() => setTempDate(date)}
+                                                            className={`py-1.5 rounded-md border text-[10px] font-bold transition-all ${tempDate === date ? 'bg-blue-500 text-white border-blue-500' : 'bg-slate-900 border-white/5 text-slate-400 hover:border-white/20'}`}
+                                                        >
+                                                            {date}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <p className="text-[9px] text-slate-500 italic">* Şubat ayı gibi kısa aylar için en fazla 28. gün seçilebilir.</p>
+                                            </motion.div>
+                                        )}
+
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                                             <label className="text-[10px] font-bold text-slate-500 uppercase block tracking-widest">Hangi Saat?</label>
                                             <div className="grid grid-cols-4 gap-2">
                                                 {TIMES.map((time) => (
-                                                    <button
-                                                        key={time}
-                                                        onClick={() => setTempTime(time)}
-                                                        className={`py-2 rounded-lg border text-[10px] font-bold transition-all ${tempTime === time ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20' : 'bg-slate-900 border-white/5 text-slate-400 hover:border-white/20'}`}
-                                                    >
+                                                    <button key={time} onClick={() => setTempTime(time)} className={`py-2 rounded-lg border text-[10px] font-bold transition-all ${tempTime === time ? 'bg-blue-500 text-white border-blue-500' : 'bg-slate-900 border-white/5 text-slate-400'}`}>
                                                         {time}
                                                     </button>
                                                 ))}
@@ -509,20 +529,6 @@ export default function ReportsPage() {
 
                 {/* RIGHT: PREVIEW AREA */}
                 <div className="lg:col-span-2 space-y-4">
-                    <AnimatePresence>
-                        {sendResult && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0 }}
-                                className={`flex items-center gap-3 p-4 rounded-xl border ${sendResult.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
-                            >
-                                {sendResult.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                                <span className="text-sm font-bold">{sendResult.message}</span>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
                     {previewHtml ? (
                         <div className="bg-slate-950/50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[750px] relative">
                             <div className="bg-slate-900/80 backdrop-blur-md border-b border-white/5 p-4 flex justify-between items-center sticky top-0 z-10">
@@ -546,8 +552,8 @@ export default function ReportsPage() {
                                 <Bot className="w-10 h-10 text-slate-700" />
                             </div>
                             <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Rapor Önizleme Alanı</h3>
-                            <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">
-                                Robotunuzun hazırlayacağı e-postanın nasıl görüneceğini görmek için sağ üstteki "Önizleme Oluştur" butonuna tıklayabilirsiniz.
+                            <p className="text-slate-500 max-w-sm mx-auto text-sm">
+                                Sağ üstteki "Önizleme Oluştur" butonuna tıklayarak robotunuzun hazırlayacağı e-postayı görebilirsiniz.
                             </p>
                         </div>
                     )}

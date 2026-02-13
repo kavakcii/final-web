@@ -28,31 +28,53 @@ export function DashboardPortfolioWidget() {
     const getPortfolioRecommendation = (answers: Record<number, string>) => {
         let totalScore = 0;
         let isIslamic = false;
+        let investmentAmount = 0;
+
         const numQuestions = Object.keys(answers).length;
         // If 6 questions (old version), Islamic is index 5.
         // If 8 questions (new version), Islamic is index 7.
+        // Amount question is index 6 in new version.
         const islamicIndex = numQuestions === 6 ? 5 : 7;
+        const amountIndex = numQuestions === 8 ? 6 : -1;
 
-        Object.entries(answers).forEach(([qIndex, score]) => {
-            const s = parseInt(score);
-            totalScore += s;
-            // Check for interest sensitivity based on detected version
-            if (parseInt(qIndex) === islamicIndex && s === 0) {
-                isIslamic = true;
+        Object.entries(answers).forEach(([qIndex, val]) => {
+            const idx = parseInt(qIndex);
+            
+            if (idx === amountIndex) {
+                // This is the amount question, not a score
+                investmentAmount = parseInt(val) || 0;
+            } else {
+                const s = parseInt(val);
+                totalScore += s;
+                // Check for interest sensitivity based on detected version
+                if (idx === islamicIndex && s === 0) {
+                    isIslamic = true;
+                }
             }
         });
 
         // Helper to adjust names for Islamic finance
         const adjustForIslamic = (items: any[]) => {
-            if (!isIslamic) return items;
-            return items.map(item => {
+            const formatCurrency = (val: number) => {
+                if (!investmentAmount) return "";
+                const amount = (investmentAmount * val) / 100;
+                return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(amount);
+            };
+
+            const processItems = (list: any[]) => list.map(item => ({
+                ...item,
+                amountStr: formatCurrency(item.value)
+            }));
+
+            if (!isIslamic) return processItems(items);
+            return processItems(items.map(item => {
                 if (item.name === "Tahvil / Bono") return { ...item, name: "Kira Sertifikaları (Sukuk)" };
                 if (item.name === "Hisse Senetleri") return { ...item, name: "Katılım Hisseleri" };
                 if (item.name === "Hisse (Temettü)") return { ...item, name: "Katılım Temettü Hisseleri" };
                 if (item.name === "Yatırım Fonları") return { ...item, name: "Katılım Fonları" };
                 if (item.name === "Nakit") return { ...item, name: "Katılım Hesabı" };
                 return item;
-            });
+            }));
         };
 
         if (totalScore >= 13) {
@@ -149,6 +171,9 @@ export function DashboardPortfolioWidget() {
                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
                                  <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">
                                      {item.name} <span className="text-slate-500">%{item.value}</span>
+                                     {item.amountStr && (
+                                         <span className="text-slate-500 ml-1">({item.amountStr})</span>
+                                     )}
                                  </span>
                              </div>
                          ))}

@@ -197,12 +197,15 @@ export default function MarketPage() {
         }
     ];
 
-    const handleAnswer = (score: number) => {
+    const [inputValue, setInputValue] = useState("");
+
+    const handleAnswer = (score: number | string) => {
         const newAnswers = { ...answers, [currentQuestion]: score.toString() };
         setAnswers(newAnswers);
         
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(curr => curr + 1);
+            setInputValue(""); // Reset input for next question if any
         } else {
             // Save to local storage when test is finished
             localStorage.setItem("portfolio_answers", JSON.stringify(newAnswers));
@@ -210,34 +213,67 @@ export default function MarketPage() {
         }
     };
 
+    const handleInputConfirm = () => {
+        if (!inputValue) return;
+        // Clean input: remove non-numeric chars except dot/comma if needed, but simple number is best for now
+        // Assuming user enters raw number or formatted. Let's strip non-digits.
+        const cleanValue = inputValue.replace(/[^0-9]/g, '');
+        if (!cleanValue) return;
+        
+        handleAnswer(cleanValue);
+    };
+
     const getPortfolioRecommendation = () => {
         let totalScore = 0;
         let isIslamic = false;
+        let investmentAmount = 0;
+        
         const numQuestions = Object.keys(answers).length;
         // If 6 questions (old version), Islamic is index 5.
         // If 8 questions (new version), Islamic is index 7.
+        // Amount question is index 6 in new version.
         const islamicIndex = numQuestions === 6 ? 5 : 7;
+        const amountIndex = numQuestions === 8 ? 6 : -1;
 
-        Object.entries(answers).forEach(([qIndex, score]) => {
-            const s = parseInt(score);
-            totalScore += s;
-            // Check for interest sensitivity based on detected version
-            if (parseInt(qIndex) === islamicIndex && s === 0) {
-                isIslamic = true;
+        Object.entries(answers).forEach(([qIndex, val]) => {
+            const idx = parseInt(qIndex);
+            
+            if (idx === amountIndex) {
+                // This is the amount question, not a score
+                investmentAmount = parseInt(val) || 0;
+            } else {
+                const s = parseInt(val);
+                totalScore += s;
+                // Check for interest sensitivity based on detected version
+                if (idx === islamicIndex && s === 0) {
+                    isIslamic = true;
+                }
             }
         });
 
         // Helper to adjust names for Islamic finance
         const adjustForIslamic = (items: any[]) => {
-            if (!isIslamic) return items;
-            return items.map(item => {
+            const formatCurrency = (val: number) => {
+                if (!investmentAmount) return "";
+                const amount = (investmentAmount * val) / 100;
+                return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(amount);
+            };
+
+            const processItems = (list: any[]) => list.map(item => ({
+                ...item,
+                amountStr: formatCurrency(item.value)
+            }));
+
+            if (!isIslamic) return processItems(items);
+            
+            return processItems(items.map(item => {
                 if (item.name === "Tahvil / Bono") return { ...item, name: "Kira Sertifikaları (Sukuk)" };
                 if (item.name === "Hisse Senetleri") return { ...item, name: "Katılım Hisseleri" };
                 if (item.name === "Hisse (Temettü)") return { ...item, name: "Katılım Temettü Hisseleri" };
                 if (item.name === "Yatırım Fonları") return { ...item, name: "Katılım Fonları" };
                 if (item.name === "Nakit") return { ...item, name: "Katılım Hesabı" };
                 return item;
-            });
+            }));
         };
 
         if (totalScore >= 13) {
@@ -367,7 +403,40 @@ export default function MarketPage() {
                         </h2>
 
                         <div className="space-y-4">
-                            {questions[currentQuestion].options.map((opt, idx) => (
+                            {questions[currentQuestion].id === 7 ? (
+                                <div className="space-y-6">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            value={inputValue}
+                                            onChange={(e) => {
+                                                // Only allow numbers
+                                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                                setInputValue(val);
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleInputConfirm();
+                                            }}
+                                            placeholder="Örn: 50000"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-2xl font-bold text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            autoFocus
+                                        />
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl">
+                                            ₺
+                                        </div>
+                                    </div>
+                                    
+                                    <button
+                                        onClick={handleInputConfirm}
+                                        disabled={!inputValue}
+                                        className="w-full py-5 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 text-white rounded-2xl font-bold text-xl transition-all flex items-center justify-center gap-3"
+                                    >
+                                        Devam Et
+                                        <ArrowRight className="w-6 h-6" />
+                                    </button>
+                                </div>
+                            ) : (
+                                questions[currentQuestion].options.map((opt, idx) => (
                                 <motion.button
                                     key={idx}
                                     initial={{ opacity: 0, y: 20 }}
@@ -386,7 +455,7 @@ export default function MarketPage() {
                                     </div>
                                     <ChevronRight className="w-6 h-6 text-slate-500 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
                                 </motion.button>
-                            ))}
+                            )))}
                         </div>
                     </motion.div>
                 ) : (
@@ -468,7 +537,12 @@ export default function MarketPage() {
                                             <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }}></div>
                                             <div className="flex justify-between w-full text-sm">
                                                 <span className="text-slate-300 font-medium">{item.name}</span>
-                                                <span className="text-white font-bold">%{item.value}</span>
+                                                <div className="text-right">
+                                                    <span className="text-white font-bold block">%{item.value}</span>
+                                                    {item.amountStr && (
+                                                        <span className="text-xs text-slate-400 font-medium block">({item.amountStr})</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
