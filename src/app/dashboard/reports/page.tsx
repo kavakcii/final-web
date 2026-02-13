@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2 } from 'lucide-react';
+import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2, Plus, ArrowRight, X, ChevronRight, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
@@ -12,7 +12,7 @@ const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
     weekly: 'Her Hafta (Pazartesi)',
     biweekly: 'İki Haftada Bir',
     monthly: 'Ayda Bir',
-    none: 'Kapalı (Gönderim İptal)',
+    none: 'Devre Dışı',
 };
 
 const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
@@ -23,18 +23,25 @@ const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
 };
 
 export default function ReportsPage() {
-    const { email: userEmail, user } = useUser();
+    const { email: userEmail } = useUser();
     const [isLoading, setIsLoading] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [previewHtml, setPreviewHtml] = useState<string | null>(null);
-    const [frequency, setFrequency] = useState<EmailFrequency>('weekly');
     const [sendResult, setSendResult] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [lastSent, setLastSent] = useState<string | null>(null);
 
-    // Content Options
+    // Active Persistence States
+    const [frequency, setFrequency] = useState<EmailFrequency>('none');
     const [includeAnalysis, setIncludeAnalysis] = useState(false);
     const [includePortfolioDetails, setIncludePortfolioDetails] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+
+    // Editing / Wizard States
+    const [isEditing, setIsEditing] = useState(false);
+    const [setupStep, setSetupStep] = useState(1); // 1: Content, 2: Frequency
+    const [tempFreq, setTempFreq] = useState<EmailFrequency>('weekly');
+    const [tempAnalysis, setTempAnalysis] = useState(false);
+    const [tempDetails, setTempDetails] = useState(true);
 
     // Load saved preferences from Supabase Metadata
     useEffect(() => {
@@ -42,13 +49,20 @@ export default function ReportsPage() {
             const { data: { user } } = await supabase.auth.getUser();
             if (user && user.user_metadata?.report_settings) {
                 const settings = user.user_metadata.report_settings;
-                // Only override if settings exist, otherwise default to weekly/true
-                if (settings.frequency) setFrequency(settings.frequency);
-                if (settings.includeAnalysis !== undefined) setIncludeAnalysis(settings.includeAnalysis);
-                if (settings.includePortfolioDetails !== undefined) setIncludePortfolioDetails(settings.includePortfolioDetails);
+                if (settings.frequency) {
+                    setFrequency(settings.frequency);
+                    setTempFreq(settings.frequency);
+                }
+                if (settings.includeAnalysis !== undefined) {
+                    setIncludeAnalysis(settings.includeAnalysis);
+                    setTempAnalysis(settings.includeAnalysis);
+                }
+                if (settings.includePortfolioDetails !== undefined) {
+                    setIncludePortfolioDetails(settings.includePortfolioDetails);
+                    setTempDetails(settings.includePortfolioDetails);
+                }
             }
 
-            // Also check localStorage for last sent time (client-side only info)
             if (typeof window !== 'undefined') {
                 const savedLastSent = localStorage.getItem('portfolioEmailLastSent');
                 if (savedLastSent) setLastSent(savedLastSent);
@@ -57,69 +71,83 @@ export default function ReportsPage() {
         loadPreferences();
     }, []);
 
-    // Save preferences to Supabase
-    const savePreferencesToSupabase = async (newSettings: any) => {
+    // Save final preferences to Supabase
+    const handleSaveInstruction = async () => {
         setIsSaving(true);
         try {
-            // Merge current state with new settings
-            const updatedSettings = {
-                frequency: newSettings.frequency !== undefined ? newSettings.frequency : frequency,
-                includeAnalysis: newSettings.includeAnalysis !== undefined ? newSettings.includeAnalysis : includeAnalysis,
-                includePortfolioDetails: newSettings.includePortfolioDetails !== undefined ? newSettings.includePortfolioDetails : includePortfolioDetails,
-                updatedAt: new Date().toISOString()
-            };
-
             const { error } = await supabase.auth.updateUser({
-                data: { report_settings: updatedSettings }
+                data: {
+                    report_settings: {
+                        frequency: tempFreq,
+                        includeAnalysis: tempAnalysis,
+                        includePortfolioDetails: tempDetails,
+                        updatedAt: new Date().toISOString()
+                    }
+                }
             });
 
             if (error) throw error;
 
-            // Also save to localStorage for fallback/offline
-            if (typeof window !== 'undefined') {
-                if (newSettings.frequency) localStorage.setItem('portfolioEmailFrequency', newSettings.frequency);
-                if (newSettings.includeAnalysis !== undefined) localStorage.setItem('portfolioIncludeAnalysis', String(newSettings.includeAnalysis));
-                if (newSettings.includePortfolioDetails !== undefined) localStorage.setItem('portfolioIncludeDetails', String(newSettings.includePortfolioDetails));
-            }
+            setFrequency(tempFreq);
+            setIncludeAnalysis(tempAnalysis);
+            setIncludePortfolioDetails(tempDetails);
+            setIsEditing(false);
+            setSendResult({ type: 'success', message: 'Yeni yatırım talimatınız başarıyla kaydedildi! Robotunuz aktif.' });
 
         } catch (err) {
             console.error("Ayarlar kaydedilemedi:", err);
-            setSendResult({ type: 'error', message: 'Ayarlar kaydedilirken hata oluştu.' });
+            setSendResult({ type: 'error', message: 'Talimat kaydedilirken bir hata oluştu.' });
         } finally {
             setIsSaving(false);
         }
     };
 
-    // Handler wrappers
-    const handleFrequencyChange = (freq: EmailFrequency) => {
-        setFrequency(freq);
-        savePreferencesToSupabase({ frequency: freq });
-    };
+    const handleCancelInstruction = async () => {
+        if (!confirm('Otomatik gönderim talimatını iptal etmek istediğinize emin misiniz?')) return;
 
-    const handleAnalysisChange = (checked: boolean) => {
-        setIncludeAnalysis(checked);
-
-        // Auto-disable table if AI is enabled (User Request)
-        let newDetails = includePortfolioDetails;
-        if (checked) {
-            setIncludePortfolioDetails(false);
-            newDetails = false;
+        setIsSaving(true);
+        try {
+            const { error } = await supabase.auth.updateUser({
+                data: {
+                    report_settings: {
+                        frequency: 'none',
+                        updatedAt: new Date().toISOString()
+                    }
+                }
+            });
+            if (error) throw error;
+            setFrequency('none');
+            setTempFreq('none');
+            setSendResult({ type: 'success', message: 'Tüm otomatik gönderim talimatları iptal edildi.' });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsSaving(false);
         }
-
-        savePreferencesToSupabase({ includeAnalysis: checked, includePortfolioDetails: newDetails });
     };
 
-    const handleDetailsChange = (checked: boolean) => {
-        setIncludePortfolioDetails(checked);
-        savePreferencesToSupabase({ includePortfolioDetails: checked });
+    const startNewInstruction = () => {
+        setSetupStep(1);
+        setIsEditing(true);
+        // Reset temp states to current or reasonable defaults
+        setTempFreq(frequency === 'none' ? 'weekly' : frequency);
+        setTempAnalysis(includeAnalysis);
+        setTempDetails(includePortfolioDetails);
     };
 
-    const handleCancelInstruction = () => {
-        setFrequency('none');
-        savePreferencesToSupabase({ frequency: 'none' });
+    // UI Helpers
+    const getInstructionSummary = () => {
+        if (frequency === 'none') return "Şu an aktif bir gönderim talimatınız bulunmuyor.";
+
+        let contentText = "";
+        if (includeAnalysis && includePortfolioDetails) contentText = "Yapay Zeka Analizi ve Portföy Tablosu";
+        else if (includeAnalysis) contentText = "Detaylı Yapay Zeka Analizi";
+        else if (includePortfolioDetails) contentText = "Portföy Varlık Tablosu";
+
+        return `${FREQUENCY_LABELS[frequency]} olarak ${contentText} raporu alacaksınız.`;
     };
 
-    // Generate preview
+    // Preview Logic
     const handlePreview = async () => {
         setIsLoading(true);
         setSendResult(null);
@@ -133,8 +161,8 @@ export default function ReportsPage() {
                 body: JSON.stringify({
                     userId: user.id,
                     sendEmail: false,
-                    includeAnalysis,
-                    includePortfolioDetails
+                    includeAnalysis: isEditing ? tempAnalysis : includeAnalysis,
+                    includePortfolioDetails: isEditing ? tempDetails : includePortfolioDetails
                 }),
             });
 
@@ -151,71 +179,6 @@ export default function ReportsPage() {
         }
     };
 
-    // Send email now
-    const handleSendNow = async () => {
-        setIsSending(true);
-        setSendResult(null);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('Oturum bulunamadı');
-
-            const res = await fetch('/api/cron/portfolio-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: user.id,
-                    sendEmail: true,
-                    includeAnalysis,
-                    includePortfolioDetails
-                }),
-            });
-
-            const data = await res.json();
-            if (data.success) {
-                const userResult = data.results?.find((r: any) => r.email === userEmail) || data.results?.[0];
-
-                if (userResult?.status === 'sent') {
-                    const now = new Date().toLocaleString('tr-TR');
-                    setLastSent(now);
-                    localStorage.setItem('portfolioEmailLastSent', now);
-                    setSendResult({ type: 'success', message: `E-posta başarıyla ${userResult.email} adresine gönderildi!` });
-                } else if (userResult?.status === 'skipped_no_assets') {
-                    setSendResult({ type: 'error', message: 'Portföyünüzde varlık bulunamadı. Önce portföyünüze varlık ekleyin.' });
-                } else if (userResult?.status === 'skipped_no_resend_key') {
-                    setSendResult({ type: 'error', message: 'Server tarafında E-posta API anahtarı eksik.' });
-                } else if (userResult?.status?.startsWith('error')) {
-                    const errorMsg = userResult.status.replace('error: ', '');
-                    setSendResult({ type: 'error', message: `Gönderim Başarısız: ${errorMsg}` });
-                } else {
-                    setSendResult({ type: 'error', message: 'Bilinmeyen bir durum oluştu. Sonuç alınamadı.' });
-                }
-
-                if (data.htmlPreview) {
-                    setPreviewHtml(data.htmlPreview);
-                }
-            } else {
-                throw new Error(data.error);
-            }
-        } catch (err: any) {
-            setSendResult({ type: 'error', message: err.message || 'E-posta gönderilemedi' });
-        } finally {
-            setIsSending(false);
-        }
-    };
-
-    // GENERATE INSTRUCTION SUMMARY TEXT
-    const getInstructionSummary = () => {
-        if (frequency === 'none') return "Otomatik rapor gönderimi şu an kapalı.";
-
-        let contentText = "";
-        if (includeAnalysis && includePortfolioDetails) contentText = "yapay zeka analizi ve detaylı portföy tablosu";
-        else if (includeAnalysis) contentText = "sadece yapay zeka analizi";
-        else if (includePortfolioDetails) contentText = "sadece portföy varlık tablosu";
-        else contentText = "boş bir şablon (içerik seçilmedi)";
-
-        return `${FREQUENCY_LABELS[frequency]} olarak ${contentText} içeren rapor gönderilecek.`;
-    };
-
     return (
         <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8">
             {/* Header */}
@@ -225,8 +188,8 @@ export default function ReportsPage() {
                         <Bot className="w-8 h-8 text-purple-500" />
                         FinAi Robotum
                     </h1>
-                    <p className="text-slate-400 mt-2">
-                        Yapay zeka destekli haftalık portföy analizi ve robot bildirimleri.
+                    <p className="text-slate-400 mt-2 text-sm">
+                        Yatırım asistanınız sizin yerinize piyasaları izler ve raporlar.
                     </p>
                 </div>
 
@@ -234,237 +197,262 @@ export default function ReportsPage() {
                     <button
                         onClick={handlePreview}
                         disabled={isLoading}
-                        className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-xl font-medium transition-all border border-white/10 disabled:opacity-50"
+                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/10 disabled:opacity-50"
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                        Önizle
-                    </button>
-                    <button
-                        onClick={handleSendNow}
-                        disabled={isSending}
-                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-lg shadow-purple-500/20 disabled:opacity-50"
-                    >
-                        {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        Analizi Başlat & Gönder
+                        Analizi Şimdi Önizle
                     </button>
                 </div>
             </div>
 
-            {/* Status Message */}
-            <AnimatePresence>
-                {sendResult && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className={`flex items-center gap-3 p-4 rounded-xl border ${sendResult.type === 'success'
-                            ? 'bg-green-500/10 border-green-500/20 text-green-400'
-                            : 'bg-red-500/10 border-red-500/20 text-red-400'
-                            }`}
-                    >
-                        {sendResult.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span className="text-sm font-medium">{sendResult.message}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left: Settings */}
+                {/* SETTINGS / WIZARD COLUMN */}
                 <div className="lg:col-span-1 space-y-6">
 
-                    {/* NEW: ACTIVE INSTRUCTION CARD */}
-                    <div className={`border rounded-2xl p-6 relative overflow-hidden transition-all ${frequency !== 'none'
-                            ? 'bg-green-900/10 border-green-500/30 shadow-[0_0_20px_rgba(34,197,94,0.1)]'
-                            : 'bg-slate-900/40 border-slate-700/30'
-                        }`}>
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className={`text-lg font-bold flex items-center gap-2 ${frequency !== 'none' ? 'text-green-400' : 'text-slate-400'}`}>
-                                <ListChecks className="w-5 h-5" />
-                                {frequency !== 'none' ? 'Aktif Talimat' : 'Talimat Yok'}
-                            </h3>
-                            {isSaving && <Loader2 className="w-4 h-4 animate-spin text-slate-500" />}
-                        </div>
-
-                        <p className="text-sm text-slate-300 mb-6 leading-relaxed font-medium">
-                            {getInstructionSummary()}
-                        </p>
-
-                        {frequency !== 'none' && (
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={handleCancelInstruction}
-                                    className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg border border-red-500/20 transition-colors flex items-center gap-1.5"
-                                >
-                                    <BellOff className="w-3 h-3" />
-                                    Otomatik Gönderimi İptal Et
-                                </button>
+                    {/* TOP STATUS / CREATE BUTTON */}
+                    {!isEditing ? (
+                        <div className={`p-6 rounded-2xl border transition-all ${frequency !== 'none'
+                                ? 'bg-gradient-to-br from-green-500/10 to-emerald-500/5 border-green-500/20 shadow-lg shadow-green-500/5'
+                                : 'bg-slate-900/40 border-slate-800'
+                            }`}>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className={`text-base font-bold flex items-center gap-2 ${frequency !== 'none' ? 'text-green-400' : 'text-slate-400'}`}>
+                                    {frequency !== 'none' ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+                                    {frequency !== 'none' ? 'Aktif Yatırım Talimatı' : 'Aktif Talimat Yok'}
+                                </h3>
+                                {frequency !== 'none' && (
+                                    <span className="flex h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                )}
                             </div>
-                        )}
 
-                        {frequency === 'none' && (
-                            <p className="text-xs text-slate-500">
-                                Rapor almak için aşağıdan sıklık ve içerik seçiniz.
+                            <p className="text-sm text-slate-300 mb-6 leading-relaxed">
+                                {getInstructionSummary()}
                             </p>
-                        )}
-                    </div>
 
-                    {/* Content Preferences */}
-                    <div className="bg-purple-900/20 border border-purple-500/20 rounded-2xl p-6 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-3xl -z-10 rounded-full" />
-
-                        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <Settings2 className="w-5 h-5 text-purple-400" />
-                            İçerik Tercihleri
-                        </h3>
-
-                        {/* AI Option */}
-                        <div className="flex items-start gap-4 p-4 bg-slate-900/40 rounded-xl border border-white/5 hover:border-purple-500/30 transition-colors cursor-pointer mb-3" onClick={() => handleAnalysisChange(!includeAnalysis)}>
-                            <div className="relative flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={includeAnalysis}
-                                    onChange={(e) => handleAnalysisChange(e.target.checked)}
-                                    className="peer h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-purple-600 focus:ring-purple-500/50"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium text-white text-sm">Detaylı Portföy Analizi</span>
-                                    <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold border border-purple-500/30">AI</span>
-                                </div>
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                    Her bir varlık için neden-sonuç ilişkisine dayalı detaylı yorum, puanlama ve gelecek beklentisi.
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Portfolio Details Option */}
-                        <div className={`flex items-start gap-4 p-4 rounded-xl border transition-colors cursor-pointer ${includeAnalysis
-                                ? 'bg-slate-900/20 border-white/5 opacity-60 cursor-not-allowed'
-                                : 'bg-slate-900/40 border-white/5 hover:border-blue-500/30'
-                            }`} onClick={() => !includeAnalysis && handleDetailsChange(!includePortfolioDetails)}>
-
-                            <div className="relative flex items-center">
-                                <input
-                                    type="checkbox"
-                                    checked={includePortfolioDetails}
-                                    onChange={(e) => !includeAnalysis && handleDetailsChange(e.target.checked)}
-                                    disabled={includeAnalysis}
-                                    className="peer h-5 w-5 cursor-pointer rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500/50 disabled:opacity-50"
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="font-medium text-white text-sm">Portföy Varlık Tablosu</span>
-                                    {includeAnalysis && <span className="text-[10px] text-yellow-500 font-bold ml-auto">AI ile Kapalı</span>}
-                                </div>
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                    Portföyünüzdeki varlıkların listesi, anlık fiyatları, toplam tutar ve kar/zarar durumu.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Frequency Selection */}
-                    <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-6">
-                        <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                            <CalendarClock className="w-5 h-5 text-blue-400" />
-                            Otomatik Gönderim Sıklığı
-                        </h3>
-                        <p className="text-sm text-slate-500 mb-4">FinAi Robotum analizleri ne sıklıkla göndersin?</p>
-                        <div className="space-y-2">
-                            {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).map((freq) => (
+                            <div className="flex flex-wrap gap-2">
                                 <button
-                                    key={freq}
-                                    onClick={() => handleFrequencyChange(freq)}
-                                    className={`w-full flex items-center gap-3 p-3.5 rounded-xl text-left transition-all border ${frequency === freq
-                                        ? 'bg-blue-600/20 border-blue-500/40 text-white'
-                                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10 hover:border-white/10'
-                                        }`}
+                                    onClick={startNewInstruction}
+                                    className="flex-1 bg-white/5 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-xs font-semibold border border-white/10 transition-all flex items-center justify-center gap-2"
                                 >
-                                    <span className="text-lg">{FREQUENCY_ICONS[freq]}</span>
-                                    <div className="flex-1">
-                                        <span className="text-sm font-medium">{FREQUENCY_LABELS[freq]}</span>
-                                    </div>
-                                    {frequency === freq && (
-                                        <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                                    )}
+                                    <Settings2 className="w-4 h-4" />
+                                    {frequency === 'none' ? 'Yeni Talimat Oluştur' : 'Talimatı Düzenle'}
                                 </button>
-                            ))}
+                                {frequency !== 'none' && (
+                                    <button
+                                        onClick={handleCancelInstruction}
+                                        className="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-2.5 rounded-xl text-xs font-semibold border border-red-500/20 transition-all"
+                                        title="Durdur"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
+                    ) : (
+                        /* WIZARD CARD */
+                        <div className="bg-slate-900/60 border-2 border-purple-500/30 rounded-2xl p-6 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-2">
+                                <button onClick={() => setIsEditing(false)} className="text-slate-500 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <div className="mb-6">
+                                <div className="flex gap-2 mb-4">
+                                    <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 1 ? 'bg-purple-500' : 'bg-slate-800'}`} />
+                                    <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 2 ? 'bg-purple-500' : 'bg-slate-800'}`} />
+                                </div>
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    {setupStep === 1 ? <Bot className="w-5 h-5 text-purple-400" /> : <Clock className="w-5 h-5 text-blue-400" />}
+                                    {setupStep === 1 ? 'İçerik Seçimi' : 'Gönderim Sıklığı'}
+                                </h3>
+                                <p className="text-sm text-slate-400 mt-1">
+                                    {setupStep === 1 ? 'Raporunuzda neler yer almalı?' : 'Robotunuz ne zaman çalışmalı?'}
+                                </p>
+                            </div>
+
+                            <AnimatePresence mode="wait">
+                                {setupStep === 1 ? (
+                                    <motion.div
+                                        key="step1"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        className="space-y-3"
+                                    >
+                                        <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${tempAnalysis ? 'bg-purple-500/10 border-purple-500/40' : 'bg-slate-900 border-white/5 hover:border-white/10'}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={tempAnalysis}
+                                                onChange={(e) => {
+                                                    setTempAnalysis(e.target.checked);
+                                                    if (e.target.checked) setTempDetails(false);
+                                                }}
+                                                className="mt-1 h-5 w-5 rounded border-slate-700 bg-slate-800 text-purple-500 focus:ring-purple-500/30"
+                                            />
+                                            <div>
+                                                <span className="block font-bold text-white text-sm">Detaylı Yapay Zeka Analizi</span>
+                                                <span className="text-xs text-slate-400">Piyasa neden-sonuç analizi ve ileriye dönük beklentiler.</span>
+                                            </div>
+                                        </label>
+
+                                        <label className={`flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/40' : tempAnalysis ? 'opacity-40 cursor-not-allowed bg-slate-900 border-white/5' : 'bg-slate-900 border-white/5 hover:border-white/10'}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={tempDetails}
+                                                disabled={tempAnalysis}
+                                                onChange={(e) => setTempDetails(e.target.checked)}
+                                                className="mt-1 h-5 w-5 rounded border-slate-700 bg-slate-800 text-blue-500 focus:ring-blue-500/30"
+                                            />
+                                            <div>
+                                                <span className="block font-bold text-white text-sm">Portföy Varlık Tablosu</span>
+                                                <span className="text-xs text-slate-400">Varlık listesi ve maliyetler. {tempAnalysis && <span className="text-yellow-500 font-bold">(AI ile kapalı)</span>}</span>
+                                            </div>
+                                        </label>
+
+                                        <button
+                                            onClick={() => setSetupStep(2)}
+                                            disabled={!tempAnalysis && !tempDetails}
+                                            className="w-full mt-6 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                                        >
+                                            Sonraki Adım
+                                            <ArrowRight className="w-4 h-4" />
+                                        </button>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="step2"
+                                        initial={{ opacity: 0, x: 20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: -20 }}
+                                        className="space-y-2"
+                                    >
+                                        {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).filter(f => f !== 'none').map((freq) => (
+                                            <button
+                                                key={freq}
+                                                onClick={() => setTempFreq(freq)}
+                                                className={`w-full flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${tempFreq === freq ? 'bg-blue-600/20 border-blue-500/40 text-white' : 'bg-slate-900 border-white/5 text-slate-400'}`}
+                                            >
+                                                <span className="text-lg">{FREQUENCY_ICONS[freq]}</span>
+                                                <span className="text-sm font-bold">{FREQUENCY_LABELS[freq]}</span>
+                                                {tempFreq === freq && <CheckCircle className="w-4 h-4 text-blue-400 ml-auto" />}
+                                            </button>
+                                        ))}
+
+                                        <div className="flex gap-2 mt-6">
+                                            <button
+                                                onClick={() => setSetupStep(1)}
+                                                className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl font-bold border border-white/10 transition-all"
+                                            >
+                                                Geri
+                                            </button>
+                                            <button
+                                                onClick={handleSaveInstruction}
+                                                disabled={isSaving}
+                                                className="flex-[2] bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-green-600/20 border border-green-400/20"
+                                            >
+                                                {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                                Talimatı Kaydet
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+
+                    {/* SEND NOW SECTION (SECONDARY) */}
+                    <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/10 border border-white/5 rounded-2xl p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-indigo-500/20 rounded-lg">
+                                <Send className="w-5 h-5 text-indigo-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-white">Anlık Analiz</h3>
+                        </div>
+                        <p className="text-xs text-slate-400 mb-6 font-medium">
+                            Otomatik raporu beklemeden hemen şimdi güncel bir analiz raporu oluşturup e-posta adresinize gönderebilirsiniz.
+                        </p>
+                        <button
+                            onClick={handleSendNow}
+                            disabled={isSending}
+                            className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50"
+                        >
+                            {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+                            Şimdi Analiz Gönder
+                        </button>
                     </div>
 
-                    {/* Email Info */}
-                    <div className="bg-gradient-to-br from-blue-900/20 to-indigo-900/20 border border-white/5 rounded-2xl p-6">
-                        <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                            <Bell className="w-4 h-4 text-blue-400" />
-                            Robot Durumu
-                        </h3>
-                        <div className="space-y-3 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Hedef E-posta</span>
-                                <span className="text-slate-300 font-medium">{userEmail || '—'}</span>
+                    {/* Email Stats */}
+                    <div className="bg-slate-900/30 border border-white/5 rounded-2xl p-6">
+                        <div className="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-wider mb-4">
+                            <ListChecks className="w-4 h-4" />
+                            İstatistikler
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                <span className="block text-[10px] text-slate-500 uppercase">Son Gönderim</span>
+                                <span className="block text-xs text-slate-300 font-bold mt-1">{lastSent || 'Yok'}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-slate-500">Son Çalışma</span>
-                                <span className="text-slate-300 font-medium">{lastSent || 'Henüz yok'}</span>
+                            <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                <span className="block text-[10px] text-slate-500 uppercase">Hedef</span>
+                                <span className="block text-xs text-slate-300 font-bold mt-1 truncate" title={userEmail || ''}>{userEmail || '—'}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right: Preview */}
+                {/* RIGHT: PREVIEW AREA */}
                 <div className="lg:col-span-2">
+                    <AnimatePresence>
+                        {sendResult && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className={`flex items-center gap-3 p-4 mb-4 rounded-xl border ${sendResult.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
+                            >
+                                {sendResult.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                <span className="text-sm font-bold">{sendResult.message}</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     {previewHtml ? (
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-slate-900/30 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col"
-                            style={{ height: '800px' }}
+                            className="bg-slate-900/30 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[700px]"
                         >
                             <div className="bg-slate-800/50 border-b border-white/5 p-4 flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <div className="flex gap-1.5">
-                                        <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                                        <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                                        <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                                        <div className="w-3 h-3 rounded-full bg-red-500/40" />
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500/40" />
+                                        <div className="w-3 h-3 rounded-full bg-green-500/40" />
                                     </div>
-                                    <span className="text-slate-400 text-sm font-medium">FinAi Robot İzleme Ekranı</span>
+                                    <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Canlı İzleme</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <Bot className="w-3.5 h-3.5" />
-                                    AI processing completed
-                                </div>
+                                <div className="text-[10px] text-slate-500 font-mono">RENDER_MODE: HTML_IFRAME</div>
                             </div>
-                            <iframe
-                                srcDoc={previewHtml}
-                                className="w-full flex-1 border-0"
-                                title="Email Preview"
-                                style={{ background: '#0a0e1a' }}
-                            />
+                            <iframe srcDoc={previewHtml} className="w-full flex-1 border-0" title="Email Preview" style={{ background: '#0a0e1a' }} />
                         </motion.div>
                     ) : (
-                        <div className="bg-slate-900/30 border border-dashed border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center p-12" style={{ height: '600px' }}>
-                            <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mb-6 relative">
-                                <Bot className="w-10 h-10 text-slate-600" />
-                                {includeAnalysis && (
-                                    <div className="absolute top-0 right-0 w-4 h-4 bg-purple-500 rounded-full animate-pulse border-2 border-slate-800" />
-                                )}
+                        <div className="bg-slate-900/30 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center p-12 h-[600px]">
+                            <div className="w-24 h-24 bg-slate-800/50 rounded-full flex items-center justify-center mb-6 relative">
+                                <Bot className="w-12 h-12 text-slate-600" />
+                                <div className="absolute top-0 right-0 w-5 h-5 bg-purple-500 rounded-full animate-bounce border-4 border-[#0a0e1a]" />
                             </div>
-                            <h3 className="text-xl font-semibold text-white mb-2">FinAi Robotum</h3>
-                            <p className="text-slate-400 max-w-md mx-auto mb-8">
-                                Portföyünüzü analiz ettirmek ve rapor sonucunu görmek için <strong>"Önizle"</strong> veya <strong>"Analizi Başlat"</strong> butonuna tıklayın.
-                                {includeAnalysis && (
-                                    <span className="block mt-2 text-purple-400 text-sm">✨ Yapay Zeka Detaylı Analizi Aktif</span>
-                                )}
+                            <h3 className="text-2xl font-bold text-white mb-2 italic tracking-tight">Bekleme Ekranı</h3>
+                            <p className="text-slate-400 max-w-sm mx-auto mb-8 text-sm">
+                                Robotuzun üreteceği raporu burada canlı olarak izleyebilirsiniz. Henüz bir önizleme üretilmedi.
                             </p>
                             <button
                                 onClick={handlePreview}
                                 disabled={isLoading}
-                                className="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-2 transition-colors disabled:opacity-50"
+                                className="flex items-center gap-2 text-purple-400 hover:text-purple-300 font-bold transition-all disabled:opacity-50 py-2 border-b border-purple-400/30"
                             >
-                                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
-                                Analiz Önizlemesi Oluştur
+                                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <BrainCircuit className="w-5 h-5" />}
+                                Şimdi Bir Rapor Oluştur & Önizle
                             </button>
                         </div>
                     )}
