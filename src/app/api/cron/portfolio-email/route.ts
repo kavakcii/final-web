@@ -31,7 +31,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
     const otherAssets = assets.filter(a => !['STOCK', 'FUND'].includes(a.asset_type));
 
     const today = new Date();
-    // const dateStr = today.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay() + 1);
     const weekEnd = new Date(weekStart);
@@ -49,7 +48,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
         `).join('');
     };
 
-    // Render AI Analysis Section if available
     const renderAISection = () => {
         if (!aiAnalysis) return '';
 
@@ -73,7 +71,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
         };
 
         return `
-            <!-- AI ANALYSIS SECTION -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px; margin-top: 10px;">
                 <tr>
                     <td style="background: linear-gradient(135deg, #1e1b4b, #0f172a); border-radius: 12px; padding: 24px; border: 1px solid rgba(124, 58, 237, 0.3);">
@@ -81,21 +78,15 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                             <span style="font-size: 20px; margin-right: 10px;">🤖</span>
                             <h3 style="margin: 0; color: #a78bfa; font-size: 18px; font-weight: 700;">FinAi Robotum Analizi</h3>
                         </div>
-                        
-                        <!-- Market Overview -->
                         <div style="background-color: rgba(30, 41, 59, 0.6); border: 1px solid #334155; padding: 16px; margin-bottom: 16px; border-radius: 8px;">
                             <p style="color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; margin: 0 0 6px;">🌍 Piyasalar & Trendler</p>
                             <p style="color: #cbd5e1; font-size: 13px; margin: 0; line-height: 1.5;">${aiAnalysis.generalMarketOverview}</p>
                         </div>
-                        
-                        <!-- Portfolio Assessment -->
                         <div style="background-color: rgba(139, 92, 246, 0.1); border-left: 3px solid #8b5cf6; padding: 12px 16px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
                             <p style="color: #e2e8f0; font-size: 14px; margin: 0; line-height: 1.6;">${aiAnalysis.portfolioAssessment}</p>
                         </div>
-
                         <h4 style="color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Varlık Detayları</h4>
                         ${renderAssetAnalysisRows()}
-
                         <div style="margin-top: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px;">
                             <p style="color: #fbbf24; font-size: 12px; font-weight: 700; margin: 0 0 8px; text-transform: uppercase;">⚡ Öneriler</p>
                             <ul style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 13px;">
@@ -117,8 +108,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
             <tr>
                 <td align="center">
                     <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
-                        
-                        <!-- HEADER -->
                         <tr>
                             <td style="background: linear-gradient(135deg, #0a192f 0%, #1e3a5f 50%, #2563eb 100%); padding: 40px 32px; text-align: center;">
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
@@ -131,22 +120,17 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                         </td>
                                     </tr>
                                 </table>
-                                <p style="color: #94a3b8; font-size: 12px; margin: 12px 0 0; letter-spacing: 2px; text-transform: uppercase; font-weight: 500;">Haftalık Portföy Raporu</p>
+                                <p style="color: #94a3b8; font-size: 12px; margin: 12px 0 0; letter-spacing: 2px; text-transform: uppercase; font-weight: 500;">Portföy Raporu</p>
                             </td>
                         </tr>
-
-                        <!-- BODY -->
                         <tr>
                             <td style="background-color: #0f172a; padding: 32px;">
                                 <p style="color: #e2e8f0; font-size: 16px; margin: 0 0 4px;">Merhaba <strong style="color: #ffffff;">${userName}</strong> 👋</p>
                                 <p style="color: #64748b; font-size: 14px; margin: 0 0 24px; line-height: 1.6;">
-                                    İşte <strong style="color: #94a3b8;">${weekRange}</strong> haftası için portföy özetiniz:
+                                    İşte <strong style="color: #94a3b8;">${weekRange}</strong> dönemi için hazırladığımız rapor:
                                 </p>
-
                                 ${renderAISection()}
-
                                 ${includePortfolioDetails ? `
-                                <!-- Stats Summary -->
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px;">
                                     <tr>
                                         <td style="background: linear-gradient(135deg, #1e3a5f, #0f2744); border-radius: 12px; padding: 20px; text-align: center; width: 50%; border: 1px solid rgba(59,130,246,0.2);">
@@ -160,79 +144,35 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                         </td>
                                     </tr>
                                 </table>
-
                                 ${stockAssets.length > 0 ? `
-                                <!-- Hisseler -->
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; background: #0b1222; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
                                     <tr>
-                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1e3a5f, #0f2744); border-bottom: 1px solid #1e293b;">
-                                            <span style="color: #3b82f6; font-size: 13px; font-weight: 700;">📈 HİSSELER</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 10px 16px; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e293b;">Sembol</td>
-                                        <td style="padding: 10px 16px; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; border-bottom: 1px solid #1e293b;">Miktar</td>
-                                        <td style="padding: 10px 16px; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; border-bottom: 1px solid #1e293b;">Maliyet</td>
+                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1e3a5f, #0f2744); border-bottom: 1px solid #1e293b;"><span style="color: #3b82f6; font-size: 13px; font-weight: 700;">📈 HİSSELER</span></td>
                                     </tr>
                                     ${renderAssetRows(stockAssets)}
-                                </table>
-                                ` : ''}
-
+                                </table>` : ''}
                                 ${fundAssets.length > 0 ? `
-                                <!-- Fonlar -->
                                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; background: #0b1222; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
                                     <tr>
-                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1a3a2a, #0f2618); border-bottom: 1px solid #1e293b;">
-                                            <span style="color: #22c55e; font-size: 13px; font-weight: 700;">🏦 FONLAR</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 10px 16px; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e293b;">Fon Kodu</td>
-                                        <td style="padding: 10px 16px; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; border-bottom: 1px solid #1e293b;">Pay</td>
-                                        <td style="padding: 10px 16px; color: #475569; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; text-align: right; border-bottom: 1px solid #1e293b;">Maliyet</td>
+                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1a3a2a, #0f2618); border-bottom: 1px solid #1e293b;"><span style="color: #22c55e; font-size: 13px; font-weight: 700;">🏦 FONLAR</span></td>
                                     </tr>
                                     ${renderAssetRows(fundAssets)}
-                                </table>
+                                </table>` : ''}
                                 ` : ''}
-
-                                ${otherAssets.length > 0 ? `
-                                <!-- Diğer -->
-                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; background: #0b1222; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
-                                    <tr>
-                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #3a2a1a, #261e0f); border-bottom: 1px solid #1e293b;">
-                                            <span style="color: #f59e0b; font-size: 13px; font-weight: 700;">💰 DİĞER VARLIKLAR</span>
-                                        </td>
-                                    </tr>
-                                    ${renderAssetRows(otherAssets)}
-                                </table>
-                                ` : ''}
-                                ` : ''}
-
-                                <!-- CTA -->
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px auto 0;">
                                     <tr>
                                         <td align="center" style="background: linear-gradient(135deg, #2563eb, #3b82f6); border-radius: 12px;">
-                                            <a href="https://finai.net.tr/dashboard/portfolio" target="_blank" style="display: inline-block; padding: 14px 40px; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none;">
-                                                Portföyümü Görüntüle →
-                                            </a>
+                                            <a href="https://finai.net.tr/dashboard/portfolio" target="_blank" style="display: inline-block; padding: 14px 40px; color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none;">Portföyümü Görüntüle →</a>
                                         </td>
                                     </tr>
                                 </table>
                             </td>
                         </tr>
-
-                        <!-- FOOTER -->
                         <tr>
                             <td style="background-color: #060f1d; padding: 24px 32px; text-align: center;">
-                                <p style="color: #334155; font-size: 11px; margin: 0; line-height: 1.6;">
-                                    © 2026 FinAl — Yapay Zeka ile Akıllı Yatırım
-                                </p>
-                                <p style="color: #1e293b; font-size: 10px; margin: 8px 0 0;">
-                                    Bu e-posta otomatik portföy bildirim sistemi tarafından gönderilmiştir.
-                                </p>
+                                <p style="color: #334155; font-size: 11px; margin: 0; line-height: 1.6;">© 2026 FinAl — Yapay Zeka ile Akıllı Yatırım</p>
                             </td>
                         </tr>
-
                     </table>
                 </td>
             </tr>
@@ -250,6 +190,7 @@ export async function POST(req: Request) {
             id: string;
             email: string;
             name: string;
+            instructionLabel?: string;
             preferences?: {
                 includeAnalysis: boolean;
                 includePortfolioDetails: boolean;
@@ -264,6 +205,7 @@ export async function POST(req: Request) {
                     id: userData.user.id,
                     email: userData.user.email || '',
                     name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.first_name || 'Değerli Kullanıcı',
+                    instructionLabel: 'Manuel Rapor',
                     preferences: {
                         includeAnalysis,
                         includePortfolioDetails
@@ -286,22 +228,14 @@ export async function POST(req: Request) {
                     const metadata = userData.user.user_metadata || {};
                     const instructions: any[] = [];
 
-                    // 1. Support for Multiple Instructions (New Format)
                     if (Array.isArray(metadata.report_instructions)) {
                         instructions.push(...metadata.report_instructions);
-                    }
-                    // 2. Backward Compatibility (Old Format)
-                    else if (metadata.report_settings && metadata.report_settings.frequency !== 'none') {
-                        instructions.push({
-                            ...metadata.report_settings,
-                            label: 'Genel Rapor'
-                        });
+                    } else if (metadata.report_settings && metadata.report_settings.frequency !== 'none') {
+                        instructions.push({ ...metadata.report_settings, label: 'Genel Rapor' });
                     }
 
-                    // Process each active instruction
                     for (const inst of instructions) {
                         if (inst.frequency === 'none') continue;
-
                         targetUsers.push({
                             id: userData.user.id,
                             email: userData.user.email,
@@ -321,7 +255,6 @@ export async function POST(req: Request) {
         let previewHtml = '';
 
         for (const user of targetUsers) {
-            // Get user's portfolio
             const { data: assets, error: assetError } = await getSupabaseAdmin()
                 .from('user_portfolios')
                 .select('symbol, asset_type, quantity, avg_cost')
@@ -332,40 +265,26 @@ export async function POST(req: Request) {
                 continue;
             }
 
-            // Use User Specific Preferences
             const useAI = user.preferences?.includeAnalysis ?? includeAnalysis;
             const useTable = user.preferences?.includePortfolioDetails ?? includePortfolioDetails;
 
-            // Perform AI Analysis if requested
             let aiAnalysis: PortfolioAIAnalysis | null = null;
             if (useAI) {
-                // Convert to Asset format expected by report generator
                 const reportAssets: Asset[] = assets.map(a => ({
-                    symbol: a.symbol,
-                    amount: a.quantity,
-                    type: a.asset_type === 'FUND' ? 'fund' : 'stock' // Basic mapping
+                    symbol: a.symbol, amount: a.quantity,
+                    type: a.asset_type === 'FUND' ? 'fund' : 'stock'
                 }));
-
-                // Get pre-calculated report data (prices, changes)
                 const weeklyReport = await generateWeeklyReport(reportAssets);
-
-                // Now analyze with specific AI agent
-                // Map weeklyReport.assets to the simpler format expected by analyzer
                 const analysisInput = weeklyReport.assets.map(a => ({
-                    symbol: a.symbol,
-                    changePercent: a.changePercent,
+                    symbol: a.symbol, changePercent: a.changePercent,
                     type: assets.find(orig => orig.symbol === a.symbol)?.asset_type || 'STOCK'
                 }));
-
                 aiAnalysis = await analyzePortfolioWithAI(analysisInput);
             }
 
             const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis, useTable);
 
-            // Store preview for the first user
-            if (results.length === 0) {
-                previewHtml = emailHtml;
-            }
+            if (results.length === 0) previewHtml = emailHtml;
 
             if (sendEmail) {
                 const resendKey = process.env.RESEND_API_KEY;
@@ -373,10 +292,7 @@ export async function POST(req: Request) {
                     try {
                         const emailRes = await fetch('https://api.resend.com/emails', {
                             method: 'POST',
-                            headers: {
-                                'Authorization': `Bearer ${resendKey}`,
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 from: 'FinAl <onboarding@resend.dev>',
                                 to: [user.email],
@@ -389,9 +305,7 @@ export async function POST(req: Request) {
                             results.push({ email: user.email, status: 'sent', assetCount: assets.length });
                         } else {
                             const errData = await emailRes.json().catch(() => ({}));
-                            console.error("Resend Error:", errData);
-                            const errorMessage = errData.message || errData.name || "Unknown Resend Error";
-                            results.push({ email: user.email, status: `error: ${errorMessage}`, assetCount: assets.length });
+                            results.push({ email: user.email, status: `error: ${errData.message || 'Resend error'}`, assetCount: assets.length });
                         }
                     } catch (sendErr: any) {
                         results.push({ email: user.email, status: `error: ${sendErr.message}`, assetCount: assets.length });
@@ -404,37 +318,20 @@ export async function POST(req: Request) {
             }
         }
 
-        return NextResponse.json({
-            success: true,
-            totalUsers: targetUsers.length,
-            results,
-            htmlPreview: previewHtml,
-        });
-
+        return NextResponse.json({ success: true, totalUsers: targetUsers.length, results, htmlPreview: previewHtml });
     } catch (error: any) {
-        console.error("Portfolio Email Error:", error);
-        return NextResponse.json({
-            success: false,
-            error: error.message || "E-posta gönderilemedi."
-        }, { status: 500 });
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
 
-// GET handler for cron jobs (Vercel Cron)
 export async function GET(req: Request) {
     const authHeader = req.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // Default to triggering POST which now handles all user specific logic
-    const response = await POST(new Request(req.url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sendEmail: true }) // No default includeAnalysis, let logic decide
+    return await POST(new Request(req.url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sendEmail: true })
     }));
-
-    return response;
 }
