@@ -123,7 +123,13 @@ export function DashboardPortfolioWidget() {
                                 activeIndex={-1} // Disable click selection effect
                             >
                                 {recommendation.allocation.map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
+                                    <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={entry.color} 
+                                        stroke="rgba(0,0,0,0.2)" 
+                                        strokeWidth={1}
+                                        style={{ filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.5))' }}
+                                    />
                                 ))}
                             </Pie>
                             <Tooltip 
