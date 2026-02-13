@@ -31,7 +31,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
     const otherAssets = assets.filter(a => !['STOCK', 'FUND'].includes(a.asset_type));
 
     const today = new Date();
-    const dateStr = today.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
+    // const dateStr = today.toLocaleDateString('tr-TR', { year: 'numeric', month: 'long', day: 'numeric' });
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay() + 1);
     const weekEnd = new Date(weekStart);
@@ -71,19 +71,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                 </div>
             `).join('');
         };
-
-        if (!aiAnalysis) {
-            // Check for specific error log if needed (passed via another way, but here let's be generic or debug)
-            const debugInfo = process.env.NODE_ENV === 'development' ? "(Check Server Console for Details)" : "";
-
-            return `
-                <!-- AI ANALYSIS ERROR -->
-                <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; margin-bottom: 24px; border-radius: 8px; text-align: center;">
-                    <p style="color: #fca5a5; font-size: 14px; margin: 0; font-weight: 500;">⚠️ Yapay Zeka Analizi Oluşturulamadı</p>
-                    <p style="color: #cbd5e1; font-size: 12px; margin: 4px 0 0;">Servis şu an yanıt vermiyor. ${debugInfo}</p>
-                </div>
-            `;
-        }
 
         return `
             <!-- AI ANALYSIS SECTION -->
@@ -259,7 +246,15 @@ export async function POST(req: Request) {
         const body = await req.json().catch(() => ({}));
         const { userId, sendEmail = false, includeAnalysis = false, includePortfolioDetails = true } = body;
 
-        let targetUsers: { id: string; email: string; name: string }[] = [];
+        let targetUsers: {
+            id: string;
+            email: string;
+            name: string;
+            preferences?: {
+                includeAnalysis: boolean;
+                includePortfolioDetails: boolean;
+            }
+        }[] = [];
 
         if (userId) {
             // Get specific user
@@ -268,7 +263,11 @@ export async function POST(req: Request) {
                 targetUsers.push({
                     id: userData.user.id,
                     email: userData.user.email || '',
-                    name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.first_name || 'Değerli Kullanıcı'
+                    name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.first_name || 'Değerli Kullanıcı',
+                    preferences: {
+                        includeAnalysis,
+                        includePortfolioDetails
+                    }
                 });
             }
         } else {
@@ -287,7 +286,7 @@ export async function POST(req: Request) {
                     // Load User Preferences
                     const settings = userData.user.user_metadata?.report_settings || {};
 
-                    // Skip if user has disabled emails
+                    // Skip if user has disabled emails (Frequency: none)
                     if (settings.frequency === 'none') {
                         console.log(`Skipping user ${userData.user.email} (Frequency: none)`);
                         continue;
@@ -308,127 +307,126 @@ export async function POST(req: Request) {
                     });
                 }
             }
+        }
 
-            const results: { email: string; status: string; assetCount: number }[] = [];
-            let previewHtml = '';
+        const results: { email: string; status: string; assetCount: number }[] = [];
+        let previewHtml = '';
 
-            for (const user of targetUsers) {
-                // Get user's portfolio
-                const { data: assets, error: assetError } = await getSupabaseAdmin()
-                    .from('user_portfolios')
-                    .select('symbol, asset_type, quantity, avg_cost')
-                    .eq('user_id', user.id);
+        for (const user of targetUsers) {
+            // Get user's portfolio
+            const { data: assets, error: assetError } = await getSupabaseAdmin()
+                .from('user_portfolios')
+                .select('symbol, asset_type, quantity, avg_cost')
+                .eq('user_id', user.id);
 
-                if (assetError || !assets || assets.length === 0) {
-                    results.push({ email: user.email, status: 'skipped_no_assets', assetCount: 0 });
-                    continue;
-                }
-
-                // Use User Specific Preferences
-                const useAI = user.preferences?.includeAnalysis || false;
-                const useTable = user.preferences?.includePortfolioDetails !== undefined ? user.preferences.includePortfolioDetails : true;
-
-                // Perform AI Analysis if requested
-                let aiAnalysis: PortfolioAIAnalysis | null = null;
-                if (useAI) {
-                    // ... AI Logic (same as before) ...
-                    // Convert to Asset format expected by report generator
-                    const reportAssets: Asset[] = assets.map(a => ({
-                        symbol: a.symbol,
-                        amount: a.quantity,
-                        type: a.asset_type === 'FUND' ? 'fund' : 'stock' // Basic mapping
-                    }));
-
-                    // Get pre-calculated report data (prices, changes)
-                    const weeklyReport = await generateWeeklyReport(reportAssets);
-
-                    // Now analyze with specific AI agent
-                    // Map weeklyReport.assets to the simpler format expected by analyzer
-                    const analysisInput = weeklyReport.assets.map(a => ({
-                        symbol: a.symbol,
-                        changePercent: a.changePercent,
-                        type: assets.find(orig => orig.symbol === a.symbol)?.asset_type || 'STOCK'
-                    }));
-
-                    aiAnalysis = await analyzePortfolioWithAI(analysisInput);
-                }
-
-                const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis, includePortfolioDetails);
-
-                // Store preview for the first user
-                if (results.length === 0) {
-                    previewHtml = emailHtml;
-                }
-
-                if (sendEmail) {
-                    const resendKey = process.env.RESEND_API_KEY;
-                    if (resendKey) {
-                        try {
-                            const emailRes = await fetch('https://api.resend.com/emails', {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${resendKey}`,
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    from: 'FinAl <onboarding@resend.dev>',
-                                    to: [user.email],
-                                    subject: `📊 FinAl — ${includeAnalysis ? 'Detaylı ' : ''}Portföy Analiz Raporunuz`,
-                                    html: emailHtml,
-                                }),
-                            });
-
-                            if (emailRes.ok) {
-                                results.push({ email: user.email, status: 'sent', assetCount: assets.length });
-                            } else {
-                                const errData = await emailRes.json().catch(() => ({}));
-                                console.error("Resend Error:", errData);
-                                // Capture specific Resend errors (e.g., domain not verified)
-                                const errorMessage = errData.message || errData.name || "Unknown Resend Error";
-                                results.push({ email: user.email, status: `error: ${errorMessage}`, assetCount: assets.length });
-                            }
-                        } catch (sendErr: any) {
-                            results.push({ email: user.email, status: `error: ${sendErr.message}`, assetCount: assets.length });
-                        }
-                    } else {
-                        results.push({ email: user.email, status: 'skipped_no_resend_key', assetCount: assets.length });
-                    }
-                } else {
-                    results.push({ email: user.email, status: 'preview_only', assetCount: assets.length });
-                }
+            if (assetError || !assets || assets.length === 0) {
+                results.push({ email: user.email, status: 'skipped_no_assets', assetCount: 0 });
+                continue;
             }
 
-            return NextResponse.json({
-                success: true,
-                totalUsers: targetUsers.length,
-                results,
-                htmlPreview: previewHtml,
-            });
+            // Use User Specific Preferences
+            const useAI = user.preferences?.includeAnalysis ?? includeAnalysis;
+            const useTable = user.preferences?.includePortfolioDetails ?? includePortfolioDetails;
 
-        } catch (error: any) {
-            console.error("Portfolio Email Error:", error);
-            return NextResponse.json({
-                success: false,
-                error: error.message || "E-posta gönderilemedi."
-            }, { status: 500 });
+            // Perform AI Analysis if requested
+            let aiAnalysis: PortfolioAIAnalysis | null = null;
+            if (useAI) {
+                // Convert to Asset format expected by report generator
+                const reportAssets: Asset[] = assets.map(a => ({
+                    symbol: a.symbol,
+                    amount: a.quantity,
+                    type: a.asset_type === 'FUND' ? 'fund' : 'stock' // Basic mapping
+                }));
+
+                // Get pre-calculated report data (prices, changes)
+                const weeklyReport = await generateWeeklyReport(reportAssets);
+
+                // Now analyze with specific AI agent
+                // Map weeklyReport.assets to the simpler format expected by analyzer
+                const analysisInput = weeklyReport.assets.map(a => ({
+                    symbol: a.symbol,
+                    changePercent: a.changePercent,
+                    type: assets.find(orig => orig.symbol === a.symbol)?.asset_type || 'STOCK'
+                }));
+
+                aiAnalysis = await analyzePortfolioWithAI(analysisInput);
+            }
+
+            const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis, useTable);
+
+            // Store preview for the first user
+            if (results.length === 0) {
+                previewHtml = emailHtml;
+            }
+
+            if (sendEmail) {
+                const resendKey = process.env.RESEND_API_KEY;
+                if (resendKey) {
+                    try {
+                        const emailRes = await fetch('https://api.resend.com/emails', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${resendKey}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                from: 'FinAl <onboarding@resend.dev>',
+                                to: [user.email],
+                                subject: `📊 FinAl — ${useAI ? 'Detaylı ' : ''}Portföy Analiz Raporunuz`,
+                                html: emailHtml,
+                            }),
+                        });
+
+                        if (emailRes.ok) {
+                            results.push({ email: user.email, status: 'sent', assetCount: assets.length });
+                        } else {
+                            const errData = await emailRes.json().catch(() => ({}));
+                            console.error("Resend Error:", errData);
+                            const errorMessage = errData.message || errData.name || "Unknown Resend Error";
+                            results.push({ email: user.email, status: `error: ${errorMessage}`, assetCount: assets.length });
+                        }
+                    } catch (sendErr: any) {
+                        results.push({ email: user.email, status: `error: ${sendErr.message}`, assetCount: assets.length });
+                    }
+                } else {
+                    results.push({ email: user.email, status: 'skipped_no_resend_key', assetCount: assets.length });
+                }
+            } else {
+                results.push({ email: user.email, status: 'preview_only', assetCount: assets.length });
+            }
         }
+
+        return NextResponse.json({
+            success: true,
+            totalUsers: targetUsers.length,
+            results,
+            htmlPreview: previewHtml,
+        });
+
+    } catch (error: any) {
+        console.error("Portfolio Email Error:", error);
+        return NextResponse.json({
+            success: false,
+            error: error.message || "E-posta gönderilemedi."
+        }, { status: 500 });
     }
+}
 
 // GET handler for cron jobs (Vercel Cron)
 export async function GET(req: Request) {
-        const authHeader = req.headers.get('authorization');
-        const cronSecret = process.env.CRON_SECRET;
+    const authHeader = req.headers.get('authorization');
+    const cronSecret = process.env.CRON_SECRET;
 
-        if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        // Cron jobs default to including detailed analysis
-        const response = await POST(new Request(req.url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sendEmail: true, includeAnalysis: true })
-        }));
-
-        return response;
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Default to triggering POST which now handles all user specific logic
+    const response = await POST(new Request(req.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sendEmail: true }) // No default includeAnalysis, let logic decide
+    }));
+
+    return response;
+}
