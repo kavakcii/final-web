@@ -283,28 +283,36 @@ export async function POST(req: Request) {
             for (const uid of uniqueUserIds) {
                 const { data: userData } = await getSupabaseAdmin().auth.admin.getUserById(uid);
                 if (userData?.user?.email) {
-                    // Load User Preferences
-                    const settings = userData.user.user_metadata?.report_settings || {};
+                    const metadata = userData.user.user_metadata || {};
+                    const instructions: any[] = [];
 
-                    // Skip if user has disabled emails (Frequency: none)
-                    if (settings.frequency === 'none') {
-                        console.log(`Skipping user ${userData.user.email} (Frequency: none)`);
-                        continue;
+                    // 1. Support for Multiple Instructions (New Format)
+                    if (Array.isArray(metadata.report_instructions)) {
+                        instructions.push(...metadata.report_instructions);
+                    }
+                    // 2. Backward Compatibility (Old Format)
+                    else if (metadata.report_settings && metadata.report_settings.frequency !== 'none') {
+                        instructions.push({
+                            ...metadata.report_settings,
+                            label: 'Genel Rapor'
+                        });
                     }
 
-                    // Determine content options (User prefs override request defaults if present)
-                    const userIncludeAnalysis = settings.includeAnalysis !== undefined ? settings.includeAnalysis : includeAnalysis;
-                    const userIncludeDetails = settings.includePortfolioDetails !== undefined ? settings.includePortfolioDetails : includePortfolioDetails;
+                    // Process each active instruction
+                    for (const inst of instructions) {
+                        if (inst.frequency === 'none') continue;
 
-                    targetUsers.push({
-                        id: userData.user.id,
-                        email: userData.user.email,
-                        name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.first_name || 'Değerli Kullanıcı',
-                        preferences: {
-                            includeAnalysis: userIncludeAnalysis,
-                            includePortfolioDetails: userIncludeDetails
-                        }
-                    });
+                        targetUsers.push({
+                            id: userData.user.id,
+                            email: userData.user.email,
+                            name: metadata.full_name || metadata.first_name || 'Değerli Kullanıcı',
+                            instructionLabel: inst.label || 'Portföy Raporu',
+                            preferences: {
+                                includeAnalysis: inst.includeAnalysis ?? includeAnalysis,
+                                includePortfolioDetails: inst.includePortfolioDetails ?? includePortfolioDetails
+                            }
+                        });
+                    }
                 }
             }
         }
@@ -372,7 +380,7 @@ export async function POST(req: Request) {
                             body: JSON.stringify({
                                 from: 'FinAl <onboarding@resend.dev>',
                                 to: [user.email],
-                                subject: `📊 FinAl — ${useAI ? 'Detaylı ' : ''}Portföy Analiz Raporunuz`,
+                                subject: `📊 FinAl — ${user.instructionLabel || 'Portföy Raporu'}`,
                                 html: emailHtml,
                             }),
                         });

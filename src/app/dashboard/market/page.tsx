@@ -381,7 +381,7 @@ export default function MarketPage() {
                                                 data={recommendation?.allocation}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={80}
+                                                innerRadius={0}
                                                 outerRadius={110}
                                                 paddingAngle={5}
                                                 dataKey="value"
