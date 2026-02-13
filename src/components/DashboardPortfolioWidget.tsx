@@ -102,51 +102,81 @@ export function DashboardPortfolioWidget() {
     }
 
     if (recommendation) {
+        // Sort by value descending to make the largest slice prominent
+        const sortedAllocation = recommendation.allocation.sort((a: any, b: any) => b.value - a.value);
+
         return (
             <div className="lg:col-span-2 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl p-6 relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
                 <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
                 
                 {/* Chart Side */}
-                <div className="w-full md:w-1/2 h-[250px] relative z-10">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPie width={400} height={250}>
-                            <Pie
-                                data={recommendation.allocation}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={0}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                                stroke="none"
-                                isAnimationActive={true}
-                                activeIndex={-1} // Disable click selection effect
-                            >
-                                {recommendation.allocation.map((entry: any, index: number) => (
-                                    <Cell 
-                                        key={`cell-${index}`} 
-                                        fill={entry.color} 
-                                        stroke="rgba(0,0,0,0.2)" 
-                                        strokeWidth={1}
-                                        style={{ filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.5))' }}
-                                    />
+                <div className="w-full md:w-1/2 h-[250px] relative z-10 flex items-center justify-center" style={{ perspective: '1000px' }}>
+                    <div style={{ transform: 'rotateX(60deg) scaleY(1.2)', width: '100%', height: '100%' }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RechartsPie width={400} height={250}>
+                                {/* Shadow/Thickness Layers */}
+                                {[...Array(6)].map((_, i) => (
+                                    <Pie
+                                        key={i}
+                                        data={sortedAllocation}
+                                        cx="50%"
+                                        cy={`${50 + (6-i)*1.5}%`}
+                                        innerRadius={0}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                        stroke="none"
+                                        isAnimationActive={false}
+                                    >
+                                        {sortedAllocation.map((entry: any, index: number) => (
+                                            <Cell 
+                                                key={`shadow-${index}`} 
+                                                fill={entry.color} 
+                                                style={{ filter: 'brightness(0.6)' }}
+                                            />
+                                        ))}
+                                    </Pie>
                                 ))}
-                            </Pie>
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                formatter={(value: number) => [`%${value}`, 'Oran']}
-                            />
-                        </RechartsPie>
-                    </ResponsiveContainer>
-                    {/* Centered Title */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-slate-400 text-xs font-medium">Önerilen</span>
-                        <span className="text-white font-bold text-sm text-center px-4">{recommendation.title}</span>
+                                {/* Main Top Layer */}
+                                <Pie
+                                    data={sortedAllocation}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={0}
+                                    outerRadius={80}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    stroke="none"
+                                    isAnimationActive={true}
+                                    activeIndex={-1}
+                                >
+                                    {sortedAllocation.map((entry: any, index: number) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.color} 
+                                            stroke="rgba(255,255,255,0.2)" 
+                                            strokeWidth={1}
+                                            style={{ filter: 'brightness(1.1)' }}
+                                        />
+                                    ))}
+                                </Pie>
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                    itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                    formatter={(value: number) => [`%${value}`, 'Oran']}
+                                />
+                            </RechartsPie>
+                        </ResponsiveContainer>
                     </div>
-                    {/* Legend */}
+                    
+                    {/* Centered Title - Adjusted for tilt */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ transform: 'translateY(-20px)' }}>
+                        <span className="text-slate-400 text-xs font-medium drop-shadow-md">Önerilen</span>
+                        <span className="text-white font-bold text-sm text-center px-4 drop-shadow-md">{recommendation.title}</span>
+                    </div>
+                    {/* Legend - Outside Tilt */}
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
-                         {recommendation.allocation.map((item: any, idx: number) => (
+                         {sortedAllocation.map((item: any, idx: number) => (
                              <div key={idx} className="flex items-center gap-1.5">
                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
                                  <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">

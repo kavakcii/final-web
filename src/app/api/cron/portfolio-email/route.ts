@@ -127,7 +127,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                             <td style="background-color: #0f172a; padding: 32px;">
                                 <p style="color: #e2e8f0; font-size: 16px; margin: 0 0 4px;">Merhaba <strong style="color: #ffffff;">${userName}</strong> 👋</p>
                                 <p style="color: #64748b; font-size: 14px; margin: 0 0 24px; line-height: 1.6;">
-                                    İşte <strong style="color: #94a3b8;">${weekRange}</strong> dönemi için hazırladığımız rapor:
+                                    İşte hazırladığımız portföy raporunuz:
                                 </p>
                                 ${renderAISection()}
                                 ${includePortfolioDetails ? `
@@ -137,11 +137,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                             <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Toplam Varlık</p>
                                             <p style="color: #3b82f6; font-size: 28px; font-weight: 800; margin: 8px 0 0;">${assets.length}</p>
                                         </td>
-                                        <td style="width: 12px;"></td>
-                                        <td style="background: linear-gradient(135deg, #1a3a2a, #0f2618); border-radius: 12px; padding: 20px; text-align: center; width: 50%; border: 1px solid rgba(34,197,94,0.2);">
-                                            <p style="color: #64748b; font-size: 11px; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Portföy Tipi</p>
-                                            <p style="color: #22c55e; font-size: 14px; font-weight: 700; margin: 8px 0 0;">${stockAssets.length} Hisse • ${fundAssets.length} Fon</p>
-                                        </td>
                                     </tr>
                                 </table>
                                 ${stockAssets.length > 0 ? `
@@ -150,13 +145,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                         <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1e3a5f, #0f2744); border-bottom: 1px solid #1e293b;"><span style="color: #3b82f6; font-size: 13px; font-weight: 700;">📈 HİSSELER</span></td>
                                     </tr>
                                     ${renderAssetRows(stockAssets)}
-                                </table>` : ''}
-                                ${fundAssets.length > 0 ? `
-                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; background: #0b1222; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
-                                    <tr>
-                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1a3a2a, #0f2618); border-bottom: 1px solid #1e293b;"><span style="color: #22c55e; font-size: 13px; font-weight: 700;">🏦 FONLAR</span></td>
-                                    </tr>
-                                    ${renderAssetRows(fundAssets)}
                                 </table>` : ''}
                                 ` : ''}
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px auto 0;">
@@ -170,7 +158,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                         </tr>
                         <tr>
                             <td style="background-color: #060f1d; padding: 24px 32px; text-align: center;">
-                                <p style="color: #334155; font-size: 11px; margin: 0; line-height: 1.6;">© 2026 FinAl — Yapay Zeka ile Akıllı Yatırım</p>
+                                <p style="color: #334155; font-size: 11px; margin: 0; line-height: 1.6;">© 2026 FinAl — 24/7 Otomatik Portföy Robotu</p>
                             </td>
                         </tr>
                     </table>
@@ -184,7 +172,12 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
 export async function POST(req: Request) {
     try {
         const body = await req.json().catch(() => ({}));
-        const { userId, sendEmail = false, includeAnalysis = false, includePortfolioDetails = true } = body;
+        const { userId, sendEmail = false, isCron = false } = body;
+
+        // Current time for scheduling checks
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
+        const dayOfMonth = now.getDate();
 
         let targetUsers: {
             id: string;
@@ -198,22 +191,22 @@ export async function POST(req: Request) {
         }[] = [];
 
         if (userId) {
-            // Get specific user
+            // Manual specific trigger (usually from Preview or Send Now)
             const { data: userData } = await getSupabaseAdmin().auth.admin.getUserById(userId);
             if (userData?.user) {
                 targetUsers.push({
                     id: userData.user.id,
                     email: userData.user.email || '',
                     name: userData.user.user_metadata?.full_name || userData.user.user_metadata?.first_name || 'Değerli Kullanıcı',
-                    instructionLabel: 'Manuel Rapor',
+                    instructionLabel: 'Anlık Rapor',
                     preferences: {
-                        includeAnalysis,
-                        includePortfolioDetails
+                        includeAnalysis: body.includeAnalysis ?? true,
+                        includePortfolioDetails: body.includePortfolioDetails ?? true
                     }
                 });
             }
         } else {
-            // Get all unique user IDs from portfolios
+            // General Cron Check for ALL users
             const { data: portfolioUsers, error } = await getSupabaseAdmin()
                 .from('user_portfolios')
                 .select('user_id');
@@ -226,24 +219,38 @@ export async function POST(req: Request) {
                 const { data: userData } = await getSupabaseAdmin().auth.admin.getUserById(uid);
                 if (userData?.user?.email) {
                     const metadata = userData.user.user_metadata || {};
-                    const instructions: any[] = [];
-
-                    if (Array.isArray(metadata.report_instructions)) {
-                        instructions.push(...metadata.report_instructions);
-                    } else if (metadata.report_settings && metadata.report_settings.frequency !== 'none') {
-                        instructions.push({ ...metadata.report_settings, label: 'Genel Rapor' });
-                    }
+                    const instructions: any[] = metadata.report_instructions || [];
 
                     for (const inst of instructions) {
                         if (inst.frequency === 'none') continue;
+
+                        // SCHEDULING LOGIC (Only if triggered by Cron)
+                        if (isCron) {
+                            let shouldSendToday = false;
+
+                            if (inst.frequency === 'weekly') {
+                                // Weekly is Monday (1)
+                                if (dayOfWeek === 1) shouldSendToday = true;
+                            } else if (inst.frequency === 'biweekly') {
+                                // Biweekly: Every 2nd Monday (using week parity)
+                                const weekNum = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
+                                if (dayOfWeek === 1 && weekNum % 2 === 0) shouldSendToday = true;
+                            } else if (inst.frequency === 'monthly') {
+                                // Monthly: 1st day of month
+                                if (dayOfMonth === 1) shouldSendToday = true;
+                            }
+
+                            if (!shouldSendToday) continue;
+                        }
+
                         targetUsers.push({
                             id: userData.user.id,
                             email: userData.user.email,
                             name: metadata.full_name || metadata.first_name || 'Değerli Kullanıcı',
                             instructionLabel: inst.label || 'Portföy Raporu',
                             preferences: {
-                                includeAnalysis: inst.includeAnalysis ?? includeAnalysis,
-                                includePortfolioDetails: inst.includePortfolioDetails ?? includePortfolioDetails
+                                includeAnalysis: inst.includeAnalysis ?? true,
+                                includePortfolioDetails: inst.includePortfolioDetails ?? true
                             }
                         });
                     }
@@ -251,22 +258,19 @@ export async function POST(req: Request) {
             }
         }
 
-        const results: { email: string; status: string; assetCount: number }[] = [];
-        let previewHtml = '';
+        const stats = { sent: 0, failed: 0, total: targetUsers.length };
+        let firstPreviewHtml = '';
 
         for (const user of targetUsers) {
-            const { data: assets, error: assetError } = await getSupabaseAdmin()
+            const { data: assets } = await getSupabaseAdmin()
                 .from('user_portfolios')
                 .select('symbol, asset_type, quantity, avg_cost')
                 .eq('user_id', user.id);
 
-            if (assetError || !assets || assets.length === 0) {
-                results.push({ email: user.email, status: 'skipped_no_assets', assetCount: 0 });
-                continue;
-            }
+            if (!assets || assets.length === 0) continue;
 
-            const useAI = user.preferences?.includeAnalysis ?? includeAnalysis;
-            const useTable = user.preferences?.includePortfolioDetails ?? includePortfolioDetails;
+            const useAI = user.preferences?.includeAnalysis ?? true;
+            const useTable = user.preferences?.includePortfolioDetails ?? true;
 
             let aiAnalysis: PortfolioAIAnalysis | null = null;
             if (useAI) {
@@ -283,42 +287,29 @@ export async function POST(req: Request) {
             }
 
             const emailHtml = generatePortfolioEmailHtml(user.name, assets, aiAnalysis, useTable);
-
-            if (results.length === 0) previewHtml = emailHtml;
+            if (!firstPreviewHtml) firstPreviewHtml = emailHtml;
 
             if (sendEmail) {
                 const resendKey = process.env.RESEND_API_KEY;
                 if (resendKey) {
-                    try {
-                        const emailRes = await fetch('https://api.resend.com/emails', {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                from: 'FinAl <onboarding@resend.dev>',
-                                to: [user.email],
-                                subject: `📊 FinAl — ${user.instructionLabel || 'Portföy Raporu'}`,
-                                html: emailHtml,
-                            }),
-                        });
+                    const emailRes = await fetch('https://api.resend.com/emails', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            from: 'FinAl <onboarding@resend.dev>',
+                            to: [user.email],
+                            subject: `📊 FinAl — ${user.instructionLabel || 'Portföy Raporu'}`,
+                            html: emailHtml,
+                        }),
+                    });
 
-                        if (emailRes.ok) {
-                            results.push({ email: user.email, status: 'sent', assetCount: assets.length });
-                        } else {
-                            const errData = await emailRes.json().catch(() => ({}));
-                            results.push({ email: user.email, status: `error: ${errData.message || 'Resend error'}`, assetCount: assets.length });
-                        }
-                    } catch (sendErr: any) {
-                        results.push({ email: user.email, status: `error: ${sendErr.message}`, assetCount: assets.length });
-                    }
-                } else {
-                    results.push({ email: user.email, status: 'skipped_no_resend_key', assetCount: assets.length });
+                    if (emailRes.ok) stats.sent++;
+                    else stats.failed++;
                 }
-            } else {
-                results.push({ email: user.email, status: 'preview_only', assetCount: assets.length });
             }
         }
 
-        return NextResponse.json({ success: true, totalUsers: targetUsers.length, results, htmlPreview: previewHtml });
+        return NextResponse.json({ success: true, stats, htmlPreview: firstPreviewHtml });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
@@ -332,6 +323,6 @@ export async function GET(req: Request) {
     }
     return await POST(new Request(req.url, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sendEmail: true })
+        body: JSON.stringify({ sendEmail: true, isCron: true })
     }));
 }
