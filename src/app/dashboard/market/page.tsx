@@ -1,7 +1,7 @@
 "use client";
 
 // Vercel Deploy Trigger: v2 - Fixed Pie Chart
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, CheckCircle2, ChevronRight, PieChart, ShieldCheck, Target, Zap, RotateCcw, Trophy, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
@@ -11,6 +11,23 @@ export default function MarketPage() {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [showResults, setShowResults] = useState(false);
+
+    // Load saved results on mount
+    useEffect(() => {
+        const savedAnswers = localStorage.getItem("portfolio_answers");
+        if (savedAnswers) {
+            try {
+                const parsed = JSON.parse(savedAnswers);
+                if (Object.keys(parsed).length > 0) {
+                    setAnswers(parsed);
+                    setShowResults(true);
+                    setTestStarted(true); // Ensure we skip intro
+                }
+            } catch (e) {
+                console.error("Failed to load saved answers", e);
+            }
+        }
+    }, []);
 
     const questions = [
         {
@@ -137,10 +154,14 @@ export default function MarketPage() {
     ];
 
     const handleAnswer = (score: number) => {
-        setAnswers({ ...answers, [currentQuestion]: score.toString() });
+        const newAnswers = { ...answers, [currentQuestion]: score.toString() };
+        setAnswers(newAnswers);
+        
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(curr => curr + 1);
         } else {
+            // Save to local storage when test is finished
+            localStorage.setItem("portfolio_answers", JSON.stringify(newAnswers));
             setShowResults(true);
         }
     };
@@ -447,6 +468,7 @@ export default function MarketPage() {
                                 
                                 <button 
                                     onClick={() => {
+                                        localStorage.removeItem("portfolio_answers"); // Clear saved data
                                         setTestStarted(false);
                                         setCurrentQuestion(0);
                                         setShowResults(false);

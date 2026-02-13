@@ -63,6 +63,13 @@ export default function ReportsPage() {
     // Save content preferences
     const handleAnalysisChange = (checked: boolean) => {
         setIncludeAnalysis(checked);
+
+        // Kullanıcı isteği: AI seçilirse tablo otomatik kapansın (Sadece yorum odaklı)
+        if (checked) {
+            setIncludePortfolioDetails(false);
+            if (typeof window !== 'undefined') localStorage.setItem('portfolioIncludeDetails', 'false');
+        }
+
         if (typeof window !== 'undefined') {
             localStorage.setItem('portfolioIncludeAnalysis', String(checked));
         }
@@ -70,6 +77,10 @@ export default function ReportsPage() {
 
     const handleDetailsChange = (checked: boolean) => {
         setIncludePortfolioDetails(checked);
+
+        // Eğer tablo da kapatılırsa ve AI zaten kapalıysa, en az biri açık kalsın mı? 
+        // Şimdilik kullanıcıya bırakıyoruz, ikisini de kapatırsa boş mail uyarısı alabilir.
+
         if (typeof window !== 'undefined') {
             localStorage.setItem('portfolioIncludeDetails', String(checked));
         }
