@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUpRight, PieChart, Wallet, Zap, RotateCcw } from "lucide-react";
+import { ArrowUpRight, PieChart, Wallet, Zap, RotateCcw, CheckCircle2 } from "lucide-react";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Link from "next/link";
 
@@ -81,7 +81,12 @@ export function DashboardPortfolioWidget() {
             return {
                 title: "Agresif Büyüme Portföyü",
                 persona: "Cesur Kaşif",
-                desc: "Risk almaktan korkmayan, uzun vadeli ve yüksek getiri hedefleyen bir yatırımcısınız.",
+                desc: "Maksimum büyüme odaklı, yüksek volatiliteyi tolere edebilen portföy.",
+                advantages: [
+                    "Uzun vadede en yüksek getiri potansiyeli",
+                    "Bileşik getirinin gücünden maksimum faydalanma",
+                    "Enflasyon üzerinde ciddi reel getiri şansı"
+                ],
                 reasoning: "Yüksek risk toleransınız ve uzun vade hedefiniz nedeniyle portföyün ağırlığı (%60) büyüme potansiyeli yüksek **" + (isIslamic ? "Katılım Hisselerine" : "Hisse Senetlerine") + "** verildi. Bu varlık sınıfı uzun vadede en yüksek getiriyi sunar. %20'lik **" + (isIslamic ? "Katılım Fonu" : "Fon") + "** kısmı sektörel çeşitlilik sağlarken, %10 **Altın** ve **" + (isIslamic ? "Katılım Hesabı" : "Nakit") + "** ise piyasa düzeltmelerinde 'dipten alım' fırsatı yaratmak ve sigorta görevi görmek için eklendi.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 60, color: "#3b82f6" },
@@ -94,7 +99,12 @@ export function DashboardPortfolioWidget() {
             return {
                 title: "Dengeli Portföy",
                 persona: "Stratejik Mimar",
-                desc: "Hem kazanmak hem de korumak isteyen, akılcı ve planlı bir yatırımcısınız.",
+                desc: "Risk ve getiri arasında ideal dengeyi kuran, piyasa dalgalanmalarına karşı kısmen korumalı yapı.",
+                advantages: [
+                    "Hem koruma hem büyüme sağlar",
+                    "Aşırı piyasa düşüşlerinde tampon görevi görür",
+                    "Stresten uzak, sürdürülebilir bir yatırım deneyimi"
+                ],
                 reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **" + (isIslamic ? "Katılım Hissesi" : "Hisse Senedi") + "** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 40, color: "#3b82f6" },
@@ -107,7 +117,12 @@ export function DashboardPortfolioWidget() {
             return {
                 title: "Koruyucu Portföy",
                 persona: "Güvenli Liman",
-                desc: "Önceliği elindekini korumak olan, riskten kaçınan temkinli bir yatırımcısınız.",
+                desc: "Sermaye koruma öncelikli, düşük riskli ve düzenli gelir odaklı portföy.",
+                advantages: [
+                    "Anapara kaybı riski minimumdur",
+                    "Piyasa krizlerinden en az etkilenen yapıdır",
+                    "Düzenli ve öngörülebilir getiri akışı sağlar"
+                ],
                 reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **" + (isIslamic ? "Katılım Hissesi" : "Hisse (Temettü)") + "** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
                 allocation: adjustForIslamic([
                     { name: "Tahvil / Bono", value: 50, color: "#22c55e" },
@@ -201,6 +216,20 @@ export function DashboardPortfolioWidget() {
                         <strong className="text-white block mb-1">Neden bu dağılım?</strong>
                         {recommendation.reasoning.split("**").map((part: string, i: number) => 
                             i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
+                        )}
+
+                        {recommendation.advantages && (
+                            <div className="mt-3 pt-3 border-t border-white/5">
+                                <strong className="text-white block mb-2">Avantajlar:</strong>
+                                <ul className="space-y-1">
+                                    {recommendation.advantages.map((adv: string, i: number) => (
+                                        <li key={i} className="flex items-start gap-1.5">
+                                            <CheckCircle2 className="w-3 h-3 text-green-400 shrink-0 mt-0.5" />
+                                            <span>{adv}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
                         )}
                     </div>
 

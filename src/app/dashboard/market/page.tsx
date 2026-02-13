@@ -34,126 +34,126 @@ export default function MarketPage() {
     const questions = [
         {
             id: 1,
-            question: "Bu yatırıma ayırdığınız bütçeyi ne zaman nakde çevirmeyi planlıyorsunuz?",
+            question: "Bu yatırıma ne kadar süre dokunmamayı planlıyorsunuz?",
             options: [
                 { 
-                    label: "Kısa Vade (0-1 Yıl)", 
-                    desc: "Önümüzdeki 6-12 ay içinde ev, araba alımı veya borç ödemesi gibi somut bir harcama planım var. Paraya her an erişebilmeliyim.", 
+                    label: "Kısa Vade (1 Yıldan Az)", 
+                    desc: "Yakın zamanda nakit ihtiyacım olabilir, likidite benim için önemli.", 
                     score: 1 
                 },
                 { 
                     label: "Orta Vade (1-3 Yıl)", 
-                    desc: "3-5 yıllık bir perspektifim var. Çocuğumun eğitimi veya gelecekteki bir iş girişimi için birikim yapıyorum, acil nakit ihtiyacım yok.", 
+                    desc: "Birkaç yıl bekleyebilirim ancak çok uzun vadeli kilitlemek istemem.", 
                     score: 2 
                 },
                 { 
                     label: "Uzun Vade (3+ Yıl)", 
-                    desc: "Bu para emeklilik veya 10 yıl üzeri servet inşası için. Kısa vadeli dalgalanmalar umurumda değil, bileşik getirinin gücüne inanıyorum.", 
+                    desc: "Bu birikimi emeklilik veya gelecek planları için yapıyorum, acelem yok.", 
                     score: 3 
                 }
             ]
         },
         {
             id: 2,
-            question: "Portföyünüzün değeri, küresel bir kriz nedeniyle bir ay içinde %25 eridi. İlk tepkiniz ne olur?",
+            question: "Portföyünüz %20 değer kaybetse tepkiniz ne olur?",
             options: [
                 { 
-                    label: "Panik ve Satış", 
-                    desc: "Uykularım kaçar. Daha fazla zarar etmemek için kalan paramı hemen çekip vadeli mevduata veya nakde dönerim.", 
+                    label: "Satış Yaparım", 
+                    desc: "Daha fazla zarar etmemek için kalan paramı korumaya alırım.", 
                     score: 1 
                 },
                 { 
-                    label: "Temkinli Bekleyiş", 
-                    desc: "Endişelenirim ama hemen satış yapmam. Durumu analiz eder, eğer düşüşün sebebi geçiciyse beklerim.", 
+                    label: "Beklerim", 
+                    desc: "Piyasanın toparlanmasını beklerim, panik yapmam.", 
                     score: 2 
                 },
                 { 
-                    label: "Alım Fırsatı", 
-                    desc: "Harika bir alım fırsatı! Düşen fiyatlardan maliyet düşürmek için portföye ekleme yaparım. Krizler zenginleşme fırsatıdır.", 
+                    label: "Ekleme Yaparım", 
+                    desc: "Düşüşü fırsat bilip maliyet düşürmek için daha fazla alım yaparım.", 
                     score: 3 
                 }
             ]
         },
         {
             id: 3,
-            question: "Finansal piyasalar ve yatırım araçları konusundaki bilgi seviyenizi nasıl tanımlarsınız?",
+            question: "Finansal piyasalarla ne kadar ilgilisiniz?",
             options: [
                 { 
-                    label: "Başlangıç Seviyesi", 
-                    desc: "Mevduat faizi ve altın dışında pek bir tecrübem yok. Karmaşık terimler (VİOP, Eurobond, Fon Sepeti) bana yabancı geliyor.", 
+                    label: "Başlangıç", 
+                    desc: "Sadece temel kavramları biliyorum (Döviz, Altın vb.).", 
                     score: 1 
                 },
                 { 
                     label: "Orta Seviye", 
-                    desc: "Hisse senetlerini, yatırım fonlarını biliyorum. Temel düzeyde piyasa takibi yapıyorum ve portföy çeşitlendirmesinin önemini kavradım.", 
+                    desc: "Yatırım fonları ve hisse senetleri hakkında fikrim var.", 
                     score: 2 
                 },
                 { 
                     label: "İleri Seviye", 
-                    desc: "Bilanço okuyabilirim, teknik analizden anlarım. Türev araçlar veya yabancı borsalar hakkında fikrim var, aktif portföy yönetimi yapabilirim.", 
+                    desc: "Aktif olarak piyasayı takip ediyor ve analiz yapabiliyorum.", 
                     score: 3 
                 }
             ]
         },
         {
             id: 4,
-            question: "Aşağıdaki senaryolardan hangisi sizin yatırım karakterinizi en iyi yansıtır?",
+            question: "Sizin için hangisi daha önemli?",
             options: [
                 { 
-                    label: "Düşük Risk - Güvenli Liman", 
-                    desc: "Enflasyonun biraz üzerinde getiri yeterli. Ana paramın erimesi veya eksiye düşmesi benim için asla kabul edilemez.", 
+                    label: "Kaybetmemek", 
+                    desc: "Ana paramı korumak, yüksek getiri elde etmekten daha önemli.", 
                     score: 1 
                 },
                 { 
-                    label: "Dengeli - Makul Büyüme", 
-                    desc: "Piyasa ortalamasında bir getiri hedefliyorum. Bazı yıllar %5-10 zarar etmeyi göze alabilirim, yeter ki uzun vadede reel kazanç sağlayayım.", 
+                    label: "Denge", 
+                    desc: "Makul bir risk alarak enflasyonun üzerinde getiri hedefliyorum.", 
                     score: 2 
                 },
                 { 
-                    label: "Yüksek Risk - Maksimum Getiri", 
-                    desc: "Portföyümü ikiye, üçe katlamak istiyorum. Bunun için ana paramın yarısını kaybetme riskini bile göze alarak agresif hisse veya kripto yatırımları yapabilirim.", 
+                    label: "Çok Kazanmak", 
+                    desc: "Yüksek getiri için yüksek dalgalanmaları göze alabilirim.", 
                     score: 3 
                 }
             ]
         },
         {
             id: 5,
-            question: "Bu yatırımdan düzenli bir nakit akışına (aylık/yıllık ödeme) ihtiyacınız var mı?",
+            question: "Yatırımınızdan düzenli nakit akışı bekliyor musunuz?",
             options: [
                 { 
-                    label: "Evet, Gelir Şart", 
-                    desc: "Bu yatırımdan elde edeceğim temettü veya faiz geliri ile faturalarımı veya taksitlerimi ödeyeceğim.", 
+                    label: "Evet", 
+                    desc: "Aylık veya dönemsel olarak belirli bir gelir elde etmek istiyorum.", 
                     score: 1 
                 },
                 { 
-                    label: "Kısmen, İyi Olur", 
-                    desc: "Düzenli gelir olsa güzel olur ama zorunlu değil. Bazen harcamalarım için kullanabilirim.", 
+                    label: "Kısmen", 
+                    desc: "Olsa iyi olur ama şart değil.", 
                     score: 2 
                 },
                 { 
-                    label: "Hayır, Büyüme Odaklıyım", 
-                    desc: "Hiçbir nakit akışına ihtiyacım yok. Tüm getirinin tekrar yatırıma dönüşüp (bileşik getiri) kartopu gibi büyümesini istiyorum.", 
+                    label: "Hayır", 
+                    desc: "Tüm getirinin tekrar yatırıma dönüşerek büyümesini istiyorum.", 
                     score: 3 
                 }
             ]
         },
         {
             id: 6,
-            question: "Yatırım yapma sıklığınız nedir?",
+            question: "Yatırımlarınızı ne sıklıkla yöneteceksiniz?",
             options: [
                 { 
-                    label: "Her Ay Düzenli", 
-                    desc: "Gelirimden her ay belirli bir miktar ayırarak düzenli alım yaparım (Dolar Cost Averaging).", 
+                    label: "Her Ay", 
+                    desc: "Düzenli olarak portföyümü gözden geçirip ekleme yapacağım.", 
                     score: 0 
                 },
                 { 
-                    label: "Düzensiz / Fırsat Buldukça", 
-                    desc: "Belirli bir takvimim yok. Elime toplu para geçtikçe veya piyasada fırsat gördükçe yatırım yaparım.", 
+                    label: "Fırsat Buldukça", 
+                    desc: "Piyasada fırsat gördüğüm zamanlarda işlem yapacağım.", 
                     score: 0 
                 },
                 { 
-                    label: "Tek Seferlik", 
-                    desc: "Elimdeki mevcut birikimi yatırmak istiyorum, düzenli ekleme yapmayı planlamıyorum.", 
+                    label: "Nadiren", 
+                    desc: "Bir kere kurup uzun süre dokunmak istemiyorum.", 
                     score: 0 
                 }
             ]
@@ -181,16 +181,16 @@ export default function MarketPage() {
         },
         {
             id: 8,
-            question: "Yatırımlarınızda Faiz Hassasiyetiniz (İslami Finans) var mı?",
+            question: "Faiz hassasiyetiniz (İslami Finans) var mı?",
             options: [
                 { 
-                    label: "Evet, Faiz Hassasiyetim Var", 
-                    desc: "Yatırımlarımın İslami finans ilkelerine (Katılım esasları) uygun olması şart. Faizli enstrümanları (Tahvil, Mevduat vb.) tercih etmem.", 
-                    score: 0 // Special flag
+                    label: "Evet, Var", 
+                    desc: "Yatırımlarımın katılım bankacılığı prensiplerine uygun olması şart.", 
+                    score: 0 
                 },
                 { 
                     label: "Hayır, Yok", 
-                    desc: "Yasal olan her türlü finansal enstrümana (Tahvil, Eurobond, Mevduat) yatırım yapabilirim. Benim için önemli olan getiridir.", 
+                    desc: "Tüm yasal finansal enstrümanlara yatırım yapabilirim.", 
                     score: 1 
                 }
             ]
@@ -280,7 +280,12 @@ export default function MarketPage() {
             return {
                 title: "Agresif Büyüme Portföyü",
                 persona: "Cesur Kaşif",
-                desc: "Risk almaktan korkmayan, uzun vadeli ve yüksek getiri hedefleyen bir yatırımcısınız.",
+                desc: "Maksimum büyüme odaklı, yüksek volatiliteyi tolere edebilen portföy.",
+                advantages: [
+                    "Uzun vadede en yüksek getiri potansiyeli",
+                    "Bileşik getirinin gücünden maksimum faydalanma",
+                    "Enflasyon üzerinde ciddi reel getiri şansı"
+                ],
                 reasoning: "Yüksek risk toleransınız ve uzun vade hedefiniz nedeniyle portföyün ağırlığı (%60) büyüme potansiyeli yüksek **" + (isIslamic ? "Katılım Hisselerine" : "Hisse Senetlerine") + "** verildi. Bu varlık sınıfı uzun vadede en yüksek getiriyi sunar. %20'lik **" + (isIslamic ? "Katılım Fonu" : "Fon") + "** kısmı sektörel çeşitlilik sağlarken, %10 **Altın** ve **" + (isIslamic ? "Katılım Hesabı" : "Nakit") + "** ise piyasa düzeltmelerinde 'dipten alım' fırsatı yaratmak ve sigorta görevi görmek için eklendi.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 60, color: "#3b82f6" },
@@ -293,7 +298,12 @@ export default function MarketPage() {
             return {
                 title: "Dengeli Portföy",
                 persona: "Stratejik Mimar",
-                desc: "Hem kazanmak hem de korumak isteyen, akılcı ve planlı bir yatırımcısınız.",
+                desc: "Risk ve getiri arasında ideal dengeyi kuran, piyasa dalgalanmalarına karşı kısmen korumalı yapı.",
+                advantages: [
+                    "Hem koruma hem büyüme sağlar",
+                    "Aşırı piyasa düşüşlerinde tampon görevi görür",
+                    "Stresten uzak, sürdürülebilir bir yatırım deneyimi"
+                ],
                 reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **" + (isIslamic ? "Katılım Hissesi" : "Hisse Senedi") + "** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 40, color: "#3b82f6" },
@@ -306,7 +316,12 @@ export default function MarketPage() {
             return {
                 title: "Koruyucu Portföy",
                 persona: "Güvenli Liman",
-                desc: "Önceliği elindekini korumak olan, riskten kaçınan temkinli bir yatırımcısınız.",
+                desc: "Sermaye koruma öncelikli, düşük riskli ve düzenli gelir odaklı portföy.",
+                advantages: [
+                    "Anapara kaybı riski minimumdur",
+                    "Piyasa krizlerinden en az etkilenen yapıdır",
+                    "Düzenli ve öngörülebilir getiri akışı sağlar"
+                ],
                 reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **" + (isIslamic ? "Katılım Hissesi" : "Hisse (Temettü)") + "** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
                 allocation: adjustForIslamic([
                     { name: "Tahvil / Bono", value: 50, color: "#22c55e" },
@@ -496,12 +511,32 @@ export default function MarketPage() {
                                                 cx="50%"
                                                 cy="50%"
                                                 innerRadius={0}
-                                                outerRadius={110}
+                                                outerRadius={100}
                                                 paddingAngle={0}
                                                 dataKey="value"
                                                 stroke="none"
                                                 isAnimationActive={true}
                                                 activeIndex={-1}
+                                                labelLine={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }}
+                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
+                                                    const RADIAN = Math.PI / 180;
+                                                    const radius = outerRadius + 20;
+                                                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                    
+                                                    return (
+                                                        <text 
+                                                            x={x} 
+                                                            y={y} 
+                                                            fill="#e2e8f0" 
+                                                            textAnchor={x > cx ? 'start' : 'end'} 
+                                                            dominantBaseline="central"
+                                                            style={{ fontSize: '11px', fontWeight: 600 }}
+                                                        >
+                                                            {`${name} (%${value})`}
+                                                        </text>
+                                                    );
+                                                }}
                                             >
                                                 {recommendation?.allocation.map((entry, index) => (
                                                     <Cell 
@@ -521,15 +556,29 @@ export default function MarketPage() {
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/5">
-                                    <h4 className="text-sm font-bold text-blue-300 mb-2 flex items-center gap-2">
+                                    <h4 className="text-sm font-bold text-blue-300 mb-3 flex items-center gap-2">
                                         <Zap className="w-4 h-4" />
                                         Neden Bu Dağılım?
                                     </h4>
-                                    <p className="text-sm text-slate-300 leading-relaxed">
+                                    <p className="text-sm text-slate-300 leading-relaxed mb-4">
                                         {recommendation?.reasoning.split("**").map((part, i) => 
                                             i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
                                         )}
                                     </p>
+                                    
+                                    {recommendation?.advantages && (
+                                        <div className="space-y-2">
+                                            <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avantajlar</h5>
+                                            <ul className="space-y-2">
+                                                {recommendation.advantages.map((adv: string, i: number) => (
+                                                    <li key={i} className="text-xs text-slate-300 flex items-start gap-2">
+                                                        <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
+                                                        {adv}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="grid grid-cols-2 gap-4 w-full mt-4">
                                     {recommendation?.allocation.map((item, idx) => (
