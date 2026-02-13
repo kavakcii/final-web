@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import TradingViewWidget from "@/components/TradingViewWidget";
 import { TefasChart } from "@/components/TefasChart";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
+import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
 
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated } = useUser();
@@ -128,46 +129,7 @@ export default function Dashboard() {
             {/* Interactive Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Chart Area REPLACED with Portfolio Intro Card */}
-                <div className="lg:col-span-2 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl p-8 relative overflow-hidden flex flex-col justify-center items-center text-center">
-                    <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
-                    
-                    <div className="relative z-10 max-w-lg mx-auto">
-                        <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-400 ring-4 ring-blue-500/10">
-                            <Wallet className="w-8 h-8" />
-                        </div>
-                        
-                        <h2 className="text-3xl font-bold text-white mb-4">
-                            Size Özel Portföy Dağılımını Bulun
-                        </h2>
-                        
-                        <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-                            Yatırım hedeflerinize ve risk profilinize en uygun dağılımı 1 dakikalık akıllı testimizle belirleyin.
-                        </p>
-
-                        <a 
-                            href="/dashboard/market" 
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg shadow-blue-900/30"
-                        >
-                            Teste Başla
-                            <ArrowUpRight className="w-5 h-5" />
-                        </a>
-                        
-                        <div className="mt-8 flex items-center justify-center gap-6 text-xs text-slate-500 font-medium">
-                            <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                Bilimsel Analiz
-                            </span>
-                            <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-                                Kişiselleştirilmiş
-                            </span>
-                            <span className="flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                                Ücretsiz
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
                 <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 flex flex-col">
