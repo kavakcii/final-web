@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2, Plus, ArrowRight, X, ChevronRight, Save, Trash2, CalendarDays } from 'lucide-react';
+import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircle, Eye, Bell, BellOff, Bot, BrainCircuit, ListChecks, CalendarClock, Settings2, Plus, ArrowRight, X, ChevronRight, Save, Trash2, CalendarDays, MousePointer2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
@@ -14,9 +14,9 @@ interface ReportInstruction {
     frequency: EmailFrequency;
     includeAnalysis: boolean;
     includePortfolioDetails: boolean;
-    preferredDay?: number; // 0-6 (for weekly)
-    preferredDate?: number; // 1-28 (for monthly/quarterly/etc)
-    preferredTime?: string; // "HH:mm"
+    preferredDay?: number;
+    preferredDate?: number;
+    preferredTime?: string;
     createdAt: string;
 }
 
@@ -67,6 +67,7 @@ export default function ReportsPage() {
 
     // Editing / Wizard States
     const [isEditing, setIsEditing] = useState(false);
+    const [showPreviewSelector, setShowPreviewSelector] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [setupStep, setSetupStep] = useState(1); // 1: Content, 2: Frequency
     const [tempLabel, setTempLabel] = useState('');
@@ -203,10 +204,20 @@ export default function ReportsPage() {
         setTempTime(inst.preferredTime ?? '09:00');
     };
 
-    // Preview Logic
-    const handlePreview = async () => {
+    // New Preview Trigger
+    const triggerPreviewChoice = () => {
+        if (instructions.length === 0 && !isEditing) {
+            setSendResult({ type: 'error', message: 'Önizleme için önce bir talimat oluşturmalısınız.' });
+            return;
+        }
+        setShowPreviewSelector(true);
+    };
+
+    // Actual Preview Logic
+    const handlePreview = async (analysis: boolean, details: boolean) => {
         setIsLoading(true);
         setSendResult(null);
+        setShowPreviewSelector(false);
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Oturum bulunamadı');
@@ -217,8 +228,8 @@ export default function ReportsPage() {
                 body: JSON.stringify({
                     userId: user.id,
                     sendEmail: false,
-                    includeAnalysis: isEditing ? tempAnalysis : (instructions[0]?.includeAnalysis || false),
-                    includePortfolioDetails: isEditing ? tempDetails : (instructions[0]?.includePortfolioDetails ?? true)
+                    includeAnalysis: analysis,
+                    includePortfolioDetails: details
                 }),
             });
 
@@ -286,15 +297,59 @@ export default function ReportsPage() {
                     </p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-3 relative">
                     <button
-                        onClick={handlePreview}
+                        onClick={triggerPreviewChoice}
                         disabled={isLoading}
-                        className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/10 disabled:opacity-50"
+                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600/20 to-blue-600/20 hover:from-purple-600/30 hover:to-blue-600/30 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all border border-white/10 disabled:opacity-50 shadow-xl"
                     >
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
                         Önizleme Oluştur
                     </button>
+
+                    {/* Preview Choice Popover */}
+                    <AnimatePresence>
+                        {showPreviewSelector && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                className="absolute top-full mt-3 right-0 w-72 bg-slate-900/95 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-xl z-[100]"
+                            >
+                                <div className="flex justify-between items-center mb-4">
+                                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        <MousePointer2 className="w-3 h-3" /> Talimat Seçin
+                                    </h4>
+                                    <button onClick={() => setShowPreviewSelector(false)} className="text-slate-500 hover:text-white"><X className="w-4 h-4" /></button>
+                                </div>
+
+                                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+                                    {isEditing && (
+                                        <button
+                                            onClick={() => handlePreview(tempAnalysis, tempDetails)}
+                                            className="w-full text-left p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all"
+                                        >
+                                            <span className="block text-[11px] font-bold text-purple-400">Şu anki Düzenleme</span>
+                                            <span className="text-[10px] text-slate-400 leading-tight">Wizard'da yaptığınız ayarları önizle.</span>
+                                        </button>
+                                    )}
+                                    {instructions.map(inst => (
+                                        <button
+                                            key={inst.id}
+                                            onClick={() => handlePreview(inst.includeAnalysis, inst.includePortfolioDetails)}
+                                            className="w-full text-left p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all flex items-center justify-between group"
+                                        >
+                                            <div>
+                                                <span className="block text-[11px] font-bold text-white group-hover:text-purple-400 transition-colors">{inst.label}</span>
+                                                <span className="text-[9px] text-slate-500">{inst.includeAnalysis ? '🤖 AI Analiz' : '📊 Tablo Raporu'}</span>
+                                            </div>
+                                            <ChevronRight className="w-3 h-3 text-slate-600 group-hover:text-white" />
+                                        </button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
@@ -477,7 +532,6 @@ export default function ReportsPage() {
                                                         </button>
                                                     ))}
                                                 </div>
-                                                <p className="text-[9px] text-slate-500 italic">* Şubat ayı gibi kısa aylar için en fazla 28. gün seçilebilir.</p>
                                             </motion.div>
                                         )}
 
@@ -529,6 +583,20 @@ export default function ReportsPage() {
 
                 {/* RIGHT: PREVIEW AREA */}
                 <div className="lg:col-span-2 space-y-4">
+                    <AnimatePresence>
+                        {sendResult && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0 }}
+                                className={`flex items-center gap-3 p-4 rounded-xl border ${sendResult.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}
+                            >
+                                {sendResult.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                                <span className="text-sm font-bold">{sendResult.message}</span>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
                     {previewHtml ? (
                         <div className="bg-slate-950/50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[750px] relative">
                             <div className="bg-slate-900/80 backdrop-blur-md border-b border-white/5 p-4 flex justify-between items-center sticky top-0 z-10">
@@ -538,7 +606,7 @@ export default function ReportsPage() {
                                         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
                                         <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
                                     </div>
-                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Canlı İzleme</span>
+                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Canlı Önizleme</span>
                                 </div>
                                 <button onClick={() => setPreviewHtml(null)} className="text-slate-500 hover:text-white transition-colors">
                                     <X className="w-4 h-4" />
@@ -553,7 +621,7 @@ export default function ReportsPage() {
                             </div>
                             <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Rapor Önizleme Alanı</h3>
                             <p className="text-slate-500 max-w-sm mx-auto text-sm">
-                                Sağ üstteki "Önizleme Oluştur" butonuna tıklayarak robotunuzun hazırlayacağı e-postayı görebilirsiniz.
+                                Yukarıdaki "Önizleme Oluştur" butonuna basarak hangi talimatınızın nasıl görüneceğini seçebilirsiniz.
                             </p>
                         </div>
                     )}
