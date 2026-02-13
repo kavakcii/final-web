@@ -119,6 +119,8 @@ export function DashboardPortfolioWidget() {
                                 paddingAngle={5}
                                 dataKey="value"
                                 stroke="none"
+                                isAnimationActive={true}
+                                activeIndex={-1} // Disable click selection effect
                             >
                                 {recommendation.allocation.map((entry: any, index: number) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
@@ -135,6 +137,17 @@ export function DashboardPortfolioWidget() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                         <span className="text-slate-400 text-xs font-medium">Önerilen</span>
                         <span className="text-white font-bold text-sm text-center px-4">{recommendation.title}</span>
+                    </div>
+                    {/* Legend */}
+                    <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
+                         {recommendation.allocation.map((item: any, idx: number) => (
+                             <div key={idx} className="flex items-center gap-1.5">
+                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                 <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">
+                                     {item.name} <span className="text-slate-500">%{item.value}</span>
+                                 </span>
+                             </div>
+                         ))}
                     </div>
                 </div>
 
