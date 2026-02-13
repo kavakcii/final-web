@@ -87,12 +87,6 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                         </div>
                         <h4 style="color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Varlık Detayları</h4>
                         ${renderAssetAnalysisRows()}
-                        <div style="margin-top: 20px; background-color: #0f172a; padding: 16px; border-radius: 8px;">
-                            <p style="color: #fbbf24; font-size: 12px; font-weight: 700; margin: 0 0 8px; text-transform: uppercase;">⚡ Öneriler</p>
-                            <ul style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 13px;">
-                                ${aiAnalysis.suggestions.map(s => `<li style="margin-bottom: 4px;">${s}</li>`).join('')}
-                            </ul>
-                        </div>
                     </td>
                 </tr>
             </table>
@@ -127,7 +121,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                             <td style="background-color: #0f172a; padding: 32px;">
                                 <p style="color: #e2e8f0; font-size: 16px; margin: 0 0 4px;">Merhaba <strong style="color: #ffffff;">${userName}</strong> 👋</p>
                                 <p style="color: #64748b; font-size: 14px; margin: 0 0 24px; line-height: 1.6;">
-                                    İşte hazırladığımız portföy raporunuz:
+                                    İşte hazırladığımız raporunuz:
                                 </p>
                                 ${renderAISection()}
                                 ${includePortfolioDetails ? `
@@ -138,15 +132,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                                             <p style="color: #3b82f6; font-size: 28px; font-weight: 800; margin: 8px 0 0;">${assets.length}</p>
                                         </td>
                                     </tr>
-                                </table>
-                                ${stockAssets.length > 0 ? `
-                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px; background: #0b1222; border-radius: 12px; overflow: hidden; border: 1px solid #1e293b;">
-                                    <tr>
-                                        <td colspan="3" style="padding: 14px 16px; background: linear-gradient(90deg, #1e3a5f, #0f2744); border-bottom: 1px solid #1e293b;"><span style="color: #3b82f6; font-size: 13px; font-weight: 700;">📈 HİSSELER</span></td>
-                                    </tr>
-                                    ${renderAssetRows(stockAssets)}
                                 </table>` : ''}
-                                ` : ''}
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px auto 0;">
                                     <tr>
                                         <td align="center" style="background: linear-gradient(135deg, #2563eb, #3b82f6); border-radius: 12px;">
@@ -158,7 +144,7 @@ function generatePortfolioEmailHtml(userName: string, assets: PortfolioAsset[], 
                         </tr>
                         <tr>
                             <td style="background-color: #060f1d; padding: 24px 32px; text-align: center;">
-                                <p style="color: #334155; font-size: 11px; margin: 0; line-height: 1.6;">© 2026 FinAl — 24/7 Otomatik Portföy Robotu</p>
+                                <p style="color: #334155; font-size: 11px; margin: 0; line-height: 1.6;">© 2026 FinAl — Otomatik Portföy Robotu</p>
                             </td>
                         </tr>
                     </table>
@@ -174,10 +160,10 @@ export async function POST(req: Request) {
         const body = await req.json().catch(() => ({}));
         const { userId, sendEmail = false, isCron = false } = body;
 
-        // Current time for scheduling checks
         const now = new Date();
-        const dayOfWeek = now.getDay(); // 0 (Sun) to 6 (Sat)
+        const dayOfWeek = now.getDay();
         const dayOfMonth = now.getDate();
+        const monthNum = now.getMonth(); // 0-11
 
         let targetUsers: {
             id: string;
@@ -191,7 +177,6 @@ export async function POST(req: Request) {
         }[] = [];
 
         if (userId) {
-            // Manual specific trigger (usually from Preview or Send Now)
             const { data: userData } = await getSupabaseAdmin().auth.admin.getUserById(userId);
             if (userData?.user) {
                 targetUsers.push({
@@ -206,7 +191,6 @@ export async function POST(req: Request) {
                 });
             }
         } else {
-            // General Cron Check for ALL users
             const { data: portfolioUsers, error } = await getSupabaseAdmin()
                 .from('user_portfolios')
                 .select('user_id');
@@ -224,20 +208,25 @@ export async function POST(req: Request) {
                     for (const inst of instructions) {
                         if (inst.frequency === 'none') continue;
 
-                        // SCHEDULING LOGIC (Only if triggered by Cron)
                         if (isCron) {
                             let shouldSendToday = false;
 
                             if (inst.frequency === 'weekly') {
-                                // Weekly is Monday (1)
                                 if (dayOfWeek === 1) shouldSendToday = true;
                             } else if (inst.frequency === 'biweekly') {
-                                // Biweekly: Every 2nd Monday (using week parity)
-                                const weekNum = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000));
-                                if (dayOfWeek === 1 && weekNum % 2 === 0) shouldSendToday = true;
+                                // 1st and 15th of month
+                                if (dayOfMonth === 1 || dayOfMonth === 15) shouldSendToday = true;
                             } else if (inst.frequency === 'monthly') {
-                                // Monthly: 1st day of month
                                 if (dayOfMonth === 1) shouldSendToday = true;
+                            } else if (inst.frequency === 'quarterly') {
+                                // Jan, Apr, Jul, Oct 1st
+                                if (dayOfMonth === 1 && [0, 3, 6, 9].includes(monthNum)) shouldSendToday = true;
+                            } else if (inst.frequency === 'semiannually') {
+                                // Jan, Jul 1st
+                                if (dayOfMonth === 1 && [0, 6].includes(monthNum)) shouldSendToday = true;
+                            } else if (inst.frequency === 'annually') {
+                                // Jan 1st
+                                if (dayOfMonth === 1 && monthNum === 0) shouldSendToday = true;
                             }
 
                             if (!shouldSendToday) continue;
@@ -267,7 +256,10 @@ export async function POST(req: Request) {
                 .select('symbol, asset_type, quantity, avg_cost')
                 .eq('user_id', user.id);
 
-            if (!assets || assets.length === 0) continue;
+            if (!assets || assets.length === 0) {
+                console.log(`User ${user.email} has no assets, skipping.`);
+                continue;
+            }
 
             const useAI = user.preferences?.includeAnalysis ?? true;
             const useTable = user.preferences?.includePortfolioDetails ?? true;
@@ -292,19 +284,23 @@ export async function POST(req: Request) {
             if (sendEmail) {
                 const resendKey = process.env.RESEND_API_KEY;
                 if (resendKey) {
-                    const emailRes = await fetch('https://api.resend.com/emails', {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            from: 'FinAl <onboarding@resend.dev>',
-                            to: [user.email],
-                            subject: `📊 FinAl — ${user.instructionLabel || 'Portföy Raporu'}`,
-                            html: emailHtml,
-                        }),
-                    });
-
-                    if (emailRes.ok) stats.sent++;
-                    else stats.failed++;
+                    try {
+                        const emailRes = await fetch('https://api.resend.com/emails', {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                from: 'FinAl <onboarding@resend.dev>',
+                                to: [user.email],
+                                subject: `📊 FinAl — ${user.instructionLabel || 'Portföy Raporu'}`,
+                                html: emailHtml,
+                            }),
+                        });
+                        if (emailRes.ok) stats.sent++;
+                        else stats.failed++;
+                    } catch (err) {
+                        stats.failed++;
+                        console.error("Email send error:", err);
+                    }
                 }
             }
         }

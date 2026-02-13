@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
 
-type EmailFrequency = 'weekly' | 'biweekly' | 'monthly' | 'none';
+type EmailFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semiannually' | 'annually' | 'none';
 
 interface ReportInstruction {
     id: string;
@@ -18,9 +18,12 @@ interface ReportInstruction {
 }
 
 const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
-    weekly: 'Her Hafta (Pazartesi)',
-    biweekly: 'İki Haftada Bir',
-    monthly: 'Ayda Bir',
+    weekly: 'Her Hafta',
+    biweekly: 'Her 15 Günde Bir',
+    monthly: 'Her Ay',
+    quarterly: '3 Ayda Bir',
+    semiannually: '6 Ayda Bir',
+    annually: 'Yılda 1',
     none: 'Devre Dışı',
 };
 
@@ -28,6 +31,9 @@ const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
     weekly: '📅',
     biweekly: '📆',
     monthly: '🗓️',
+    quarterly: '📊',
+    semiannually: '🌓',
+    annually: '🎆',
     none: '🔕',
 };
 
@@ -68,7 +74,7 @@ export default function ReportsPage() {
                         const migrated: ReportInstruction = {
                             id: 'migrated-local-1',
                             label: 'Eski Talimat',
-                            frequency: old.frequency,
+                            frequency: old.frequency === 'biweekly' ? 'biweekly' : (old.frequency as any),
                             includeAnalysis: old.includeAnalysis || false,
                             includePortfolioDetails: old.includePortfolioDetails ?? true,
                             createdAt: old.updatedAt || new Date().toISOString()
@@ -110,7 +116,6 @@ export default function ReportsPage() {
             const { error } = await supabase.auth.updateUser({
                 data: {
                     report_instructions: newInstructions,
-                    // Clear old settings to avoid confusion if they exist
                     report_settings: null
                 }
             });
@@ -215,7 +220,7 @@ export default function ReportsPage() {
                 body: JSON.stringify({
                     userId: user.id,
                     sendEmail: true,
-                    includeAnalysis: isEditing ? tempAnalysis : true, // Manual send usually implies full report
+                    includeAnalysis: isEditing ? tempAnalysis : true,
                     includePortfolioDetails: isEditing ? tempDetails : true
                 }),
             });
@@ -393,17 +398,19 @@ export default function ReportsPage() {
                                 ) : (
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Gönderim Sıklığı</label>
-                                        {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).filter(f => f !== 'none').map((freq) => (
-                                            <button
-                                                key={freq}
-                                                onClick={() => setTempFreq(freq)}
-                                                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${tempFreq === freq ? 'bg-blue-600/10 border-blue-500/40' : 'bg-slate-950 border-white/5 text-slate-500'}`}
-                                            >
-                                                <span>{FREQUENCY_ICONS[freq]}</span>
-                                                <span className="text-xs font-bold">{FREQUENCY_LABELS[freq]}</span>
-                                                {tempFreq === freq && <CheckCircle className="w-3.5 h-3.5 text-blue-400 ml-auto" />}
-                                            </button>
-                                        ))}
+                                        <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).filter(f => f !== 'none').map((freq) => (
+                                                <button
+                                                    key={freq}
+                                                    onClick={() => setTempFreq(freq)}
+                                                    className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${tempFreq === freq ? 'bg-blue-600/10 border-blue-500/40' : 'bg-slate-950 border-white/5 text-slate-500'}`}
+                                                >
+                                                    <span>{FREQUENCY_ICONS[freq]}</span>
+                                                    <span className="text-xs font-bold">{FREQUENCY_LABELS[freq]}</span>
+                                                    {tempFreq === freq && <CheckCircle className="w-3.5 h-3.5 text-blue-400 ml-auto" />}
+                                                </button>
+                                            ))}
+                                        </div>
 
                                         <div className="flex gap-2 mt-6">
                                             <button onClick={() => setSetupStep(1)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl text-xs font-bold border border-white/10 transition-all">Geri</button>
