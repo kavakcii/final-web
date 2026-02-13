@@ -383,7 +383,7 @@ export default function MarketPage() {
                                                 cy="50%"
                                                 innerRadius={0}
                                                 outerRadius={110}
-                                                paddingAngle={5}
+                                                paddingAngle={0}
                                                 dataKey="value"
                                                 stroke="none"
                                                 isAnimationActive={true}
@@ -393,9 +393,8 @@ export default function MarketPage() {
                                                     <Cell 
                                                         key={`cell-${index}`} 
                                                         fill={entry.color} 
-                                                        stroke="rgba(0,0,0,0.2)" 
+                                                        stroke="rgba(255,255,255,0.2)" 
                                                         strokeWidth={1}
-                                                        style={{ filter: 'drop-shadow(2px 4px 6px rgba(0,0,0,0.5))' }}
                                                     />
                                                 ))}
                                             </Pie>
