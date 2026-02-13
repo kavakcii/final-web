@@ -28,12 +28,16 @@ export function DashboardPortfolioWidget() {
     const getPortfolioRecommendation = (answers: Record<number, string>) => {
         let totalScore = 0;
         let isIslamic = false;
+        const numQuestions = Object.keys(answers).length;
+        // If 6 questions (old version), Islamic is index 5.
+        // If 8 questions (new version), Islamic is index 7.
+        const islamicIndex = numQuestions === 6 ? 5 : 7;
 
         Object.entries(answers).forEach(([qIndex, score]) => {
             const s = parseInt(score);
             totalScore += s;
-            // Question 6 (index 5) checks for interest sensitivity
-            if (parseInt(qIndex) === 5 && s === 0) {
+            // Check for interest sensitivity based on detected version
+            if (parseInt(qIndex) === islamicIndex && s === 0) {
                 isIslamic = true;
             }
         });

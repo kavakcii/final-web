@@ -14,6 +14,8 @@ interface ReportInstruction {
     frequency: EmailFrequency;
     includeAnalysis: boolean;
     includePortfolioDetails: boolean;
+    preferredDay?: number; // 0-6
+    preferredTime?: string; // "HH:mm"
     createdAt: string;
 }
 
@@ -37,6 +39,18 @@ const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
     none: '🔕',
 };
 
+const DAYS = [
+    { id: 1, label: 'Pazartesi' },
+    { id: 2, label: 'Salı' },
+    { id: 3, label: 'Çarşamba' },
+    { id: 4, label: 'Perşembe' },
+    { id: 5, label: 'Cuma' },
+    { id: 6, label: 'Cumartesi' },
+    { id: 0, label: 'Pazar' },
+];
+
+const TIMES = ['09:00', '15:00', '18:00', '21:00'];
+
 export default function ReportsPage() {
     const { email: userEmail } = useUser();
     const [isLoading, setIsLoading] = useState(false);
@@ -57,17 +71,17 @@ export default function ReportsPage() {
     const [tempFreq, setTempFreq] = useState<EmailFrequency>('weekly');
     const [tempAnalysis, setTempAnalysis] = useState(false);
     const [tempDetails, setTempDetails] = useState(true);
+    const [tempDay, setTempDay] = useState<number>(1);
+    const [tempTime, setTempTime] = useState<string>('09:00');
 
     // Load saved preferences from Supabase Metadata
     useEffect(() => {
         const loadPreferences = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user && user.user_metadata) {
-                // Support multiple instructions
                 if (Array.isArray(user.user_metadata.report_instructions)) {
                     setInstructions(user.user_metadata.report_instructions);
                 }
-                // Migration logic for old single setting
                 else if (user.user_metadata.report_settings) {
                     const old = user.user_metadata.report_settings;
                     if (old.frequency !== 'none') {
@@ -77,6 +91,8 @@ export default function ReportsPage() {
                             frequency: old.frequency === 'biweekly' ? 'biweekly' : (old.frequency as any),
                             includeAnalysis: old.includeAnalysis || false,
                             includePortfolioDetails: old.includePortfolioDetails ?? true,
+                            preferredDay: 1,
+                            preferredTime: '09:00',
                             createdAt: old.updatedAt || new Date().toISOString()
                         };
                         setInstructions([migrated]);
@@ -104,6 +120,8 @@ export default function ReportsPage() {
                 frequency: tempFreq,
                 includeAnalysis: tempAnalysis,
                 includePortfolioDetails: tempDetails,
+                preferredDay: tempFreq === 'weekly' ? tempDay : undefined,
+                preferredTime: tempTime,
                 createdAt: new Date().toISOString()
             };
 
@@ -162,6 +180,8 @@ export default function ReportsPage() {
         setTempFreq('weekly');
         setTempAnalysis(false);
         setTempDetails(true);
+        setTempDay(1);
+        setTempTime('09:00');
     };
 
     const startEditInstruction = (inst: ReportInstruction) => {
@@ -172,6 +192,8 @@ export default function ReportsPage() {
         setTempFreq(inst.frequency);
         setTempAnalysis(inst.includeAnalysis);
         setTempDetails(inst.includePortfolioDetails);
+        setTempDay(inst.preferredDay ?? 1);
+        setTempTime(inst.preferredTime ?? '09:00');
     };
 
     // Preview Logic
@@ -311,10 +333,15 @@ export default function ReportsPage() {
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <h4 className="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">{inst.label}</h4>
-                                                <div className="flex items-center gap-2 mt-1">
+                                                <div className="flex flex-wrap items-center gap-2 mt-1">
                                                     <span className="text-[10px] bg-white/5 text-slate-400 px-2 py-0.5 rounded-full border border-white/5">
-                                                        {FREQUENCY_LABELS[inst.frequency]}
+                                                        {FREQUENCY_LABELS[inst.frequency]} {inst.frequency === 'weekly' && inst.preferredDay !== undefined && `(${DAYS.find(d => d.id === inst.preferredDay)?.label})`}
                                                     </span>
+                                                    {inst.preferredTime && (
+                                                        <span className="text-[10px] bg-white/5 text-slate-400 px-2 py-0.5 rounded-full border border-white/5 flex items-center gap-1">
+                                                            <Clock className="w-2.5 h-2.5" /> {inst.preferredTime}
+                                                        </span>
+                                                    )}
                                                     {inst.includeAnalysis && (
                                                         <span className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/10">AI Analiz</span>
                                                     )}
@@ -342,7 +369,7 @@ export default function ReportsPage() {
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="bg-slate-900/80 border-2 border-purple-500/40 rounded-2xl p-6 relative overflow-hidden"
+                                className="bg-slate-950/90 border-2 border-purple-500/40 rounded-2xl p-6 relative overflow-hidden backdrop-blur-xl shadow-2xl shadow-purple-500/10"
                             >
                                 <div className="absolute top-0 right-0 p-2">
                                     <button onClick={() => setIsEditing(false)} className="text-slate-500 hover:text-white">
@@ -355,7 +382,7 @@ export default function ReportsPage() {
                                         <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 1 ? 'bg-purple-500' : 'bg-slate-800'}`} />
                                         <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 2 ? 'bg-purple-500' : 'bg-slate-800'}`} />
                                     </div>
-                                    <h3 className="text-lg font-bold text-white">
+                                    <h3 className="text-lg font-bold text-white tracking-tight">
                                         {editingId ? 'Talimatı Düzenle' : 'Yeni Talimat Oluştur'}
                                     </h3>
                                 </div>
@@ -369,20 +396,20 @@ export default function ReportsPage() {
                                                 placeholder="Örn: Haftalık AI Analizim"
                                                 value={tempLabel}
                                                 onChange={(e) => setTempLabel(e.target.value)}
-                                                className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
+                                                className="w-full bg-slate-900 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
                                             />
                                         </div>
 
                                         <div className="space-y-2 pt-2">
                                             <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">İçerik Tercihleri</label>
-                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempAnalysis ? 'bg-purple-500/10 border-purple-500/30' : 'bg-slate-950 border-white/5'}`}>
+                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempAnalysis ? 'bg-purple-500/10 border-purple-500/30' : 'bg-slate-900 border-white/5'}`}>
                                                 <input type="checkbox" checked={tempAnalysis} onChange={(e) => { setTempAnalysis(e.target.checked); if (e.target.checked) setTempDetails(false); }} className="mt-1" />
                                                 <div>
                                                     <span className="block font-bold text-white text-xs">Yapay Zeka Analizi</span>
                                                     <span className="text-[10px] text-slate-500">Piyasa neden-sonuç yorumları.</span>
                                                 </div>
                                             </label>
-                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/30' : tempAnalysis ? 'opacity-40 cursor-not-allowed bg-slate-950' : 'bg-slate-950 border-white/5'}`}>
+                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/30' : tempAnalysis ? 'opacity-40 cursor-not-allowed bg-slate-900' : 'bg-slate-900 border-white/5'}`}>
                                                 <input type="checkbox" checked={tempDetails} disabled={tempAnalysis} onChange={(e) => setTempDetails(e.target.checked)} className="mt-1" />
                                                 <div>
                                                     <span className="block font-bold text-white text-xs">Portföy Tablosu</span>
@@ -396,27 +423,60 @@ export default function ReportsPage() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Gönderim Sıklığı</label>
-                                        <div className="grid grid-cols-1 gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                                            {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).filter(f => f !== 'none').map((freq) => (
-                                                <button
-                                                    key={freq}
-                                                    onClick={() => setTempFreq(freq)}
-                                                    className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${tempFreq === freq ? 'bg-blue-600/10 border-blue-500/40' : 'bg-slate-950 border-white/5 text-slate-500'}`}
-                                                >
-                                                    <span>{FREQUENCY_ICONS[freq]}</span>
-                                                    <span className="text-xs font-bold">{FREQUENCY_LABELS[freq]}</span>
-                                                    {tempFreq === freq && <CheckCircle className="w-3.5 h-3.5 text-blue-400 ml-auto" />}
-                                                </button>
-                                            ))}
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Gönderim Sıklığı</label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {(Object.keys(FREQUENCY_LABELS) as EmailFrequency[]).filter(f => f !== 'none').map((freq) => (
+                                                    <button
+                                                        key={freq}
+                                                        onClick={() => setTempFreq(freq)}
+                                                        className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all ${tempFreq === freq ? 'bg-blue-600/10 border-blue-500/40 text-white' : 'bg-slate-900 border-white/5 text-slate-500'}`}
+                                                    >
+                                                        <span className="text-sm">{FREQUENCY_ICONS[freq]}</span>
+                                                        <span className="text-[10px] font-bold leading-tight">{FREQUENCY_LABELS[freq]}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
+
+                                        {tempFreq === 'weekly' && (
+                                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                                                <label className="text-[10px] font-bold text-slate-500 uppercase block tracking-widest">Hangi Gün?</label>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {DAYS.map((day) => (
+                                                        <button
+                                                            key={day.id}
+                                                            onClick={() => setTempDay(day.id)}
+                                                            className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all ${tempDay === day.id ? 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20' : 'bg-slate-900 border-white/5 text-slate-400 hover:border-white/20'}`}
+                                                        >
+                                                            {day.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+
+                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block tracking-widest">Hangi Saat?</label>
+                                            <div className="grid grid-cols-4 gap-2">
+                                                {TIMES.map((time) => (
+                                                    <button
+                                                        key={time}
+                                                        onClick={() => setTempTime(time)}
+                                                        className={`py-2 rounded-lg border text-[10px] font-bold transition-all ${tempTime === time ? 'bg-blue-500 text-white border-blue-500 shadow-lg shadow-blue-500/20' : 'bg-slate-900 border-white/5 text-slate-400 hover:border-white/20'}`}
+                                                    >
+                                                        {time}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
 
                                         <div className="flex gap-2 mt-6">
                                             <button onClick={() => setSetupStep(1)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl text-xs font-bold border border-white/10 transition-all">Geri</button>
                                             <button onClick={handleSaveInstruction} disabled={isSaving} className="flex-[2] bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg">
                                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                                Talimatı Kaydet
+                                                Kaydet & Bitir
                                             </button>
                                         </div>
                                     </div>
@@ -427,10 +487,10 @@ export default function ReportsPage() {
 
                     {/* SEND NOW SECTION */}
                     {!isEditing && (
-                        <div className="bg-gradient-to-br from-indigo-900/20 to-purple-900/10 border border-white/5 rounded-2xl p-6">
+                        <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/20 border border-white/10 rounded-2xl p-6 shadow-xl shadow-indigo-500/5">
                             <div className="flex items-center gap-3 mb-4">
                                 <Send className="w-5 h-5 text-indigo-400" />
-                                <h3 className="text-base font-bold text-white">Anlık Gönderim</h3>
+                                <h3 className="text-base font-bold text-white tracking-tight">Anlık Gönderim</h3>
                             </div>
                             <p className="text-[11px] text-slate-400 mb-6 leading-relaxed">
                                 Otomatik raporu beklemeden istediğiniz an güncel verilerle bir rapor oluşturup e-posta alabilirsiniz.
@@ -464,15 +524,15 @@ export default function ReportsPage() {
                     </AnimatePresence>
 
                     {previewHtml ? (
-                        <div className="bg-slate-900/30 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[750px] relative">
-                            <div className="bg-slate-800/80 backdrop-blur-md border-b border-white/5 p-4 flex justify-between items-center sticky top-0 z-10">
+                        <div className="bg-slate-950/50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl flex flex-col h-[750px] relative">
+                            <div className="bg-slate-900/80 backdrop-blur-md border-b border-white/5 p-4 flex justify-between items-center sticky top-0 z-10">
                                 <div className="flex items-center gap-3">
                                     <div className="flex gap-1.5">
                                         <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
                                         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
                                         <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
                                     </div>
-                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Rapor Önizleme</span>
+                                    <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Canlı İzleme</span>
                                 </div>
                                 <button onClick={() => setPreviewHtml(null)} className="text-slate-500 hover:text-white transition-colors">
                                     <X className="w-4 h-4" />
@@ -481,11 +541,13 @@ export default function ReportsPage() {
                             <iframe srcDoc={previewHtml} className="w-full flex-1 border-0" title="Email Preview" style={{ background: '#0a0e1a' }} />
                         </div>
                     ) : (
-                        <div className="bg-slate-900/20 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center p-12 h-[600px]">
-                            <Bot className="w-16 h-16 text-slate-800 mb-6" />
-                            <h3 className="text-xl font-bold text-white mb-2">Canlı Rapor Önizleme</h3>
+                        <div className="bg-slate-950/20 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-center p-12 h-[600px]">
+                            <div className="w-20 h-20 bg-slate-900/50 rounded-full flex items-center justify-center mb-6 border border-white/5">
+                                <Bot className="w-10 h-10 text-slate-700" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Rapor Önizleme Alanı</h3>
                             <p className="text-slate-500 max-w-sm mx-auto mb-8 text-sm">
-                                Robotunuzun hazırlayacağı e-postanın nasıl görüneceğini görmek için yukarıdaki "Önizleme Oluştur" butonuna tıklayabilirsiniz.
+                                Robotunuzun hazırlayacağı e-postanın nasıl görüneceğini görmek için sağ üstteki "Önizleme Oluştur" butonuna tıklayabilirsiniz.
                             </p>
                         </div>
                     )}

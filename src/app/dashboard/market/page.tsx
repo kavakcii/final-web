@@ -139,6 +139,48 @@ export default function MarketPage() {
         },
         {
             id: 6,
+            question: "Yatırım yapma sıklığınız nedir?",
+            options: [
+                { 
+                    label: "Her Ay Düzenli", 
+                    desc: "Gelirimden her ay belirli bir miktar ayırarak düzenli alım yaparım (Dolar Cost Averaging).", 
+                    score: 0 
+                },
+                { 
+                    label: "Düzensiz / Fırsat Buldukça", 
+                    desc: "Belirli bir takvimim yok. Elime toplu para geçtikçe veya piyasada fırsat gördükçe yatırım yaparım.", 
+                    score: 0 
+                },
+                { 
+                    label: "Tek Seferlik", 
+                    desc: "Elimdeki mevcut birikimi yatırmak istiyorum, düzenli ekleme yapmayı planlamıyorum.", 
+                    score: 0 
+                }
+            ]
+        },
+        {
+            id: 7,
+            question: "Yatırım için ayırmayı düşündüğünüz yaklaşık tutar nedir?",
+            options: [
+                { 
+                    label: "0 - 100.000 ₺", 
+                    desc: "Başlangıç seviyesinde bir birikimle giriş yapıyorum.", 
+                    score: 0 
+                },
+                { 
+                    label: "100.000 ₺ - 1.000.000 ₺", 
+                    desc: "Orta ölçekli bir portföy oluşturmak istiyorum.", 
+                    score: 0 
+                },
+                { 
+                    label: "1.000.000 ₺ ve üzeri", 
+                    desc: "Ciddi bir sermaye yönetimi ve çeşitlendirme hedefliyorum.", 
+                    score: 0 
+                }
+            ]
+        },
+        {
+            id: 8,
             question: "Yatırımlarınızda Faiz Hassasiyetiniz (İslami Finans) var mı?",
             options: [
                 { 
@@ -171,13 +213,16 @@ export default function MarketPage() {
     const getPortfolioRecommendation = () => {
         let totalScore = 0;
         let isIslamic = false;
+        const numQuestions = Object.keys(answers).length;
+        // If 6 questions (old version), Islamic is index 5.
+        // If 8 questions (new version), Islamic is index 7.
+        const islamicIndex = numQuestions === 6 ? 5 : 7;
 
         Object.entries(answers).forEach(([qIndex, score]) => {
             const s = parseInt(score);
             totalScore += s;
-            // Question 6 (index 5) checks for interest sensitivity
-            // Score 0 means "Yes, I have interest sensitivity"
-            if (parseInt(qIndex) === 5 && s === 0) {
+            // Check for interest sensitivity based on detected version
+            if (parseInt(qIndex) === islamicIndex && s === 0) {
                 isIslamic = true;
             }
         });
