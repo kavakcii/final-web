@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2 } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 
@@ -25,6 +25,16 @@ export default function PortfolioPage() {
         content: "",
         title: ""
     });
+
+    // Delete Confirmation State
+    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assetId: string | null; assetSymbol: string }>({
+        isOpen: false,
+        assetId: null,
+        assetSymbol: ""
+    });
+
+    // Feedback message state
+    const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
     // Fetch Data
     const fetchPortfolioData = async () => {
@@ -70,34 +80,58 @@ export default function PortfolioPage() {
     // Handlers
     const handleAddAsset = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
         if (newItemValues.symbol && newItemValues.quantity && newItemValues.avgCost) {
             try {
+                const quantity = Number(newItemValues.quantity);
+                const totalCost = Number(newItemValues.avgCost);
+                // Calculate unit cost from total cost
+                const unitCost = quantity > 0 ? totalCost / quantity : 0;
+
                 await PortfolioService.addAsset({
                     symbol: newItemValues.symbol.toUpperCase(),
                     type: newItemType,
-                    quantity: Number(newItemValues.quantity),
-                    avgCost: Number(newItemValues.avgCost),
+                    quantity: quantity,
+                    avgCost: unitCost,
                     dateAdded: new Date().toISOString()
                 });
 
                 setIsModalOpen(false);
                 setNewItemValues({ symbol: '', quantity: '', avgCost: '' });
                 setNewItemType("STOCK");
+                setFeedback({ message: "Varlık başarıyla eklendi!", type: 'success' });
+                setTimeout(() => setFeedback(null), 3000);
                 await fetchPortfolioData();
             } catch (error) {
                 console.error("Failed to add asset", error);
-                alert("Varlık eklenirken hata oluştu. Giriş yaptığınızdan emin olun.");
+                setFeedback({ message: "Varlık eklenirken hata oluştu. Giriş yaptığınızdan emin olun.", type: 'error' });
+                setTimeout(() => setFeedback(null), 5000);
+            } finally {
+                setLoading(false);
             }
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (confirm("Bu varlığı silmek istediğinize emin misiniz?")) {
+    const confirmDelete = (asset: Asset) => {
+        setDeleteConfirm({
+            isOpen: true,
+            assetId: asset.id,
+            assetSymbol: asset.symbol
+        });
+    };
+
+    const handleDelete = async () => {
+        if (deleteConfirm.assetId) {
             try {
-                await PortfolioService.removeAsset(id);
+                await PortfolioService.removeAsset(deleteConfirm.assetId);
+                setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "" });
+                setFeedback({ message: "Varlık başarıyla silindi.", type: 'success' });
+                setTimeout(() => setFeedback(null), 3000);
                 await fetchPortfolioData();
             } catch (error) {
                 console.error("Failed to delete asset", error);
+                setFeedback({ message: "Silme işlemi sırasında bir hata oluştu.", type: 'error' });
+                setTimeout(() => setFeedback(null), 5000);
             }
         }
     };
@@ -128,9 +162,24 @@ export default function PortfolioPage() {
 
     return (
         <div className="p-6 md:p-8 space-y-6 h-full overflow-y-auto pb-24">
+            {/* Feedback Notifications */}
+            <AnimatePresence>
+                {feedback && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                        className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border ${feedback.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'} backdrop-blur-xl`}
+                    >
+                        {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertTriangle className="w-5 h-5" />}
+                        <span className="font-bold text-sm tracking-tight">{feedback.message}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Bento Grid Layout */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                
+
                 {/* Total Value - Large Card */}
                 <div className="md:col-span-2 bg-gradient-to-br from-slate-900 to-slate-800 border border-white/10 p-8 rounded-3xl relative overflow-hidden group shadow-2xl">
                     <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -169,7 +218,7 @@ export default function PortfolioPage() {
                 </div>
 
                 {/* Add Asset - Action Card */}
-                <button 
+                <button
                     onClick={() => setIsModalOpen(true)}
                     className="md:col-span-1 bg-blue-600 hover:bg-blue-500 border border-blue-400/20 p-6 rounded-3xl flex flex-col items-center justify-center gap-3 text-white transition-all shadow-lg shadow-blue-500/20 group"
                 >
@@ -190,7 +239,7 @@ export default function PortfolioPage() {
                         </h3>
                         <p className="text-slate-400 text-sm mt-1">Sahip olduğunuz tüm varlıkların detaylı listesi</p>
                     </div>
-                    
+
                     {/* Quick Stats or Filters could go here */}
                     <div className="text-xs text-slate-500 font-mono">
                         {assets.length} VARLIK
@@ -262,7 +311,7 @@ export default function PortfolioPage() {
                                                 </div>
                                             </td>
                                             <td className="p-5">
-                                                 {(() => {
+                                                {(() => {
                                                     const price = prices[asset.symbol] || prices[`${asset.symbol}.IS`] || prices[`${asset.symbol}.is`] || 0;
                                                     return price > 0 ? (
                                                         <span className="font-medium text-white">{formatCurrency(price)}</span>
@@ -283,13 +332,13 @@ export default function PortfolioPage() {
                                                 {(() => {
                                                     const price = prices[asset.symbol] || prices[`${asset.symbol}.IS`] || prices[`${asset.symbol}.is`] || 0;
                                                     if (price <= 0) return "-";
-                                                    
+
                                                     const marketValue = price * asset.quantity;
                                                     const costValue = asset.avgCost * asset.quantity;
                                                     const profit = marketValue - costValue;
                                                     const profitPercent = costValue > 0 ? (profit / costValue) * 100 : 0;
                                                     const isProfit = profit >= 0;
-                                                    
+
                                                     return (
                                                         <div className={`flex flex-col items-start ${isProfit ? "text-green-400" : "text-red-400"}`}>
                                                             <span className="font-bold">{isProfit ? "+" : ""}{formatCurrency(profit)}</span>
@@ -309,8 +358,8 @@ export default function PortfolioPage() {
                                                     >
                                                         <Brain className="w-4 h-4" />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(asset.id)} 
+                                                    <button
+                                                        onClick={() => confirmDelete(asset)}
                                                         className="p-2 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
                                                         title="Sil"
                                                     >
@@ -327,7 +376,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* Analysis Modal - Same logic, slightly updated style */}
+            {/* Analysis Modal */}
             <AnimatePresence>
                 {analysisModal.isOpen && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -383,7 +432,51 @@ export default function PortfolioPage() {
                 )}
             </AnimatePresence>
 
-            {/* Add Asset Modal - Same logic */}
+            {/* Custom Delete Confirmation Modal */}
+            <AnimatePresence>
+                {deleteConfirm.isOpen && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "" })}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                            className="relative bg-slate-900 border border-red-500/30 rounded-3xl p-8 w-full max-w-sm shadow-[0_0_50px_rgba(239,68,68,0.1)] text-center"
+                        >
+                            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
+                                <Trash2 className="w-10 h-10 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Varlığı Sil</h3>
+                            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+                                <span className="font-bold text-white bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase">{deleteConfirm.assetSymbol}</span> varlığını portföyünüzden silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                            </p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "" })}
+                                    className="px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-bold border border-white/5 transition-all"
+                                >
+                                    Vazgeç
+                                </button>
+                                <button
+                                    onClick={handleDelete}
+                                    className="px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    Evet, Sil
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Add Asset Modal */}
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -400,7 +493,12 @@ export default function PortfolioPage() {
                             exit={{ scale: 0.95, opacity: 0 }}
                             className="relative bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
                         >
-                            <h2 className="text-2xl font-bold text-white mb-6">Yeni Varlık Ekle</h2>
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-white">Yeni Varlık Ekle</h2>
+                                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-colors">
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                             <form onSubmit={handleAddAsset} className="space-y-5">
                                 <div>
                                     <label className="block text-sm font-medium text-slate-400 mb-2">Varlık Tipi</label>
@@ -446,19 +544,23 @@ export default function PortfolioPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-400 mb-2">Maliyet (₺)</label>
+                                        <label className="block text-sm font-medium text-slate-400 mb-2">Toplam Maliyet (₺)</label>
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Örn: 1000"
                                             className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                             value={newItemValues.avgCost}
                                             onChange={e => setNewItemValues({ ...newItemValues, avgCost: e.target.value })}
                                             required
                                         />
+                                        <p className="text-[10px] text-slate-500 mt-1">
+                                            Aldığınız tüm adetler için ödediğiniz toplam tutarı giriniz.
+                                        </p>
                                     </div>
                                 </div>
 
-                                <button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/25 mt-2 flex items-center justify-center gap-2">
+                                <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/25 mt-2 flex items-center justify-center gap-2 disabled:opacity-50">
                                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                                     {loading ? "Ekleniyor..." : "Portföye Ekle"}
                                 </button>
