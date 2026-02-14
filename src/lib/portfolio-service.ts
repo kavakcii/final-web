@@ -88,6 +88,24 @@ export const PortfolioService = {
         }
     },
 
+    updateAsset: async (id: string, updates: Partial<Asset>) => {
+        try {
+            const dbUpdates: any = {};
+            if (updates.avgCost !== undefined) dbUpdates.avg_cost = updates.avgCost;
+            if (updates.quantity !== undefined) dbUpdates.quantity = updates.quantity;
+            
+            const { error } = await supabase
+                .from('user_portfolios')
+                .update(dbUpdates)
+                .eq('id', id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error('Error updating asset:', error);
+            throw error;
+        }
+    },
+
     calculateTotalValue: (assets: Asset[], currentPrices: Record<string, number>) => {
         return assets.reduce((total, asset) => {
             const price = currentPrices[asset.symbol] || asset.avgCost;

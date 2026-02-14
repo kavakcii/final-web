@@ -1,13 +1,32 @@
 'use client';
 
-import { useEffect, useState } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History, Calendar } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
+
+// Grouped Asset Type
+interface GroupedAsset {
+    symbol: string;
+    type: Asset["type"];
+    totalQuantity: number;
+    totalCost: number;
+    avgCost: number;
+    transactions: Asset[];
+}
 
 // Helper for currency formatting
 const formatCurrency = (value: number, currency: string = "₺") => {
     return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value).replace('₺', '') + ' ' + currency;
+};
+
+// Helper for date formatting
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 };
 
 export default function PortfolioPage() {
@@ -18,6 +37,9 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
+    // UI states
+    const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
+
     // Analysis Modal State
     const [analysisModal, setAnalysisModal] = useState<{ isOpen: boolean; loading: boolean; content: string; title: string }>({
         isOpen: false,
@@ -27,14 +49,44 @@ export default function PortfolioPage() {
     });
 
     // Delete Confirmation State
-    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assetId: string | null; assetSymbol: string }>({
+    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assetId: string | null; assetSymbol: string; isTransaction: boolean }>({
         isOpen: false,
         assetId: null,
-        assetSymbol: ""
+        assetSymbol: "",
+        isTransaction: false
     });
 
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    // Group assets by symbol
+    const groupedAssets = useMemo(() => {
+        const groups: Record<string, GroupedAsset> = {};
+
+        assets.forEach(asset => {
+            if (!groups[asset.symbol]) {
+                groups[asset.symbol] = {
+                    symbol: asset.symbol,
+                    type: asset.type,
+                    totalQuantity: 0,
+                    totalCost: 0,
+                    avgCost: 0,
+                    transactions: []
+                };
+            }
+
+            groups[asset.symbol].totalQuantity += asset.quantity;
+            groups[asset.symbol].totalCost += (asset.quantity * asset.avgCost);
+            groups[asset.symbol].transactions.push(asset);
+        });
+
+        // Sort transactions by date (newest first)
+        return Object.values(groups).map(group => {
+            group.avgCost = group.totalQuantity > 0 ? group.totalCost / group.totalQuantity : 0;
+            group.transactions.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
+            return group;
+        });
+    }, [assets]);
 
     // Fetch Data
     const fetchPortfolioData = async () => {
@@ -44,10 +96,11 @@ export default function PortfolioPage() {
             setAssets(storedAssets);
 
             if (storedAssets.length > 0) {
-                const symbols = storedAssets.map(a => a.symbol).join(',');
-                console.log("Fetching symbols:", symbols);
+                // Get unique symbols for price fetching
+                const uniqueSymbols = Array.from(new Set(storedAssets.map(a => a.symbol))).join(',');
+                console.log("Fetching symbols:", uniqueSymbols);
                 try {
-                    const res = await fetch(`/api/finance?symbols=${symbols}`);
+                    const res = await fetch(`/api/finance?symbols=${uniqueSymbols}`);
                     const json = await res.json();
 
                     if (json.results) {
@@ -86,7 +139,7 @@ export default function PortfolioPage() {
                 const quantity = Number(newItemValues.quantity);
                 const totalCost = Number(newItemValues.avgCost);
                 // Calculate unit cost from total cost
-                const unitCost = quantity > 0 ? totalCost / quantity : 0;
+                const unitCost = quantity > 0 ? Number((totalCost / quantity).toFixed(4)) : 0;
 
                 await PortfolioService.addAsset({
                     symbol: newItemValues.symbol.toUpperCase(),
@@ -99,12 +152,12 @@ export default function PortfolioPage() {
                 setIsModalOpen(false);
                 setNewItemValues({ symbol: '', quantity: '', avgCost: '' });
                 setNewItemType("STOCK");
-                setFeedback({ message: "Varlık başarıyla eklendi!", type: 'success' });
+                setFeedback({ message: "İşlem başarıyla kaydedildi!", type: 'success' });
                 setTimeout(() => setFeedback(null), 3000);
                 await fetchPortfolioData();
             } catch (error) {
                 console.error("Failed to add asset", error);
-                setFeedback({ message: "Varlık eklenirken hata oluştu. Giriş yaptığınızdan emin olun.", type: 'error' });
+                setFeedback({ message: "İşlem kaydedilirken hata oluştu.", type: 'error' });
                 setTimeout(() => setFeedback(null), 5000);
             } finally {
                 setLoading(false);
@@ -112,11 +165,12 @@ export default function PortfolioPage() {
         }
     };
 
-    const confirmDelete = (asset: Asset) => {
+    const confirmDelete = (assetId: string, symbol: string, isTransaction: boolean = false) => {
         setDeleteConfirm({
             isOpen: true,
-            assetId: asset.id,
-            assetSymbol: asset.symbol
+            assetId: assetId,
+            assetSymbol: symbol,
+            isTransaction: isTransaction
         });
     };
 
@@ -124,8 +178,8 @@ export default function PortfolioPage() {
         if (deleteConfirm.assetId) {
             try {
                 await PortfolioService.removeAsset(deleteConfirm.assetId);
-                setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "" });
-                setFeedback({ message: "Varlık başarıyla silindi.", type: 'success' });
+                setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false });
+                setFeedback({ message: "Kayıt silindi.", type: 'success' });
                 setTimeout(() => setFeedback(null), 3000);
                 await fetchPortfolioData();
             } catch (error) {
@@ -136,12 +190,12 @@ export default function PortfolioPage() {
         }
     };
 
-    const handleAnalyze = async (asset: Asset) => {
-        setAnalysisModal({ isOpen: true, loading: true, content: "", title: `${asset.symbol} Analizi` });
+    const handleAnalyze = async (symbol: string, type: Asset["type"]) => {
+        setAnalysisModal({ isOpen: true, loading: true, content: "", title: `${symbol} Analizi` });
         try {
             const res = await fetch("/api/analyze", {
                 method: "POST",
-                body: JSON.stringify({ symbol: asset.symbol, type: asset.type }),
+                body: JSON.stringify({ symbol: symbol, type: type }),
                 headers: { "Content-Type": "application/json" }
             });
             const data = await res.json();
@@ -156,9 +210,9 @@ export default function PortfolioPage() {
 
     // Calculations
     const totalValue = assets.reduce((acc, asset) => acc + (asset.quantity * (prices[asset.symbol] || asset.avgCost)), 0);
-    const totalCost = assets.reduce((acc, asset) => acc + (asset.quantity * asset.avgCost), 0);
-    const totalProfit = totalValue - totalCost;
-    const profitRatio = totalCost > 0 ? (totalProfit / totalCost) * 100 : 0;
+    const totalCostValue = assets.reduce((acc, asset) => acc + (asset.quantity * asset.avgCost), 0);
+    const totalProfit = totalValue - totalCostValue;
+    const profitRatio = totalCostValue > 0 ? (totalProfit / totalCostValue) * 100 : 0;
 
     return (
         <div className="p-6 md:p-8 space-y-6 h-full overflow-y-auto pb-24">
@@ -190,12 +244,12 @@ export default function PortfolioPage() {
                             <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
                                 <Wallet className="w-5 h-5" />
                             </div>
-                            <span className="text-slate-400 font-medium">Toplam Varlık</span>
+                            <span className="text-slate-400 font-medium">Toplam Varlık Değeri</span>
                         </div>
                         <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mt-4">
                             {formatCurrency(totalValue)}
                         </h2>
-                        <p className="text-slate-500 mt-2 text-sm">Güncel piyasa değerlerine göre</p>
+                        <p className="text-slate-500 mt-2 text-sm">Güncel piyasa fiyatlarına göre</p>
                     </div>
                 </div>
 
@@ -225,7 +279,7 @@ export default function PortfolioPage() {
                     <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Plus className="w-6 h-6" />
                     </div>
-                    <span className="font-semibold">Varlık Ekle</span>
+                    <span className="font-semibold">İşlem Ekle</span>
                 </button>
             </div>
 
@@ -235,14 +289,13 @@ export default function PortfolioPage() {
                     <div>
                         <h3 className="text-xl font-bold text-white flex items-center gap-2">
                             <PieChart className="w-5 h-5 text-purple-500" />
-                            Portföy Varlıkları
+                            Portföyüm
                         </h3>
-                        <p className="text-slate-400 text-sm mt-1">Sahip olduğunuz tüm varlıkların detaylı listesi</p>
+                        <p className="text-slate-400 text-sm mt-1">Varlıklarınızın kümülatif görünümü</p>
                     </div>
 
-                    {/* Quick Stats or Filters could go here */}
                     <div className="text-xs text-slate-500 font-mono">
-                        {assets.length} VARLIK
+                        {groupedAssets.length} FARKLI VARLIK
                     </div>
                 </div>
 
@@ -259,14 +312,14 @@ export default function PortfolioPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
-                            {loading ? (
+                            {loading && assets.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="p-12 text-center text-slate-500 animate-pulse">
                                         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
                                         Veriler güncelleniyor...
                                     </td>
                                 </tr>
-                            ) : assets.length === 0 ? (
+                            ) : groupedAssets.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="p-12 text-center text-slate-500">
                                         <div className="flex flex-col items-center gap-3">
@@ -281,93 +334,137 @@ export default function PortfolioPage() {
                                     </td>
                                 </tr>
                             ) : (
-                                assets.map((asset) => {
-                                    const currentPrice = prices[asset.symbol] || 0;
-                                    const marketValue = currentPrice * asset.quantity;
-                                    const costValue = asset.avgCost * asset.quantity;
+                                groupedAssets.map((group) => {
+                                    const currentPrice = prices[group.symbol] || 0;
+                                    const marketValue = currentPrice * group.totalQuantity;
+                                    const costValue = group.totalCost;
                                     const profit = marketValue - costValue;
                                     const profitPercent = costValue > 0 ? (profit / costValue) * 100 : 0;
                                     const isProfit = profit >= 0;
+                                    const isExpanded = expandedSymbol === group.symbol;
 
                                     return (
-                                        <tr key={asset.id} className="text-slate-300 hover:bg-white/5 transition-colors group">
-                                            <td className="p-5">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-white/10 shadow-lg">
-                                                        {asset.symbol.substring(0, 2)}
+                                        <React.Fragment key={group.symbol}>
+                                            <tr className={`text-slate-300 hover:bg-white/5 transition-colors group cursor-pointer ${isExpanded ? 'bg-white/5' : ''}`} onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}>
+                                                <td className="p-5">
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-blue-400 transition-colors">
+                                                            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                                        </div>
+                                                        <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xs font-bold text-white border border-white/10 shadow-lg">
+                                                            {group.symbol.substring(0, 2)}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-white group-hover:text-blue-400 transition-colors">{group.symbol}</p>
+                                                            <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">
+                                                                {group.type}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <p className="font-bold text-white group-hover:text-blue-400 transition-colors">{asset.symbol}</p>
-                                                        <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/5">
-                                                            {asset.type}
-                                                        </span>
+                                                </td>
+                                                <td className="p-5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-slate-400 text-xs">Toplam: <span className="text-slate-300">{group.totalQuantity}</span></span>
+                                                        <span className="text-slate-400 text-xs">Ort. Maliyet: <span className="text-slate-300">{formatCurrency(group.avgCost)}</span></span>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="p-5">
-                                                <div className="flex flex-col">
-                                                    <span className="text-slate-400 text-xs">Adet: <span className="text-slate-300">{asset.quantity}</span></span>
-                                                    <span className="text-slate-400 text-xs">Maliyet: <span className="text-slate-300">{formatCurrency(asset.avgCost)}</span></span>
-                                                </div>
-                                            </td>
-                                            <td className="p-5">
-                                                {(() => {
-                                                    const price = prices[asset.symbol] || prices[`${asset.symbol}.IS`] || prices[`${asset.symbol}.is`] || 0;
-                                                    return price > 0 ? (
-                                                        <span className="font-medium text-white">{formatCurrency(price)}</span>
+                                                </td>
+                                                <td className="p-5">
+                                                    {currentPrice > 0 ? (
+                                                        <span className="font-medium text-white">{formatCurrency(currentPrice)}</span>
                                                     ) : (
-                                                        loading ? <span className="text-xs text-slate-500 animate-pulse">...</span> : <span className="text-xs text-red-400">Veri Yok</span>
-                                                    );
-                                                })()}
-                                            </td>
-                                            <td className="p-5">
-                                                {(() => {
-                                                    const price = prices[asset.symbol] || prices[`${asset.symbol}.IS`] || prices[`${asset.symbol}.is`] || 0;
-                                                    return price > 0 ? (
-                                                        <span className="font-bold text-white text-lg">{formatCurrency(price * asset.quantity)}</span>
-                                                    ) : "-";
-                                                })()}
-                                            </td>
-                                            <td className="p-5">
-                                                {(() => {
-                                                    const price = prices[asset.symbol] || prices[`${asset.symbol}.IS`] || prices[`${asset.symbol}.is`] || 0;
-                                                    if (price <= 0) return "-";
-
-                                                    const marketValue = price * asset.quantity;
-                                                    const costValue = asset.avgCost * asset.quantity;
-                                                    const profit = marketValue - costValue;
-                                                    const profitPercent = costValue > 0 ? (profit / costValue) * 100 : 0;
-                                                    const isProfit = profit >= 0;
-
-                                                    return (
+                                                        <span className="text-xs text-red-400">Veri Yok</span>
+                                                    )}
+                                                </td>
+                                                <td className="p-5">
+                                                    {currentPrice > 0 ? (
+                                                        <span className="font-bold text-white text-lg">{formatCurrency(marketValue)}</span>
+                                                    ) : "-"}
+                                                </td>
+                                                <td className="p-5">
+                                                    {currentPrice > 0 ? (
                                                         <div className={`flex flex-col items-start ${isProfit ? "text-green-400" : "text-red-400"}`}>
                                                             <span className="font-bold">{isProfit ? "+" : ""}{formatCurrency(profit)}</span>
                                                             <span className="text-xs bg-white/5 px-1.5 py-0.5 rounded">
                                                                 %{profitPercent.toFixed(2)}
                                                             </span>
                                                         </div>
-                                                    );
-                                                })()}
-                                            </td>
-                                            <td className="p-5 text-right">
-                                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => handleAnalyze(asset)}
-                                                        className="p-2 hover:bg-purple-500/20 text-slate-400 hover:text-purple-400 rounded-lg transition-colors"
-                                                        title="AI Analiz"
-                                                    >
-                                                        <Brain className="w-4 h-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => confirmDelete(asset)}
-                                                        className="p-2 hover:bg-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-colors"
-                                                        title="Sil"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                    ) : "-"}
+                                                </td>
+                                                <td className="p-5 text-right" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleAnalyze(group.symbol, group.type)}
+                                                            className="p-2 hover:bg-purple-500/20 text-slate-400 hover:text-purple-400 rounded-lg transition-colors"
+                                                            title="AI Analiz"
+                                                        >
+                                                            <Brain className="w-4 h-4" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
+                                                            className={`p-2 hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 rounded-lg transition-colors ${isExpanded ? 'bg-blue-500/10 text-blue-400' : ''}`}
+                                                            title="Geçmiş Kayıtlar"
+                                                        >
+                                                            <History className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            {/* Transaction Details (Expanded Area) */}
+                                            <AnimatePresence>
+                                                {isExpanded && (
+                                                    <tr>
+                                                        <td colSpan={6} className="bg-slate-900/30 p-0 border-b border-white/5">
+                                                            <motion.div
+                                                                initial={{ height: 0, opacity: 0 }}
+                                                                animate={{ height: 'auto', opacity: 1 }}
+                                                                exit={{ height: 0, opacity: 0 }}
+                                                                className="overflow-hidden"
+                                                            >
+                                                                <div className="p-6 pl-20 space-y-4">
+                                                                    <div className="flex items-center gap-2 mb-2">
+                                                                        <History className="w-3.5 h-3.5 text-blue-400" />
+                                                                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">İşlem Geçmişi ({group.transactions.length})</h4>
+                                                                    </div>
+                                                                    <div className="grid grid-cols-1 gap-2">
+                                                                        {group.transactions.map((tx) => (
+                                                                            <div key={tx.id} className="bg-white/5 border border-white/5 rounded-xl p-4 flex items-center justify-between group/tx">
+                                                                                <div className="flex items-center gap-6">
+                                                                                    <div className="flex items-center gap-2 text-slate-400">
+                                                                                        <Calendar className="w-3.5 h-3.5" />
+                                                                                        <span className="text-[11px] font-medium">{formatDate(tx.dateAdded)}</span>
+                                                                                    </div>
+                                                                                    <div className="h-4 w-px bg-white/10" />
+                                                                                    <div className="flex flex-col">
+                                                                                        <span className="text-[10px] text-slate-500 uppercase tracking-tighter">Adet</span>
+                                                                                        <span className="text-sm font-bold text-white">{tx.quantity}</span>
+                                                                                    </div>
+                                                                                    <div className="flex flex-col">
+                                                                                        <span className="text-[10px] text-slate-500 uppercase tracking-tighter">Birim Maliyet</span>
+                                                                                        <span className="text-sm font-bold text-white">{formatCurrency(tx.avgCost)}</span>
+                                                                                    </div>
+                                                                                    <div className="flex flex-col">
+                                                                                        <span className="text-[10px] text-slate-500 uppercase tracking-tighter">Toplam Maliyet</span>
+                                                                                        <span className="text-sm font-bold text-blue-400">{formatCurrency(tx.quantity * tx.avgCost)}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <button
+                                                                                    onClick={() => confirmDelete(tx.id, group.symbol, true)}
+                                                                                    className="p-2 opacity-0 group-hover/tx:opacity-100 hover:bg-red-500/20 text-slate-500 hover:text-red-400 rounded-lg transition-all"
+                                                                                    title="Bu işlemi sil"
+                                                                                >
+                                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                                </button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </motion.div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </AnimatePresence>
+                                        </React.Fragment>
                                     );
                                 })
                             )}
@@ -440,7 +537,7 @@ export default function PortfolioPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "" })}
+                            onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false })}
                             className="absolute inset-0 bg-black/80 backdrop-blur-md"
                         />
                         <motion.div
@@ -452,20 +549,26 @@ export default function PortfolioPage() {
                             <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20">
                                 <Trash2 className="w-10 h-10 text-red-500" />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Varlığı Sil</h3>
+                            <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
+                                {deleteConfirm.isTransaction ? 'İşlemi Sil' : 'Varlığı Sil'}
+                            </h3>
                             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-                                <span className="font-bold text-white bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase">{deleteConfirm.assetSymbol}</span> varlığını portföyünüzden silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+                                <span className="font-bold text-white bg-white/5 px-2 py-0.5 rounded border border-white/10 uppercase">{deleteConfirm.assetSymbol}</span>
+                                {deleteConfirm.isTransaction
+                                    ? " varlığına ait bu işlemi silmek istediğinize emin misiniz?"
+                                    : " varlığını ve tüm geçmişini portföyünüzden silmek istediğinize emin misiniz?"}
+                                <br />Bu işlem geri alınamaz.
                             </p>
                             <div className="grid grid-cols-2 gap-3">
                                 <button
-                                    onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "" })}
-                                    className="px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-bold border border-white/5 transition-all"
+                                    onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false })}
+                                    className="px-6 py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-bold border border-white/5 transition-all outline-none"
                                 >
                                     Vazgeç
                                 </button>
                                 <button
                                     onClick={handleDelete}
-                                    className="px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2"
+                                    className="px-6 py-3.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-600/20 transition-all flex items-center justify-center gap-2 outline-none"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                     Evet, Sil
@@ -494,7 +597,7 @@ export default function PortfolioPage() {
                             className="relative bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-md shadow-2xl"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-bold text-white">Yeni Varlık Ekle</h2>
+                                <h2 className="text-2xl font-bold text-white tracking-tight">Yeni İşlem Ekle</h2>
                                 <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/5 rounded-full text-slate-500 hover:text-white transition-colors">
                                     <X className="w-5 h-5" />
                                 </button>
@@ -508,7 +611,7 @@ export default function PortfolioPage() {
                                                 key={type}
                                                 type="button"
                                                 onClick={() => setNewItemType(type as any)}
-                                                className={`py-2.5 text-xs font-semibold rounded-xl border transition-all ${newItemType === type ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-800 border-white/10 text-slate-400 hover:bg-slate-700"}`}
+                                                className={`py-2.5 text-[10px] font-bold rounded-xl border transition-all ${newItemType === type ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/25" : "bg-slate-800 border-white/10 text-slate-400 hover:bg-slate-700 hover:border-white/20"}`}
                                             >
                                                 {type === "STOCK" ? "HİSSE" : type === "FUND" ? "FON" : type === "GOLD" ? "ALTIN" : "KRİPTO"}
                                             </button>
@@ -521,12 +624,12 @@ export default function PortfolioPage() {
                                     <input
                                         type="text"
                                         placeholder={newItemType === "STOCK" ? "Örn: THYAO.IS" : "Örn: BTC-USD"}
-                                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all uppercase placeholder:text-slate-600"
+                                        className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all uppercase placeholder:text-slate-600 font-bold tracking-wider"
                                         value={newItemValues.symbol}
                                         onChange={e => setNewItemValues({ ...newItemValues, symbol: e.target.value.toUpperCase() })}
                                         required
                                     />
-                                    <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
+                                    <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5 opacity-70">
                                         <Info className="w-3 h-3" /> Yahoo Finance kodunu giriniz (BIST için .IS ekleyin)
                                     </p>
                                 </div>
@@ -537,7 +640,7 @@ export default function PortfolioPage() {
                                         <input
                                             type="number"
                                             step="any"
-                                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-bold"
                                             value={newItemValues.quantity}
                                             onChange={e => setNewItemValues({ ...newItemValues, quantity: e.target.value })}
                                             required
@@ -548,21 +651,33 @@ export default function PortfolioPage() {
                                         <input
                                             type="number"
                                             step="any"
-                                            placeholder="Örn: 1000"
-                                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                            placeholder="Örn: 5000"
+                                            className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-bold"
                                             value={newItemValues.avgCost}
                                             onChange={e => setNewItemValues({ ...newItemValues, avgCost: e.target.value })}
                                             required
                                         />
-                                        <p className="text-[10px] text-slate-500 mt-1">
-                                            Aldığınız tüm adetler için ödediğiniz toplam tutarı giriniz.
-                                        </p>
                                     </div>
                                 </div>
 
-                                <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/25 mt-2 flex items-center justify-center gap-2 disabled:opacity-50">
+                                <AnimatePresence>
+                                    {newItemValues.quantity && newItemValues.avgCost && Number(newItemValues.quantity) > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-4 flex justify-between items-center"
+                                        >
+                                            <span className="text-xs text-slate-400">Hesaplanan Birim Maliyet:</span>
+                                            <span className="text-sm font-bold text-blue-400">
+                                                {formatCurrency(Number(newItemValues.avgCost) / Number(newItemValues.quantity))}
+                                            </span>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/25 mt-2 flex items-center justify-center gap-2 disabled:opacity-50 outline-none">
                                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                                    {loading ? "Ekleniyor..." : "Portföye Ekle"}
+                                    {loading ? "Kaydediliyor..." : "İşlemi Kaydet"}
                                 </button>
                             </form>
                         </motion.div>
@@ -572,3 +687,5 @@ export default function PortfolioPage() {
         </div>
     );
 }
+
+import React from "react";
