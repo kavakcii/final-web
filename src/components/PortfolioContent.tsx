@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History, Calendar } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History, Calendar, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 
@@ -205,6 +205,25 @@ export default function PortfolioPage() {
         } catch (error) {
             console.error("Analysis Error:", error);
             setAnalysisModal(prev => ({ ...prev, loading: false, content: "Analiz alınamadı. Lütfen daha sonra tekrar deneyin." }));
+        }
+    };
+
+    const handleFixUnitCost = async (asset: Asset) => {
+        if (!confirm(`${asset.symbol} için mevcut maliyetin (${formatCurrency(asset.avgCost)}) aslında TOPLAM maliyet olduğunu onaylıyor musunuz?\n\nBu işlem maliyeti adede (${asset.quantity}) bölerek birim maliyeti güncelleyecektir.`)) return;
+
+        setLoading(true);
+        try {
+            const newUnitCost = asset.avgCost / asset.quantity;
+            await PortfolioService.updateAsset(asset.id, { avgCost: newUnitCost });
+            setFeedback({ message: "Birim maliyet başarıyla güncellendi!", type: 'success' });
+            setTimeout(() => setFeedback(null), 3000);
+            await fetchPortfolioData();
+        } catch (error) {
+            console.error("Failed to update asset cost", error);
+            setFeedback({ message: "Güncelleme başarısız oldu.", type: 'error' });
+            setTimeout(() => setFeedback(null), 5000);
+        } finally {
+            setLoading(false);
         }
     };
 

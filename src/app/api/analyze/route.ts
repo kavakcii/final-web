@@ -161,6 +161,13 @@ export async function POST(req: Request) {
 
         {
             "summary": "Yatırımcıya özel, net, eyleme geçirilebilir özet (2-3 cümle).",
+            "historicalEvent": {
+                "title": "Yakın Geçmişteki Kritik Olay (Örn: FED Faiz Kararı)",
+                "date": "Olay Tarihi veya Dönemi",
+                "impact": "Olayın piyasaya ve bu varlığa olan doğrudan etkisi.",
+                "result": "Sonuç olarak fiyat veya talep üzerindeki somut değişim.",
+                "affectedAssets": ["ALTIN", "DOLAR"]
+            },
             "analysis": [
                 {
                     "id": 1,
@@ -190,6 +197,7 @@ export async function POST(req: Request) {
         }
 
         KURALLAR:
+        - "historicalEvent" nesnesi MUTLAKA DOLU OLMALIDIR. Yakın geçmişten (son 1-6 ay) somut bir örnek ver.
         - "analysis" dizisinde EN AZ 2, EN FAZLA 4 madde olsun.
         - Her maddenin "scenarios" dizisi DOLU OLMALIDIR. Boş senaryo kabul edilemez.
         - Dil: Profesyonel, akıcı Türkçe.
@@ -220,6 +228,13 @@ export async function POST(req: Request) {
         // This ensures the user always sees the structure they expect, even if the AI service is temporarily unavailable.
         const mockData = {
             summary: `Küresel piyasalardaki gelişmeler ve makroekonomik veriler ışığında, ${assetName} için volatilite artışı gözlemlenebilir. Mevcut konjonktürde dengeli bir portföy yönetimi ve risk analizi önerilmektedir.`,
+            historicalEvent: {
+                title: "FED Faiz Kararı Etkisi (Örnek Vaka)",
+                date: "Son Çeyrek",
+                impact: "Piyasa beklentilerine paralel gelen faiz kararı sonrası varlık fiyatlarında kısa vadeli dalgalanma yaşandı.",
+                result: "Varlık fiyatı %1-2 bandında hareket ederek denge seviyesini korudu.",
+                affectedAssets: ["USD", "ALTIN"]
+            },
             analysis: [
                 {
                     id: 1,

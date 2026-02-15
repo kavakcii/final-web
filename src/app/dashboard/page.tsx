@@ -16,21 +16,104 @@ import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget"
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated } = useUser();
     const [myAssets, setMyAssets] = useState<Asset[]>([]);
+    const [prices, setPrices] = useState<Record<string, number>>({});
+    const [stats, setStats] = useState<any[]>([]);
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
 
+    // Group assets by symbol
+    const groupedAssets = useMemo(() => {
+        const groups: Record<string, { symbol: string, type: string, quantity: number, totalCost: number }> = {};
+        myAssets.forEach(asset => {
+            if (!groups[asset.symbol]) {
+                groups[asset.symbol] = { symbol: asset.symbol, type: asset.type, quantity: 0, totalCost: 0 };
+            }
+            groups[asset.symbol].quantity += asset.quantity;
+            groups[asset.symbol].totalCost += (asset.quantity * asset.avgCost);
+        });
+        return Object.values(groups);
+    }, [myAssets]);
+
     useEffect(() => {
-        const loadAssets = async () => {
+        const loadDashboardData = async () => {
+            setIsLoadingStats(true);
             try {
                 const assets = await PortfolioService.getAssets();
                 setMyAssets(assets);
-                // If user has assets, maybe select the first one?
-                // For now, let's keep XU100 as default but allow selection.
+
+                if (assets.length > 0) {
+                    const uniqueSymbols = Array.from(new Set(assets.map(a => a.symbol))).join(',');
+                    const res = await fetch(`/api/finance?symbols=${uniqueSymbols}`);
+                    const json = await res.json();
+
+                    const priceMap: Record<string, number> = {};
+                    if (json.results) {
+                        json.results.forEach((r: any) => {
+                            if (r.symbol && r.regularMarketPrice) {
+                                priceMap[r.symbol.toUpperCase()] = r.regularMarketPrice;
+                            }
+                        });
+                        setPrices(priceMap);
+                    }
+
+                    // Calculate stats
+                    let totalVal = 0;
+                    let totalCost = 0;
+                    assets.forEach(a => {
+                        const currentPrice = priceMap[a.symbol.toUpperCase()] || a.avgCost;
+                        totalVal += currentPrice * a.quantity;
+                        totalCost += a.avgCost * a.quantity;
+                    });
+
+                    const profit = totalVal - totalCost;
+                    const profitPercent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
+
+                    setStats([
+                        {
+                            title: "Toplam Portföy",
+                            value: `₺${totalVal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            change: `${profitPercent >= 0 ? '+' : ''}%${profitPercent.toFixed(1)}`,
+                            isPositive: profit >= 0,
+                            icon: Wallet,
+                            gradient: "from-blue-500/20 to-purple-500/20",
+                            border: "border-blue-500/20"
+                        },
+                        {
+                            title: "Toplam Kar/Zarar",
+                            value: `₺${profit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                            change: "Net",
+                            isPositive: profit >= 0,
+                            icon: Activity,
+                            gradient: profit >= 0 ? "from-green-500/20 to-emerald-500/20" : "from-red-500/20 to-orange-500/20",
+                            border: profit >= 0 ? "border-green-500/20" : "border-red-500/20"
+                        },
+                        {
+                            title: "Varlık Sayısı",
+                            value: Array.from(new Set(assets.map(a => a.symbol))).length.toString(),
+                            change: "Aktif",
+                            isPositive: true,
+                            icon: BarChart2,
+                            gradient: "from-orange-500/20 to-red-500/20",
+                            border: "border-orange-500/20"
+                        }
+                    ]);
+                } else {
+                    // Default empty stats
+                    setStats([
+                        { title: "Toplam Portföy", value: "₺0.00", change: "%0", isPositive: true, icon: Wallet, gradient: "from-blue-500/20 to-purple-500/20", border: "border-blue-500/20" },
+                        { title: "Toplam Kar/Zarar", value: "₺0.00", change: "Net", isPositive: true, icon: Activity, gradient: "from-green-500/20 to-emerald-500/20", border: "border-green-500/20" },
+                        { title: "Varlık Sayısı", value: "0", change: "Aktif", isPositive: true, icon: BarChart2, gradient: "from-orange-500/20 to-red-500/20", border: "border-orange-500/20" }
+                    ]);
+                }
             } catch (e) {
-                console.error("Failed to load assets for dashboard", e);
+                console.error("Dashboard data error:", e);
+            } finally {
+                setIsLoadingStats(false);
             }
         };
-        if (isAuthenticated) loadAssets();
+
+        if (isAuthenticated) loadDashboardData();
     }, [isAuthenticated]);
 
     const handleAssetSelect = (symbol: string, type: string) => {
@@ -38,43 +121,11 @@ export default function Dashboard() {
             setSelectedAsset(symbol);
             setIsTefas(true);
         } else {
-            // For stocks, TradingView needs BIST: prefix usually
             const cleanSymbol = symbol.replace('.IS', '').replace('.is', '');
             setSelectedAsset(`BIST:${cleanSymbol}`);
             setIsTefas(false);
         }
     };
-
-    // DASHBOARD CONTENT
-    const stats = [
-        {
-            title: "Toplam Portföy",
-            value: "₺124,500.00",
-            change: "+%12.5",
-            isPositive: true,
-            icon: Wallet,
-            gradient: "from-blue-500/20 to-purple-500/20",
-            border: "border-blue-500/20"
-        },
-        {
-            title: "Günlük Kar/Zarar",
-            value: "₺1,250.00",
-            change: "+%2.1",
-            isPositive: true,
-            icon: Activity,
-            gradient: "from-green-500/20 to-emerald-500/20",
-            border: "border-green-500/20"
-        },
-        {
-            title: "Açık Pozisyonlar",
-            value: myAssets.length.toString(),
-            change: "Aktif",
-            isPositive: true,
-            icon: BarChart2,
-            gradient: "from-orange-500/20 to-red-500/20",
-            border: "border-orange-500/20"
-        }
-    ];
 
     return (
         <div className="p-6 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
@@ -94,86 +145,103 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Market Analysis Cards - Removed from Dashboard per user request */}
-            
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {stats.map((stat, index) => (
+                {(isLoadingStats ? Array(3).fill(null) : stats).map((stat, index) => (
                     <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className={`bg-slate-900/50 backdrop-blur-sm border ${stat.border} rounded-2xl p-6 relative overflow-hidden group hover:bg-slate-900/80 transition-all duration-300`}
+                        className={cn(
+                            "bg-slate-900/50 backdrop-blur-sm border rounded-2xl p-6 relative overflow-hidden group hover:bg-slate-900/80 transition-all duration-300",
+                            stat?.border || "border-white/5"
+                        )}
                     >
-                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-
-                        <div className="relative z-10">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="p-2 bg-white/5 rounded-lg text-slate-300 group-hover:text-white transition-colors">
-                                    <stat.icon className="w-6 h-6" />
-                                </div>
-                                <div className={`flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full ${stat.isPositive ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
-                                    {stat.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                                    {stat.change}
-                                </div>
+                        {isLoadingStats ? (
+                            <div className="animate-pulse space-y-3">
+                                <div className="h-10 w-10 bg-white/5 rounded-lg" />
+                                <div className="h-4 w-20 bg-white/5 rounded" />
+                                <div className="h-8 w-32 bg-white/5 rounded" />
                             </div>
-
-                            <h3 className="text-slate-400 text-sm font-medium mb-1">{stat.title}</h3>
-                            <p className="text-2xl font-bold text-white">{stat.value}</p>
-                        </div>
+                        ) : (
+                            <>
+                                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                                <div className="relative z-10">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div className="p-2 bg-white/5 rounded-lg text-slate-300 group-hover:text-white transition-colors">
+                                            <stat.icon className="w-6 h-6" />
+                                        </div>
+                                        <div className={`flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full ${stat.isPositive ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
+                                            {stat.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                            {stat.change}
+                                        </div>
+                                    </div>
+                                    <h3 className="text-slate-400 text-sm font-medium mb-1">{stat.title}</h3>
+                                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                                </div>
+                            </>
+                        )}
                     </motion.div>
                 ))}
             </div>
 
             {/* Interactive Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Main Chart Area REPLACED with Portfolio Intro Card */}
                 <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
                 <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 flex flex-col">
                     <h2 className="text-lg font-semibold text-white mb-6">Varlıklarım</h2>
                     <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-white/10">
-                        {myAssets.length === 0 ? (
+                        {isLoadingStats ? (
+                            Array(3).fill(null).map((_, i) => (
+                                <div key={i} className="h-16 w-full animate-pulse bg-white/5 rounded-xl" />
+                            ))
+                        ) : groupedAssets.length === 0 ? (
                             <div className="text-center py-10">
                                 <p className="text-sm text-slate-500">Henüz varlık eklemediniz.</p>
-                                <button
-                                    onClick={() => setSelectedAsset("FOREKS:XU100")}
-                                    className="text-xs text-blue-400 mt-2 hover:underline"
-                                >
-                                    Endeksi Göster
-                                </button>
                             </div>
                         ) : (
-                            myAssets.map((asset, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => handleAssetSelect(asset.symbol, asset.type)}
-                                    className={cn(
-                                        "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border",
-                                        selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                            ? "bg-blue-600/20 border-blue-500/50"
-                                            : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/10"
-                                    )}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-blue-400 border border-white/5">
-                                            {asset.symbol.substring(0, 2)}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-white">{asset.symbol}</p>
-                                            <p className="text-[10px] text-slate-500">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <ArrowUpRight className="w-4 h-4 text-slate-600" />
-                                    </div>
-                                </div>
-                            ))
-                        )}
+                            groupedAssets.map((asset, i) => {
+                                const currentPrice = prices[asset.symbol.toUpperCase()];
+                                const change = currentPrice ? ((currentPrice - (asset.totalCost / asset.quantity)) / (asset.totalCost / asset.quantity)) * 100 : 0;
 
-                        {/* Default selection if no assets or to go back to index */}
+                                return (
+                                    <div
+                                        key={i}
+                                        onClick={() => handleAssetSelect(asset.symbol, asset.type)}
+                                        className={cn(
+                                            "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border",
+                                            selectedAsset.includes(asset.symbol.replace('.IS', ''))
+                                                ? "bg-blue-600/20 border-blue-500/50"
+                                                : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/10"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-blue-400 border border-white/5">
+                                                {asset.symbol.substring(0, 2)}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-white">{asset.symbol}</p>
+                                                <p className="text-[10px] text-slate-500">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className={cn(
+                                                "text-xs font-bold",
+                                                change >= 0 ? "text-green-400" : "text-red-400"
+                                            )}>
+                                                {change >= 0 ? '+' : ''}{change.toFixed(1)}%
+                                            </p>
+                                            <p className="text-[10px] text-slate-500">
+                                                {asset.quantity} Adet
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
                         <div
                             onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                             className={cn(

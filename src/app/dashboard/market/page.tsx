@@ -2,9 +2,10 @@
 
 // Vercel Deploy Trigger: v2 - Fixed Pie Chart
 import { useState, useEffect } from "react";
-import { ArrowRight, CheckCircle2, ChevronRight, PieChart, ShieldCheck, Target, Zap, RotateCcw, Trophy, User } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight, PieChart, ShieldCheck, Target, Zap, RotateCcw, Trophy, User, Brain, Loader2, X, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PortfolioService, Asset } from "@/lib/portfolio-service";
 
 export default function MarketPage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -12,24 +13,89 @@ export default function MarketPage() {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [showResults, setShowResults] = useState(false);
+    
+    // Random Funds Analysis State
+    const [randomFunds, setRandomFunds] = useState<Asset[]>([]);
+    const [analysisModal, setAnalysisModal] = useState<{ isOpen: boolean; loading: boolean; content: string; title: string }>({
+        isOpen: false,
+        loading: false,
+        content: "",
+        title: ""
+    });
 
-    // Load saved results on mount
+    // Load saved results and random funds on mount
     useEffect(() => {
-        const savedAnswers = localStorage.getItem("portfolio_answers");
-        if (savedAnswers) {
-            try {
-                const parsed = JSON.parse(savedAnswers);
-                if (Object.keys(parsed).length > 0) {
-                    setAnswers(parsed);
-                    setShowResults(true);
-                    setTestStarted(true); // Ensure we skip intro
+        const initData = async () => {
+            // Load saved answers
+            const savedAnswers = localStorage.getItem("portfolio_answers");
+            if (savedAnswers) {
+                try {
+                    const parsed = JSON.parse(savedAnswers);
+                    if (Object.keys(parsed).length > 0) {
+                        setAnswers(parsed);
+                        setShowResults(true);
+                        setTestStarted(true);
+                    }
+                } catch (e) {
+                    console.error("Failed to load saved answers", e);
                 }
-            } catch (e) {
-                console.error("Failed to load saved answers", e);
             }
-        }
-        setIsLoading(false);
+
+            // Fetch random funds
+            try {
+                const assets = await PortfolioService.getAssets();
+                const funds = assets.filter(a => a.type === "FUND");
+                // Shuffle and pick 4
+                const shuffled = funds.sort(() => 0.5 - Math.random());
+                setRandomFunds(shuffled.slice(0, 4));
+            } catch (error) {
+                console.error("Failed to fetch funds", error);
+            }
+
+            setIsLoading(false);
+        };
+
+        initData();
     }, []);
+
+    const handleAnalyzeFunds = async () => {
+        if (randomFunds.length === 0) return;
+        
+        setAnalysisModal({ isOpen: true, loading: true, content: "", title: "Fon Portföy Analizi" });
+        
+        try {
+            // Create a summary prompt for all 4 funds
+            const symbols = randomFunds.map(f => f.symbol).join(", ");
+            const prompt = `Aşağıdaki fonlar için kısa ve öz bir toplu analiz yap: ${symbols}. Her biri için 1-2 cümlelik yorum ve genel portföy uyumu hakkında tavsiye ver.`;
+            
+            // We use the existing API but pass a combined symbol string or handle it custom.
+            // Since the API expects { symbol, type }, let's try to send one request per fund and combine results, 
+            // OR reuse the API if it handles generic prompts (it probably doesn't).
+            // Let's call the API for each fund sequentially to ensure quality.
+            
+            const results = await Promise.all(randomFunds.map(async (fund) => {
+                try {
+                    const res = await fetch("/api/analyze", {
+                        method: "POST",
+                        body: JSON.stringify({ symbol: fund.symbol, type: fund.type }),
+                        headers: { "Content-Type": "application/json" }
+                    });
+                    const data = await res.json();
+                    return { symbol: fund.symbol, analysis: data.analysis || "Analiz alınamadı." };
+                } catch (e) {
+                    return { symbol: fund.symbol, analysis: "Hata oluştu." };
+                }
+            }));
+
+            // Combine results into one string
+            const combinedAnalysis = results.map(r => `### ${r.symbol}\n${r.analysis}`).join("\n\n");
+            
+            setAnalysisModal(prev => ({ ...prev, loading: false, content: combinedAnalysis }));
+        } catch (error) {
+            console.error("Analysis Error:", error);
+            setAnalysisModal(prev => ({ ...prev, loading: false, content: "Analiz sırasında bir hata oluştu." }));
+        }
+    };
 
     const questions = [
         {
@@ -344,7 +410,53 @@ export default function MarketPage() {
     }
 
     return (
-        <div className="p-6 h-full flex flex-col items-center justify-center min-h-[600px] overflow-hidden">
+        <div className="p-6 h-full flex flex-col items-center justify-start min-h-[600px] overflow-y-auto space-y-8">
+            {/* Random Funds Analysis Section */}
+            <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-5xl bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/20 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden shrink-0"
+            >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                
+                <div className="relative z-10 flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400">
+                            <Brain className="w-5 h-5" />
+                        </div>
+                        <span className="text-purple-300 font-medium text-sm uppercase tracking-wider">Akıllı Portföy Analizi</span>
+                    </div>
+                    {randomFunds.length > 0 ? (
+                        <>
+                            <h2 className="text-2xl font-bold text-white mb-2">Fonlarınız İncelenmeye Hazır</h2>
+                            <p className="text-slate-400 text-sm">
+                                Portföyünüzden seçilen <span className="text-white font-bold">{randomFunds.map(f => f.symbol).join(", ")}</span> fonları için yapay zeka destekli detaylı analiz alın.
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-bold text-white mb-2">Fon Analizi</h2>
+                            <p className="text-slate-400 text-sm">
+                                Akıllı analiz için portföyünüzde henüz yeterli <strong>Yatırım Fonu</strong> bulunamadı. Varlık ekleyerek başlayın.
+                            </p>
+                        </>
+                    )}
+                </div>
+
+                <button 
+                    onClick={handleAnalyzeFunds}
+                    disabled={randomFunds.length === 0}
+                    className={`relative z-10 px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 whitespace-nowrap ${
+                        randomFunds.length > 0 
+                        ? "bg-white text-purple-900 hover:bg-purple-50 hover:scale-105 shadow-purple-900/20" 
+                        : "bg-white/10 text-slate-400 cursor-not-allowed border border-white/5"
+                    }`}
+                >
+                    <Zap className={`w-5 h-5 ${randomFunds.length > 0 ? "fill-purple-900" : "text-slate-500"}`} />
+                    {randomFunds.length > 0 ? "Şimdi Analiz Et" : "Fon Bulunamadı"}
+                </button>
+            </motion.div>
+
             <AnimatePresence mode="wait">
                 {!testStarted ? (
                     <motion.div 
@@ -648,6 +760,62 @@ export default function MarketPage() {
                             </div>
                         </div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Analysis Modal */}
+            <AnimatePresence>
+                {analysisModal.isOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setAnalysisModal(prev => ({ ...prev, isOpen: false }))}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="relative bg-slate-900 border border-white/10 rounded-3xl p-8 w-full max-w-2xl shadow-2xl max-h-[85vh] overflow-y-auto"
+                        >
+                            <div className="flex justify-between items-start mb-8 border-b border-white/10 pb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                        <div className="p-2 bg-purple-500/20 rounded-xl">
+                                            <Brain className="w-6 h-6 text-purple-500" />
+                                        </div>
+                                        {analysisModal.title}
+                                    </h2>
+                                    <p className="text-slate-400 text-sm mt-2 ml-1">Yapay zeka tabanlı portföy analizi</p>
+                                </div>
+                                <button onClick={() => setAnalysisModal(prev => ({ ...prev, isOpen: false }))} className="p-2 hover:bg-white/10 rounded-full text-slate-400 hover:text-white transition-colors">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            {analysisModal.loading ? (
+                                <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                                    <div className="relative">
+                                        <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+                                        <Loader2 className="w-12 h-12 animate-spin relative z-10 text-purple-500" />
+                                    </div>
+                                    <p className="mt-4 font-medium animate-pulse">Analiz hazırlanıyor...</p>
+                                </div>
+                            ) : (
+                                <div className="prose prose-invert max-w-none">
+                                    <div className="bg-slate-800/50 p-6 rounded-2xl border border-white/5 text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                        {analysisModal.content}
+                                    </div>
+                                    <div className="mt-6 flex items-center gap-2 text-xs text-slate-500 bg-blue-500/5 p-3 rounded-lg border border-blue-500/10">
+                                        <Info className="w-4 h-4 text-blue-400" />
+                                        Bu analiz AI tarafından oluşturulmuştur. Yatırım tavsiyesi değildir.
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
         </div>

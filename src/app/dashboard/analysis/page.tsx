@@ -2,10 +2,12 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { ArrowRight, Brain, Filter, TrendingUp, TrendingDown, Scale, Info, Calendar, AlertTriangle, Search, ChevronDown, ExternalLink, Newspaper, Loader2, Building2, Landmark, Coins, DollarSign, Euro } from "lucide-react";
+import { ArrowRight, Brain, Filter, TrendingUp, TrendingDown, Scale, Info, Calendar, AlertTriangle, Search, ChevronDown, ExternalLink, Newspaper, Loader2, Building2, Landmark, Coins, DollarSign, Euro, Wallet, History as HistoryIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { DashboardAnalysisCards } from "@/components/DashboardAnalysisCards";
+import { PortfolioService } from "@/lib/portfolio-service";
+import { DisplayCard } from "@/components/ui/display-cards";
 
 // Supported Assets for Filtering
 const SUPPORTED_ASSETS = [
@@ -34,8 +36,8 @@ export default function AnalysisPage() {
 
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-
     const [isValidSelection, setIsValidSelection] = useState(false);
+    const [portfolioAssets, setPortfolioAssets] = useState<any[]>([]);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -49,6 +51,19 @@ export default function AnalysisPage() {
 
         return () => clearTimeout(timer);
     }, [searchTerm]);
+
+    // Fetch user portfolio assets
+    useEffect(() => {
+        const loadPortfolio = async () => {
+            try {
+                const assets = await PortfolioService.getAssets();
+                setPortfolioAssets(assets);
+            } catch (error) {
+                console.error("Failed to load portfolio assets", error);
+            }
+        };
+        loadPortfolio();
+    }, []);
 
     // Reset validity when user types
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -299,6 +314,33 @@ export default function AnalysisPage() {
                     </div>
                 </div>
 
+                {/* Portfolio Quick Actions */}
+                {!selectedAsset && portfolioAssets.length > 0 && (
+                    <div className="space-y-4 mt-6">
+                        <div className="flex items-center gap-2 text-sm text-slate-400">
+                            <Wallet className="w-5 h-5 text-blue-400" />
+                            <span className="font-medium">Portföyünüzden Hızlı Analiz</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                            {portfolioAssets.slice(0, 4).map((asset) => (
+                                <DisplayCard
+                                    key={asset.id}
+                                    onClick={() => {
+                                        setSearchTerm(asset.symbol);
+                                        handleAnalyze(asset.symbol);
+                                    }}
+                                    className="h-24 w-full cursor-pointer hover:border-blue-500/50 bg-slate-900/50 hover:bg-slate-800/80 transition-all group overflow-hidden"
+                                    title={asset.symbol}
+                                    description="AI ile Analiz Et"
+                                    date="Portföy Varlığı"
+                                    icon={<Brain className="size-4 text-blue-300" />}
+                                    titleClassName="text-lg font-bold text-white group-hover:text-blue-400"
+                                />
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {selectedAsset && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -493,6 +535,60 @@ export default function AnalysisPage() {
                             <p className="text-white text-lg font-medium leading-relaxed">
                                 {aiAnalysisData.summary}
                             </p>
+                        </div>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Historical Event Analysis Table */}
+            {aiAnalysisData?.historicalEvent && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-8 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm"
+                >
+                    <div className="bg-gradient-to-r from-amber-900/40 to-slate-900/40 px-6 py-4 border-b border-amber-500/20 flex items-center gap-3">
+                        <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                            <HistoryIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-amber-100">Geçmiş Analiz (Örnek Vaka)</h3>
+                            <p className="text-xs text-amber-200/60">Yakın geçmişte yaşanan benzer bir olayın analizi</p>
+                        </div>
+                    </div>
+
+                    <div className="p-6">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-slate-700/50 text-xs uppercase tracking-wider text-slate-400">
+                                        <th className="pb-3 pl-2 font-medium">Olay</th>
+                                        <th className="pb-3 px-4 font-medium">Etki (Neden)</th>
+                                        <th className="pb-3 pr-2 font-medium">Sonuç</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm">
+                                    <tr className="group">
+                                        <td className="py-4 pl-2 pr-4 align-top text-white font-medium min-w-[140px]">
+                                            {aiAnalysisData.historicalEvent.title}
+                                            <div className="text-xs text-slate-500 mt-1 font-normal">{aiAnalysisData.historicalEvent.date}</div>
+                                        </td>
+                                        <td className="py-4 px-4 align-top text-slate-300 border-l border-slate-800/50">
+                                            {aiAnalysisData.historicalEvent.impact}
+                                            {aiAnalysisData.historicalEvent.affectedAssets && (
+                                                <div className="flex gap-1 flex-wrap mt-2">
+                                                    {aiAnalysisData.historicalEvent.affectedAssets.map((asset: string, idx: number) => (
+                                                        <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{asset}</span>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="py-4 pl-4 pr-2 align-top text-emerald-400 font-medium border-l border-slate-800/50 min-w-[140px]">
+                                            {aiAnalysisData.historicalEvent.result}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </motion.div>

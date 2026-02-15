@@ -31,6 +31,7 @@ export interface WeeklyReportData {
     weeklyChangePercent: number;
     assets: AssetPerformance[];
     aiSummary: string;
+    structuredAnalysis?: any;
     marketContext: string;
 }
 
@@ -49,7 +50,7 @@ async function getYahooPrice(symbol: string, type: string, lastWeek: Date): Prom
     try {
         let querySymbol = symbol;
         if (type === 'stock' && !symbol.includes('.')) querySymbol += '.IS';
-        
+
         const result = await yahooFinance.historical(querySymbol, {
             period1: lastWeek,
             period2: new Date(),
@@ -61,7 +62,7 @@ async function getYahooPrice(symbol: string, type: string, lastWeek: Date): Prom
             const old = result[0].close;
             return { current, lastWeek: old };
         }
-        
+
         const quote = await yahooFinance.quote(querySymbol);
         return { current: quote.regularMarketPrice || 0, lastWeek: quote.regularMarketPrice || 0 };
 
@@ -71,20 +72,22 @@ async function getYahooPrice(symbol: string, type: string, lastWeek: Date): Prom
     }
 }
 
-export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyReportData> {
+export async function generateWeeklyReport(assets: Asset[], days: number = 7): Promise<WeeklyReportData> {
     const today = new Date();
-    const lastWeekDate = new Date();
-    lastWeekDate.setDate(today.getDate() - 7);
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - days);
+
+    const dateRangeStr = `${startDate.toLocaleDateString('tr-TR')} - ${today.toLocaleDateString('tr-TR')}`;
 
     // 1. Optimization: Fetch TEFAS data once if needed
     const hasTefas = assets.some(a => a.type === 'fund' && a.symbol.length === 3);
     let tefasCurrent: TefasFundData[] = [];
-    let tefasLastWeek: TefasFundData[] = [];
+    let tefasStart: TefasFundData[] = [];
 
     if (hasTefas) {
-        [tefasCurrent, tefasLastWeek] = await Promise.all([
+        [tefasCurrent, tefasStart] = await Promise.all([
             fetchTefasData(today),
-            fetchTefasData(lastWeekDate)
+            fetchTefasData(startDate)
         ]);
     }
 
@@ -95,36 +98,42 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
     // 2. Calculate Performance
     for (const asset of assets) {
         let currentPrice = 0;
-        let lastWeekPrice = 0;
+        let startPrice = 0;
+        let isPriceFound = false;
 
-        if (asset.type === 'fund' && asset.symbol.length === 3) {
-            const currentFund = tefasCurrent.find(f => f.FONKODU === asset.symbol);
-            const oldFund = tefasLastWeek.find(f => f.FONKODU === asset.symbol);
+        try {
+            if (asset.type === 'fund' && asset.symbol.length === 3) {
+                const currentFund = tefasCurrent.find(f => f.FONKODU === asset.symbol);
+                const oldFund = tefasStart.find(f => f.FONKODU === asset.symbol);
 
-            currentPrice = (currentFund?.SONPORTFOYDEGERI && currentFund?.SONPAYADEDI) 
-                ? currentFund.SONPORTFOYDEGERI / currentFund.SONPAYADEDI 
-                : 0;
-            
-            lastWeekPrice = (oldFund?.SONPORTFOYDEGERI && oldFund?.SONPAYADEDI)
-                ? oldFund.SONPORTFOYDEGERI / oldFund.SONPAYADEDI
-                : currentPrice;
-        } else {
-            const prices = await getYahooPrice(asset.symbol, asset.type, lastWeekDate);
-            currentPrice = prices.current;
-            lastWeekPrice = prices.lastWeek;
+                currentPrice = (currentFund?.SONPORTFOYDEGERI && currentFund?.SONPAYADEDI)
+                    ? currentFund.SONPORTFOYDEGERI / currentFund.SONPAYADEDI
+                    : 0;
+
+                startPrice = (oldFund?.SONPORTFOYDEGERI && oldFund?.SONPAYADEDI)
+                    ? oldFund.SONPORTFOYDEGERI / oldFund.SONPAYADEDI
+                    : currentPrice;
+
+                if (currentPrice > 0) isPriceFound = true;
+            } else {
+                const prices = await getYahooPrice(asset.symbol, asset.type, startDate);
+                currentPrice = prices.current;
+                startPrice = prices.lastWeek;
+                if (currentPrice > 0) isPriceFound = true;
+            }
+        } catch (e) {
+            console.error(`Price calculation failed for ${asset.symbol}:`, e);
         }
 
-        if (currentPrice === 0) continue;
-
-        const changePercent = ((currentPrice - lastWeekPrice) / lastWeekPrice) * 100;
+        const changePercent = (isPriceFound && startPrice > 0) ? ((currentPrice - startPrice) / startPrice) * 100 : 0;
         const score = calculateScore(changePercent);
         const value = currentPrice * asset.amount;
-        const oldValue = lastWeekPrice * asset.amount;
+        const oldValue = startPrice * asset.amount;
 
         performanceData.push({
             symbol: asset.symbol,
-            currentPrice,
-            lastWeekPrice,
+            currentPrice: currentPrice || 0,
+            lastWeekPrice: startPrice || 0,
             changePercent,
             score,
             amount: asset.amount,
@@ -139,49 +148,66 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
     const portfolioChange = totalOldValue > 0 ? ((totalValue - totalOldValue) / totalOldValue) * 100 : 0;
     const portfolioScore = calculateScore(portfolioChange);
 
-    // 4. AI Analysis
-    let aiSummary = "Yapay zeka analizi için API anahtarı yapılandırılmamış. Lütfen .env dosyasını kontrol edin.";
-    
+    // 4. Structured AI Analysis
+    let aiSummary = "Yapay zeka analizi şu anda hazır değil.";
+    let structuredAnalysis: any = null;
+
     if (genAI) {
         try {
             const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
-            
-            const assetSummary = performanceData.map(p => 
-                `- ${p.symbol}: %${p.changePercent.toFixed(2)} değişim. (Puan: ${p.score}/10)`
+
+            const assetSummary = performanceData.map(p =>
+                `- ${p.symbol}: %${p.changePercent.toFixed(2)} değişim. (${startDate.toLocaleDateString('tr-TR')} Fiyatı: ${p.lastWeekPrice.toFixed(2)} -> Bugün: ${p.currentPrice.toFixed(2)})`
             ).join('\n');
 
-            // Limit assets to avoid token limits if too many
-            const limitedAssetSummary = assetSummary.length > 2000 ? assetSummary.substring(0, 2000) + "...(devamı var)" : assetSummary;
-
-
             const prompt = `
-            Sen kişisel bir finans asistanısın. Kullanıcı için HAFTALIK PORTFÖY RAPORU hazırlıyorsun.
+            Sen kıdemli bir Finansal Stratejist ve Yatırım Dedektifisin. 
+            ANALİZ DÖNEMİ: ${dateRangeStr} (${days} GÜNLÜK ARALIK)
+
+            GÖREVİN:
+            Kullanıcının portföyündeki her bir varlık için bu ${days} günlük periyodu özel olarak analiz et.
             
+            ADIM 1 (GEÇMİŞ ANALİZİ): 
+            Her varlık için ${startDate.toLocaleDateString('tr-TR')} tarihinden bu yana gerçekleşen değişimin GERÇEK nedenini bul. "Neden düştü?" veya "Neden yükseldi?" sorularına makro (FED, enflasyon, faiz) veya mikro (şirket haberi, fon içeriği) verilerle kesin cevap ver.
+            
+            ADIM 2 (GELECEK İHTİMALLERİ): 
+            Önümüzdeki ${days} günlük yeni aralık için ihtimalleri değerlendir. "Şu olursa yükseliş sürer, şu veriye dikkat edilmeli" şeklinde olasılık bazlı gelecek projeksiyonu çiz.
+
             PORTFÖY DURUMU:
             - Toplam Değer: ${totalValue.toFixed(2)} TL
-            - Haftalık Değişim: %${portfolioChange.toFixed(2)}
+            - Dönemlik Değişim: %${portfolioChange.toFixed(2)}
             - Genel Puan: ${portfolioScore}/10
             
-            VARLIK PERFORMANSLARI:
-            ${limitedAssetSummary}
+            VARLIKLAR:
+            ${assetSummary}
             
-            GÖREVİN:
-            1. "Geçen Hafta Ne Oldu?": Piyasaları (BIST, Altın, Döviz) ve bu portföyü etkileyen ana olayları özetle. (Genel piyasa bilginle yorumla).
-            2. "Portföy Yorumu": Kullanıcının varlıklarının performansını değerlendir. Neden düştü veya çıktı?
-            3. "Gelecek Hafta Beklentisi": Kısa bir cümle ile önümüzdeki hafta için neye dikkat etmeli?
-            
-            Üslup: Samimi, bilgilendirici ve profesyonel. Türkçe yaz.
-            Çıktı formatı: HTML etiketleri kullanmadan (sadece paragraf boşlukları ile) düz metin olarak yaz.
+            İSTENEN ÇIKTI (SADECE JSON FORMATINDA):
+            {
+                "marketOverview": "Bu ${days} günlük dönemde genel piyasa trendleri özeti.",
+                "portfolioAssessment": "Portföyün genel performansı ve risk dengesi yorumu.",
+                "assetAnalyses": [
+                    {
+                        "symbol": "Sembol",
+                        "reason": "${startDate.toLocaleDateString('tr-TR')} tarihinden bugüne bu varlığın hareketinin ANA NEDENİ nedir? (Detaylı analiz)",
+                        "outlook": "Önümüzdeki ${days} günlük periyot için olasılıklar ve ihtimaller.",
+                        "score": 1-10 puan
+                    }
+                ]
+            }
+
+            SADECE saf JSON objesi olarak cevap ver. Markdown etiketi ('''json) kullanma. Türkçe yaz.
             `;
 
             const result = await model.generateContent(prompt);
-            aiSummary = result.response.text();
+            const responseText = result.response.text();
+
+            const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            structuredAnalysis = JSON.parse(cleanJson);
+            aiSummary = structuredAnalysis.portfolioAssessment;
         } catch (error) {
             console.error("AI Analysis Failed:", error);
-            aiSummary = "Yapay zeka analizi şu anda yapılamıyor. Lütfen daha sonra tekrar deneyin.";
+            aiSummary = "Yapay zeka analizi şu anda yapılamıyor.";
         }
-    } else {
-        console.warn("GEMINI_API_KEY is missing. Skipping AI analysis.");
     }
 
     return {
@@ -191,7 +217,8 @@ export async function generateWeeklyReport(assets: Asset[]): Promise<WeeklyRepor
         weeklyChangePercent: portfolioChange,
         assets: performanceData,
         aiSummary,
-        marketContext: "Piyasa verileri AI tarafından yorumlandı."
+        structuredAnalysis,
+        marketContext: `${dateRangeStr} dönemi analiz edildi.`
     };
 }
 
