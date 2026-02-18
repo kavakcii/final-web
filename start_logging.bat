@@ -1,0 +1,3 @@
+@echo off
+echo Starting server logging to server.log...
+node "node_modules\next\dist\bin\next" dev -p 3000 > server.log 2>&1

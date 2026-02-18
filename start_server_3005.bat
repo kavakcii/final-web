@@ -1,0 +1,3 @@
+@echo off
+echo Starting Next.js Server on 3005...
+node "node_modules\next\dist\bin\next" dev -p 3005 > server_3005.log 2>&1

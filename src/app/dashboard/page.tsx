@@ -2,7 +2,7 @@
 
 import { AuthComponent } from "@/components/ui/sign-up";
 import { TrendingUp, Activity, DollarSign, BarChart2, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
@@ -14,18 +14,14 @@ import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
 
 export default function Dashboard() {
-    const { email: userEmail, userName, isAuthenticated } = useUser();
-    const [myAssets, setMyAssets] = useState<Asset[]>([]);
-    const [prices, setPrices] = useState<Record<string, number>>({});
-    const [stats, setStats] = useState<any[]>([]);
-    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, isDataLoaded } = useUser();
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
         const groups: Record<string, { symbol: string, type: string, quantity: number, totalCost: number }> = {};
-        myAssets.forEach(asset => {
+        myAssets.forEach((asset: Asset) => {
             if (!groups[asset.symbol]) {
                 groups[asset.symbol] = { symbol: asset.symbol, type: asset.type, quantity: 0, totalCost: 0 };
             }
@@ -34,87 +30,6 @@ export default function Dashboard() {
         });
         return Object.values(groups);
     }, [myAssets]);
-
-    useEffect(() => {
-        const loadDashboardData = async () => {
-            setIsLoadingStats(true);
-            try {
-                const assets = await PortfolioService.getAssets();
-                setMyAssets(assets);
-
-                if (assets.length > 0) {
-                    const uniqueSymbols = Array.from(new Set(assets.map(a => a.symbol))).join(',');
-                    const res = await fetch(`/api/finance?symbols=${uniqueSymbols}`);
-                    const json = await res.json();
-
-                    const priceMap: Record<string, number> = {};
-                    if (json.results) {
-                        json.results.forEach((r: any) => {
-                            if (r.symbol && r.regularMarketPrice) {
-                                priceMap[r.symbol.toUpperCase()] = r.regularMarketPrice;
-                            }
-                        });
-                        setPrices(priceMap);
-                    }
-
-                    // Calculate stats
-                    let totalVal = 0;
-                    let totalCost = 0;
-                    assets.forEach(a => {
-                        const currentPrice = priceMap[a.symbol.toUpperCase()] || a.avgCost;
-                        totalVal += currentPrice * a.quantity;
-                        totalCost += a.avgCost * a.quantity;
-                    });
-
-                    const profit = totalVal - totalCost;
-                    const profitPercent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
-
-                    setStats([
-                        {
-                            title: "Toplam Portföy",
-                            value: `₺${totalVal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            change: `${profitPercent >= 0 ? '+' : ''}%${profitPercent.toFixed(1)}`,
-                            isPositive: profit >= 0,
-                            icon: Wallet,
-                            gradient: "from-blue-500/20 to-purple-500/20",
-                            border: "border-blue-500/20"
-                        },
-                        {
-                            title: "Toplam Kar/Zarar",
-                            value: `₺${profit.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                            change: "Net",
-                            isPositive: profit >= 0,
-                            icon: Activity,
-                            gradient: profit >= 0 ? "from-green-500/20 to-emerald-500/20" : "from-red-500/20 to-orange-500/20",
-                            border: profit >= 0 ? "border-green-500/20" : "border-red-500/20"
-                        },
-                        {
-                            title: "Varlık Sayısı",
-                            value: Array.from(new Set(assets.map(a => a.symbol))).length.toString(),
-                            change: "Aktif",
-                            isPositive: true,
-                            icon: BarChart2,
-                            gradient: "from-orange-500/20 to-red-500/20",
-                            border: "border-orange-500/20"
-                        }
-                    ]);
-                } else {
-                    // Default empty stats
-                    setStats([
-                        { title: "Toplam Portföy", value: "₺0.00", change: "%0", isPositive: true, icon: Wallet, gradient: "from-blue-500/20 to-purple-500/20", border: "border-blue-500/20" },
-                        { title: "Toplam Kar/Zarar", value: "₺0.00", change: "Net", isPositive: true, icon: Activity, gradient: "from-green-500/20 to-emerald-500/20", border: "border-green-500/20" },
-                        { title: "Varlık Sayısı", value: "0", change: "Aktif", isPositive: true, icon: BarChart2, gradient: "from-orange-500/20 to-red-500/20", border: "border-orange-500/20" }
-                    ]);
-                }
-            } catch (e) {
-                console.error("Dashboard data error:", e);
-            } finally {
-                setIsLoadingStats(false);
-            }
-        };
-
-        if (isAuthenticated) loadDashboardData();
-    }, [isAuthenticated]);
 
     const handleAssetSelect = (symbol: string, type: string) => {
         if (type === 'FUND') {
@@ -135,19 +50,11 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold text-white mb-2">Hoşgeldin, {userName || userEmail?.split('@')[0]} 👋</h1>
                     <p className="text-slate-400">Piyasa verileri ve portföyün güncel.</p>
                 </div>
-                <div className="flex gap-3">
-                    <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        Yeni İşlem
-                    </button>
-                    <button className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-white/10">
-                        Rapor Al
-                    </button>
-                </div>
             </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {(isLoadingStats ? Array(3).fill(null) : stats).map((stat, index) => (
+                {(!isDataLoaded ? Array(3).fill(null) : stats).map((stat, index) => (
                     <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 20 }}
@@ -158,7 +65,7 @@ export default function Dashboard() {
                             stat?.border || "border-white/5"
                         )}
                     >
-                        {isLoadingStats ? (
+                        {!isDataLoaded ? (
                             <div className="animate-pulse space-y-3">
                                 <div className="h-10 w-10 bg-white/5 rounded-lg" />
                                 <div className="h-4 w-20 bg-white/5 rounded" />
@@ -194,7 +101,7 @@ export default function Dashboard() {
                 <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 flex flex-col">
                     <h2 className="text-lg font-semibold text-white mb-6">Varlıklarım</h2>
                     <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-white/10">
-                        {isLoadingStats ? (
+                        {!isDataLoaded ? (
                             Array(3).fill(null).map((_, i) => (
                                 <div key={i} className="h-16 w-full animate-pulse bg-white/5 rounded-xl" />
                             ))
@@ -203,7 +110,7 @@ export default function Dashboard() {
                                 <p className="text-sm text-slate-500">Henüz varlık eklemediniz.</p>
                             </div>
                         ) : (
-                            groupedAssets.map((asset, i) => {
+                            groupedAssets.map((asset: any, i: number) => {
                                 const currentPrice = prices[asset.symbol.toUpperCase()];
                                 const change = currentPrice ? ((currentPrice - (asset.totalCost / asset.quantity)) / (asset.totalCost / asset.quantity)) * 100 : 0;
 

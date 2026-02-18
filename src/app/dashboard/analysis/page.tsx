@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { DashboardAnalysisCards } from "@/components/DashboardAnalysisCards";
 import { PortfolioService } from "@/lib/portfolio-service";
 import { DisplayCard } from "@/components/ui/display-cards";
+import { FinAiLogo } from "@/components/FinAiLogo";
 
 // Supported Assets for Filtering
 const SUPPORTED_ASSETS = [
@@ -25,7 +26,7 @@ const SUPPORTED_ASSETS = [
 export default function AnalysisPage() {
     const searchParams = useSearchParams();
     const queryAsset = searchParams.get('q');
-    
+
     const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
     const [selectedAssetDetails, setSelectedAssetDetails] = useState<any | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +39,19 @@ export default function AnalysisPage() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isValidSelection, setIsValidSelection] = useState(false);
     const [portfolioAssets, setPortfolioAssets] = useState<any[]>([]);
+    const FIN_LESSONS = [
+        { title: "Faiz", lines: ["Faiz: Paranın zaman içindeki karşılığıdır; borç ve yatırımın fiyatını belirler.", "Politika faizi kredi maliyetini ve toplam talebi yönlendirir.", "Artan faiz tüketimi ve yatırımı soğutur; düşen faiz canlandırır."] },
+        { title: "Enflasyon", lines: ["Enflasyon: Fiyatların genel düzeyindeki kalıcı artıştır; alım gücünü eritir.", "Reel getiri, nominal getiriden enflasyonun düşülmesiyle hesaplanır.", "Enflasyon yükseldiğinde nakit ve sabit getiriler reel olarak zayıflar."] },
+        { title: "Çeşitlendirme", lines: ["Çeşitlendirme: Riski farklı varlıklara yayarak portföyü dengeler.", "Düşük korelasyonlu varlıklar birlikte hareket etmez.", "Böylece ani düşüşlerde kayıplar sınırlanır."] },
+        { title: "Bileşik Getiri", lines: ["Bileşik getiri: Getirinin yeniden yatırıma dönüp büyümeyi hızlandırmasıdır.", "Erken başlamak ve düzenli katkı etkisini katlar.", "Zaman, getirinin en büyük müttefikidir."] },
+        { title: "Likidite", lines: ["Likidite: Varlığın değerini koruyarak hızla nakde dönebilmesidir.", "Yüksek likidite acil ihtiyaçlarda esneklik sağlar.", "Düşük likidite spreadi ve fiyat etkisini artırır."] },
+        { title: "Risk Yönetimi", lines: ["Risk yönetimi: Zarar kes ve hedef belirle; pozisyon boyutunu kontrol et.", "Volatiliteye ve kaldıraç seviyesine göre maruziyeti ayarla.", "Disiplin, uzun vadeli performansın temelidir."] },
+        { title: "Vade Uyumu", lines: ["Vade uyumu: Yatırım süresi hedef ve nakit ihtiyacıyla uyumlu olmalıdır.", "Kısa vadede oynaklık yüksektir; duygular kararları bozabilir.", "Uzun vadede trend ve nakit akışları belirleyici olur."] },
+        { title: "Maliyet", lines: ["Maliyet: Ücret, komisyon ve vergi net getiriyi azaltır.", "Düşük gider oranlı ürünler toplam getiriyi artırır.", "Gereksiz işlem sıklığını sınırlamak maliyeti düşürür."] }
+    ];
+    const [lessonIndex, setLessonIndex] = useState(0);
+    const [prepIndex, setPrepIndex] = useState(1);
+    const [lessonOrder, setLessonOrder] = useState<number[]>(FIN_LESSONS.map((_, i) => i));
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -51,6 +65,15 @@ export default function AnalysisPage() {
 
         return () => clearTimeout(timer);
     }, [searchTerm]);
+
+    useEffect(() => {
+        if (!isAnalyzing) return;
+        const t = setInterval(() => {
+            setLessonIndex((prev) => (prev + 1) % lessonOrder.length);
+            setPrepIndex((prev) => (prev + 1) % lessonOrder.length);
+        }, 15000);
+        return () => clearInterval(t);
+    }, [isAnalyzing, lessonOrder]);
 
     // Fetch user portfolio assets
     useEffect(() => {
@@ -103,6 +126,10 @@ export default function AnalysisPage() {
         if (!termToUse.trim()) return;
 
         setIsAnalyzing(true);
+        const shuffled = [...FIN_LESSONS.map((_, i) => i)].sort(() => Math.random() - 0.5);
+        setLessonOrder(shuffled);
+        setLessonIndex(0);
+        setPrepIndex(1 % shuffled.length);
         setSelectedAsset(termToUse); // Use search term as the "selected asset" name
         setAiAnalysisData(null); // Clear previous data
         setTefasData(null); // Clear previous TEFAS data
@@ -188,6 +215,43 @@ export default function AnalysisPage() {
 
     return (
         <div className="p-8 space-y-8 min-h-full pb-20">
+            {isAnalyzing && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center"
+                >
+                    <div className="relative w-[min(640px,90vw)] rounded-2xl border border-white/10 bg-slate-900/80 p-8 text-white">
+                        <div className="flex flex-col items-center gap-6">
+                            <FinAiLogo size="lg" className="ring-4 ring-blue-500/20 rounded-2xl p-1" />
+                            <div className="flex items-center gap-2 text-slate-300">
+                                <Info className="w-5 h-5 text-amber-300" />
+                                <span className="font-semibold">Finansal Okuryazarlık</span>
+                            </div>
+                            <div className="relative min-h-[120px] w-full">
+                                <AnimatePresence mode="wait">
+                                    <motion.p
+                                        key={lessonIndex}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="text-base leading-tight text-slate-200 text-center"
+                                    >
+                                        <span className="whitespace-pre-line">
+                                            {`${FIN_LESSONS[lessonOrder[lessonIndex]].lines[0]}\n${FIN_LESSONS[lessonOrder[lessonIndex]].lines[1]}\n${FIN_LESSONS[lessonOrder[lessonIndex]].lines[2]}`}
+                                        </span>
+                                    </motion.p>
+                                </AnimatePresence>
+                                <p aria-hidden className="opacity-0 absolute">{FIN_LESSONS[lessonOrder[prepIndex]].title} {FIN_LESSONS[lessonOrder[prepIndex]].lines.join(" ")}</p>
+                            </div>
+                            <div className="text-xs text-slate-500">15 sn sonra yeni bilgi</div>
+                        </div>
+                        <div className="absolute bottom-3 right-4 text-xs text-slate-400">
+                            Analiziniz yapılıyor, lütfen bekleyin.
+                        </div>
+                    </div>
+                </motion.div>
+            )}
             {/* Header */}
             <div className="space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -429,29 +493,29 @@ export default function AnalysisPage() {
                             ))}
                         </div>
                     </div>
-                    
+
                     {/* Summary Skeleton */}
                     <div className="h-40 rounded-xl bg-gradient-to-br from-slate-200 to-slate-300 opacity-50"></div>
 
                     {/* Scenarios Skeleton */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                         <div className="h-16 bg-slate-800 px-6 py-4 flex items-center gap-3">
-                             <div className="h-6 bg-white/20 rounded w-64"></div>
-                         </div>
-                         <div className="p-6 space-y-6">
-                             <div className="h-4 bg-slate-100 rounded w-full"></div>
-                             <div className="h-4 bg-slate-100 rounded w-2/3"></div>
-                             <div className="grid md:grid-cols-2 gap-4 mt-6">
-                                 <div className="h-40 bg-emerald-50/50 border border-emerald-100 rounded-lg p-4">
-                                     <div className="h-6 bg-emerald-100/50 rounded w-32 mb-4"></div>
-                                     <div className="h-20 bg-emerald-100/30 rounded"></div>
-                                 </div>
-                                 <div className="h-40 bg-red-50/50 border border-red-100 rounded-lg p-4">
-                                     <div className="h-6 bg-red-100/50 rounded w-32 mb-4"></div>
-                                     <div className="h-20 bg-red-100/30 rounded"></div>
-                                 </div>
-                             </div>
-                         </div>
+                        <div className="h-16 bg-slate-800 px-6 py-4 flex items-center gap-3">
+                            <div className="h-6 bg-white/20 rounded w-64"></div>
+                        </div>
+                        <div className="p-6 space-y-6">
+                            <div className="h-4 bg-slate-100 rounded w-full"></div>
+                            <div className="h-4 bg-slate-100 rounded w-2/3"></div>
+                            <div className="grid md:grid-cols-2 gap-4 mt-6">
+                                <div className="h-40 bg-emerald-50/50 border border-emerald-100 rounded-lg p-4">
+                                    <div className="h-6 bg-emerald-100/50 rounded w-32 mb-4"></div>
+                                    <div className="h-20 bg-emerald-100/30 rounded"></div>
+                                </div>
+                                <div className="h-40 bg-red-50/50 border border-red-100 rounded-lg p-4">
+                                    <div className="h-6 bg-red-100/50 rounded w-32 mb-4"></div>
+                                    <div className="h-20 bg-red-100/30 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -502,8 +566,8 @@ export default function AnalysisPage() {
                                         </div>
                                         {/* Simple Progress Bar Visual */}
                                         <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-blue-500 rounded-full opacity-80" 
+                                            <div
+                                                className="h-full bg-blue-500 rounded-full opacity-80"
                                                 style={{ width: holding.percent.replace('%', '').replace(',', '.') + '%' }}
                                             />
                                         </div>
@@ -641,7 +705,7 @@ export default function AnalysisPage() {
                                             <div className="grid md:grid-cols-2 gap-4">
                                                 {event.scenarios.map((scenario: any, sIdx: number) => {
                                                     const sentiment = scenario.sentiment?.toLowerCase() || 'neutral';
-                                                    
+
                                                     // Fixed titles based on sentiment to match user preference
                                                     let title = "Nötr Beklenti";
                                                     if (sentiment === 'positive') title = "Pozitif Beklenti";
@@ -649,10 +713,10 @@ export default function AnalysisPage() {
 
                                                     return (
                                                         <div key={sIdx} className={`rounded-lg p-4 border transition-colors ${sentiment === 'positive'
-                                                                ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
-                                                                : sentiment === 'negative'
-                                                                    ? 'bg-red-50 border-red-200 hover:border-red-300'
-                                                                    : 'bg-slate-50 border-slate-200 hover:border-blue-300'
+                                                            ? 'bg-emerald-50 border-emerald-200 hover:border-emerald-300'
+                                                            : sentiment === 'negative'
+                                                                ? 'bg-red-50 border-red-200 hover:border-red-300'
+                                                                : 'bg-slate-50 border-slate-200 hover:border-blue-300'
                                                             }`}>
                                                             <h4 className={`font-bold mb-2 ${sentiment === 'positive' ? 'text-emerald-800' :
                                                                 sentiment === 'negative' ? 'text-red-800' : 'text-slate-800'

@@ -52,11 +52,11 @@ export default function Navbar() {
                 </div>
 
                 <div>
-                    <Link href="/dashboard" passHref>
+                    <Link href={isAuthenticated ? "/dashboard" : "/login"} passHref>
                         <motion.div
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="curso-pointer px-6 py-2.5 text-sm font-bold text-[#0a192f] bg-white hover:bg-blue-50 rounded-full shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] transition-all flex items-center justify-center"
+                            className="cursor-pointer px-6 py-2.5 text-sm font-bold text-[#0a192f] bg-white hover:bg-blue-50 rounded-full shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] transition-all flex items-center justify-center"
                         >
                             {isAuthenticated ? "Dashboard" : "Giriş Yap"}
                         </motion.div>
@@ -78,7 +78,7 @@ export default function Navbar() {
                             <Link href="#" onClick={() => setIsOpen(false)} className="block text-lg font-medium text-neutral-300">Piyasalar</Link>
                             <Link href="#pricing" onClick={() => setIsOpen(false)} className="block text-lg font-medium text-neutral-300">Fiyatlandırma</Link>
                             <Link
-                                href="/dashboard"
+                                href={isAuthenticated ? "/dashboard" : "/login"}
                                 onClick={() => setIsOpen(false)}
                                 className="block w-full text-center px-4 py-3 text-base font-bold text-black bg-white rounded-xl"
                             >

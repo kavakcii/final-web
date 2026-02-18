@@ -107,7 +107,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [phone, setPhone] = useState("");
-    
+
     // AGREEMENTS
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [marketingAccepted, setMarketingAccepted] = useState(false);
@@ -115,7 +115,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
     // UI STATE
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoginMode, setIsLoginMode] = useState(false); // DEFAULT TO REGISTER
+    const [isLoginMode, setIsLoginMode] = useState(true); // DEFAULT TO LOGIN
 
     // MODAL STATE
     const [modalStatus, setModalStatus] = useState<'closed' | 'loading' | 'error' | 'success'>('closed');
@@ -176,7 +176,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
 
     const handleForgotPassword = async () => {
         if (modalStatus === 'loading') return;
-        
+
         if (!email) {
             setModalErrorMessage("Lütfen şifrenizi sıfırlamak için e-posta adresinizi giriniz.");
             setModalStatus('error');
@@ -201,19 +201,19 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
 
     const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (isLoginMode) {
-             if (!email || !password) {
-                 setModalErrorMessage("Lütfen tüm alanları doldurunuz.");
-                 setModalStatus('error');
-                 return;
-             }
+            if (!email || !password) {
+                setModalErrorMessage("Lütfen tüm alanları doldurunuz.");
+                setModalStatus('error');
+                return;
+            }
         } else {
             // Register Validation
             if (!email || !password || !firstName || !lastName || !phone) {
-                 setModalErrorMessage("Lütfen tüm alanları doldurunuz.");
-                 setModalStatus('error');
-                 return;
+                setModalErrorMessage("Lütfen tüm alanları doldurunuz.");
+                setModalStatus('error');
+                return;
             }
             if (password !== confirmPassword) {
                 setModalErrorMessage("Şifreler uyuşmuyor!");
@@ -316,8 +316,8 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
                                     <Mail className="w-16 h-16 text-blue-500 mx-auto mb-4" />
                                     <h2 className="text-2xl font-bold text-white mb-2">E-posta Gönderildi</h2>
                                     <p className="text-slate-400 mb-4">{modalErrorMessage}</p>
-                                    <button 
-                                        onClick={closeModal} 
+                                    <button
+                                        onClick={closeModal}
                                         className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
                                     >
                                         Tamam
@@ -356,46 +356,46 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
                                 {!isLoginMode ? (
                                     // REGISTER FORM
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputField 
-                                            label="İsim" 
-                                            type="text" 
-                                            value={firstName} 
-                                            onChange={(e: any) => setFirstName(e.target.value)} 
+                                        <InputField
+                                            label="İsim"
+                                            type="text"
+                                            value={firstName}
+                                            onChange={(e: any) => setFirstName(e.target.value)}
                                         />
-                                        <InputField 
-                                            label="Soyisim" 
-                                            type="text" 
-                                            value={lastName} 
-                                            onChange={(e: any) => setLastName(e.target.value)} 
+                                        <InputField
+                                            label="Soyisim"
+                                            type="text"
+                                            value={lastName}
+                                            onChange={(e: any) => setLastName(e.target.value)}
                                         />
-                                        
-                                        <InputField 
-                                            label="Telefon numarası" 
-                                            type="tel" 
+
+                                        <InputField
+                                            label="Telefon numarası"
+                                            type="tel"
                                             colSpan={2}
-                                            value={phone} 
-                                            onChange={(e: any) => setPhone(e.target.value)} 
+                                            value={phone}
+                                            onChange={(e: any) => setPhone(e.target.value)}
                                         />
-                                        
-                                        <InputField 
-                                            label="E-mail adresi" 
-                                            type="email" 
+
+                                        <InputField
+                                            label="E-mail adresi"
+                                            type="email"
                                             colSpan={2}
-                                            value={email} 
-                                            onChange={(e: any) => setEmail(e.target.value)} 
+                                            value={email}
+                                            onChange={(e: any) => setEmail(e.target.value)}
                                         />
-                                        
-                                        <InputField 
-                                            label="Şifre" 
-                                            type="password" 
-                                            value={password} 
-                                            onChange={(e: any) => setPassword(e.target.value)} 
+
+                                        <InputField
+                                            label="Şifre"
+                                            type="password"
+                                            value={password}
+                                            onChange={(e: any) => setPassword(e.target.value)}
                                         />
-                                        <InputField 
-                                            label="Şifre tekrarı" 
-                                            type="password" 
-                                            value={confirmPassword} 
-                                            onChange={(e: any) => setConfirmPassword(e.target.value)} 
+                                        <InputField
+                                            label="Şifre tekrarı"
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e: any) => setConfirmPassword(e.target.value)}
                                         />
 
                                         <div className="col-span-2 space-y-3 mt-2">
@@ -423,21 +423,21 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", cla
                                 ) : (
                                     // LOGIN FORM
                                     <div className="space-y-4">
-                                        <InputField 
-                                            label="E-mail adresi" 
-                                            type="email" 
-                                            value={email} 
-                                            onChange={(e: any) => setEmail(e.target.value)} 
+                                        <InputField
+                                            label="E-mail adresi"
+                                            type="email"
+                                            value={email}
+                                            onChange={(e: any) => setEmail(e.target.value)}
                                         />
-                                        <InputField 
-                                            label="Şifre" 
-                                            type="password" 
-                                            value={password} 
-                                            onChange={(e: any) => setPassword(e.target.value)} 
+                                        <InputField
+                                            label="Şifre"
+                                            type="password"
+                                            value={password}
+                                            onChange={(e: any) => setPassword(e.target.value)}
                                         />
                                         <div className="flex justify-end">
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={handleForgotPassword}
                                                 disabled={modalStatus === 'loading'}
                                                 className="text-sm text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

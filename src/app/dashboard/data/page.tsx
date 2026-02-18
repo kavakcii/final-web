@@ -3,6 +3,7 @@
 import { useState, useEffect, Fragment } from "react";
 import { Search, Filter, Loader2, Info, TrendingUp, TrendingDown, Layers, Database, ChevronDown, ChevronUp, ExternalLink, DollarSign, PieChart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Helper to estimate holdings based on fund info
 const getEstimatedHoldings = (fund: any) => {
@@ -75,6 +76,17 @@ export default function DataPage() {
     const [detailedFunds, setDetailedFunds] = useState<Record<string, any>>({});
     const [loadingDetails, setLoadingDetails] = useState<Record<string, boolean>>({});
 
+    // Advanced Filter States
+    const [sortBy, setSortBy] = useState<string>("return1y");
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+    const [minReturn, setMinReturn] = useState<number | "">("");
+    const [returnPeriod, setReturnPeriod] = useState<string>("return1y");
+    const [onlyPositive, setOnlyPositive] = useState(false);
+    const [onlyKatilim, setOnlyKatilim] = useState(false);
+    const [onlyForeign, setOnlyForeign] = useState(false);
+    const [selectedDetailedCategory, setSelectedDetailedCategory] = useState("Tümü");
+    const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
+
     // Fetch Funds on Mount
     useEffect(() => {
         const fetchFunds = async () => {
@@ -100,19 +112,21 @@ export default function DataPage() {
         fetchFunds();
     }, []);
 
-    // Filter Logic
+    // Filter and Sort Logic
     useEffect(() => {
-        let result = funds;
+        let result = [...funds];
 
+        // 1. Search Filter
         if (searchTerm) {
             const lowerTerm = searchTerm.toLowerCase();
-            result = result.filter((f: any) => 
-                f.code.toLowerCase().includes(lowerTerm) || 
+            result = result.filter((f: any) =>
+                f.code.toLowerCase().includes(lowerTerm) ||
                 f.title.toLowerCase().includes(lowerTerm) ||
                 f.holdings.toLowerCase().includes(lowerTerm)
             );
         }
 
+        // 2. Category Filter (Quick Tabs)
         if (selectedCategory !== "Tümü") {
             if (selectedCategory === "Hisse") result = result.filter((f: any) => f.category === 'Hisse Senedi Şemsiye Fonu' || f.title.toUpperCase().includes('HİSSE'));
             else if (selectedCategory === "Altın/Maden") result = result.filter((f: any) => f.category === 'Kıymetli Madenler Şemsiye Fonu' || f.title.toUpperCase().includes('ALTIN') || f.title.toUpperCase().includes('GÜMÜŞ'));
@@ -121,10 +135,57 @@ export default function DataPage() {
             else if (selectedCategory === "Faiz/Para") result = result.filter((f: any) => f.category === 'Para Piyasası Şemsiye Fonu' || f.category === 'Borçlanma Araçları Şemsiye Fonu' || f.title.toUpperCase().includes('MEVDUAT'));
         }
 
+        // 2b. Detailed Category Filter
+        if (selectedDetailedCategory !== "Tümü") {
+            result = result.filter((f: any) => f.category === selectedDetailedCategory);
+        }
+
+        // 3. Advanced Filters
+        if (onlyPositive) {
+            result = result.filter((f: any) => parseFloat(f[returnPeriod] || 0) > 0);
+        }
+
+        if (minReturn !== "") {
+            result = result.filter((f: any) => parseFloat(f[returnPeriod] || 0) >= Number(minReturn));
+        }
+
+        if (onlyKatilim) {
+            result = result.filter((f: any) =>
+                f.title.toUpperCase().includes('KATILIM') ||
+                f.category.toUpperCase().includes('KATILIM')
+            );
+        }
+
+        if (onlyForeign) {
+            result = result.filter((f: any) =>
+                f.title.toUpperCase().includes('YABANCI') ||
+                f.title.toUpperCase().includes('GOS')
+            );
+        }
+
+        // 4. Sorting
+        result.sort((a, b) => {
+            let valA = a[sortBy];
+            let valB = b[sortBy];
+
+            // Special handling for numeric returns
+            if (sortBy.startsWith('return')) {
+                valA = parseFloat(valA || -999);
+                valB = parseFloat(valB || -999);
+            }
+
+            if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+            if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+            return 0;
+        });
+
         setFilteredFunds(result);
-    }, [searchTerm, selectedCategory, funds]);
+    }, [searchTerm, selectedCategory, selectedDetailedCategory, funds, sortBy, sortOrder, onlyPositive, minReturn, onlyKatilim, onlyForeign, returnPeriod]);
 
     const categories = ["Tümü", "Hisse", "Altın/Maden", "Serbest", "Döviz/Yabancı", "Faiz/Para"];
+
+    // Get unique categories for the detailed filter
+    const detailedCategories = ["Tümü", ...Array.from(new Set(funds.map(f => f.category)))].sort();
 
     const toggleExpand = async (code: string) => {
         if (expandedFund === code) {
@@ -154,6 +215,14 @@ export default function DataPage() {
             }
         }
     };
+    const toggleSort = (field: string) => {
+        if (sortBy === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+        } else {
+            setSortBy(field);
+            setSortOrder("desc");
+        }
+    };
 
     return (
         <div className="p-8 min-h-full space-y-8">
@@ -176,32 +245,210 @@ export default function DataPage() {
                     {/* Search */}
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                        <input 
-                            type="text" 
-                            placeholder="Fon kodu, adı veya içerik ara (Örn: MAC, Teknoloji, Altın)..." 
+                        <input
+                            type="text"
+                            placeholder="Fon kodu, adı veya içerik ara (Örn: MAC, Teknoloji, Altın)..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white focus:border-blue-500 focus:outline-none transition-colors"
                         />
                     </div>
 
-                    {/* Category Tabs */}
-                    <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                                    selectedCategory === cat 
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                                }`}
-                            >
-                                {cat}
-                            </button>
-                        ))}
+                    <div className="flex gap-2">
+                        {/* Sharia Sensitivity Toggle */}
+                        <button
+                            onClick={() => setOnlyKatilim(!onlyKatilim)}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border",
+                                onlyKatilim
+                                    ? "bg-emerald-600 border-emerald-500 text-white shadow-lg shadow-emerald-900/20"
+                                    : "bg-slate-800 border-slate-700 text-emerald-400 hover:bg-slate-700"
+                            )}
+                        >
+                            <div className={cn(
+                                "w-4 h-4 rounded-sm border border-current flex items-center justify-center transition-all",
+                                onlyKatilim ? "bg-white text-emerald-600" : ""
+                            )}>
+                                {onlyKatilim && <div className="w-2 h-2 bg-emerald-600 rounded-full" />}
+                            </div>
+                            Faizsiz Seçenekler
+                        </button>
+
+                        {/* Advanced Toggle */}
+                        <button
+                            onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all border",
+                                isAdvancedOpen
+                                    ? "bg-blue-600 border-blue-500 text-white"
+                                    : "bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700"
+                            )}
+                        >
+                            <Filter className="w-4 h-4" />
+                            {isAdvancedOpen ? "Filtreleri Kapat" : "Gelişmiş Filtreler"}
+                        </button>
                     </div>
                 </div>
+
+                {/* Category Tabs */}
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setSelectedCategory(cat)}
+                            className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${selectedCategory === cat
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Advanced Filter Content */}
+                <AnimatePresence>
+                    {isAdvancedOpen && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden border-t border-slate-800 pt-4"
+                        >
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                {/* Category Select */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Kategori</label>
+                                    <select
+                                        value={selectedCategory}
+                                        onChange={(e) => setSelectedCategory(e.target.value)}
+                                        className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                                    >
+                                        {categories.map((cat) => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {/* Return Filter */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Dönemsel Getiri (%)</label>
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={returnPeriod}
+                                            onChange={(e) => setReturnPeriod(e.target.value)}
+                                            className="bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                                        >
+                                            <option value="return1m">1 Ay</option>
+                                            <option value="return3m">3 Ay</option>
+                                            <option value="return6m">6 Ay</option>
+                                            <option value="return1y">1 Yıl</option>
+                                            <option value="return3y">3 Yıl</option>
+                                            <option value="return5y">5 Yıl</option>
+                                        </select>
+                                        <input
+                                            type="number"
+                                            placeholder="Min %"
+                                            value={minReturn}
+                                            onChange={(e) => setMinReturn(e.target.value === "" ? "" : Number(e.target.value))}
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Detailed Category Filter */}
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Detaylı Kategori</label>
+                                    <select
+                                        value={selectedDetailedCategory}
+                                        onChange={(e) => setSelectedDetailedCategory(e.target.value)}
+                                        className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-2 text-xs text-white focus:border-blue-500 focus:outline-none"
+                                    >
+                                        {detailedCategories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Toggles Group 1 */}
+                                <div className="space-y-3 pt-2">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div
+                                            onClick={() => setOnlyPositive(!onlyPositive)}
+                                            className={cn(
+                                                "w-8 h-4 rounded-full relative transition-colors",
+                                                onlyPositive ? "bg-blue-600" : "bg-slate-700"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform",
+                                                onlyPositive ? "translate-x-4" : "translate-x-0"
+                                            )} />
+                                        </div>
+                                        <span className="text-xs text-slate-300 group-hover:text-white transition-colors">Sadece Pozitf Getiri</span>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div
+                                            onClick={() => setOnlyKatilim(!onlyKatilim)}
+                                            className={cn(
+                                                "w-8 h-4 rounded-full relative transition-colors",
+                                                onlyKatilim ? "bg-emerald-600" : "bg-slate-700"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform",
+                                                onlyKatilim ? "translate-x-4" : "translate-x-0"
+                                            )} />
+                                        </div>
+                                        <span className="text-xs text-slate-300 group-hover:text-white transition-colors">Katılım Fonları</span>
+                                    </label>
+                                </div>
+
+                                {/* Toggles Group 2 */}
+                                <div className="space-y-3 pt-2">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div
+                                            onClick={() => setOnlyForeign(!onlyForeign)}
+                                            className={cn(
+                                                "w-8 h-4 rounded-full relative transition-colors",
+                                                onlyForeign ? "bg-orange-600" : "bg-slate-700"
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform",
+                                                onlyForeign ? "translate-x-4" : "translate-x-0"
+                                            )} />
+                                        </div>
+                                        <span className="text-xs text-slate-300 group-hover:text-white transition-colors">Yabancı/GOS Fonları</span>
+                                    </label>
+                                </div>
+
+                                <div className="flex flex-col items-end justify-end space-y-2">
+                                    <p className="text-[10px] text-slate-500 bg-slate-800/50 px-2 py-1 rounded">
+                                        {filteredFunds.length} fon listelendi
+                                    </p>
+                                    <button
+                                        onClick={() => {
+                                            setSearchTerm("");
+                                            setSelectedCategory("Tümü");
+                                            setSelectedDetailedCategory("Tümü");
+                                            setMinReturn("");
+                                            setReturnPeriod("return1y");
+                                            setOnlyPositive(false);
+                                            setOnlyKatilim(false);
+                                            setOnlyForeign(false);
+                                            setSortBy("return1y");
+                                            setSortOrder("desc");
+                                        }}
+                                        className="text-[10px] font-bold text-slate-500 hover:text-red-400 transition-colors uppercase"
+                                    >
+                                        Filtreleri Sıfırla
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Data Table */}
@@ -216,8 +463,24 @@ export default function DataPage() {
                         <table className="w-full text-left">
                             <thead className="bg-[#1e293b] text-white uppercase text-xs font-bold tracking-wider">
                                 <tr>
-                                    <th className="px-6 py-4 rounded-tl-xl">Fon Kodu</th>
-                                    <th className="px-6 py-4">Fon Adı</th>
+                                    <th
+                                        className="px-6 py-4 rounded-tl-xl cursor-pointer hover:bg-slate-700 transition-colors"
+                                        onClick={() => toggleSort('code')}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            Fon Kodu
+                                            {sortBy === 'code' && (sortOrder === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
+                                    <th
+                                        className="px-6 py-4 cursor-pointer hover:bg-slate-700 transition-colors"
+                                        onClick={() => toggleSort('title')}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            Fon Adı
+                                            {sortBy === 'title' && (sortOrder === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-4">Kategori</th>
                                     <th className="px-6 py-4 w-1/3">
                                         <div className="flex items-center gap-2">
@@ -225,7 +488,15 @@ export default function DataPage() {
                                             İçerik (Top 5)
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 text-right rounded-tr-xl">Yıllık Getiri</th>
+                                    <th
+                                        className="px-6 py-4 text-right rounded-tr-xl cursor-pointer hover:bg-slate-700 transition-colors"
+                                        onClick={() => toggleSort('return1y')}
+                                    >
+                                        <div className="flex items-center justify-end gap-2">
+                                            Yıllık Getiri
+                                            {sortBy === 'return1y' && (sortOrder === 'asc' ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)}
+                                        </div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -233,10 +504,10 @@ export default function DataPage() {
                                     filteredFunds.slice(0, 100).map((fund) => {
                                         const catInfo = getCategoryLabel(fund.category);
                                         const isExpanded = expandedFund === fund.code;
-                                        
+
                                         return (
                                             <Fragment key={fund.code}>
-                                                <tr 
+                                                <tr
                                                     onClick={() => toggleExpand(fund.code)}
                                                     className={`cursor-pointer transition-colors group ${isExpanded ? 'bg-blue-50/50' : 'hover:bg-slate-50'}`}
                                                 >
@@ -258,13 +529,12 @@ export default function DataPage() {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                                            fund.category.includes('Hisse') ? 'bg-blue-100 text-blue-700' :
+                                                        <span className={`px-2 py-1 rounded text-xs font-bold ${fund.category.includes('Hisse') ? 'bg-blue-100 text-blue-700' :
                                                             fund.category.includes('Altın') || fund.category.includes('Kıymetli') ? 'bg-yellow-100 text-yellow-700' :
-                                                            fund.category.includes('Serbest') ? 'bg-purple-100 text-purple-700' :
-                                                            fund.category.includes('Yabancı') || fund.category.includes('Sepet') ? 'bg-orange-100 text-orange-700' :
-                                                            'bg-slate-100 text-slate-600'
-                                                        }`}>
+                                                                fund.category.includes('Serbest') ? 'bg-purple-100 text-purple-700' :
+                                                                    fund.category.includes('Yabancı') || fund.category.includes('Sepet') ? 'bg-orange-100 text-orange-700' :
+                                                                        'bg-slate-100 text-slate-600'
+                                                            }`}>
                                                             {catInfo.label}
                                                         </span>
                                                     </td>
@@ -309,7 +579,7 @@ export default function DataPage() {
                                                                                 ))}
                                                                             </ul>
                                                                             <div className="mt-4 pt-4 border-t border-blue-200">
-                                                                                <a 
+                                                                                <a
                                                                                     href={`https://www.google.com/search?q=site%3Akap.org.tr+${fund.code}+portföy+dağılım+raporu`}
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
@@ -330,17 +600,17 @@ export default function DataPage() {
                                                                                 <DollarSign className="w-4 h-4 text-emerald-500" />
                                                                                 Fiyat ve Performans
                                                                             </h3>
-                                                                            
+
                                                                             {loadingDetails[fund.code] ? (
                                                                                 <div className="flex items-center justify-center py-8">
                                                                                     <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
                                                                                 </div>
                                                                             ) : detailedFunds[fund.code] ? (
                                                                                 <div className="grid grid-cols-2 gap-4">
-                                                                                     <div className="bg-white p-3 rounded-lg border border-slate-200">
+                                                                                    <div className="bg-white p-3 rounded-lg border border-slate-200">
                                                                                         <span className="text-xs text-slate-500 block">Son Fiyat</span>
                                                                                         <span className="text-lg font-bold text-slate-900">
-                                                                                            {detailedFunds[fund.code].SONPORTFOYDEGERI && detailedFunds[fund.code].SONPAYADEDI 
+                                                                                            {detailedFunds[fund.code].SONPORTFOYDEGERI && detailedFunds[fund.code].SONPAYADEDI
                                                                                                 ? (detailedFunds[fund.code].SONPORTFOYDEGERI / detailedFunds[fund.code].SONPAYADEDI).toFixed(6) + ' ₺'
                                                                                                 : 'Hesaplanamadı'}
                                                                                         </span>
@@ -354,7 +624,7 @@ export default function DataPage() {
                                                                                     <div className="bg-white p-3 rounded-lg border border-slate-200">
                                                                                         <span className="text-xs text-slate-500 block">Toplam Değer</span>
                                                                                         <span className="text-sm font-bold text-slate-900">
-                                                                                            {detailedFunds[fund.code].SONPORTFOYDEGERI 
+                                                                                            {detailedFunds[fund.code].SONPORTFOYDEGERI
                                                                                                 ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(detailedFunds[fund.code].SONPORTFOYDEGERI)
                                                                                                 : '-'}
                                                                                         </span>
@@ -430,6 +700,6 @@ export default function DataPage() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }

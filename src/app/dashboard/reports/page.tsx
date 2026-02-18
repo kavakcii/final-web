@@ -11,6 +11,7 @@ type EmailFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semiann
 interface ReportInstruction {
     id: string;
     label: string;
+    type: 'basic' | 'risk_radar' | 'growth' | 'rotation' | 'resilience' | 'tax_fees';
     frequency: EmailFrequency;
     includeAnalysis: boolean;
     includePortfolioDetails: boolean;
@@ -19,6 +20,15 @@ interface ReportInstruction {
     preferredTime?: string;
     createdAt: string;
 }
+
+const REPORT_TYPES = [
+    { id: 'risk_radar', label: 'Haftalık Risk Radarı', icon: '📡', description: 'Kritik olayların portföye etkisi ve haber duyarlılığı.', frequency: 'weekly' },
+    { id: 'growth', label: 'Gerçek Büyüme Raporu', icon: '📈', description: 'Enflasyondan arındırılmış reel getiri ve alım gücü analizi.', frequency: 'monthly' },
+    { id: 'rotation', label: 'Fon Rotasyon Analizi', icon: '🔄', description: 'SPK uyumlu fon kıyaslaması ve alternatif izleme listesi.', frequency: 'monthly' },
+    { id: 'resilience', label: 'Yatırım Dayanıklılık Raporu', icon: '🛡️', description: 'Kriz testleri ve siyah kuğu senaryo analizleri.', frequency: 'annually' },
+    { id: 'tax_fees', label: 'Yıllık Vergi ve Kesinti Tablosu', icon: '📑', description: 'Stopaj tahminleri ve gizli maliyet dökümü.', frequency: 'annually' },
+    { id: 'basic', label: 'Genel Portföy Raporu', icon: '📊', description: 'Standart varlık dağılımı ve haftalık özet.', frequency: 'weekly' },
+];
 
 const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
     weekly: 'Her Hafta',
@@ -69,8 +79,9 @@ export default function ReportsPage() {
     const [isEditing, setIsEditing] = useState(false);
     const [showPreviewSelector, setShowPreviewSelector] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [setupStep, setSetupStep] = useState(1); // 1: Content, 2: Frequency
+    const [setupStep, setSetupStep] = useState(1); // 1: Type, 2: Content, 3: Frequency
     const [tempLabel, setTempLabel] = useState('');
+    const [tempType, setTempType] = useState<ReportInstruction['type']>('basic');
     const [tempFreq, setTempFreq] = useState<EmailFrequency>('weekly');
     const [tempAnalysis, setTempAnalysis] = useState(false);
     const [tempDetails, setTempDetails] = useState(true);
@@ -92,6 +103,7 @@ export default function ReportsPage() {
                         const migrated: ReportInstruction = {
                             id: 'migrated-local-1',
                             label: 'Eski Talimat',
+                            type: 'basic',
                             frequency: old.frequency === 'biweekly' ? 'biweekly' : (old.frequency as any),
                             includeAnalysis: old.includeAnalysis || false,
                             includePortfolioDetails: old.includePortfolioDetails ?? true,
@@ -121,7 +133,8 @@ export default function ReportsPage() {
 
             const instructionData: ReportInstruction = {
                 id: editingId || `report-${Date.now()}`,
-                label: tempLabel || (tempAnalysis ? 'AI Analiz Raporu' : 'Portföy Özeti'),
+                label: tempLabel || REPORT_TYPES.find(t => t.id === tempType)?.label || 'Yeni Rapor',
+                type: tempType,
                 frequency: tempFreq,
                 includeAnalysis: tempAnalysis,
                 includePortfolioDetails: tempDetails,
@@ -183,8 +196,9 @@ export default function ReportsPage() {
         setIsEditing(true);
         setEditingId(null);
         setTempLabel('');
+        setTempType('basic');
         setTempFreq('weekly');
-        setTempAnalysis(false);
+        setTempAnalysis(true);
         setTempDetails(true);
         setTempDay(1);
         setTempDate(1);
@@ -196,6 +210,7 @@ export default function ReportsPage() {
         setIsEditing(true);
         setEditingId(inst.id);
         setTempLabel(inst.label);
+        setTempType(inst.type || 'basic');
         setTempFreq(inst.frequency);
         setTempAnalysis(inst.includeAnalysis);
         setTempDetails(inst.includePortfolioDetails);
@@ -214,7 +229,7 @@ export default function ReportsPage() {
     };
 
     // Actual Preview Logic
-    const handlePreview = async (analysis: boolean, details: boolean) => {
+    const handlePreview = async (analysis: boolean, details: boolean, type: string = 'basic') => {
         setIsLoading(true);
         setSendResult(null);
         setShowPreviewSelector(false);
@@ -228,6 +243,7 @@ export default function ReportsPage() {
                 body: JSON.stringify({
                     userId: user.id,
                     sendEmail: false,
+                    reportType: type,
                     includeAnalysis: analysis,
                     includePortfolioDetails: details
                 }),
@@ -326,7 +342,7 @@ export default function ReportsPage() {
                                 <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                                     {isEditing && (
                                         <button
-                                            onClick={() => handlePreview(tempAnalysis, tempDetails)}
+                                            onClick={() => handlePreview(tempAnalysis, tempDetails, tempType)}
                                             className="w-full text-left p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all"
                                         >
                                             <span className="block text-[11px] font-bold text-purple-400">Şu anki Düzenleme</span>
@@ -336,7 +352,7 @@ export default function ReportsPage() {
                                     {instructions.map(inst => (
                                         <button
                                             key={inst.id}
-                                            onClick={() => handlePreview(inst.includeAnalysis, inst.includePortfolioDetails)}
+                                            onClick={() => handlePreview(inst.includeAnalysis, inst.includePortfolioDetails, inst.type)}
                                             className="w-full text-left p-3 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all flex items-center justify-between group"
                                         >
                                             <div>
@@ -444,6 +460,7 @@ export default function ReportsPage() {
                                     <div className="flex gap-2 mb-4">
                                         <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 1 ? 'bg-purple-500' : 'bg-slate-800'}`} />
                                         <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 2 ? 'bg-purple-500' : 'bg-slate-800'}`} />
+                                        <div className={`h-1.5 flex-1 rounded-full ${setupStep >= 3 ? 'bg-purple-500' : 'bg-slate-800'}`} />
                                     </div>
                                     <h3 className="text-lg font-bold text-white tracking-tight">
                                         {editingId ? 'Talimatı Düzenle' : 'Yeni Talimat Oluştur'}
@@ -451,6 +468,29 @@ export default function ReportsPage() {
                                 </div>
 
                                 {setupStep === 1 ? (
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Rapor Türü Seçin</label>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {REPORT_TYPES.map((type) => (
+                                                <button
+                                                    key={type.id}
+                                                    onClick={() => {
+                                                        setTempType(type.id as any);
+                                                        setTempFreq(type.frequency as any);
+                                                        setSetupStep(2);
+                                                    }}
+                                                    className={`flex items-start gap-4 p-4 rounded-2xl border text-left transition-all ${tempType === type.id ? 'bg-purple-600/10 border-purple-500/50 ring-1 ring-purple-500/20' : 'bg-slate-900 border-white/5 hover:border-white/10'}`}
+                                                >
+                                                    <span className="text-2xl mt-1">{type.icon}</span>
+                                                    <div>
+                                                        <span className="block font-bold text-white text-sm">{type.label}</span>
+                                                        <span className="text-[10px] text-slate-500 leading-tight">{type.description}</span>
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : setupStep === 2 ? (
                                     <div className="space-y-4">
                                         <div>
                                             <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">Talimat Başlığı</label>
@@ -466,14 +506,14 @@ export default function ReportsPage() {
                                         <div className="space-y-2 pt-2">
                                             <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">İçerik Tercihleri</label>
                                             <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempAnalysis ? 'bg-purple-500/10 border-purple-500/30' : 'bg-slate-900 border-white/5'}`}>
-                                                <input type="checkbox" checked={tempAnalysis} onChange={(e) => { setTempAnalysis(e.target.checked); if (e.target.checked) setTempDetails(false); }} className="mt-1" />
+                                                <input type="checkbox" checked={tempAnalysis} onChange={(e) => { setTempAnalysis(e.target.checked); }} className="mt-1" />
                                                 <div>
                                                     <span className="block font-bold text-white text-xs">Yapay Zeka Analizi</span>
                                                     <span className="text-[10px] text-slate-500">Piyasa yorumları.</span>
                                                 </div>
                                             </label>
-                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/30' : tempAnalysis ? 'opacity-40 cursor-not-allowed bg-slate-900' : 'bg-slate-900 border-white/5'}`}>
-                                                <input type="checkbox" checked={tempDetails} disabled={tempAnalysis} onChange={(e) => setTempDetails(e.target.checked)} className="mt-1" />
+                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/30' : 'bg-slate-900 border-white/5'}`}>
+                                                <input type="checkbox" checked={tempDetails} onChange={(e) => setTempDetails(e.target.checked)} className="mt-1" />
                                                 <div>
                                                     <span className="block font-bold text-white text-xs">Portföy Tablosu</span>
                                                     <span className="text-[10px] text-slate-500">Varlık listesi.</span>
@@ -481,9 +521,12 @@ export default function ReportsPage() {
                                             </label>
                                         </div>
 
-                                        <button onClick={() => setSetupStep(2)} className="w-full mt-4 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
-                                            Devam Et <ArrowRight className="w-4 h-4" />
-                                        </button>
+                                        <div className="flex gap-2 mt-4">
+                                            <button onClick={() => setSetupStep(1)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl text-xs font-bold border border-white/10 transition-all">Geri</button>
+                                            <button onClick={() => setSetupStep(3)} className="flex-[2] bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                                                Devam Et <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -547,7 +590,7 @@ export default function ReportsPage() {
                                         </motion.div>
 
                                         <div className="flex gap-2 mt-6">
-                                            <button onClick={() => setSetupStep(1)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl text-xs font-bold border border-white/10 transition-all">Geri</button>
+                                            <button onClick={() => setSetupStep(2)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl text-xs font-bold border border-white/10 transition-all">Geri</button>
                                             <button onClick={handleSaveInstruction} disabled={isSaving} className="flex-[2] bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-lg">
                                                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                                 Kaydet & Bitir
