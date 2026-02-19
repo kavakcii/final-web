@@ -58,7 +58,7 @@ export async function GET() {
         const url = 'https://www.tefas.gov.tr/api/DB/BindComparisonFundReturns';
 
         // Date logic: Ensure we don't send future dates (2026)
-        let targetDate = new Date();
+        const targetDate = new Date();
         if (targetDate.getFullYear() > 2025) {
              // Fallback for wrong system date
              targetDate.setFullYear(2025);

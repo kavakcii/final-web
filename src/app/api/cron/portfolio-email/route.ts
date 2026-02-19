@@ -307,7 +307,7 @@ export async function POST(req: Request) {
         const currentDate = trTime.getDate();
         const currentMonth = trTime.getMonth();
 
-        let targetUsers: {
+        const targetUsers: {
             id: string;
             email: string;
             name: string;

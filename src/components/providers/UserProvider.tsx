@@ -2,10 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 import { PortfolioService, Asset } from '@/lib/portfolio-service';
 import { Wallet, Activity, BarChart2 } from 'lucide-react';
 
 interface UserContextType {
+    user: User | null;
     avatarUrl: string | null;
     setAvatarUrl: (url: string | null) => void;
     userName: string | null;
@@ -26,6 +28,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<User | null>(null);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
     const [email, setEmail] = useState<string | null>(null);
@@ -136,6 +139,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
                 if (session) {
                     setIsAuthenticated(true);
+                    setUser(session.user);
                     const user = session.user;
                     const metadata = user.user_metadata;
                     setUserMetadata(metadata);
@@ -173,6 +177,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 setIsAuthenticated(true);
+                setUser(session.user);
                 const user = session.user;
                 const metadata = user.user_metadata;
                 setUserMetadata(metadata);
@@ -198,6 +203,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 refreshDashboardData();
             } else {
                 setIsAuthenticated(false);
+                setUser(null);
                 setUserName(null);
                 setEmail(null);
                 setUserMetadata(null);
@@ -252,6 +258,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <UserContext.Provider value={{
+            user,
             avatarUrl,
             setAvatarUrl: updateAvatar,
             userName,
@@ -276,6 +283,7 @@ export function useUser() {
     // If we're on the server, return a mock context to avoid SSR errors
     if (typeof window === 'undefined') {
         return {
+            user: null,
             avatarUrl: null,
             setAvatarUrl: () => { },
             userName: null,
@@ -297,6 +305,7 @@ export function useUser() {
     if (context === undefined) {
         // Returning a default state for server-side rendering or outside provider
         return {
+            user: null,
             avatarUrl: null,
             setAvatarUrl: () => { },
             userName: null,

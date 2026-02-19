@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { DashboardAnalysisCards } from "@/components/DashboardAnalysisCards";
 import { PortfolioService } from "@/lib/portfolio-service";
 import { DisplayCard } from "@/components/ui/display-cards";
+import { PremiumAssetCard } from "@/components/ui/premium-asset-card";
 import { FinAiLogo } from "@/components/FinAiLogo";
 
 // Supported Assets for Filtering
@@ -39,15 +40,15 @@ export default function AnalysisPage() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isValidSelection, setIsValidSelection] = useState(false);
     const [portfolioAssets, setPortfolioAssets] = useState<any[]>([]);
+    const [abortController, setAbortController] = useState<AbortController | null>(null);
+
     const FIN_LESSONS = [
-        { title: "Faiz", lines: ["Faiz: Paranın zaman içindeki karşılığıdır; borç ve yatırımın fiyatını belirler.", "Politika faizi kredi maliyetini ve toplam talebi yönlendirir.", "Artan faiz tüketimi ve yatırımı soğutur; düşen faiz canlandırır."] },
-        { title: "Enflasyon", lines: ["Enflasyon: Fiyatların genel düzeyindeki kalıcı artıştır; alım gücünü eritir.", "Reel getiri, nominal getiriden enflasyonun düşülmesiyle hesaplanır.", "Enflasyon yükseldiğinde nakit ve sabit getiriler reel olarak zayıflar."] },
-        { title: "Çeşitlendirme", lines: ["Çeşitlendirme: Riski farklı varlıklara yayarak portföyü dengeler.", "Düşük korelasyonlu varlıklar birlikte hareket etmez.", "Böylece ani düşüşlerde kayıplar sınırlanır."] },
-        { title: "Bileşik Getiri", lines: ["Bileşik getiri: Getirinin yeniden yatırıma dönüp büyümeyi hızlandırmasıdır.", "Erken başlamak ve düzenli katkı etkisini katlar.", "Zaman, getirinin en büyük müttefikidir."] },
-        { title: "Likidite", lines: ["Likidite: Varlığın değerini koruyarak hızla nakde dönebilmesidir.", "Yüksek likidite acil ihtiyaçlarda esneklik sağlar.", "Düşük likidite spreadi ve fiyat etkisini artırır."] },
-        { title: "Risk Yönetimi", lines: ["Risk yönetimi: Zarar kes ve hedef belirle; pozisyon boyutunu kontrol et.", "Volatiliteye ve kaldıraç seviyesine göre maruziyeti ayarla.", "Disiplin, uzun vadeli performansın temelidir."] },
-        { title: "Vade Uyumu", lines: ["Vade uyumu: Yatırım süresi hedef ve nakit ihtiyacıyla uyumlu olmalıdır.", "Kısa vadede oynaklık yüksektir; duygular kararları bozabilir.", "Uzun vadede trend ve nakit akışları belirleyici olur."] },
-        { title: "Maliyet", lines: ["Maliyet: Ücret, komisyon ve vergi net getiriyi azaltır.", "Düşük gider oranlı ürünler toplam getiriyi artırır.", "Gereksiz işlem sıklığını sınırlamak maliyeti düşürür."] }
+        { title: "Portföy Çeşitlendirmesi", lines: ["Yatırım dünyasının temel prensibi olan çeşitlendirme, riskin farklı varlık sınıflarına (hisse senedi, tahvil, emtia vb.) dağıtılmasını ifade eder. Tek bir varlığa odaklanmak yerine dengeli bir sepet oluşturmak, piyasa dalgalanmalarına karşı portföyünüzün dayanıklılığını artırır ve uzun vadeli, sürdürülebilir getiri potansiyelini optimize eder."] },
+        { title: "Piyasa Zamanlaması ve Trend Analizi", lines: ["Piyasa düşüşleri her zaman bir alım fırsatı olarak değerlendirilmemelidir; düşüş trendinin sonlandığına dair teknik ve temel göstergelerin teyidi beklenmelidir. 'Bıçak düşerken tutulmaz' prensibi gereği, fiyatların dengelenmesini beklemek ve ana trend yönünde işlem yapmak, sermaye koruma stratejisinin en kritik bileşenidir."] },
+        { title: "Yatırımcı Psikolojisi ve Disiplin", lines: ["Yatırım kararlarında duygusal faktörlerin (FOMO, panik vb.) rolünü minimize etmek, başarılı bir stratejinin temelidir. Piyasa coşkusunun zirve yaptığı anlarda temkinli olmak, karamsarlığın hakim olduğu dönemlerde ise rasyonel fırsatları değerlendirmek gerekir. Veriye dayalı karar alma mekanizması, sürdürülebilir başarının anahtarıdır."] },
+        { title: "Likidite Yönetimi", lines: ["Portföy yönetiminde nakit pozisyonunu korumak, olası kriz dönemlerinde stratejik manevra kabiliyeti sağlar. Piyasa belirsizliklerinin arttığı dönemlerde likit kalmak, hem varlık değerlerinizi korumanıza hem de piyasa diplerinde oluşabilecek cazip fırsatları değerlendirmenize olanak tanır."] },
+        { title: "Uzun Vadeli Yatırım Perspektifi", lines: ["Finansal piyasalarda servet inşası, kısa vadeli spekülatif işlemlerden ziyade, uzun vadeli ve disiplinli bir strateji gerektirir. Bileşik getirinin gücünden faydalanmak için sabırlı olmak ve piyasadaki günlük gürültüden uzaklaşarak temel hedeflere odaklanmak, yatırımcının en büyük avantajıdır."] },
+        { title: "Risk Yönetimi ve Stop-Loss", lines: ["Sermaye piyasalarında hayatta kalmanın birinci kuralı sermayeyi korumaktır. Stop-loss (zarar kes) mekanizmalarını aktif kullanmak, öngörülemeyen piyasa hareketlerinde kayıpları sınırlı tutar. Zararı erken realize etmek, daha büyük finansal yıkımların önüne geçer ve oyunda kalmanızı sağlar."] }
     ];
     const [lessonIndex, setLessonIndex] = useState(0);
     const [prepIndex, setPrepIndex] = useState(1);
@@ -126,6 +127,9 @@ export default function AnalysisPage() {
         if (!termToUse.trim()) return;
 
         setIsAnalyzing(true);
+        const controller = new AbortController(); // Create new ABortController
+        setAbortController(controller);
+
         const shuffled = [...FIN_LESSONS.map((_, i) => i)].sort(() => Math.random() - 0.5);
         setLessonOrder(shuffled);
         setLessonIndex(0);
@@ -163,7 +167,8 @@ export default function AnalysisPage() {
                 body: JSON.stringify({
                     assetName: termToUse,
                     assetContext: assetContext
-                })
+                }),
+                signal: controller.signal // Connect the signal
             });
             const data = await res.json();
 
@@ -172,11 +177,16 @@ export default function AnalysisPage() {
             } else {
                 setError(data.error || "Analiz yapılamadı. Lütfen tekrar deneyin.");
             }
-        } catch (error) {
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                console.log('Analysis cancelled by user');
+                return; // Do nothing if cancelled
+            }
             console.error("Analysis failed", error);
             setError("Bir bağlantı hatası oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
         } finally {
             setIsAnalyzing(false);
+            setAbortController(null);
         }
     };
 
@@ -219,35 +229,100 @@ export default function AnalysisPage() {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center"
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[100] bg-[#020617]/90 backdrop-blur-md grid place-items-center"
                 >
-                    <div className="relative w-[min(640px,90vw)] rounded-2xl border border-white/10 bg-slate-900/80 p-8 text-white">
-                        <div className="flex flex-col items-center gap-6">
-                            <FinAiLogo size="lg" className="ring-4 ring-blue-500/20 rounded-2xl p-1" />
-                            <div className="flex items-center gap-2 text-slate-300">
-                                <Info className="w-5 h-5 text-amber-300" />
-                                <span className="font-semibold">Finansal Okuryazarlık</span>
+                    <div className="relative w-[min(600px,90vw)] overflow-hidden rounded-3xl border border-blue-500/20 bg-slate-900/50 p-1 shadow-2xl">
+                        {/* Background Gradients */}
+                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10 pointer-events-none" />
+
+                        {/* Cancel Button */}
+                        <button
+                            onClick={() => {
+                                if (abortController) abortController.abort();
+                                setIsAnalyzing(false);
+                            }}
+                            className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-all border border-white/5 hover:border-red-500/30 group"
+                            title="Analizi İptal Et"
+                        >
+                            <span className="sr-only">İptal Et</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 group-hover:scale-110 transition-transform"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                        </button>
+
+                        <div className="relative z-10 flex flex-col items-center gap-8 p-10 bg-slate-950/80 rounded-[22px]">
+                            {/* Logo & Spinner */}
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-blue-500/30 blur-2xl rounded-full" />
+                                <div className="relative z-10 p-4 bg-slate-900 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
+                                    <FinAiLogo size="lg" />
+                                </div>
+                                {/* Spinning Ring */}
+                                <div className="absolute -inset-4 border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_8s_linear_infinite]" />
+                                <div className="absolute -inset-4 border-2 border-blue-500/10 rounded-full animate-[ping_3s_ease-in-out_infinite]" />
                             </div>
-                            <div className="relative min-h-[120px] w-full">
-                                <AnimatePresence mode="wait">
-                                    <motion.p
-                                        key={lessonIndex}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        className="text-base leading-tight text-slate-200 text-center"
-                                    >
-                                        <span className="whitespace-pre-line">
-                                            {`${FIN_LESSONS[lessonOrder[lessonIndex]].lines[0]}\n${FIN_LESSONS[lessonOrder[lessonIndex]].lines[1]}\n${FIN_LESSONS[lessonOrder[lessonIndex]].lines[2]}`}
+
+                            {/* Status Text & Pro Tip */}
+                            <div className="w-full max-w-lg text-center space-y-8">
+                                <div className="space-y-3">
+                                    <h3 className="text-2xl font-bold text-white flex items-center justify-center gap-3 tracking-tight">
+                                        <Loader2 className="w-6 h-6 animate-spin text-blue-400" />
+                                        <span className="bg-gradient-to-r from-white via-blue-100 to-slate-200 bg-clip-text text-transparent drop-shadow-sm">
+                                            Analiz Ediliyor...
                                         </span>
-                                    </motion.p>
-                                </AnimatePresence>
-                                <p aria-hidden className="opacity-0 absolute">{FIN_LESSONS[lessonOrder[prepIndex]].title} {FIN_LESSONS[lessonOrder[prepIndex]].lines.join(" ")}</p>
+                                    </h3>
+                                    <p className="text-sm font-medium text-slate-400/80 tracking-wide">
+                                        Piyasa verileri taranıyor, geçmiş senaryolar inceleniyor.
+                                    </p>
+                                </div>
+
+                                {/* Pro Tip Card */}
+                                <div className="relative w-full bg-[#0B1120]/80 backdrop-blur-xl rounded-2xl p-8 border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden group hover:border-blue-500/20 transition-colors duration-500">
+                                    {/* Subtle animated background gradient */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] via-transparent to-purple-500/[0.02] group-hover:from-blue-500/[0.05] transition-all duration-1000" />
+
+                                    {/* Decorative top line */}
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
+
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={lessonIndex}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="relative z-10 flex flex-col items-center"
+                                        >
+                                            <div className="mb-6">
+                                                <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-300 text-[11px] font-bold uppercase tracking-[0.15em] border border-blue-500/20 shadow-[0_0_15px_-3px_rgba(59,130,246,0.2)]">
+                                                    Finansal Okuryazarlık Notu #{lessonIndex + 1}
+                                                </span>
+                                            </div>
+
+                                            <h4 className="text-xl font-bold text-white mb-4 tracking-tight">
+                                                {FIN_LESSONS[lessonOrder[lessonIndex]].title}
+                                            </h4>
+
+                                            <div className="text-center w-full px-4">
+                                                <p className="text-[14px] leading-7 text-slate-300 font-normal">
+                                                    {FIN_LESSONS[lessonOrder[lessonIndex]].lines.join(" ")}
+                                                </p>
+                                            </div>
+                                        </motion.div>
+                                    </AnimatePresence>
+
+                                    {/* Progress Bar at bottom */}
+                                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-slate-800/50">
+                                        <motion.div
+                                            initial={{ width: "0%" }}
+                                            animate={{ width: "100%" }}
+                                            transition={{ duration: 15, ease: "linear", repeat: Infinity }}
+                                            className="h-full bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest animate-pulse">
+                                    FinAI Sizin için çalışıyor...
+                                </p>
                             </div>
-                            <div className="text-xs text-slate-500">15 sn sonra yeni bilgi</div>
-                        </div>
-                        <div className="absolute bottom-3 right-4 text-xs text-slate-400">
-                            Analiziniz yapılıyor, lütfen bekleyin.
                         </div>
                     </div>
                 </motion.div>
@@ -387,18 +462,13 @@ export default function AnalysisPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
                             {portfolioAssets.slice(0, 4).map((asset) => (
-                                <DisplayCard
+                                <PremiumAssetCard
                                     key={asset.id}
+                                    symbol={asset.symbol}
                                     onClick={() => {
                                         setSearchTerm(asset.symbol);
                                         handleAnalyze(asset.symbol);
                                     }}
-                                    className="h-24 w-full cursor-pointer hover:border-blue-500/50 bg-slate-900/50 hover:bg-slate-800/80 transition-all group overflow-hidden"
-                                    title={asset.symbol}
-                                    description="AI ile Analiz Et"
-                                    date="Portföy Varlığı"
-                                    icon={<Brain className="size-4 text-blue-300" />}
-                                    titleClassName="text-lg font-bold text-white group-hover:text-blue-400"
                                 />
                             ))}
                         </div>
@@ -528,135 +598,142 @@ export default function AnalysisPage() {
                 </div>
             )}
 
-            {/* Top Holdings Section (Detailed Card) */}
-            {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-xl shadow-lg border border-slate-200 mb-8 overflow-hidden"
-                >
-                    <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                                <Coins className="w-5 h-5" />
-                            </div>
-                            <h3 className="font-bold text-slate-800 text-lg">Fon Varlık Dağılımı</h3>
-                        </div>
-                        <span className="text-xs font-medium text-slate-500 bg-slate-200 px-3 py-1 rounded-full">
-                            En Büyük {aiAnalysisData.topHoldings.length} Varlık
-                        </span>
-                    </div>
-
-                    <div className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {aiAnalysisData.topHoldings.map((holding: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
-                                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors text-sm">
-                                        {idx + 1}
+            {/* Split Layout: Top Holdings (Left) & AI Summary (Right) */}
+            {(aiAnalysisData?.topHoldings?.length > 0 || aiAnalysisData?.summary) && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    {/* Top Holdings Section (Detailed Card) - Left */}
+                    {aiAnalysisData?.topHoldings && aiAnalysisData.topHoldings.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden h-full flex flex-col"
+                        >
+                            <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                                        <Coins className="w-5 h-5" />
                                     </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="font-bold text-slate-800">{holding.symbol}</span>
-                                            <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                                                {holding.percent}
-                                            </span>
-                                        </div>
-                                        <div className="text-xs text-slate-500 truncate" title={holding.name}>
-                                            {holding.name}
-                                        </div>
-                                        {/* Simple Progress Bar Visual */}
-                                        <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-blue-500 rounded-full opacity-80"
-                                                style={{ width: holding.percent.replace('%', '').replace(',', '.') + '%' }}
-                                            />
-                                        </div>
-                                    </div>
+                                    <h3 className="font-bold text-slate-800 text-lg">Fon Varlık Dağılımı</h3>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </motion.div>
-            )}
+                                <span className="text-xs font-medium text-slate-500 bg-slate-200 px-3 py-1 rounded-full">
+                                    En Büyük {aiAnalysisData.topHoldings.length} Varlık
+                                </span>
+                            </div>
 
-            {/* AI Summary Section - Original Location */}
-            {aiAnalysisData?.summary && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg border border-blue-500/50 mb-8 p-6 text-white relative overflow-hidden"
-                >
-                    <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
-                    <div className="flex items-start gap-4 relative z-10">
-                        <div className="p-3 bg-white/10 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
-                            <Brain className="w-8 h-8 text-blue-200" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold mb-3 text-blue-100 flex items-center gap-2">
-                                Piyasa Özeti ve Beklentiler
-                                <span className="px-2 py-0.5 rounded-full bg-blue-500/30 text-xs text-blue-200 border border-blue-400/30">Canlı Analiz</span>
-                            </h3>
-                            <p className="text-white text-lg font-medium leading-relaxed">
-                                {aiAnalysisData.summary}
-                            </p>
-                        </div>
-                    </div>
-                </motion.div>
+                            <div className="p-6 flex-1 overflow-y-auto max-h-[500px] scrollbar-thin scrollbar-thumb-slate-200">
+                                <div className="grid grid-cols-1 gap-4">
+                                    {aiAnalysisData.topHoldings.map((holding: any, idx: number) => (
+                                        <div key={idx} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/50 transition-all group">
+                                            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 group-hover:bg-blue-500 group-hover:text-white transition-colors text-sm">
+                                                {idx + 1}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span className="font-bold text-slate-800">{holding.symbol}</span>
+                                                    <span className="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                                                        {holding.percent}
+                                                    </span>
+                                                </div>
+                                                <div className="text-xs text-slate-500 truncate" title={holding.name}>
+                                                    {holding.name}
+                                                </div>
+                                                {/* Simple Progress Bar Visual */}
+                                                <div className="mt-2 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-blue-500 rounded-full opacity-80"
+                                                        style={{ width: holding.percent.replace('%', '').replace(',', '.') + '%' }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* AI Summary Section - Right */}
+                    {aiAnalysisData?.summary && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg border border-blue-500/50 p-6 text-white relative overflow-hidden h-full flex flex-col justify-center"
+                        >
+                            <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+                            <div className="flex items-start gap-4 relative z-10">
+                                <div className="p-3 bg-white/10 rounded-xl shrink-0 backdrop-blur-sm border border-white/10">
+                                    <Brain className="w-8 h-8 text-blue-200" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold mb-3 text-blue-100 flex items-center gap-2">
+                                        Piyasa Özeti ve Beklentiler
+                                        <span className="px-2 py-0.5 rounded-full bg-blue-500/30 text-xs text-blue-200 border border-blue-400/30">Canlı Analiz</span>
+                                    </h3>
+                                    <p className="text-white text-lg font-medium leading-relaxed">
+                                        {aiAnalysisData.summary}
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
             )}
 
             {/* Historical Event Analysis Table */}
-            {aiAnalysisData?.historicalEvent && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm"
-                >
-                    <div className="bg-gradient-to-r from-amber-900/40 to-slate-900/40 px-6 py-4 border-b border-amber-500/20 flex items-center gap-3">
-                        <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
-                            <HistoryIcon className="w-5 h-5" />
+            {
+                aiAnalysisData?.historicalEvent && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mb-8 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm"
+                    >
+                        <div className="bg-gradient-to-r from-amber-900/40 to-slate-900/40 px-6 py-4 border-b border-amber-500/20 flex items-center gap-3">
+                            <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                                <HistoryIcon className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-amber-100">Geçmiş Analiz (Örnek Vaka)</h3>
+                                <p className="text-xs text-amber-200/60">Yakın geçmişte yaşanan benzer bir olayın analizi</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-amber-100">Geçmiş Analiz (Örnek Vaka)</h3>
-                            <p className="text-xs text-amber-200/60">Yakın geçmişte yaşanan benzer bir olayın analizi</p>
-                        </div>
-                    </div>
 
-                    <div className="p-6">
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="border-b border-slate-700/50 text-xs uppercase tracking-wider text-slate-400">
-                                        <th className="pb-3 pl-2 font-medium">Olay</th>
-                                        <th className="pb-3 px-4 font-medium">Etki (Neden)</th>
-                                        <th className="pb-3 pr-2 font-medium">Sonuç</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm">
-                                    <tr className="group">
-                                        <td className="py-4 pl-2 pr-4 align-top text-white font-medium min-w-[140px]">
-                                            {aiAnalysisData.historicalEvent.title}
-                                            <div className="text-xs text-slate-500 mt-1 font-normal">{aiAnalysisData.historicalEvent.date}</div>
-                                        </td>
-                                        <td className="py-4 px-4 align-top text-slate-300 border-l border-slate-800/50">
-                                            {aiAnalysisData.historicalEvent.impact}
-                                            {aiAnalysisData.historicalEvent.affectedAssets && (
-                                                <div className="flex gap-1 flex-wrap mt-2">
-                                                    {aiAnalysisData.historicalEvent.affectedAssets.map((asset: string, idx: number) => (
-                                                        <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{asset}</span>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="py-4 pl-4 pr-2 align-top text-emerald-400 font-medium border-l border-slate-800/50 min-w-[140px]">
-                                            {aiAnalysisData.historicalEvent.result}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div className="p-6">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-slate-700/50 text-xs uppercase tracking-wider text-slate-400">
+                                            <th className="pb-3 pl-2 font-medium">Olay</th>
+                                            <th className="pb-3 px-4 font-medium">Etki (Neden)</th>
+                                            <th className="pb-3 pr-2 font-medium">Sonuç</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm">
+                                        <tr className="group">
+                                            <td className="py-4 pl-2 pr-4 align-top text-white font-medium min-w-[140px]">
+                                                {aiAnalysisData.historicalEvent.title}
+                                                <div className="text-xs text-slate-500 mt-1 font-normal">{aiAnalysisData.historicalEvent.date}</div>
+                                            </td>
+                                            <td className="py-4 px-4 align-top text-slate-300 border-l border-slate-800/50">
+                                                {aiAnalysisData.historicalEvent.impact}
+                                                {aiAnalysisData.historicalEvent.affectedAssets && (
+                                                    <div className="flex gap-1 flex-wrap mt-2">
+                                                        {aiAnalysisData.historicalEvent.affectedAssets.map((asset: string, idx: number) => (
+                                                            <span key={idx} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{asset}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="py-4 pl-4 pr-2 align-top text-emerald-400 font-medium border-l border-slate-800/50 min-w-[140px]">
+                                                {aiAnalysisData.historicalEvent.result}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                </motion.div>
-            )}
+                    </motion.div>
+                )
+            }
 
             {/* Upcoming/AI Scenarios Section */}
             {

@@ -13,7 +13,7 @@ export default function MarketPage() {
     const [currentQuestion, setCurrentQuestion] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [showResults, setShowResults] = useState(false);
-    
+
     // Random Funds Analysis State
     const [randomFunds, setRandomFunds] = useState<Asset[]>([]);
     const [analysisModal, setAnalysisModal] = useState<{ isOpen: boolean; loading: boolean; content: string; title: string }>({
@@ -60,19 +60,19 @@ export default function MarketPage() {
 
     const handleAnalyzeFunds = async () => {
         if (randomFunds.length === 0) return;
-        
+
         setAnalysisModal({ isOpen: true, loading: true, content: "", title: "Fon Portföy Analizi" });
-        
+
         try {
             // Create a summary prompt for all 4 funds
             const symbols = randomFunds.map(f => f.symbol).join(", ");
             const prompt = `Aşağıdaki fonlar için kısa ve öz bir toplu analiz yap: ${symbols}. Her biri için 1-2 cümlelik yorum ve genel portföy uyumu hakkında tavsiye ver.`;
-            
+
             // We use the existing API but pass a combined symbol string or handle it custom.
             // Since the API expects { symbol, type }, let's try to send one request per fund and combine results, 
             // OR reuse the API if it handles generic prompts (it probably doesn't).
             // Let's call the API for each fund sequentially to ensure quality.
-            
+
             const results = await Promise.all(randomFunds.map(async (fund) => {
                 try {
                     const res = await fetch("/api/analyze", {
@@ -89,7 +89,7 @@ export default function MarketPage() {
 
             // Combine results into one string
             const combinedAnalysis = results.map(r => `### ${r.symbol}\n${r.analysis}`).join("\n\n");
-            
+
             setAnalysisModal(prev => ({ ...prev, loading: false, content: combinedAnalysis }));
         } catch (error) {
             console.error("Analysis Error:", error);
@@ -102,20 +102,20 @@ export default function MarketPage() {
             id: 1,
             question: "Bu yatırıma ne kadar süre dokunmamayı planlıyorsunuz?",
             options: [
-                { 
-                    label: "Kısa Vade (1 Yıldan Az)", 
-                    desc: "Yakın zamanda nakit ihtiyacım olabilir, likidite benim için önemli.", 
-                    score: 1 
+                {
+                    label: "Kısa Vade (1 Yıldan Az)",
+                    desc: "Yakın zamanda nakit ihtiyacım olabilir, likidite benim için önemli.",
+                    score: 1
                 },
-                { 
-                    label: "Orta Vade (1-3 Yıl)", 
-                    desc: "Birkaç yıl bekleyebilirim ancak çok uzun vadeli kilitlemek istemem.", 
-                    score: 2 
+                {
+                    label: "Orta Vade (1-3 Yıl)",
+                    desc: "Birkaç yıl bekleyebilirim ancak çok uzun vadeli kilitlemek istemem.",
+                    score: 2
                 },
-                { 
-                    label: "Uzun Vade (3+ Yıl)", 
-                    desc: "Bu birikimi emeklilik veya gelecek planları için yapıyorum, acelem yok.", 
-                    score: 3 
+                {
+                    label: "Uzun Vade (3+ Yıl)",
+                    desc: "Bu birikimi emeklilik veya gelecek planları için yapıyorum, acelem yok.",
+                    score: 3
                 }
             ]
         },
@@ -123,20 +123,20 @@ export default function MarketPage() {
             id: 2,
             question: "Portföyünüz %20 değer kaybetse tepkiniz ne olur?",
             options: [
-                { 
-                    label: "Satış Yaparım", 
-                    desc: "Daha fazla zarar etmemek için kalan paramı korumaya alırım.", 
-                    score: 1 
+                {
+                    label: "Satış Yaparım",
+                    desc: "Daha fazla zarar etmemek için kalan paramı korumaya alırım.",
+                    score: 1
                 },
-                { 
-                    label: "Beklerim", 
-                    desc: "Piyasanın toparlanmasını beklerim, panik yapmam.", 
-                    score: 2 
+                {
+                    label: "Beklerim",
+                    desc: "Piyasanın toparlanmasını beklerim, panik yapmam.",
+                    score: 2
                 },
-                { 
-                    label: "Ekleme Yaparım", 
-                    desc: "Düşüşü fırsat bilip maliyet düşürmek için daha fazla alım yaparım.", 
-                    score: 3 
+                {
+                    label: "Ekleme Yaparım",
+                    desc: "Düşüşü fırsat bilip maliyet düşürmek için daha fazla alım yaparım.",
+                    score: 3
                 }
             ]
         },
@@ -144,20 +144,20 @@ export default function MarketPage() {
             id: 3,
             question: "Finansal piyasalarla ne kadar ilgilisiniz?",
             options: [
-                { 
-                    label: "Başlangıç", 
-                    desc: "Sadece temel kavramları biliyorum (Döviz, Altın vb.).", 
-                    score: 1 
+                {
+                    label: "Başlangıç",
+                    desc: "Sadece temel kavramları biliyorum (Döviz, Altın vb.).",
+                    score: 1
                 },
-                { 
-                    label: "Orta Seviye", 
-                    desc: "Yatırım fonları ve hisse senetleri hakkında fikrim var.", 
-                    score: 2 
+                {
+                    label: "Orta Seviye",
+                    desc: "Yatırım fonları ve hisse senetleri hakkında fikrim var.",
+                    score: 2
                 },
-                { 
-                    label: "İleri Seviye", 
-                    desc: "Aktif olarak piyasayı takip ediyor ve analiz yapabiliyorum.", 
-                    score: 3 
+                {
+                    label: "İleri Seviye",
+                    desc: "Aktif olarak piyasayı takip ediyor ve analiz yapabiliyorum.",
+                    score: 3
                 }
             ]
         },
@@ -165,20 +165,20 @@ export default function MarketPage() {
             id: 4,
             question: "Sizin için hangisi daha önemli?",
             options: [
-                { 
-                    label: "Kaybetmemek", 
-                    desc: "Ana paramı korumak, yüksek getiri elde etmekten daha önemli.", 
-                    score: 1 
+                {
+                    label: "Kaybetmemek",
+                    desc: "Ana paramı korumak, yüksek getiri elde etmekten daha önemli.",
+                    score: 1
                 },
-                { 
-                    label: "Denge", 
-                    desc: "Makul bir risk alarak enflasyonun üzerinde getiri hedefliyorum.", 
-                    score: 2 
+                {
+                    label: "Denge",
+                    desc: "Makul bir risk alarak enflasyonun üzerinde getiri hedefliyorum.",
+                    score: 2
                 },
-                { 
-                    label: "Çok Kazanmak", 
-                    desc: "Yüksek getiri için yüksek dalgalanmaları göze alabilirim.", 
-                    score: 3 
+                {
+                    label: "Çok Kazanmak",
+                    desc: "Yüksek getiri için yüksek dalgalanmaları göze alabilirim.",
+                    score: 3
                 }
             ]
         },
@@ -186,20 +186,20 @@ export default function MarketPage() {
             id: 5,
             question: "Yatırımınızdan düzenli nakit akışı bekliyor musunuz?",
             options: [
-                { 
-                    label: "Evet", 
-                    desc: "Aylık veya dönemsel olarak belirli bir gelir elde etmek istiyorum.", 
-                    score: 1 
+                {
+                    label: "Evet",
+                    desc: "Aylık veya dönemsel olarak belirli bir gelir elde etmek istiyorum.",
+                    score: 1
                 },
-                { 
-                    label: "Kısmen", 
-                    desc: "Olsa iyi olur ama şart değil.", 
-                    score: 2 
+                {
+                    label: "Kısmen",
+                    desc: "Olsa iyi olur ama şart değil.",
+                    score: 2
                 },
-                { 
-                    label: "Hayır", 
-                    desc: "Tüm getirinin tekrar yatırıma dönüşerek büyümesini istiyorum.", 
-                    score: 3 
+                {
+                    label: "Hayır",
+                    desc: "Tüm getirinin tekrar yatırıma dönüşerek büyümesini istiyorum.",
+                    score: 3
                 }
             ]
         },
@@ -207,20 +207,20 @@ export default function MarketPage() {
             id: 6,
             question: "Yatırımlarınızı ne sıklıkla yöneteceksiniz?",
             options: [
-                { 
-                    label: "Her Ay", 
-                    desc: "Düzenli olarak portföyümü gözden geçirip ekleme yapacağım.", 
-                    score: 0 
+                {
+                    label: "Her Ay",
+                    desc: "Düzenli olarak portföyümü gözden geçirip ekleme yapacağım.",
+                    score: 0
                 },
-                { 
-                    label: "Fırsat Buldukça", 
-                    desc: "Piyasada fırsat gördüğüm zamanlarda işlem yapacağım.", 
-                    score: 0 
+                {
+                    label: "Fırsat Buldukça",
+                    desc: "Piyasada fırsat gördüğüm zamanlarda işlem yapacağım.",
+                    score: 0
                 },
-                { 
-                    label: "Nadiren", 
-                    desc: "Bir kere kurup uzun süre dokunmak istemiyorum.", 
-                    score: 0 
+                {
+                    label: "Nadiren",
+                    desc: "Bir kere kurup uzun süre dokunmak istemiyorum.",
+                    score: 0
                 }
             ]
         },
@@ -228,20 +228,20 @@ export default function MarketPage() {
             id: 7,
             question: "Yatırım için ayırmayı düşündüğünüz yaklaşık tutar nedir?",
             options: [
-                { 
-                    label: "0 - 100.000 ₺", 
-                    desc: "Başlangıç seviyesinde bir birikimle giriş yapıyorum.", 
-                    score: 0 
+                {
+                    label: "0 - 100.000 ₺",
+                    desc: "Başlangıç seviyesinde bir birikimle giriş yapıyorum.",
+                    score: 0
                 },
-                { 
-                    label: "100.000 ₺ - 1.000.000 ₺", 
-                    desc: "Orta ölçekli bir portföy oluşturmak istiyorum.", 
-                    score: 0 
+                {
+                    label: "100.000 ₺ - 1.000.000 ₺",
+                    desc: "Orta ölçekli bir portföy oluşturmak istiyorum.",
+                    score: 0
                 },
-                { 
-                    label: "1.000.000 ₺ ve üzeri", 
-                    desc: "Ciddi bir sermaye yönetimi ve çeşitlendirme hedefliyorum.", 
-                    score: 0 
+                {
+                    label: "1.000.000 ₺ ve üzeri",
+                    desc: "Ciddi bir sermaye yönetimi ve çeşitlendirme hedefliyorum.",
+                    score: 0
                 }
             ]
         },
@@ -249,15 +249,15 @@ export default function MarketPage() {
             id: 8,
             question: "Faiz hassasiyetiniz (İslami Finans) var mı?",
             options: [
-                { 
-                    label: "Evet, Var", 
-                    desc: "Yatırımlarımın katılım bankacılığı prensiplerine uygun olması şart.", 
-                    score: 0 
+                {
+                    label: "Evet, Var",
+                    desc: "Yatırımlarımın katılım bankacılığı prensiplerine uygun olması şart.",
+                    score: 0
                 },
-                { 
-                    label: "Hayır, Yok", 
-                    desc: "Tüm yasal finansal enstrümanlara yatırım yapabilirim.", 
-                    score: 1 
+                {
+                    label: "Hayır, Yok",
+                    desc: "Tüm yasal finansal enstrümanlara yatırım yapabilirim.",
+                    score: 1
                 }
             ]
         }
@@ -268,7 +268,7 @@ export default function MarketPage() {
     const handleAnswer = (score: number | string) => {
         const newAnswers = { ...answers, [currentQuestion]: score.toString() };
         setAnswers(newAnswers);
-        
+
         if (currentQuestion < questions.length - 1) {
             setCurrentQuestion(curr => curr + 1);
             setInputValue(""); // Reset input for next question if any
@@ -285,7 +285,7 @@ export default function MarketPage() {
         // Assuming user enters raw number or formatted. Let's strip non-digits.
         const cleanValue = inputValue.replace(/[^0-9]/g, '');
         if (!cleanValue) return;
-        
+
         handleAnswer(cleanValue);
     };
 
@@ -293,7 +293,7 @@ export default function MarketPage() {
         let totalScore = 0;
         let isIslamic = false;
         let investmentAmount = 0;
-        
+
         const numQuestions = Object.keys(answers).length;
         // If 6 questions (old version), Islamic is index 5.
         // If 8 questions (new version), Islamic is index 7.
@@ -303,7 +303,7 @@ export default function MarketPage() {
 
         Object.entries(answers).forEach(([qIndex, val]) => {
             const idx = parseInt(qIndex);
-            
+
             if (idx === amountIndex) {
                 // This is the amount question, not a score
                 investmentAmount = parseInt(val) || 0;
@@ -331,7 +331,7 @@ export default function MarketPage() {
             }));
 
             if (!isIslamic) return processItems(items);
-            
+
             return processItems(items.map(item => {
                 if (item.name === "Tahvil / Bono") return { ...item, name: "Kira Sertifikaları (Sukuk)" };
                 if (item.name === "Hisse Senetleri") return { ...item, name: "Katılım Hisseleri" };
@@ -412,13 +412,13 @@ export default function MarketPage() {
     return (
         <div className="p-6 h-full flex flex-col items-center justify-start min-h-[600px] overflow-y-auto space-y-8">
             {/* Random Funds Analysis Section */}
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="w-full max-w-5xl bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/20 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden shrink-0"
             >
                 <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                
+
                 <div className="relative z-10 flex-1">
                     <div className="flex items-center gap-3 mb-2">
                         <div className="p-2 bg-purple-500/20 rounded-lg text-purple-400">
@@ -443,14 +443,13 @@ export default function MarketPage() {
                     )}
                 </div>
 
-                <button 
+                <button
                     onClick={handleAnalyzeFunds}
                     disabled={randomFunds.length === 0}
-                    className={`relative z-10 px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 whitespace-nowrap ${
-                        randomFunds.length > 0 
-                        ? "bg-white text-purple-900 hover:bg-purple-50 hover:scale-105 shadow-purple-900/20" 
+                    className={`relative z-10 px-8 py-4 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 whitespace-nowrap ${randomFunds.length > 0
+                        ? "bg-white text-purple-900 hover:bg-purple-50 hover:scale-105 shadow-purple-900/20"
                         : "bg-white/10 text-slate-400 cursor-not-allowed border border-white/5"
-                    }`}
+                        }`}
                 >
                     <Zap className={`w-5 h-5 ${randomFunds.length > 0 ? "fill-purple-900" : "text-slate-500"}`} />
                     {randomFunds.length > 0 ? "Şimdi Analiz Et" : "Fon Bulunamadı"}
@@ -459,7 +458,7 @@ export default function MarketPage() {
 
             <AnimatePresence mode="wait">
                 {!testStarted ? (
-                    <motion.div 
+                    <motion.div
                         key="intro"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -478,7 +477,7 @@ export default function MarketPage() {
                         <p className="text-slate-400 text-lg mb-10 leading-relaxed">
                             Sadece 1 dakikada risk profilinizi analiz edelim ve size en uygun <span className="text-blue-400 font-bold">bilimsel portföy dağılımını</span> sunalım.
                         </p>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 text-left">
                             <div className="bg-white/5 p-5 rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
                                 <h3 className="font-bold text-white">Hedef Odaklı</h3>
@@ -494,7 +493,7 @@ export default function MarketPage() {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => setTestStarted(true)}
                             className="group relative px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-xl transition-all hover:scale-105 flex items-center gap-3 mx-auto shadow-2xl shadow-blue-900/40 overflow-hidden"
                         >
@@ -504,7 +503,7 @@ export default function MarketPage() {
                         </button>
                     </motion.div>
                 ) : !showResults ? (
-                    <motion.div 
+                    <motion.div
                         key="question"
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -516,7 +515,7 @@ export default function MarketPage() {
                                 <span>Adım {currentQuestion + 1} / {questions.length}</span>
                             </div>
                             <div className="h-3 w-full bg-slate-800 rounded-full overflow-hidden border border-white/5">
-                                <motion.div 
+                                <motion.div
                                     className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
                                     initial={{ width: `${((currentQuestion) / questions.length) * 100}%` }}
                                     animate={{ width: `${((currentQuestion + 1) / questions.length) * 100}%` }}
@@ -552,7 +551,7 @@ export default function MarketPage() {
                                             ₺
                                         </div>
                                     </div>
-                                    
+
                                     <button
                                         onClick={handleInputConfirm}
                                         disabled={!inputValue}
@@ -564,29 +563,29 @@ export default function MarketPage() {
                                 </div>
                             ) : (
                                 questions[currentQuestion].options.map((opt, idx) => (
-                                <motion.button
-                                    key={idx}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    onClick={() => handleAnswer(opt.score)}
-                                    className="w-full text-left p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 transition-all group flex items-center gap-4 hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    <div className="flex-1">
-                                        <div className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">
-                                            {opt.label}
+                                    <motion.button
+                                        key={idx}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        onClick={() => handleAnswer(opt.score)}
+                                        className="w-full text-left p-6 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-500/50 transition-all group flex items-center gap-4 hover:scale-[1.02] active:scale-[0.98]"
+                                    >
+                                        <div className="flex-1">
+                                            <div className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">
+                                                {opt.label}
+                                            </div>
+                                            <div className="text-sm text-slate-400 mt-1 font-medium leading-snug">
+                                                {opt.desc}
+                                            </div>
                                         </div>
-                                        <div className="text-sm text-slate-400 mt-1 font-medium leading-snug">
-                                            {opt.desc}
-                                        </div>
-                                    </div>
-                                    <ChevronRight className="w-6 h-6 text-slate-500 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
-                                </motion.button>
-                            )))}
+                                        <ChevronRight className="w-6 h-6 text-slate-500 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                                    </motion.button>
+                                )))}
                         </div>
                     </motion.div>
                 ) : (
-                    <motion.div 
+                    <motion.div
                         key="results"
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -628,20 +627,19 @@ export default function MarketPage() {
                                                 dataKey="value"
                                                 stroke="none"
                                                 isAnimationActive={true}
-                                                activeIndex={-1}
                                                 labelLine={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }}
-                                                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }) => {
+                                                label={({ cx, cy, midAngle = 0, innerRadius, outerRadius, percent, index, name, value }) => {
                                                     const RADIAN = Math.PI / 180;
                                                     const radius = outerRadius + 20;
                                                     const x = cx + radius * Math.cos(-midAngle * RADIAN);
                                                     const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                                                    
+
                                                     return (
-                                                        <text 
-                                                            x={x} 
-                                                            y={y} 
-                                                            fill="#e2e8f0" 
-                                                            textAnchor={x > cx ? 'start' : 'end'} 
+                                                        <text
+                                                            x={x}
+                                                            y={y}
+                                                            fill="#e2e8f0"
+                                                            textAnchor={x > cx ? 'start' : 'end'}
                                                             dominantBaseline="central"
                                                             style={{ fontSize: '11px', fontWeight: 600 }}
                                                         >
@@ -651,18 +649,18 @@ export default function MarketPage() {
                                                 }}
                                             >
                                                 {recommendation?.allocation.map((entry, index) => (
-                                                    <Cell 
-                                                        key={`cell-${index}`} 
-                                                        fill={entry.color} 
-                                                        stroke="rgba(255,255,255,0.2)" 
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={entry.color}
+                                                        stroke="rgba(255,255,255,0.2)"
                                                         strokeWidth={1}
                                                     />
                                                 ))}
                                             </Pie>
-                                            <Tooltip 
+                                            <Tooltip
                                                 contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)' }}
                                                 itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                                formatter={(value: number) => [`%${value}`, 'Oran']}
+                                                formatter={(value: any) => [`%${value}`, 'Oran']}
                                             />
                                         </RechartsPie>
                                     </ResponsiveContainer>
@@ -673,11 +671,11 @@ export default function MarketPage() {
                                         Neden Bu Dağılım?
                                     </h4>
                                     <p className="text-sm text-slate-300 leading-relaxed mb-4">
-                                        {recommendation?.reasoning.split("**").map((part, i) => 
+                                        {recommendation?.reasoning.split("**").map((part, i) =>
                                             i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
                                         )}
                                     </p>
-                                    
+
                                     {recommendation?.advantages && (
                                         <div className="space-y-2">
                                             <h5 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avantajlar</h5>
@@ -713,7 +711,7 @@ export default function MarketPage() {
                             {/* Action Card */}
                             <div className="bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/30 rounded-3xl p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                                
+
                                 <div>
                                     <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
                                         <Target className="w-6 h-6 text-blue-400" />
@@ -743,8 +741,8 @@ export default function MarketPage() {
                                         </li>
                                     </ul>
                                 </div>
-                                
-                                <button 
+
+                                <button
                                     onClick={() => {
                                         localStorage.removeItem("portfolio_answers"); // Clear saved data
                                         setTestStarted(false);
