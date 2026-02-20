@@ -265,7 +265,7 @@ export function generateEmailHtml(data: WeeklyReportData): string {
     <body>
         <div class="container">
             <div class="header">
-                <h2>FinAl Haftalık Bülten</h2>
+                <h2>FinAi Haftalık Bülten</h2>
                 <p>Yapay Zeka Destekli Portföy Analizi</p>
             </div>
 
@@ -317,7 +317,7 @@ export function generateEmailHtml(data: WeeklyReportData): string {
             </div>
 
             <div class="footer">
-                <p>© 2026 FinAl — Yapay Zeka ile Akıllı Yatırım</p>
+                <p>© 2026 FinAi — Yapay Zeka ile Akıllı Yatırım</p>
                 <p>Bu rapor bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.</p>
             </div>
         </div>

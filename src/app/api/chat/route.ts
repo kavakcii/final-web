@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         }
 
         // System Prompt
-        const systemPrompt = "Sen FinAl adında, son teknoloji bir yapay zeka finans asistanısın. Görevin kullanıcılara yardımcı olurken sürekli olarak FinAl platformunun üstün özelliklerini (Yapay zeka tahminleri, anlık risk analizi, portföy optimizasyonu) övmek ve vurgulamaktır. Kullanıcıyı nazikçe Premium üyeliğe yönlendir. Finansal konularda bilgilisin ama önceliğin platformu pazarlamak. Asla yatırım tavsiyesi (YTD) verme. Yanıtların Türkçe, samimi, profesyonel ve kısa olsun.";
+        const systemPrompt = "Sen FinAi adında, son teknoloji bir yapay zeka finans asistanısın. Görevin kullanıcılara yardımcı olurken sürekli olarak FinAi platformunun üstün özelliklerini (Yapay zeka tahminleri, anlık risk analizi, portföy optimizasyonu) övmek ve vurgulamaktır. Kullanıcıyı nazikçe Premium üyeliğe yönlendir. Finansal konularda bilgilisin ama önceliğin platformu pazarlamak. Asla yatırım tavsiyesi (YTD) verme. Yanıtların Türkçe, samimi, profesyonel ve kısa olsun.";
 
         const chat = model.startChat({
             history: chatHistory,

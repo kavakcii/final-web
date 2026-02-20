@@ -60,7 +60,7 @@ function DashboardShell({
             <div className="min-h-screen bg-black relative flex items-center justify-center">
                 <AuthComponent
                     logo={<div className="bg-blue-500 text-white rounded-md p-1.5"><TrendingUp className="w-4 h-4" /></div>}
-                    brandName="FinAl Asistan"
+                    brandName="FinAi"
                     className="w-full"
                     isTransparent={true}
                 />
@@ -97,7 +97,7 @@ function DashboardShell({
                             <TrendingUp className="w-8 h-8 text-blue-500" />
                         </div>
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
-                            FinAl
+                            FinAi
                         </span>
                     </Link>
                 </div>
@@ -130,7 +130,7 @@ function DashboardShell({
             <main className="flex-1 bg-black relative overflow-hidden flex flex-col min-w-0">
                 {/* Header */}
                 <header className="h-16 border-b border-white/10 bg-black flex items-center justify-between px-6 sticky top-0 z-40 backdrop-blur-md bg-black/80 flex-shrink-0">
-                    <h1 className="text-lg font-semibold text-white">FinAl Asistan</h1>
+                    <h1 className="text-lg font-semibold text-white">FinAi</h1>
                     <div className="flex items-center space-x-4">
                         <div className="relative hidden sm:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />

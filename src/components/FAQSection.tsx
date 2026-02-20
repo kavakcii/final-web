@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 const faqs = [
     {
-        question: "FinAl nedir ve nasıl çalışır?",
-        answer: "FinAl, yapay zeka destekli bir finansal asistandır. Portföyünüzü analiz eder, piyasa verilerini tarar ve size kişiselleştirilmiş stratejiler sunar.",
+        question: "FinAi nedir ve nasıl çalışır?",
+        answer: "FinAi, yapay zeka destekli bir finansal asistandır. Portföyünüzü analiz eder, piyasa verilerini tarar ve size kişiselleştirilmiş stratejiler sunar.",
     },
     {
         question: "Veriler ne kadar güncel?",
@@ -16,7 +16,7 @@ const faqs = [
     },
     {
         question: "Mobilden kullanabilir miyim?",
-        answer: "Evet! FinAl tamamen responsive (mobil uyumlu) bir tasarıma sahiptir. Telefonunuzdan veya tabletinizden tüm özelliklere erişebilirsiniz.",
+        answer: "Evet! FinAi tamamen responsive (mobil uyumlu) bir tasarıma sahiptir. Telefonunuzdan veya tabletinizden tüm özelliklere erişebilirsiniz.",
     },
     {
         question: "İstediğim zaman iptal edebilir miyim?",

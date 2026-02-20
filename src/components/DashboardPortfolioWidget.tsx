@@ -39,7 +39,7 @@ export function DashboardPortfolioWidget() {
 
         Object.entries(answers).forEach(([qIndex, val]) => {
             const idx = parseInt(qIndex);
-            
+
             if (idx === amountIndex) {
                 // This is the amount question, not a score
                 investmentAmount = parseInt(val) || 0;
@@ -142,11 +142,11 @@ export function DashboardPortfolioWidget() {
         );
     }
 
-        if (recommendation) {
+    if (recommendation) {
         return (
             <div className="lg:col-span-2 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl p-6 relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
                 <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
-                
+
                 {/* Chart Side */}
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
                     <ResponsiveContainer width="100%" height="100%">
@@ -159,18 +159,16 @@ export function DashboardPortfolioWidget() {
                                 outerRadius={80}
                                 paddingAngle={5}
                                 dataKey="value"
-                                stroke="none"
                                 isAnimationActive={true}
-                                activeIndex={-1} // Disable click selection effect
                             >
                                 {recommendation.allocation.map((entry: any, index: number) => (
                                     <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
                                 ))}
                             </Pie>
-                            <Tooltip 
+                            <Tooltip
                                 contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
                                 itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                formatter={(value: number) => [`%${value}`, 'Oran']}
+                                formatter={(value: any) => [`%${value}`, 'Oran']}
                             />
                         </RechartsPie>
                     </ResponsiveContainer>
@@ -181,17 +179,17 @@ export function DashboardPortfolioWidget() {
                     </div>
                     {/* Legend */}
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
-                         {recommendation.allocation.map((item: any, idx: number) => (
-                             <div key={idx} className="flex items-center gap-1.5">
-                                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                                 <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">
-                                     {item.name} <span className="text-slate-500">%{item.value}</span>
-                                     {item.amountStr && (
-                                         <span className="text-slate-500 ml-1">({item.amountStr})</span>
-                                     )}
-                                 </span>
-                             </div>
-                         ))}
+                        {recommendation.allocation.map((item: any, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1.5">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
+                                <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">
+                                    {item.name} <span className="text-slate-500">%{item.value}</span>
+                                    {item.amountStr && (
+                                        <span className="text-slate-500 ml-1">({item.amountStr})</span>
+                                    )}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
@@ -206,15 +204,15 @@ export function DashboardPortfolioWidget() {
                             {recommendation.persona}
                         </div>
                     </div>
-                    
+
                     <h3 className="text-2xl font-bold text-white mb-2">{recommendation.title}</h3>
                     <p className="text-slate-400 text-sm mb-4 leading-relaxed">
                         {recommendation.desc}
                     </p>
-                    
+
                     <div className="p-3 bg-white/5 rounded-xl border border-white/5 mb-6 text-xs text-slate-300 leading-relaxed">
                         <strong className="text-white block mb-1">Neden bu dağılım?</strong>
-                        {recommendation.reasoning.split("**").map((part: string, i: number) => 
+                        {recommendation.reasoning.split("**").map((part: string, i: number) =>
                             i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
                         )}
 
@@ -234,7 +232,7 @@ export function DashboardPortfolioWidget() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                        <button 
+                        <button
                             onClick={() => {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
@@ -254,28 +252,28 @@ export function DashboardPortfolioWidget() {
     return (
         <div className="lg:col-span-2 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl p-8 relative overflow-hidden flex flex-col justify-center items-center text-center">
             <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
-            
+
             <div className="relative z-10 max-w-lg mx-auto">
                 <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-400 ring-4 ring-blue-500/10">
                     <Wallet className="w-8 h-8" />
                 </div>
-                
+
                 <h2 className="text-3xl font-bold text-white mb-4">
                     Size Özel Portföy Dağılımını Bulun
                 </h2>
-                
+
                 <p className="text-slate-400 text-lg mb-8 leading-relaxed">
                     Yatırım hedeflerinize ve risk profilinize en uygun dağılımı 1 dakikalık akıllı testimizle belirleyin.
                 </p>
 
-                <Link 
-                    href="/dashboard/market" 
+                <Link
+                    href="/dashboard/market"
                     className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg shadow-blue-900/30"
                 >
                     Teste Başla
                     <ArrowUpRight className="w-5 h-5" />
                 </Link>
-                
+
                 <div className="mt-8 flex items-center justify-center gap-6 text-xs text-slate-500 font-medium">
                     <span className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>

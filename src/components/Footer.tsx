@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { TrendingUp, Twitter, Linkedin, Instagram } from "lucide-react";
+import Image from "next/image";
+import { Twitter, Linkedin, Instagram } from "lucide-react";
 
 export default function Footer() {
     return (
@@ -8,8 +9,8 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2">
-                            <TrendingUp className="w-6 h-6 text-blue-500" />
-                            <span className="text-xl font-bold text-white">FinAl</span>
+                            <Image src="/logo.png" alt="FinAi" width={32} height={32} className="rounded" />
+                            <span className="text-xl font-bold text-white">FinAi</span>
                         </div>
                         <p className="text-sm text-slate-400">
                             Yapay zeka destekli yatırım asistanınız ile finansal geleceğinizi
@@ -52,7 +53,7 @@ export default function Footer() {
                 </div>
 
                 <div className="mt-8 pt-8 border-t border-blue-900/50 text-center text-sm text-slate-500">
-                    © {new Date().getFullYear()} FinAl. Tüm hakları saklıdır.
+                    © {new Date().getFullYear()} FinAi. Tüm hakları saklıdır.
                 </div>
             </div>
         </footer>

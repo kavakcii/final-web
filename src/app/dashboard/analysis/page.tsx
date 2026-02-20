@@ -320,7 +320,7 @@ export default function AnalysisPage() {
                                     </div>
                                 </div>
                                 <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-widest animate-pulse">
-                                    FinAI Sizin için çalışıyor...
+                                    FinAi Sizin için çalışıyor...
                                 </p>
                             </div>
                         </div>

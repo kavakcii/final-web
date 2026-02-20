@@ -9,9 +9,9 @@ const testimonialsData: Testimonial[] = [
         id: "1",
         initials: "AY",
         name: "Ayşe Yılmaz",
-        role: "Bireysel Yatırımcı",
-        quote: "FinAl sayesinde portföy yönetimim tamamen değişti. Yapay zeka analizleri piyasa hareketlerini önceden görmemi sağladı. Artık kararlarımı veriye dayalı alıyorum.",
-        tags: [{ text: "Öne Çıkan", type: "featured" }, { text: "Hisse Senedi", type: "default" }],
+        role: "",
+        quote: "FinAi sayesinde birikimlerimi nasıl değerlendireceğimi öğrendim. Özellikle fon analizleri ve yapay zeka önerileri çok başarılı.",
+        tags: [{ text: "Öne Çıkan", type: "featured" }, { text: "Yatırım Fonu", type: "default" }],
         stats: [{ icon: TrendingUp, text: "%45 Kar Artışı" }, { icon: Clock, text: "6 Aydır Üye" }],
         avatarGradient: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
     },
@@ -19,9 +19,9 @@ const testimonialsData: Testimonial[] = [
         id: "2",
         initials: "MD",
         name: "Mehmet Demir",
-        role: "Finans Müdürü",
-        quote: "ERP tarafındaki entegrasyonlar kadar hızlı bir veri akışı görmedim. FinAl gerçekten hızlı ve kararlı çalışıyor. Kurumsal raporlama özellikleri ekibimizin işini yarı yarıya azalttı.",
-        tags: [{ text: "Kurumsal", type: "default" }, { text: "Fintech", type: "default" }],
+        role: "",
+        quote: "Portföyümü tek bir yerden takip etmek büyük kolaylık. Altın ve döviz yatırımlarımın performansını grafiklerle görmek çok net.",
+        tags: [{ text: "Altın", type: "default" }, { text: "Döviz", type: "default" }],
         stats: [{ icon: Zap, text: "Anlık Veri" }, { icon: ShieldCheck, text: "Doğrulanmış" }],
         avatarGradient: "linear-gradient(135deg, #10b981, #059669)",
     },
@@ -29,9 +29,9 @@ const testimonialsData: Testimonial[] = [
         id: "3",
         initials: "ZK",
         name: "Zeynep Kaya",
-        role: "Girişimci",
-        quote: "Destek ekibi ve AI asistanı harika. 7/24 sorularıma yanıt bulabiliyorum, bu güven verici. Özellikle risk analiz modülü, startup yatırımlarımı korumamda büyük rol oynadı.",
-        tags: [{ text: "Startup", type: "default" }, { text: "Yapay Zeka", type: "featured" }],
+        role: "",
+        quote: "Yapay zeka asistanı finansal özgürlüğüm için harika ipuçları veriyor. Karmaşık terimler yerine anlaşılır özetler sunması çok iyi.",
+        tags: [{ text: "Bireysel", type: "default" }, { text: "Yapay Zeka", type: "featured" }],
         stats: [{ icon: Star, text: "5 Yıldız" }, { icon: Activity, text: "Aktif Kullanıcı" }],
         avatarGradient: "linear-gradient(135deg, #f59e0b, #d97706)",
     },
@@ -39,19 +39,19 @@ const testimonialsData: Testimonial[] = [
         id: "4",
         initials: "CÖ",
         name: "Caner Öztürk",
-        role: "Kripto Analisti",
-        quote: "Kripto piyasasındaki volatilitiye karşı FinAl'in risk kalkanı sayesinde zarardan döndüm. Mükemmel bir araç. Volatilite uyarıları hayat kurtarıyor.",
-        tags: [{ text: "Kripto", type: "default" }, { text: "Risk Yönetimi", type: "featured" }],
-        stats: [{ icon: ShieldCheck, text: "Güvenli" }, { icon: Globe, text: "Global Takip" }],
+        role: "",
+        quote: "TEFAS fonlarını analiz ederken kayboluyordum, şimdi en iyi fonları saniyeler içinde bulup portföyüme ekleyebiliyorum.",
+        tags: [{ text: "TEFAS", type: "default" }, { text: "Analiz", type: "featured" }],
+        stats: [{ icon: ShieldCheck, text: "Güvenli" }, { icon: Globe, text: "Kapsamlı" }],
         avatarGradient: "linear-gradient(135deg, #ec4899, #d946ef)",
     },
     {
         id: "5",
         initials: "EY",
         name: "Emre Yıldız",
-        role: "Yazılım Mühendisi",
-        quote: "Geleneksel borsa takibi bitti, yaşasın Yapay Zeka destekli FinAl! Arayüz çok akıcı ve modern. API desteği sayesinde kendi algoritmalarımı da entegre edebildim.",
-        tags: [{ text: "Teknoloji", type: "default" }, { text: "API", type: "default" }],
+        role: "",
+        quote: "Sade ve şık arayüzü sayesinde kullanımı çok keyifli. Karmaşık banka uygulamalarından sıkılanlar için birebir.",
+        tags: [{ text: "Kullanıcı Dostu", type: "default" }, { text: "Web", type: "default" }],
         stats: [{ icon: PieChart, text: "Portföy Analizi" }, { icon: Users, text: "Topluluk" }],
         avatarGradient: "linear-gradient(135deg, #6366f1, #4f46e5)",
     }
@@ -81,7 +81,7 @@ export const TestimonialsSection = () => {
                         Kullanıcılarımız Ne Diyor?
                     </h2>
                     <p className="text-center text-slate-400 text-lg leading-relaxed">
-                        Binlerce bireysel ve kurumsal yatırımcı, FinAl ile finansal özgürlük yolculuğunda bir adım öne geçiyor.
+                        Binlerce bireysel ve kurumsal yatırımcı, FinAi ile finansal özgürlük yolculuğunda bir adım öne geçiyor.
                     </p>
                 </motion.div>
 

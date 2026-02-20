@@ -2,8 +2,18 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FinAl - Yapay Zeka Finans Asistanı",
+  title: "FinAi - Yapay Zeka Yatırım Asistanı",
   description: "Yapay zeka asistanınızla yatırımlarınızı kolayca takip edin.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/logo.png",
+  },
+  openGraph: {
+    title: "FinAi - Yapay Zeka Yatırım Asistanı",
+    description: "Yapay zeka asistanınızla yatırımlarınızı kolayca takip edin.",
+    images: ["/logo.png"],
+    siteName: "FinAi",
+  },
 };
 
 import { UserProvider } from "@/components/providers/UserProvider";

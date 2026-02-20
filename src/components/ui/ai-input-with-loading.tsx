@@ -20,7 +20,7 @@ interface AIInputWithLoadingProps {
 
 export function AIInputWithLoading({
     id = "ai-input-with-loading",
-    placeholder = "FinAl'e Sor...",
+    placeholder = "Yatırımcım'a Sor...",
     minHeight = 56,
     maxHeight = 200,
     loadingDuration = 3000,
@@ -124,7 +124,7 @@ export function AIInputWithLoading({
                     </button>
                 </div>
                 <p className="pl-4 h-4 text-xs mx-auto text-slate-500">
-                    {submitted ? "FinAl düşünüyor..." : "Yatırım tavsiyesi değildir."}
+                    {submitted ? "Yatırımcım düşünüyor..." : "Yatırım tavsiyesi değildir."}
                 </p>
             </div>
         </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu as LucideMenu, X, TrendingUp } from "lucide-react";
+import { Menu as LucideMenu, X } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 
 export default function Navbar() {
@@ -16,10 +17,8 @@ export default function Navbar() {
             <div className="block md:hidden bg-black/50 backdrop-blur-md border-b border-white/10">
                 <div className="flex items-center justify-between h-16 px-4">
                     <Link href="/" className="flex items-center space-x-2">
-                        <div className="p-1 px-2 bg-blue-600/20 rounded border border-blue-500/30">
-                            <TrendingUp className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <span className="text-xl font-bold text-white">FinAl</span>
+                        <Image src="/logo.png" alt="FinAi" width={36} height={36} className="rounded" />
+                        <span className="text-xl font-bold text-white">FinAi</span>
                     </Link>
                     <button
                         onClick={() => setIsOpen(!isOpen)}
@@ -33,15 +32,13 @@ export default function Navbar() {
             {/* Desktop Navbar */}
             <div className="hidden md:flex items-center justify-between px-10 py-4 bg-[#0a192f]/90 border-b border-blue-900/30 backdrop-blur-md shadow-lg transition-all duration-300">
                 <Link href="/" className="flex items-center space-x-2 group">
-                    <div className="p-1.5 bg-blue-500/20 rounded-lg group-hover:bg-blue-500/30 transition-colors border border-blue-500/30 group-hover:border-blue-400/50">
-                        <TrendingUp className="w-5 h-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
-                    </div>
-                    <span className="text-xl font-bold text-white tracking-tight group-hover:text-blue-200 transition-colors">FinAl</span>
+                    <Image src="/logo.png" alt="FinAi" width={40} height={40} className="rounded-lg group-hover:opacity-90 transition-opacity" />
+                    <span className="text-xl font-bold text-white tracking-tight group-hover:text-blue-200 transition-colors">FinAi</span>
                 </Link>
 
                 <div className="flex items-center space-x-8">
-                    {['Biz Kimiz?', 'Neler Yapabiliriz?', 'Fiyatlandırma'].map((text, idx) => {
-                        const hrefs = ['#hero', '#features', '#pricing'];
+                    {['Biz Kimiz?', 'Neler Yapabiliriz?'].map((text, idx) => {
+                        const hrefs = ['#hero', '#features'];
                         return (
                             <Link key={idx} href={hrefs[idx]} className="relative group px-2 py-1">
                                 <span className="relative z-10 text-sm font-medium text-slate-300 group-hover:text-white transition-colors duration-300">{text}</span>
@@ -58,7 +55,7 @@ export default function Navbar() {
                             whileTap={{ scale: 0.95 }}
                             className="cursor-pointer px-6 py-2.5 text-sm font-bold text-[#0a192f] bg-white hover:bg-blue-50 rounded-full shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_-5px_rgba(255,255,255,0.5)] transition-all flex items-center justify-center"
                         >
-                            {isAuthenticated ? "Dashboard" : "Giriş Yap"}
+                            {isAuthenticated ? "Giriş" : "Giriş Yap"}
                         </motion.div>
                     </Link>
                 </div>
@@ -76,13 +73,12 @@ export default function Navbar() {
                         <div className="px-6 py-6 space-y-6">
                             <Link href="#features" onClick={() => setIsOpen(false)} className="block text-lg font-medium text-neutral-300">Özellikler</Link>
                             <Link href="#" onClick={() => setIsOpen(false)} className="block text-lg font-medium text-neutral-300">Piyasalar</Link>
-                            <Link href="#pricing" onClick={() => setIsOpen(false)} className="block text-lg font-medium text-neutral-300">Fiyatlandırma</Link>
                             <Link
                                 href={isAuthenticated ? "/dashboard" : "/login"}
                                 onClick={() => setIsOpen(false)}
                                 className="block w-full text-center px-4 py-3 text-base font-bold text-black bg-white rounded-xl"
                             >
-                                {isAuthenticated ? "Dashboard" : "Giriş Yap"}
+                                {isAuthenticated ? "Giriş" : "Giriş Yap"}
                             </Link>
                         </div>
                     </motion.div>

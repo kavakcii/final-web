@@ -8,7 +8,7 @@ import { BentoGrid, BentoGridItem } from "@/components/ui/BentoGrid";
 import { ModernPricingPage } from "@/components/ui/animated-glassy-pricing";
 import { FAQSection } from "@/components/FAQSection";
 import { InfiniteMovingCards } from "@/components/ui/InfiniteMovingCards";
-import { FinAlChatWidget } from "@/components/FinAlChatWidget";
+import { FinAiChatWidget } from "@/components/FinAiChatWidget";
 import {
   Brain,
   ShieldCheck,
@@ -25,49 +25,49 @@ export default function Home() {
     {
       id: 1,
       initials: 'AY',
-      name: 'Ahmet Y.',
-      role: 'Bireysel Yatırımcı',
-      quote: "FinAl sayesinde portföyümdeki gizli riskleri anında fark ettim ve zamanında önlem aldım. Harika bir asistan!",
+      name: 'Ahmet Yılmaz',
+      role: '',
+      quote: "Portföyümdeki riskleri daha iyi yönetiyorum. Uygulama çok yönlendirici ve anlaşılır.",
       tags: [{ text: 'Premium', type: 'featured' as const }, { text: 'BIST', type: 'default' as const }],
-      stats: [{ icon: TrendingUp, text: '%35 Kar' }, { icon: ShieldCheck, text: 'Güvenli' }],
+      stats: [{ icon: TrendingUp, text: 'Karlı' }, { icon: ShieldCheck, text: 'Güvenli' }],
       avatarGradient: 'linear-gradient(135deg, #3b82f6, #2563eb)',
     },
     {
       id: 2,
       initials: 'ZK',
-      name: 'Zeynep K.',
-      role: 'Finans Analisti',
-      quote: "Borsa verilerini bu kadar sade ve net analiz eden başka bir uygulama yok. İşimi yarı yarıya hafifletti.",
-      tags: [{ text: 'Kurumsal', type: 'featured' as const }, { text: 'Analiz', type: 'default' as const }],
+      name: 'Zeynep Kara',
+      role: '',
+      quote: "Borsa verilerini sade bir dille anlatması harika. Karmaşık analizlerle uğraşmıyorum artık.",
+      tags: [{ text: 'Bireysel', type: 'featured' as const }, { text: 'Fon', type: 'default' as const }],
       stats: [{ icon: Brain, text: 'AI Destekli' }, { icon: Zap, text: 'Hızlı' }],
       avatarGradient: 'linear-gradient(135deg, #10b981, #059669)',
     },
     {
       id: 3,
       initials: 'MT',
-      name: 'Mehmet T.',
-      role: 'Kripto Trader',
-      quote: "Yapay zeka önerileriyle piyasa düşerken bile bütçemi korumayı başardım. Kesinlikle tavsiye ederim.",
-      tags: [{ text: 'Trader', type: 'featured' as const }, { text: 'Kripto', type: 'default' as const }],
-      stats: [{ icon: Target, text: 'Tam İsabet' }, { icon: Globe, text: '7/24' }],
+      name: 'Mehmet Tekin',
+      role: '',
+      quote: "Yapay zeka asistanı sayesinde piyasa düşerken bile sakin kalıp doğru kararlar verdim.",
+      tags: [{ text: 'Yatırımcı', type: 'featured' as const }, { text: 'Altın', type: 'default' as const }],
+      stats: [{ icon: Target, text: 'İsabetli' }, { icon: Globe, text: '7/24' }],
       avatarGradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
     },
     {
       id: 4,
       initials: 'EB',
-      name: 'Elif B.',
-      role: 'Yazılım Mühendisi',
-      quote: "Premium özellikler parasını sonuna kadar hak ediyor. Anlık bildirimler hayat kurtarıyor.",
-      tags: [{ text: 'Premium', type: 'featured' as const }, { text: 'Mobil', type: 'default' as const }],
+      name: 'Elif Bakır',
+      role: '',
+      quote: "Premium özellikler sayesinde anlık veriye ulaşıyorum. Arayüz çok modern.",
+      tags: [{ text: 'Premium', type: 'featured' as const }, { text: 'Web', type: 'default' as const }],
       stats: [{ icon: Check, text: 'Onaylı' }],
       avatarGradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
     },
     {
       id: 5,
       initials: 'CD',
-      name: 'Caner D.',
-      role: 'Girişimci',
-      quote: "Karmaşık tablolar yerine net sinyaller vermesi çok iyi. Global piyasaları takip etmek artık çok kolay.",
+      name: 'Caner Demir',
+      role: '',
+      quote: "Global piyasaları ve emtiaları takip etmek hiç bu kadar kolay olmamıştı.",
       tags: [{ text: 'Global', type: 'default' as const }],
       stats: [{ icon: Globe, text: 'Dünya Çapında' }],
       avatarGradient: 'linear-gradient(135deg, #ec4899, #db2777)',
@@ -116,8 +116,6 @@ export default function Home() {
 
       <Navbar />
 
-      {/* AI Chat Widget */}
-      <FinAlChatWidget />
 
       <main className="flex-1">
         {/* HERO SECTION: Biz Kimiz? */}
@@ -132,7 +130,7 @@ export default function Home() {
             </div>
 
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#0a192f] drop-shadow-sm">
-              Biz <span className="text-blue-600">FinAl</span>'iz.
+              Biz <span className="text-blue-600">FinAi</span>'yiz.
             </h1>
 
             <p className="text-xl md:text-2xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
@@ -156,7 +154,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-[#0a192f] mb-4">Neler Yapabiliriz?</h2>
-              <p className="text-slate-500 text-lg">FinAl sizin için 7/24 çalışır.</p>
+              <p className="text-slate-500 text-lg">FinAi sizin için 7/24 çalışır.</p>
             </div>
 
             <BentoGrid className="max-w-6xl mx-auto">
@@ -192,41 +190,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* COMPARISON: Planlar Arasındaki Fark */}
-        <section id="pricing" className="snap-start h-screen flex flex-col justify-center shrink-0 [scroll-snap-stop:always] overflow-hidden relative">
-          <ModernPricingPage
-            title="Şeffaf Fiyatlandırma"
-            subtitle="Size en uygun planı seçin ve kazanmaya başlayın."
-            plans={[
-              {
-                planName: 'Başlangıç',
-                description: 'Yatırım dünyasına giriş yapın.',
-                price: '0',
-                features: ['15 Dk Gecikmeli Veri', 'Tek Portföy Hakkı', 'Temel Analiz Araçları', 'Günlük Piyasa Özeti'],
-                buttonText: 'Hemen Başla',
-                buttonVariant: 'primary'
-              },
-              {
-                planName: 'Standart',
-                description: 'Bilinçli yatırımcılar için.',
-                price: '299',
-                features: ['Canlı Borsa Verisi', 'Sınırsız Portföy', 'AI Haber Analizi', 'Gelişmiş Grafikler'],
-                buttonText: 'Seç',
-                isPopular: true,
-                buttonVariant: 'primary'
-              },
-              {
-                planName: 'Premium',
-                description: 'Profesyonellerin tercihi.',
-                price: '499',
-                features: ['Derinlikli (L1) Veri', 'AI Alım/Satım Sinyalleri', 'Risk Yönetim Raporu', 'Algo-Trading Desteği'],
-                buttonText: 'Premium Ol',
-                buttonVariant: 'primary'
-              },
-            ]}
-            showAnimatedBackground={false}
-          />
-        </section>
 
         {/* FAQ Section */}
         <section className="snap-start h-screen flex flex-col justify-between pt-24 bg-slate-50 shrink-0 [scroll-snap-stop:always] overflow-hidden">

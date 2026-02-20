@@ -4,9 +4,10 @@ import { AuthComponent } from "@/components/ui/sign-up";
 import { TrendingUp, Activity, DollarSign, BarChart2, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
 import { cn } from "@/lib/utils";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 import TradingViewWidget from "@/components/TradingViewWidget";
 import { TefasChart } from "@/components/TefasChart";
@@ -42,13 +43,89 @@ export default function Dashboard() {
         }
     };
 
+    // Loading State with Steps
+    const [loadingStep, setLoadingStep] = useState(0);
+    const loadingMessages = [
+        "Portföy verileri hazırlanıyor...",
+        "Piyasa fiyatları güncelleniyor...",
+        "Varlık dağılımı hesaplanıyor...",
+        "Analiz tamamlanıyor..."
+    ];
+
+    useEffect(() => {
+        if (!isDataLoaded) {
+            const interval = setInterval(() => {
+                setLoadingStep((prev) => (prev + 1) % loadingMessages.length);
+            }, 1200);
+            return () => clearInterval(interval);
+        }
+    }, [isDataLoaded]);
+
     return (
-        <div className="p-6 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
+        <div className="p-6 space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto relative min-h-screen">
+            {/* Loading Overlay */}
+            <AnimatePresence>
+                {!isDataLoaded && (
+                    <motion.div
+                        initial={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020617]/80 backdrop-blur-xl"
+                    >
+                        <div className="w-full max-w-md p-8 rounded-3xl bg-slate-900/50 border border-white/10 shadow-2xl relative overflow-hidden text-center">
+                            {/* Animated Background Gradient */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent animate-pulse" />
+
+                            <div className="relative z-10 flex flex-col items-center gap-6">
+                                {/* Logo / Icon Animation */}
+                                <div className="relative">
+                                    <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
+                                    <div className="w-20 h-20 bg-slate-950 rounded-2xl border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                        <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <motion.h2
+                                        key={loadingStep}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="text-2xl font-bold text-white"
+                                    >
+                                        {loadingMessages[loadingStep]}
+                                    </motion.h2>
+                                    <p className="text-slate-400 text-sm">Lütfen bekleyin, verileriniz işleniyor.</p>
+                                </div>
+
+                                {/* Progress Bar */}
+                                <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                    <motion.div
+                                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: "100%" }}
+                                        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Hoşgeldin, {userName || userEmail?.split('@')[0]} 👋</h1>
                     <p className="text-slate-400">Piyasa verileri ve portföyün güncel.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <a
+                        href="/dashboard/correlation-analysis"
+                        className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:opacity-90 transition-opacity text-white text-sm font-medium"
+                    >
+                        <Activity className="w-4 h-4" />
+                        Korelasyon Analizi
+                    </a>
                 </div>
             </div>
 

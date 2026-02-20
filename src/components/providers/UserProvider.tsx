@@ -280,6 +280,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useUser() {
+    const context = useContext(UserContext);
+
     // If we're on the server, return a mock context to avoid SSR errors
     if (typeof window === 'undefined') {
         return {
@@ -301,7 +303,6 @@ export function useUser() {
         } as UserContextType;
     }
 
-    const context = useContext(UserContext);
     if (context === undefined) {
         // Returning a default state for server-side rendering or outside provider
         return {

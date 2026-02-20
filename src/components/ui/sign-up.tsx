@@ -99,7 +99,7 @@ interface AuthComponentProps {
     onAuthSuccess?: () => void;
 }
 
-export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAl", className, isTransparent = false, onAuthSuccess }: AuthComponentProps) => {
+export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", className, isTransparent = false, onAuthSuccess }: AuthComponentProps) => {
     // FORM STATE
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

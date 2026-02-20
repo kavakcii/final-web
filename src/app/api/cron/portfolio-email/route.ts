@@ -264,7 +264,7 @@ function generatePortfolioEmailHtml(userName: string, reportData: any, includeAn
                                 <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 48px auto 0;">
                                     <tr>
                                         <td align="center" style="background: #3b82f6; border-radius: 20px; box-shadow: 0 20px 40px -10px rgba(59,130,246,0.5);">
-                                            <a href="https://finai.net.tr/dashboard/portfolio" target="_blank" style="display: inline-block; padding: 20px 56px; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; letter-spacing: 0.5px;">Portföyümü Yönet →</a>
+                                            <a href="https://yatirimcim.com.tr/dashboard/portfolio" target="_blank" style="display: inline-block; padding: 20px 56px; color: #ffffff; font-size: 16px; font-weight: 800; text-decoration: none; letter-spacing: 0.5px;">Portföyümü Yönet →</a>
                                         </td>
                                     </tr>
                                 </table>
@@ -276,7 +276,7 @@ function generatePortfolioEmailHtml(userName: string, reportData: any, includeAn
                             <td style="background-color: #020617; padding: 40px; text-align: center;">
                                 <p style="color: #475569; font-size: 11px; margin: 0 0 20px; line-height: 1.8;">
                                     Bu analizler robotumuz tarafından oluşturulmuştur ve yatırım tavsiyesi değildir.<br>
-                                    © 2026 FinAl Labs. Sizin İçin Akıllı Yatırım.
+                                    © 2026 Yatırımcım. Sizin İçin Akıllı Yatırım.
                                 </p>
                                 <div style="height: 1px; background: rgba(255,255,255,0.05); margin-bottom: 20px;"></div>
                                 <p style="color: #334155; font-size: 9px; text-transform: uppercase; letter-spacing: 3px; font-weight: 900;">
@@ -452,9 +452,9 @@ export async function POST(req: Request) {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            from: 'FinAl <onboarding@resend.dev>',
+                            from: 'Yatırımcım <onboarding@resend.dev>',
                             to: [user.email],
-                            subject: `📊 FinAl — ${user.instructionLabel || 'Robotu Raporu'}`,
+                            subject: `📊 Yatırımcım — ${user.instructionLabel || 'Robotu Raporu'}`,
                             html: emailHtml,
                         }),
                     });

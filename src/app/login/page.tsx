@@ -11,7 +11,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-center pt-20">
                 <AuthComponent
                     logo={<div className="bg-blue-500 text-white rounded-md p-1.5"><TrendingUp className="w-4 h-4" /></div>}
-                    brandName="FinAl Asistan"
+                    brandName="FinAi"
                     className="w-full"
                     isTransparent={true}
                 />

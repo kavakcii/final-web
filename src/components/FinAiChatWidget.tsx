@@ -11,10 +11,10 @@ interface Message {
     content: string;
 }
 
-export function FinAlChatWidget() {
+export function FinAiChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
-        { role: "assistant", content: "Merhaba! Ben FinAl Asistanı. Size nasıl yardımcı olabilirim? Yatırımlarınızı nasıl geliştirebileceğimizden bahsedelim mi?" }
+        { role: "assistant", content: "Merhaba! Ben FinAi Asistanı. Size nasıl yardımcı olabilirim? Yatırımlarınızı nasıl geliştirebileceğimizden bahsedelim mi?" }
     ]);
     const [isMinimized, setIsMinimized] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,7 +78,7 @@ export function FinAlChatWidget() {
                                     <MessageSquare className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-semibold text-white text-sm">FinAl AI</h3>
+                                    <h3 className="font-semibold text-white text-sm">FinAi AI</h3>
                                     <p className="text-xs text-green-400 flex items-center gap-1">
                                         <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                                         Çevrimiçi
