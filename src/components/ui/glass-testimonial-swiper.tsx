@@ -10,6 +10,7 @@ export interface Testimonial {
     tags: { text: string; type: 'featured' | 'default' }[];
     stats: { icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; text: string; }[];
     avatarGradient: string;
+    image?: string;
 }
 
 export interface TestimonialStackProps {
@@ -113,8 +114,12 @@ export const TestimonialStack = ({ testimonials, visibleBehind = 2 }: Testimonia
                         <div className="p-6 md:p-8">
                             <div className="flex items-start justify-between mb-6">
                                 <div className="flex items-center gap-4">
-                                    <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-base shadow-md" style={{ background: testimonial.avatarGradient }}>
-                                        {testimonial.initials}
+                                    <div className="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-white font-semibold text-base shadow-md overflow-hidden" style={{ background: testimonial.avatarGradient }}>
+                                        {testimonial.image ? (
+                                            <img src={testimonial.image} alt={testimonial.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            testimonial.initials
+                                        )}
                                     </div>
                                     <div>
                                         <h3 className="text-slate-900 font-bold text-lg">{testimonial.name}</h3>

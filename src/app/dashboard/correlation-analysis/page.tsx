@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useUser } from "@/components/providers/UserProvider";
 import { motion, AnimatePresence } from "framer-motion";
+import { SynchronizedCorrelationChart } from "@/components/SynchronizedCorrelationChart";
 import {
     Activity,
     ArrowLeft,
@@ -28,15 +29,28 @@ interface CorrelationPair {
     source: string;
     target: string;
     value: number;
+    rolling?: number[];
+    historySource?: { date: string; price: number }[];
+    historyTarget?: { date: string; price: number }[];
+    isStructuralOverlap?: boolean;
+    events?: MarketEvent[];
+}
+
+interface MarketEvent {
+    date: string;
+    title: string;
+    description: string;
+    impact: string;
 }
 
 export default function CorrelationAnalysisPage() {
-    const { myAssets, isDataLoaded } = useUser();
+    const { myAssets, prices, isDataLoaded } = useUser();
     const [matrixData, setMatrixData] = useState<CorrelationPair[]>([]);
     const [loading, setLoading] = useState(true);
     const [uniqueSymbols, setUniqueSymbols] = useState<string[]>([]);
     const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
     const [expandedPair, setExpandedPair] = useState<string | null>(null);
+    const [marketEvents, setMarketEvents] = useState<MarketEvent[]>([]);
 
     // Fetch Correlation Data
     useEffect(() => {
@@ -51,13 +65,17 @@ export default function CorrelationAnalysisPage() {
                 const res = await fetch('/api/portfolio/correlation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ assets: assetList })
+                    body: JSON.stringify({
+                        assets: assetList,
+                        currentPrices: prices // Pass current dashboard prices for exact matching
+                    })
                 });
                 if (!res.ok) throw new Error("Failed to fetch");
                 const data = await res.json();
                 if (data.matrix && Array.isArray(data.matrix)) {
                     setMatrixData(data.matrix);
                     setUniqueSymbols(data.symbols || []);
+                    setMarketEvents(data.events || []);
                     // Auto-select first asset
                     if (data.symbols && data.symbols.length > 0) {
                         setSelectedAsset(data.symbols[0]);
@@ -199,40 +217,68 @@ export default function CorrelationAnalysisPage() {
         const infoT = getAssetInfo(target);
 
         let reasons: string[] = [];
+        const salt = (s.length + t.length + Math.round(val * 100)) % 5;
 
         // ── Aynı yönetici mi? ──
         if (infoS.manager !== '-' && infoS.manager !== 'Bilinmiyor' && infoS.manager === infoT.manager) {
-            reasons.push(`Her iki varlık da **${infoS.manager}** tarafından yönetiliyor. Aynı portföy yönetim ekibi benzer yatırım stratejileri kullanma eğiliminde olduğundan, varlıklar birbirine paralel hareket edebilir.`);
+            const variants = [
+                `Hem ${s} hem de ${t} varlıkları ${infoS.manager} tarafından yönetilmektedir. Aynı kurumun uzman ekibi ve strateji yaklaşımı, bu iki varlığın piyasa hareketlerine benzer tepkiler vermesine neden oluyor.`,
+                `${infoS.manager} portföy yönetim felsefesi her iki fonda da hakimdir. Bu ortak yönetim anlayışı, varlıkların fiyat davranışlarında yüksek bir senkronizasyon oluşturuyor.`,
+                `Bu iki enstrümanın arkasındaki analitik süreç ve yatırım masası aynıdır. Bu durum, piyasa koşullarındaki değişimlerin her iki varlığa da paralel şekilde yansımasını sağlar.`,
+                `${infoS.manager} imzası taşıyan bu iki varlık, kurumun genel risk ve getiri beklentileriyle uyumlu hareket etmektedir.`,
+                `Yönetici ortaklığı, yatırım kararlarındaki temel 'bakış açısının' aynı olduğunu gösterir; bu da fiyat hareketlerindeki benzerliği açıklayan temel bir unsurdur.`
+            ];
+            reasons.push(variants[salt % variants.length]);
         }
 
         // ── Aynı sektör mü? ──
         if (infoS.sector !== 'Bilinmiyor' && infoS.sector === infoT.sector) {
-            reasons.push(`Her iki varlık da **${infoS.sector}** sektörüne odaklı. Aynı sektördeki varlıklar, sektöre özgü haberler ve düzenlemelerden benzer şekilde etkilendiği için birlikte hareket etme olasılıkları yüksektir.`);
+            const variants = [
+                `Her iki varlık da ${infoS.sector} sektörüne odaklanmış durumdadır. Sektörel haber akışları, yasal düzenlemeler ve global trendler bu iki enstrümanı ortak bir paydada etkilemektedir.`,
+                `${infoS.sector} alanındaki makroekonomik değişimler, bu iki varlığın performansını aynı zaman dilimlerinde tetikleyen ana motor görevi görüyor.`,
+                `Aynı sektör grubunda yer alan bu varlıklar, piyasanın sektörel beklentilerine paralel olarak birlikte yükselip düşme eğilimi gösterirler.`,
+                `Sektörel döngüler ve büyüme potansiyelleri her iki varlık için de ortak bir risk ve fırsat zemini oluşturmaktadır.`,
+                `Bu enstrümanların kaderi büyük ölçüde ${infoS.sector} sektöründeki karlılık ve büyüme rakamlarına bağlıdır.`
+            ];
+            reasons.push(variants[(salt + 1) % variants.length]);
         }
 
         // ── Aynı endeksi mi takip ediyor? ──
         if (infoS.sector.includes('BIST') && infoT.sector.includes('BIST') && infoS.sector === infoT.sector) {
-            reasons.push(`Her ikisi de **${infoS.sector} endeksini** takip ediyor. Portföylerinde büyük ölçüde aynı hisseler (THYAO, GARAN, ASELS vb.) yer aldığından, neredeyse aynı şekilde hareket etmeleri beklenir.`);
+            const variants = [
+                `Her iki fon da ${infoS.sector} endeksini baz alıyor. Sepetlerindeki ağırlıklı hisselerin ortak olması, fiyat grafiklerinin neredeyse üst üste binmesine yol açıyor.`,
+                `Bu iki varlığın temel performans ölçütü ${infoS.sector} endeksidir. Endekse paralel hareket etmek üzere kurgulanan bu yapılar, yerel piyasada eş zamanlı tepkiler verir.`,
+                `Ortak bir yatırım evreninde (${infoS.sector}) faaliyet gösteren bu fonlar, borsadaki büyük şirketlerin performansından doğrudan ve benzer şekilde etkilenir.`,
+                `${infoS.sector} endeksinin yönü, bu iki varlığın getiri rotasını belirleyen en temel faktördür.`,
+                `Aynı kıyas ölçütünü takip etmeleri, bu varlıklar arasında yapısal bir korelasyon oluşturmaktadır.`
+            ];
+            reasons.push(variants[(salt + 2) % variants.length]);
         } else if (infoS.sector.includes('BIST') && infoT.sector.includes('BIST')) {
-            reasons.push(`Her ikisi de BIST hisselerine yatırım yapıyor. Ortak hisseler barındırmaları nedeniyle (özellikle büyük şirketler) benzer performans gösterebilirler.`);
+            reasons.push(`Her iki varlık da Borsa İstanbul piyasasında yoğunlaşıyor. Ortak hisse senedi havuzundan beslendikleri için genel piyasa iştahındaki değişimler ikisini de etkiliyor.`);
         }
 
         // ── Aynı türde varlıklar mı? ──
         if (infoS.type === infoT.type && infoS.type !== 'Bilinmiyor') {
             if (infoS.type === 'Hisse') {
-                reasons.push(`Her iki varlık da **hisse senedi ağırlıklı**. Borsa genel olarak yükseldiğinde ikisi de yükselir, düştüğünde ikisi de düşer.`);
+                reasons.push(`İki varlığın da ana odağı hisse senetleridir. Özsermaye piyasalarındaki volatilite ve genel yükseliş trendleri bu çiftin hareketlerini senkronize tutuyor.`);
             } else if (infoS.type === 'Borçlanma') {
-                reasons.push(`Her ikisi de **sabit getirili (tahvil/bono)** varlık. Faiz oranı değişiklikleri her ikisini de benzer şekilde etkiler.`);
+                reasons.push(`Bu çift sabit getirili menkul kıymetlere (tahvil/bono) dayanmaktadır. Faiz oranlarındaki değişimler ve likidite koşulları her iki varlığı da benzer yönde etkiler.`);
             } else if (infoS.type === 'Karma') {
-                reasons.push(`Her ikisi de **karma (çoklu varlık)** fon. Benzer dağılım stratejileri kullanıyorlarsa paralel hareket etmeleri doğaldır.`);
+                reasons.push(`Çoklu varlık yapısına sahip bu fonlar, benzer dağılım modelleri (hisse-tahvil dengesi) kullandıkları için dengeli bir paralellik sergiliyor.`);
             }
         }
 
         // ── Farklı türde varlıklar mı? (Düşük korelasyon açıklaması) ──
         if (infoS.type !== infoT.type && infoS.type !== 'Bilinmiyor' && infoT.type !== 'Bilinmiyor') {
-            const typeS = infoS.type === 'Hisse' ? 'hisse senedi' : infoS.type === 'Borçlanma' ? 'sabit getirili tahvil' : infoS.type === 'Döviz' ? 'döviz bazlı' : infoS.type;
-            const typeT = infoT.type === 'Hisse' ? 'hisse senedi' : infoT.type === 'Borçlanma' ? 'sabit getirili tahvil' : infoT.type === 'Döviz' ? 'döviz bazlı' : infoT.type;
-            reasons.push(`${s} bir **${typeS}** varlık iken, ${t} **${typeT}** yapıda. Farklı varlık sınıfları farklı piyasa dinamiklerinden etkilendiğinden, birbirlerinden bağımsız hareket etmeleri beklenir.`);
+            const typeS = infoS.type === 'Hisse' ? 'hisse senedi' : infoS.type === 'Borçlanma' ? 'sabit getirili' : infoS.type === 'Döviz' ? 'döviz tabanlı' : infoS.type;
+            const typeT = infoT.type === 'Hisse' ? 'hisse senedi' : infoT.type === 'Borçlanma' ? 'sabit getirili' : infoT.type === 'Döviz' ? 'döviz tabanlı' : infoT.type;
+            const variants = [
+                `${s} bir ${typeS} enstrüman iken, ${t} ${typeT} yapısındadır. Farklı piyasa dinamikleriyle çalışan bu varlıklar, portföyünüzdeki riski dağıtmanıza yardımcı olur.`,
+                `Bu iki varlık tamamen farklı finansal mekanizmalar üzerinden değerleniyor. Biri büyüme odaklıyken diğeri koruma odaklı olduğu için ilişkileri düşük seyretmektedir.`,
+                `Varlık sınıflarının farklı olması ( ${typeS} vs ${typeT} ), piyasadaki dalgalanmalara karşı portföyünüzde koruyucu bir kalkan görevi görür.`,
+                `Bu enstrümanlar piyasa haberlerine zıt veya bağımsız tepkiler verir; bu da yatırım sepetinizde dengeleyici bir unsur oluşturur.`
+            ];
+            reasons.push(variants[(salt + 3) % variants.length]);
         }
 
         // ── Hisse-Hisse aynı sektör mü? ──
@@ -241,41 +287,41 @@ export default function CorrelationAnalysisPage() {
             const tStock = stockInfo[t];
             if (sStock && tStock) {
                 if (sStock.subSector === tStock.subSector) {
-                    reasons.push(`**${sStock.name}** ve **${tStock.name}** aynı alt sektörde (${sStock.subSector}) faaliyet gösteriyor. Rakip veya benzer iş modeline sahip şirketler olarak aynı piyasa koşullarından etkileniyorlar.`);
+                    reasons.push(`${sStock.name} ve ${tStock.name} şirketleri doğrudan ${sStock.subSector} alanında faaliyet gösteriyor. Sektörel talepler ve rakip şirketlerin ortak maliyetleri, fiyatları benzer yönde hareket ettiriyor.`);
                 } else if (sStock.sector === tStock.sector) {
-                    reasons.push(`**${sStock.name}** (${sStock.subSector}) ve **${tStock.name}** (${tStock.subSector}) aynı ana sektörde (${sStock.sector}). Sektörel haberler ve düzenlemeler her ikisini de etkileyebilir.`);
+                    reasons.push(`Her iki şirket de ${sStock.sector} ana sektörü altında yer alıyor. Sektöre yönelik genel teşvikler veya kısıtlamalar bu iki kağıdı da etkileyen ortak faktörlerdir.`);
                 }
             }
         }
 
         // ── Fon-Hisse: Fon o hisseyi barındırıyor olabilir ──
         if (infoS.assetType === 'fund' && infoT.assetType === 'stock' && infoS.sector.includes('BIST')) {
-            reasons.push(`${s} fonu BIST endeksini takip ettiğinden, portföyünde büyük olasılıkla **${stockInfo[t]?.name || t}** hissesi de bulunuyor. Bu nedenle birlikte hareket etmeleri doğaldır.`);
+            reasons.push(`${s} fonu endeks bazlı bir portfeye sahiptir. Portföyünde yüksek olasılıkla ${stockInfo[t]?.name || t} hissesini de barındırdığı için aralarında doğal bir bağ bulunmaktadır.`);
         }
         if (infoT.assetType === 'fund' && infoS.assetType === 'stock' && infoT.sector.includes('BIST')) {
-            reasons.push(`${t} fonu BIST endeksini takip ettiğinden, portföyünde büyük olasılıkla **${stockInfo[s]?.name || s}** hissesi de bulunuyor. Bu nedenle birlikte hareket etmeleri doğaldır.`);
+            reasons.push(`${t} fonunun sepetinde ${stockInfo[s]?.name || s} hissesi yer alma ihtimali yüksektir. Bu durum, fonun getirisini doğrudan bu hissenin performansına duyarlı hale getirir.`);
         }
 
         // Korelasyon seviyesi açıklaması
-        let levelText = '';
+        let summaryText = '';
         if (val >= 0.8) {
-            levelText = `📈 **Korelasyon: ${val.toFixed(2)}** — Çok yüksek bir birlikte hareket. Bu seviyede iki varlık neredeyse aynı hisseleri/enstrümanları barındırıyor veya aynı piyasa faktörlerine maruz kalıyor demektir. Portföyünüzde **çeşitlendirme etkisi çok düşük**.`;
+            summaryText = `Korelasyon Oranı: ${val.toFixed(2)} — Çok yüksek bir birlikte hareket söz konusu. Bu seviye, iki varlığın neredeyse aynı risk gruplarında bulunduğunu gösterir. Çeşitlendirme etkisi bu çift için oldukça düşüktür.`;
         } else if (val >= 0.5) {
-            levelText = `📊 **Korelasyon: ${val.toFixed(2)}** — Belirgin pozitif ilişki. İki varlık genellikle aynı yönde hareket ediyor. Ortak faktörler (sektör, yönetici, endeks) bu benzerliğe yol açıyor olabilir.`;
+            summaryText = `Korelasyon Oranı: ${val.toFixed(2)} — Belirgin bir pozitif ilişki mevcut. Varlıklar piyasa koşullarına genellikle aynı yönde tepki veriyor. Ortak sektörel veya yönetimsel faktörler bu benzerliği beslemektedir.`;
         } else if (val >= 0.3) {
-            levelText = `📉 **Korelasyon: ${val.toFixed(2)}** — Orta düzey ilişki. Tamamen bağımsız değiller ancak her zaman birlikte de hareket etmiyorlar.`;
+            summaryText = `Korelasyon Oranı: ${val.toFixed(2)} — Orta düzeyde bir ilişki izleniyor. Varlıklar tamamen bağımsız olmasa da her zaman aynı yöne gitmiyorlar; bu da sınırlı bir çeşitlendirme sunar.`;
         } else if (val >= -0.3) {
-            levelText = `✅ **Korelasyon: ${val.toFixed(2)}** — Düşük ilişki. Bu iki varlık büyük ölçüde birbirinden bağımsız hareket ediyor. **İdeal çeşitlendirme** — birindeki kayıp diğerini doğrudan etkilemiyor.`;
+            summaryText = `Korelasyon Oranı: ${val.toFixed(2)} — Düşük ve sağlıklı bir ilişki seviyesi. Bu iki değer birbirinden büyük ölçüde bağımsız hareket ederek portföyünüzün risk dağılımını ideal bir noktaya taşıyor.`;
         } else {
-            levelText = `🛡️ **Korelasyon: ${val.toFixed(2)}** — Negatif korelasyon. Biri yükselirken diğeri düşme eğiliminde. Bu, portföyünüze **doğal bir koruma (hedge)** sağlıyor.`;
+            summaryText = `Korelasyon Oranı: ${val.toFixed(2)} — Negatif korelasyon tespit edildi. Bu varlıklar birbirinin zıttı yönlerde hareket etme eğilimindedir, bu da piyasa düşüşlerinde portföyünüz için doğal bir sigorta işlevi görür.`;
         }
 
         // Birleştir
         if (reasons.length === 0) {
-            reasons.push(`${s} ve ${t} arasındaki ilişki piyasa koşullarına bağlı olarak değişkenlik gösterebilir.`);
+            reasons.push(`${s} ve ${t} arasındaki ilişki güncel piyasa dinamiklerine ve makro ekonomik verilere bağlı olarak şekillenmektedir.`);
         }
 
-        return levelText + '\n\n**Neden böyle?**\n' + reasons.map(r => `• ${r}`).join('\n');
+        return summaryText + '\n\nAnaliz Detayları:\n' + reasons.map(r => `• ${r}`).join('\n');
     };
 
     const getRecommendation = (source: string, target: string, val: number) => {
@@ -449,10 +495,20 @@ export default function CorrelationAnalysisPage() {
                                                         <div className="flex items-center gap-4">
                                                             {getRiskIcon(pair.value)}
 
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-sm font-bold text-blue-400">{clean(pair.source)}</span>
-                                                                <ChevronRight className="w-3 h-3 text-slate-700" />
-                                                                <span className="text-sm font-bold text-white">{clean(pair.target)}</span>
+                                                            <div className="flex flex-col">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-bold text-blue-400">{clean(pair.source)}</span>
+                                                                    <ChevronRight className="w-3 h-3 text-slate-700" />
+                                                                    <span className="text-sm font-bold text-white">{clean(pair.target)}</span>
+                                                                </div>
+                                                                {pair.isStructuralOverlap && (
+                                                                    <div className="flex items-center gap-1 mt-1">
+                                                                        <div className="px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20 flex items-center gap-1">
+                                                                            <AlertTriangle className="w-2.5 h-2.5 text-red-400" />
+                                                                            <span className="text-[8px] font-black text-red-400 uppercase tracking-tighter">AYNI VARLIKLAR</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
 
                                                             <span
@@ -495,55 +551,35 @@ export default function CorrelationAnalysisPage() {
                                                                 animate={{ height: "auto", opacity: 1 }}
                                                                 exit={{ height: 0, opacity: 0 }}
                                                                 transition={{ duration: 0.25 }}
-                                                                className="overflow-hidden"
+                                                                className="overflow-visible"
                                                             >
-                                                                <div className="px-5 pb-5 pt-2 ml-8 space-y-4">
-                                                                    {/* AI Analysis */}
-                                                                    <div className="bg-white/[0.03] rounded-xl p-4 border border-white/5">
-                                                                        <div className="flex items-center gap-2 mb-3">
-                                                                            <Brain className="w-3.5 h-3.5 text-purple-400" />
-                                                                            <span className="text-xs font-semibold text-purple-300">Detaylı Analiz</span>
-                                                                        </div>
-                                                                        <div className="text-sm text-slate-300 leading-relaxed space-y-2">
-                                                                            {getDetailedInsight(pair.source, pair.target, pair.value)
-                                                                                .split('\n')
-                                                                                .filter(line => line.trim())
-                                                                                .map((line, li) => (
-                                                                                    <p key={li} className={cn(
-                                                                                        line.startsWith('•') ? 'pl-3 text-slate-400' : '',
-                                                                                        line.startsWith('**') ? 'font-semibold text-slate-200 mt-3' : ''
-                                                                                    )}
-                                                                                        dangerouslySetInnerHTML={{
-                                                                                            __html: line.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-                                                                                        }}
-                                                                                    />
-                                                                                ))
-                                                                            }
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {/* Recommendation */}
-                                                                    <div className="bg-blue-500/5 rounded-xl p-4 border border-blue-500/10">
-                                                                        <div className="flex items-center gap-2 mb-1">
-                                                                            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                                                                            <span className="text-xs font-semibold text-blue-300">Öneri</span>
-                                                                        </div>
-                                                                        <p className="text-sm text-slate-400">
-                                                                            {getRecommendation(pair.source, pair.target, pair.value)}
-                                                                        </p>
-                                                                    </div>
-
-                                                                    {/* Scale bar */}
-                                                                    <div className="flex items-center gap-3">
-                                                                        <span className="text-[10px] text-slate-600 font-mono">-1</span>
-                                                                        <div className="flex-1 h-2 bg-slate-800 rounded-full relative overflow-hidden">
-                                                                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-green-500 via-50% via-yellow-500 to-red-500 opacity-20" />
-                                                                            <div
-                                                                                className="absolute top-0 w-3 h-3 rounded-full bg-white shadow-md shadow-white/30 -translate-y-[2px]"
-                                                                                style={{ left: `${((pair.value + 1) / 2) * 100}%`, transform: 'translateX(-50%)' }}
+                                                                <div className="px-4 pb-6 pt-2 space-y-4">
+                                                                    {/* Enhanced Synchronized Charts */}
+                                                                    {pair.historySource && pair.historyTarget && (
+                                                                        <div className="bg-white/[0.01] rounded-[2.5rem] p-5 border border-white/5 shadow-2xl backdrop-blur-3xl">
+                                                                            <SynchronizedCorrelationChart
+                                                                                sourceSymbol={pair.source}
+                                                                                targetSymbol={pair.target}
+                                                                                historySource={pair.historySource}
+                                                                                historyTarget={pair.historyTarget}
+                                                                                rollingCorrelation={pair.rolling || []}
+                                                                                events={pair.events || []}
+                                                                                correlationValue={pair.value}
+                                                                                isStructuralOverlap={pair.isStructuralOverlap}
+                                                                                customInsight={getDetailedInsight(pair.source, pair.target, pair.value)}
                                                                             />
                                                                         </div>
-                                                                        <span className="text-[10px] text-slate-600 font-mono">+1</span>
+                                                                    )}
+
+                                                                    {/* Quick Recommendation Badge */}
+                                                                    <div className="flex flex-wrap gap-2 px-2">
+                                                                        <div className="px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 flex items-center gap-2">
+                                                                            <Brain className="w-3 h-3 text-blue-400" />
+                                                                            <span className="text-[9px] font-bold text-slate-500">STRATEJİ:</span>
+                                                                            <span className="text-[9px] font-black text-white uppercase tracking-wider">
+                                                                                {pair.value > 0.7 ? "Çeşitlendirme Gerekli" : "İdeal Risk Dağılımı"}
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </motion.div>
