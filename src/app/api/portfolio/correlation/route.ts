@@ -1,32 +1,72 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import yahooFinance from 'yahoo-finance2';
+import { fetchTefasHistory, fetchTefasData, TefasFundData, fetchTefasComposition } from '@/lib/tefas';
+
+function calculateLinearRegression(x: number[], y: number[]) {
+    let shortest = Math.min(x.length, y.length);
+    if (shortest < 2) return { slope: 1, intercept: 0 };
+
+    const getReturns = (arr: number[]) => {
+        const returns = [];
+        for (let i = 1; i < arr.length; i++) {
+            returns.push((arr[i] - arr[i - 1]) / arr[i - 1]);
+        }
+        return returns;
+    };
+
+    const retsX = getReturns(x.slice(-shortest));
+    const retsY = getReturns(y.slice(-shortest));
+    const n = retsX.length;
+
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (let i = 0; i < n; i++) {
+        sumX += retsX[i];
+        sumY += retsY[i];
+        sumXY += retsX[i] * retsY[i];
+        sumX2 += retsX[i] * retsX[i];
+    }
+
+    const varianceX = (sumX2 - (sumX * sumX) / n) / (n - 1);
+    const covariance = (sumXY - (sumX * sumY) / n) / (n - 1);
+
+    if (varianceX === 0) return { slope: 1, intercept: 0 };
+    const slope = covariance / varianceX;
+    const intercept = (sumY / n) - (slope * (sumX / n));
+
+    return { slope, intercept };
+}
+
+function calculateConfidence(correlation: number, rolling: number[], dataLength: number) {
+    if (dataLength < 10) return 0.2;
+    const densityBoost = Math.min(1, dataLength / 90);
+    let stability = 1;
+    if (rolling.length > 5) {
+        const mean = rolling.reduce((a, b) => a + b, 0) / rolling.length;
+        const variance = rolling.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / rolling.length;
+        const stdDev = Math.sqrt(variance);
+        stability = Math.max(0, 1 - stdDev * 2);
+    }
+    const score = (0.4 * densityBoost) + (0.6 * stability);
+    return parseFloat((score * 100).toFixed(0));
+}
 
 function pearsonCorrelation(x: number[], y: number[]) {
     let shortest = Math.min(x.length, y.length);
     if (shortest < 2) return 0;
-
     const xs = x.slice(-shortest);
     const ys = y.slice(-shortest);
-
     let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
     for (let i = 0; i < shortest; i++) {
-        sumX += xs[i];
-        sumY += ys[i];
-        sumXY += xs[i] * ys[i];
-        sumX2 += xs[i] * xs[i];
-        sumY2 += ys[i] * ys[i];
+        sumX += xs[i]; sumY += ys[i]; sumXY += xs[i] * ys[i];
+        sumX2 += xs[i] * xs[i]; sumY2 += ys[i] * ys[i];
     }
-
     const numerator = (shortest * sumXY) - (sumX * sumY);
     const denominator = Math.sqrt(((shortest * sumX2) - (sumX * sumX)) * ((shortest * sumY2) - (sumY * sumY)));
-
     if (denominator === 0) return 0;
     return numerator / denominator;
 }
 
-// Helper for rolling correlation
-function calculateRollingCorrelation(x: number[], y: number[], windowSize: number = 10) {
+function calculateRollingCorrelation(x: number[], y: number[], windowSize: number = 15) {
     const rolling = [];
     const len = Math.min(x.length, y.length);
     for (let i = windowSize; i <= len; i++) {
@@ -44,301 +84,215 @@ interface MarketEvent {
     impact: string;
 }
 
-// Dynamic Event Generator for Pair-Specific Insights
-function generateDynamicEvents(assetA: any, assetB: any, correlation: number): MarketEvent[] {
+function calculateStressTests(srcHist: { date: string, price: number }[], tgtHist: { date: string, price: number }[]) {
+    const events = [
+        { name: 'Mayıs 23 Seçim Belirsizliği', start: '2023-05-01', end: '2023-05-28' },
+        { name: 'Ekim 23 Jeopolitik Risk (Savaş)', start: '2023-10-07', end: '2023-11-01' },
+        { name: 'Şubat 24 Enflasyon Raporu/Faiz', start: '2024-02-01', end: '2024-03-01' },
+        { name: 'Nisan 24 Global Teknoloji Satışı', start: '2024-04-10', end: '2024-04-20' }
+    ];
+
+    return events.map(event => {
+        const srcStart = srcHist.find(h => h.date >= event.start);
+        const srcEnd = [...srcHist].reverse().find(h => h.date <= event.end);
+        const tgtStart = tgtHist.find(h => h.date >= event.start);
+        const tgtEnd = [...tgtHist].reverse().find(h => h.date <= event.end);
+
+        if (!srcStart || !srcEnd || !tgtStart || !tgtEnd) return null;
+
+        const srcReturn = ((srcEnd.price - srcStart.price) / srcStart.price) * 100;
+        const tgtReturn = ((tgtEnd.price - tgtStart.price) / tgtStart.price) * 100;
+
+        return {
+            name: event.name,
+            srcReturn: parseFloat(srcReturn.toFixed(2)),
+            tgtReturn: parseFloat(tgtReturn.toFixed(2)),
+            divergence: Math.abs(srcReturn - tgtReturn)
+        };
+    }).filter(Boolean);
+}
+
+function calculateMonthlyCorrelation(srcHist: { date: string, price: number }[], tgtHist: { date: string, price: number }[]) {
+    const monthlyData: Record<string, { src: number[], tgt: number[] }> = {};
+    const dates = Array.from(new Set([...srcHist.map(h => h.date), ...tgtHist.map(h => h.date)])).sort();
+    dates.forEach(date => {
+        const monthKey = date.substring(0, 7);
+        if (!monthlyData[monthKey]) monthlyData[monthKey] = { src: [], tgt: [] };
+        const s = srcHist.find(h => h.date === date)?.price;
+        const t = tgtHist.find(h => h.date === date)?.price;
+        if (s !== undefined && t !== undefined) {
+            monthlyData[monthKey].src.push(s);
+            monthlyData[monthKey].tgt.push(t);
+        }
+    });
+
+    return Object.entries(monthlyData)
+        .map(([key, data]) => ({
+            month: key,
+            value: data.src.length > 3 ? parseFloat(pearsonCorrelation(data.src, data.tgt).toFixed(2)) : null
+        }))
+        .filter(d => d.value !== null)
+        .slice(-12);
+}
+
+function generateProfessionalEvents(assetA: any, assetB: any, correlation: number): MarketEvent[] {
     const events: MarketEvent[] = [];
     const symA = assetA.symbol?.toUpperCase() || '';
     const symB = assetB.symbol?.toUpperCase() || '';
-
-    // Seed for consistent "randomness" per pair
-    const seed = symA.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) +
-        symB.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-
-    const variantIndex = seed % 3;
-
-    const isTech = (s: string) => s.includes('TTE') || s.includes('ZJT') || s.includes('NASDAQ') || s.includes('APPLE') || s.includes('AMAZON') || s.includes('METW') || s.includes('AFT');
-    const isGold = (s: string) => s.includes('GOLD') || s.includes('GLD') || s.includes('ALTIN') || s.includes('GLD');
-    const isBist = (s: string) => s.length === 3 || s.includes('BIST') || s.includes('.IS');
-    const isBank = (s: string) => s.includes('BANK') || s.includes('AKBNK') || s.includes('GARAN') || s.includes('ISCTR') || s.includes('YKBNK');
-
+    const seed = symA.length + symB.length;
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
     const getRandomDate = (daysAgo: number) => new Date(now - (daysAgo + (seed % 5)) * day).toISOString().split('T')[0];
 
-    // Scenario: Tech Focus
-    if (isTech(symA) || isTech(symB)) {
-        const variants = [
-            { title: "Yapay Zeka Rallisi", desc: "Küresel teknoloji devlerinin rekor kâr açıklamaları teknoloji endekslerini yukarı taşıdı.", impact: "Teknoloji odaklı varlıklarda eşzamanlı yükseliş dalgası." },
-            { title: "Silikon Vadisi İnovasyon Dalgası", desc: "Yeni nesil çip mimarilerinin duyurulması donanım ve yazılım şirketlerinde iyimserlik yarattı.", impact: "Sektörel değerlemelerin yukarı yönlü revizyonu." },
-            { title: "Teknoloji Devi Satın Almaları", desc: "Sektördeki konsolidasyon adımları yatırımcıların teknoloji büyüme potansiyeline olan güvenini artırdı.", impact: "Hisse bazlı hareketlerin sektör geneline yayılması." }
-        ];
-        const v = variants[variantIndex];
-        events.push({ date: getRandomDate(42), title: v.title, description: v.desc, impact: v.impact });
-
+    if (correlation > 0.88) {
         events.push({
-            date: getRandomDate(15),
-            title: "Çip Arzı Gelişmeleri",
-            description: "Yarı iletken tedarik zincirindeki iyileşme donanım şirketlerine olan güveni tazeledi.",
-            impact: "Sektörel korelasyonda belirgin artış."
+            date: getRandomDate(10),
+            title: "Yoğun Davranışsal Senkronizasyon",
+            description: "Varlıklar arasındaki hareket birliği kritik eşiği aştı. Portföy çeşitlendirmesi bu ikili arasında etkisiz kalıyor.",
+            impact: "Yapısal Risk Artışı"
         });
     }
-
-    // Scenario: Gold/Commodity
-    if (isGold(symA) || isGold(symB)) {
-        const variants = [
-            { title: "Jeopolitik Güvenli Liman Talebi", desc: "Küresel belirsizlikler yatırımcıları 'güvenli liman' olarak görülen varlıklara yöneltti.", impact: "Altın ve emtia bazlı fonlarda paralel pozitif hareket." },
-            { title: "Enflasyon Korunma Güdüsü", desc: "Beklentilerin üzerinde gelen enflasyon verileri emtia fiyatlarını destekledi.", impact: "Reel varlık sınıflarında toplu girişler görüldü." },
-            { title: "Merkez Bankası Altın Alımları", desc: "Gelişmiş ülke merkez bankalarının rezerv çeşitlendirmesi kıymetli maden piyasasını canlandırdı.", impact: "Emtia korelasyonunun zirve yapması." }
-        ];
-        const v = variants[variantIndex % variants.length];
-        events.push({ date: getRandomDate(30), title: v.title, description: v.desc, impact: v.impact });
-    }
-
-    // Scenario: Bank/BIST
-    if (isBank(symA) || isBank(symB) || (isBist(symA) && isBist(symB))) {
-        const variants = [
-            { title: "TCMB Para Politikası Mesajı", desc: "Merkez Bankası'nın sıkılaşma adımları bankacılık ve finansal varlıkları etkiledi.", impact: "Yerel finansal enstrümanlarda korelasyonu artıran makro etki." },
-            { title: "Bankacılık Kararlılık Raporu", desc: "Sektör kârlılıklarının beklentileri aşması BIST endekslerinde lokomotif etkisi yarattı.", impact: "BIST-30 genelinde güçlü alıcılı seyir." },
-            { title: "Küresel Sermaye Girişi", desc: "Gelişmekte olan piyasalara yönelik risk iştahının artması yerel hisse senetlerini destekledi.", impact: "Döviz bazlı hisse getirilerinde senkronizasyon." }
-        ];
-        const v = variants[variantIndex % variants.length];
-        events.push({ date: getRandomDate(20), title: v.title, description: v.desc, impact: v.impact });
-    }
-
-    // Correlation-specific events
-    if (correlation > 0.8) {
-        events.push({
-            date: getRandomDate(8),
-            title: "Yoğun Sektörel Senkronizasyon",
-            description: "Makroekonomik verilerin bu iki varlık üzerinde neredeyse özdeş bir etki bıraktığı gözlemlendi.",
-            impact: "Korelasyonun %80 bandının üzerine çıkması."
-        });
-    } else if (correlation < 0.2) {
-        events.push({
-            date: getRandomDate(12),
-            title: "Ayrışan Dinamikler",
-            description: "Varlıkların farklı piyasa katalizörlerine yanıt vermesi sonucunda fiyat hareketleri bağımsızlaştı.",
-            impact: "Portföy risk dağılımı için fırsat doğması."
-        });
-    }
-
-    // Default macro event
-    events.push({
-        date: getRandomDate(3),
-        title: "Küresel Risk İştahı Değişimi",
-        description: "ABD enflasyon verilerinin ardından piyasalarda risk iştahı yeniden dengelendi.",
-        impact: "Çoğu varlık sınıfında ortak trend oluşumu."
-    });
-
-    return events.sort((a, b) => a.date.localeCompare(b.date));
+    return events;
 }
 
-import { fetchTefasHistory, fetchTefasData } from '@/lib/tefas';
+function compareCompositions(compA: any[], compB: any[]) {
+    if (!compA || !compB) return null;
+    const common: { type: string, weightA: number, weightB: number }[] = [];
+    compA.forEach(a => {
+        const b = compB.find((x: any) => x.VARLIKTURU === a.VARLIKTURU);
+        if (b) {
+            common.push({ type: a.VARLIKTURU, weightA: a.ORAN, weightB: b.ORAN });
+        }
+    });
+    const similarity = common.reduce((acc, curr) => acc + Math.min(curr.weightA, curr.weightB), 0);
+    return {
+        similarity: parseFloat(similarity.toFixed(1)),
+        commonAssets: common.sort((a, b) => (b.weightA + b.weightB) - (a.weightA + a.weightB)).slice(0, 3)
+    };
+}
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
         const assets = body.assets || [];
-        const currentPrices = body.currentPrices || {}; // Prices from dashboard for 100% sync
+        const currentPrices = body.currentPrices || {};
 
         if (assets.length < 2) {
-            return NextResponse.json({
-                matrix: [],
-                symbols: [],
-                message: "Correlation requires at least 2 assets."
-            });
+            return NextResponse.json({ matrix: [], symbols: [], message: "Korelasyon için en az 2 varlık gerekir." });
         }
 
-        // Pre-fetch current prices for all funds to ensure consistency with portfolio
-        const currentTefasData = await fetchTefasData(new Date());
+        const currentTefasData: TefasFundData[] = await fetchTefasData(new Date());
 
         const historyPromises = assets.map(async (asset: any) => {
             try {
-                let symbol = asset.symbol;
-                const clientPrice = currentPrices[symbol.toUpperCase()];
+                let symbol = asset.symbol.toUpperCase();
+                const clientPrice = currentPrices[symbol];
 
-                // Real TEFAS Fetch for 3-letter codes
-                if (asset.type === 'FUND' || asset.symbol.length === 3) {
-                    const realData = await fetchTefasHistory(symbol);
+                const isFund = asset.type === 'FUND' || currentTefasData.some(f => f.FONKODU === symbol);
 
-                    // Get current price from portfolio system for better alignment
-                    const fund = currentTefasData.find((f: any) => f.FONKODU === symbol.toUpperCase());
-                    let latestPrice = clientPrice || 0; // Use client price as primary source
+                if (isFund) {
+                    const [realData, composition] = await Promise.all([
+                        fetchTefasHistory(symbol),
+                        fetchTefasComposition(symbol)
+                    ]);
 
+                    const fund = currentTefasData.find((f: TefasFundData) => f.FONKODU === symbol);
+                    let latestPrice = clientPrice || 0;
                     if (!latestPrice && fund && fund.SONPORTFOYDEGERI && fund.SONPAYADEDI) {
                         latestPrice = fund.SONPORTFOYDEGERI / fund.SONPAYADEDI;
                     }
 
                     if (realData && realData.length > 5) {
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const lastPoint = realData[realData.length - 1];
-
-                        // If latestPrice is provided, force it as the current point
-                        if (latestPrice > 0) {
-                            if (lastPoint.date === todayStr) {
-                                lastPoint.price = latestPrice;
-                            } else {
-                                // If the last point is not today, append a new point for today
-                                // Or if it's very recent, just update the last point
-                                const lastDataDate = new Date(lastPoint.date);
-                                const today = new Date();
-                                const diffTime = Math.abs(today.getTime() - lastDataDate.getTime());
-                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-                                if (diffDays <= 1) { // If last data point is yesterday or today
-                                    realData[realData.length - 1].price = latestPrice;
-                                    realData[realData.length - 1].date = todayStr; // Ensure date is today
-                                } else {
-                                    // If there's a gap, append a new point for today
-                                    realData.push({ date: todayStr, price: latestPrice });
-                                }
-                            }
-                        }
-                        return { symbol: asset.symbol, history: realData.slice(-90) };
+                        return { symbol: asset.symbol, history: realData.slice(-365), category: fund?.FONTURACIKLAMA || 'Fon', composition };
                     }
 
-                    // Strict Fallback for known funds from user screen
-                    let basePrice = latestPrice > 0 ? latestPrice : 100;
-                    if (basePrice === 100) {
-                        if (symbol.toUpperCase() === 'IPJ') basePrice = 16.94;
-                        if (symbol.toUpperCase() === 'ALC') basePrice = 0.35;
-                        if (symbol.toUpperCase() === 'TP2') basePrice = 1.74;
-                        if (symbol.toUpperCase() === 'YLE') basePrice = 8.35;
-                        if (symbol.toUpperCase() === 'IRT') basePrice = 5.83;
-                        if (symbol.toUpperCase() === 'GGK') basePrice = 15.34;
-                        if (symbol.toUpperCase() === 'GMC') basePrice = 10.49;
+                    // Mock data as fallback for funds if TEFAS returns empty but it's a known fund
+                    const mockHistory = [];
+                    let lastP = latestPrice || 100;
+                    for (let i = 0; i < 365; i++) {
+                        mockHistory.push({
+                            date: new Date(Date.now() - (364 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                            price: lastP
+                        });
+                        lastP *= (1 + (Math.random() - 0.5) * 0.015);
                     }
-
-                    // Improved MOCK if TEFAS fetch still fails (using basePrice)
-                    const codeSum = symbol.split('').reduce((a: number, b: string) => a + b.charCodeAt(0), 0);
-                    const isStable = symbol.toUpperCase() === 'TP2' || symbol.toUpperCase().includes('PPL');
-
-                    const volatility = isStable ? 0.0002 : (codeSum % 15) / 1000 + 0.005;
-                    const drift = isStable ? 0.0012 : ((codeSum % 7) - 3) / 10000;
-                    const freq = 0.1 + (codeSum % 10) / 20;
-
-                    let price = basePrice;
-                    const mockHistory = Array.from({ length: 90 }, (_, i) => {
-                        const noise = (Math.random() - 0.5) * volatility;
-                        const periodic = isStable ? 0 : Math.sin(i * freq) * volatility;
-                        price = price * (1 + noise + periodic + drift);
-                        return {
-                            date: new Date(Date.now() - (90 - i) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                            price: parseFloat(price.toFixed(5))
-                        };
-                    });
-
-                    // Force the very last point to be exactly the basePrice (Dashboard Price)
-                    if (mockHistory.length > 0) {
-                        mockHistory[mockHistory.length - 1].price = basePrice;
-                    }
-
-                    return { symbol: asset.symbol, history: mockHistory };
+                    return { symbol: asset.symbol, history: mockHistory, category: fund?.FONTURACIKLAMA || 'Fon', composition };
                 }
 
                 let querySymbol = symbol;
-                if (asset.type === 'STOCK' && !querySymbol.includes('.')) {
-                    querySymbol += '.IS';
-                }
-
-                const queryOptions = {
-                    period1: new Date(Date.now() - 95 * 24 * 60 * 60 * 1000), // ~3 months + buffer
-                    interval: '1d' as const
-                };
-
-                try {
-                    const results: any = await yahooFinance.historical(querySymbol, queryOptions);
-                    let data = (results as any[]).map((r: any) => ({
-                        date: r.date.toISOString().split('T')[0],
-                        price: r.close
-                    }));
-
-                    if (data.length === 0 && querySymbol.includes('.IS')) {
-                        const retryResults: any = await yahooFinance.historical(symbol, queryOptions);
-                        data = (retryResults as any[]).map((r: any) => ({
-                            date: r.date.toISOString().split('T')[0],
-                            price: r.close
-                        }));
-                    }
-
-                    // Sync latest point with clientPrice if available
-                    if (data.length > 0 && clientPrice > 0) {
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const lastPoint = data[data.length - 1];
-
-                        if (lastPoint.date === todayStr) {
-                            lastPoint.price = clientPrice;
-                        } else {
-                            const lastDataDate = new Date(lastPoint.date);
-                            const today = new Date();
-                            const diffDays = Math.ceil(Math.abs(today.getTime() - lastDataDate.getTime()) / (1000 * 60 * 60 * 24));
-
-                            if (diffDays <= 1) {
-                                data[data.length - 1].price = clientPrice;
-                                data[data.length - 1].date = todayStr;
-                            } else {
-                                data.push({ date: todayStr, price: clientPrice });
-                            }
-                        }
-                    }
-
-                    return { symbol: asset.symbol, history: data.slice(-90) };
-                } catch (yErr) {
-                    return { symbol: asset.symbol, history: [] };
-                }
-            } catch (error) {
-                return { symbol: asset.symbol, history: [] };
+                if (!querySymbol.includes('.')) querySymbol += '.IS';
+                const results: any = await yahooFinance.historical(querySymbol, {
+                    period1: new Date(Date.now() - 400 * 24 * 60 * 60 * 1000),
+                    interval: '1d'
+                });
+                const data = results.map((r: any) => ({ date: r.date.toISOString().split('T')[0], price: r.close }));
+                return { symbol: asset.symbol, history: data.slice(-365), category: 'Hisse Senedi', composition: null };
+            } catch (err) {
+                return { symbol: asset.symbol, history: [], category: 'Bilinmiyor', composition: null };
             }
         });
 
         const histories = await Promise.all(historyPromises);
         const validUniques = histories.filter(h => h.history.length > 5);
-
         const uniqueSymbols = Array.from(new Set(validUniques.map(v => v.symbol)));
         const finalData = uniqueSymbols.map(s => validUniques.find(v => v.symbol === s));
 
         if (!finalData || finalData.length < 2) {
-            return NextResponse.json({ matrix: [], symbols: [], message: "Not enough data." });
+            return NextResponse.json({ matrix: [], symbols: [] });
         }
 
         const matrix = [];
         for (let i = 0; i < finalData.length; i++) {
             for (let j = 0; j < finalData.length; j++) {
-                const histI = finalData[i]!.history.map((h: any) => h.price);
-                const histJ = finalData[j]!.history.map((h: any) => h.price);
-                const val = pearsonCorrelation(histI, histJ);
+                const fI = finalData[i]!;
+                const fJ = finalData[j]!;
+                const histI = fI.history;
+                const histJ = fJ.history;
+                const pricesI = histI.map((h: any) => h.price);
+                const pricesJ = histJ.map((h: any) => h.price);
 
-                // Calculate rolling correlation only for distinct pairs
-                let rolling: number[] = [];
+                const val = pearsonCorrelation(pricesI, pricesJ);
+                const regression = calculateLinearRegression(pricesI, pricesJ);
+                const rolling = (i !== j) ? calculateRollingCorrelation(pricesI, pricesJ, 15) : [];
+                const confidence = (i !== j) ? calculateConfidence(val, rolling, pricesI.length) : 100;
+
+                const scatter = [];
                 if (i !== j) {
-                    rolling = calculateRollingCorrelation(histI, histJ, 15);
+                    const shortest = Math.min(histI.length, histJ.length);
+                    const sI = histI.slice(-shortest);
+                    const sJ = histJ.slice(-shortest);
+                    // Sample every 5 days for scatter
+                    for (let k = 0; k < shortest; k += 5) {
+                        scatter.push({
+                            x: parseFloat(((sI[k].price / sI[0].price - 1) * 100).toFixed(2)),
+                            y: parseFloat(((sJ[k].price / sJ[0].price - 1) * 100).toFixed(2))
+                        });
+                    }
                 }
 
-                // Structural Overlap Detection
-                const isSameHoldingType =
-                    (finalData[i]!.symbol.length === 3 && finalData[j]!.symbol.length === 3) || // Both are TEFAS funds
-                    (finalData[i]!.symbol.includes('BIST') && finalData[j]!.symbol.includes('BIST')) || // Both BIST focus
-                    (finalData[i]!.symbol.includes('NASD') && finalData[j]!.symbol.includes('NASD'));
-
                 matrix.push({
-                    source: finalData[i]!.symbol,
-                    target: finalData[j]!.symbol,
+                    source: fI.symbol,
+                    target: fJ.symbol,
                     value: parseFloat(val.toFixed(2)),
+                    beta: parseFloat(regression.slope.toFixed(2)),
+                    alpha: parseFloat((regression.intercept * 100).toFixed(3)),
+                    confidence: confidence,
                     rolling: rolling,
-                    historySource: finalData[i]!.history,
-                    historyTarget: finalData[j]!.history,
-                    isStructuralOverlap: isSameHoldingType && val > 0.85,
-                    events: generateDynamicEvents(finalData[i], finalData[j], val)
+                    historySource: histI,
+                    historyTarget: histJ,
+                    categorySource: fI.category,
+                    categoryTarget: fJ.category,
+                    sharedComposition: (i !== j) ? compareCompositions(fI.composition, fJ.composition) : null,
+                    events: generateProfessionalEvents(fI, fJ, val),
+                    stressTests: (i !== j) ? calculateStressTests(histI, histJ) : [],
+                    heatmap: (i !== j) ? calculateMonthlyCorrelation(histI, histJ) : [],
+                    scatterData: scatter
                 });
             }
         }
 
-        return NextResponse.json({
-            matrix: matrix,
-            symbols: uniqueSymbols
-        });
-
+        return NextResponse.json({ matrix, symbols: uniqueSymbols });
     } catch (error) {
-        return NextResponse.json({ error: 'Failed result' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed' }, { status: 500 });
     }
 }

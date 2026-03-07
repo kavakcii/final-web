@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History, Calendar, RefreshCw } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 
 // Grouped Asset Type
@@ -335,7 +336,7 @@ export default function PortfolioPage() {
                                 <tr>
                                     <td colSpan={6} className="p-12 text-center text-slate-500 animate-pulse">
                                         <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2 text-blue-500" />
-                                        Veriler güncelleniyor...
+                                        Veriler yükleniyor...
                                     </td>
                                 </tr>
                             ) : groupedAssets.length === 0 ? (
@@ -391,7 +392,9 @@ export default function PortfolioPage() {
                                                     {currentPrice > 0 ? (
                                                         <span className="font-medium text-white">{formatCurrency(currentPrice)}</span>
                                                     ) : (
-                                                        <span className="text-xs text-red-400">Veri Yok</span>
+                                                        <span className={cn("text-xs", loading ? "text-blue-400 animate-pulse" : "text-red-400")}>
+                                                            {loading ? "Yükleniyor..." : "Veri Yok"}
+                                                        </span>
                                                     )}
                                                 </td>
                                                 <td className="p-5">
@@ -423,7 +426,7 @@ export default function PortfolioPage() {
                                                             className={`p-2 hover:bg-blue-500/20 text-slate-400 hover:text-blue-400 rounded-lg transition-colors ${isExpanded ? 'bg-blue-500/10 text-blue-400' : ''}`}
                                                             title="Geçmiş Kayıtlar"
                                                         >
-                                                            <History className="w-4 h-4" />
+                                                            <HistoryIcon className="w-4 h-4" />
                                                         </button>
                                                     </div>
                                                 </td>
@@ -442,7 +445,7 @@ export default function PortfolioPage() {
                                                             >
                                                                 <div className="p-6 pl-20 space-y-4">
                                                                     <div className="flex items-center gap-2 mb-2">
-                                                                        <History className="w-3.5 h-3.5 text-blue-400" />
+                                                                        <HistoryIcon className="w-3.5 h-3.5 text-blue-400" />
                                                                         <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">İşlem Geçmişi ({group.transactions.length})</h4>
                                                                     </div>
                                                                     <div className="grid grid-cols-1 gap-2">

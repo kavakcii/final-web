@@ -6,19 +6,50 @@ export interface TefasFundData {
     SONPORTFOYDEGERI: number;
     SONPAYADEDI: number;
     TARIH: string;
+    FONTURACIKLAMA?: string;
+    KURUCUKODU?: string;
 }
 
-// Shared helper for TEFAS HTTPS requests (Handles Legacy TLS)
-function tefasRequest(url: string, payload: any): Promise<any> {
+// Shared helper to get session cookies from TEFAS
+let cachedCookies = '';
+let lastCookieTime = 0;
+
+async function getTefasCookies(): Promise<string> {
+    const now = Date.now();
+    if (cachedCookies && (now - lastCookieTime < 300000)) {
+        return cachedCookies;
+    }
+    return new Promise((resolve) => {
+        const req = https.get('https://www.tefas.gov.tr/FonKarsilastirma.aspx', {
+            rejectUnauthorized: false,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+        }, (res) => {
+            const cookies = res.headers['set-cookie'];
+            const cookieStr = cookies ? cookies.map(c => c.split(';')[0]).join('; ') : '';
+            cachedCookies = cookieStr;
+            lastCookieTime = Date.now();
+            resolve(cookieStr);
+        });
+        req.on('error', () => resolve(''));
+        req.end();
+    });
+}
+
+// Shared helper for TEFAS HTTPS requests (Handles Legacy TLS and Cookies)
+async function tefasRequest(url: string, payload: any): Promise<any> {
+    const cookieHeader = await getTefasCookies();
     const postData = new URLSearchParams(payload).toString();
+
     return new Promise((resolve, reject) => {
         const options = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                'Referer': 'https://www.tefas.gov.tr/',
+                'Referer': 'https://www.tefas.gov.tr/FonKarsilastirma.aspx',
                 'X-Requested-With': 'XMLHttpRequest',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                'Origin': 'https://www.tefas.gov.tr',
+                'Cookie': cookieHeader,
                 'Content-Length': Buffer.byteLength(postData).toString()
             },
             rejectUnauthorized: false,
@@ -54,26 +85,40 @@ function formatDate(date: Date): string {
 }
 
 export async function fetchTefasData(date: Date): Promise<TefasFundData[]> {
-    const targetDate = new Date(date);
-    const day = targetDate.getDay();
-    if (day === 0) targetDate.setDate(targetDate.getDate() - 2);
-    else if (day === 6) targetDate.setDate(targetDate.getDate() - 1);
+    let attempts = 0;
+    const maxAttempts = 5;
+    let results: TefasFundData[] = [];
+    let targetDate = new Date(date);
 
-    const dateStr = formatDate(targetDate);
-    const payload = {
-        "calismatipi": "2", "fontip": "YAT", "sfontur": "", "kurucukod": "", "fongrup": "",
-        "bastarih": dateStr, "bittarih": dateStr, "fonturkod": "", "fonunvantip": "",
-        "strperiod": "1,1,1,1,1,1,1", "islemdurum": ""
-    };
+    while (attempts < maxAttempts && results.length === 0) {
+        // Adjust for weekend
+        const day = targetDate.getDay();
+        if (day === 0) targetDate.setDate(targetDate.getDate() - 2); // Sunday -> Friday
+        else if (day === 6) targetDate.setDate(targetDate.getDate() - 1); // Saturday -> Friday
 
-    const resYAT = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', payload);
-    let results = resYAT?.data || [];
+        const dateStr = formatDate(targetDate);
+        const payload = {
+            "calismatipi": "2", "fontip": "YAT", "sfontur": "", "kurucukod": "", "fongrup": "",
+            "bastarih": dateStr, "bittarih": dateStr, "fonturkod": "", "fonunvantip": "",
+            "strperiod": "1,1,1,1,1,1,1", "islemdurum": ""
+        };
 
-    // Also fetch EMK for pension funds
-    payload.fontip = 'EMK';
-    const resEMK = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', payload);
-    if (resEMK?.data) results = [...results, ...resEMK.data];
+        const resYAT = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', payload);
+        if (resYAT?.data) {
+            results = [...results, ...resYAT.data];
+        }
 
+        payload.fontip = 'EMK';
+        const resEMK = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', payload);
+        if (resEMK?.data) {
+            results = [...results, ...resEMK.data];
+        }
+
+        if (results.length === 0) {
+            targetDate.setDate(targetDate.getDate() - 1);
+            attempts++;
+        }
+    }
     return results;
 }
 
@@ -107,4 +152,27 @@ export async function fetchTefasHistory(fundCode: string, months: number = 4) {
         }).sort((a, b) => a.date.localeCompare(b.date));
     }
     return null;
+}
+
+export async function fetchTefasComposition(fundCode: string) {
+    let targetDate = new Date();
+    let results = null;
+    let attempts = 0;
+
+    while (attempts < 5 && !results) {
+        const dateStr = formatDate(targetDate);
+        const payload = {
+            fonkod: fundCode.toUpperCase(),
+            bastarih: dateStr,
+            bittarih: dateStr
+        };
+        const res = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindFundCompositionHistory', payload);
+        if (res?.data && res.data.length > 0) {
+            results = res.data;
+        } else {
+            targetDate.setDate(targetDate.getDate() - 1);
+            attempts++;
+        }
+    }
+    return results;
 }
