@@ -108,20 +108,30 @@ export default function PortfolioPage() {
                         const priceMap: Record<string, number> = {};
                         json.results.forEach((r: any) => {
                             if (r.symbol && r.regularMarketPrice) {
-                                priceMap[r.symbol] = r.regularMarketPrice;
-                                priceMap[r.symbol.toUpperCase()] = r.regularMarketPrice;
+                                const symbol = r.symbol.toUpperCase();
+                                priceMap[symbol] = r.regularMarketPrice;
+                                // Add fallback without .IS for Turkish stocks
+                                if (symbol.endsWith('.IS')) {
+                                    priceMap[symbol.replace('.IS', '')] = r.regularMarketPrice;
+                                }
                             }
                         });
                         setPrices(priceMap);
                     } else if (json.error) {
                         console.error("API Error:", json.error);
+                        setFeedback({ message: "Fiyat verileri alınamadı.", type: 'error' });
+                        setTimeout(() => setFeedback(null), 5000);
                     }
                 } catch (e) {
                     console.error("Network/Parse Error:", e);
+                    setFeedback({ message: "Bağlantı hatası: Fiyatlar güncellenemedi.", type: 'error' });
+                    setTimeout(() => setFeedback(null), 5000);
                 }
             }
         } catch (error) {
             console.error("Failed to load portfolio", error);
+            setFeedback({ message: "Portföy yüklenirken hata oluştu.", type: 'error' });
+            setTimeout(() => setFeedback(null), 5000);
         } finally {
             setLoading(false);
         }

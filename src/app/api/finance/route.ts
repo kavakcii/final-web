@@ -2,8 +2,14 @@ import { NextResponse } from 'next/server';
 import YahooFinance from 'yahoo-finance2';
 import { fetchTefasData } from '@/lib/tefas';
 
-const yahooFinance = new YahooFinance();
-// yahooFinance.suppressNotices(['yahooSurvey']);
+let yahooFinance = YahooFinance as any;
+if (typeof yahooFinance === 'function' || (yahooFinance?.prototype && yahooFinance?.prototype?.search)) {
+    try {
+        yahooFinance = new yahooFinance();
+    } catch (e) {
+        console.warn("Using YahooFinance as instance");
+    }
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);

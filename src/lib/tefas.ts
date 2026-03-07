@@ -40,7 +40,20 @@ async function tefasRequest(url: string, payload: any): Promise<any> {
     const cookieHeader = await getTefasCookies();
     const postData = new URLSearchParams(payload).toString();
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+        const getLegacySslOption = () => {
+            try {
+                const crypto = require('crypto');
+                return crypto.constants?.SSL_OP_LEGACY_SERVER_CONNECT || 0x4;
+            } catch (e) {
+                try {
+                    return require('constants')?.SSL_OP_LEGACY_SERVER_CONNECT || 0x4;
+                } catch (e2) {
+                    return 0x4;
+                }
+            }
+        };
+
         const options = {
             method: 'POST',
             headers: {
@@ -55,7 +68,7 @@ async function tefasRequest(url: string, payload: any): Promise<any> {
             rejectUnauthorized: false,
             ciphers: 'DEFAULT@SECLEVEL=1',
             minVersion: 'TLSv1' as any,
-            secureOptions: (require('constants') as any).SSL_OP_LEGACY_SERVER_CONNECT
+            secureOptions: getLegacySslOption()
         };
 
         const req = https.request(url, options, (res) => {
@@ -71,7 +84,7 @@ async function tefasRequest(url: string, payload: any): Promise<any> {
             });
         });
 
-        req.on('error', (e) => resolve(null));
+        req.on('error', () => resolve(null));
         req.write(postData);
         req.end();
     });
