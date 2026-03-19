@@ -180,21 +180,21 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8"
               >
-                <Link href="/login?tab=register" className="w-full sm:w-auto">
+                <Link href="/login?tab=register" className="w-full sm:w-auto relative z-30 pointer-events-auto">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#0a192f] hover:bg-black text-white font-bold rounded-2xl shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] transition-all text-base tracking-wide relative z-20"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#0a192f] hover:bg-black text-white font-bold rounded-2xl shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] transition-all text-base tracking-wide"
                   >
                     Ücretsiz Dene
                     <ArrowRight className="w-5 h-5" />
                   </motion.button>
                 </Link>
-                <Link href="/login" className="w-full sm:w-auto">
+                <Link href="/login" className="w-full sm:w-auto relative z-30 pointer-events-auto">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-2xl border-2 border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-base tracking-wide relative z-20"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-2xl border-2 border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-base tracking-wide"
                   >
                     Giriş Yap
                   </motion.button>

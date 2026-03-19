@@ -454,63 +454,60 @@ export default function PortfolioPage() {
 
                 {/* Sidebar Widgets */}
                 <div className="xl:col-span-1 space-y-6">
-                    <GlowCard customSize glowColor="primary" className="h-auto">
-                        <div className="p-6">
-                            <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
-                                <Calendar className="w-4 h-4 text-blue-400" /><h3 className="text-sm font-bold text-white">Takvim</h3>
-                            </div>
-                            <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                                {Object.entries(earningsDates).map(([sym, time]) => {
-                                    const days = Math.ceil((time - Date.now()) / (86400000));
-                                    if (days < -30) return null;
-                                    return (
-                                        <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs">
-                                            <span className="font-bold">{sym}</span>
-                                            <span className={days > 0 ? "text-blue-400" : "text-slate-500"}>{days > 0 ? `${days} GÜN` : "AÇIKLANDI"}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    {/* Takvim Widget */}
+                    <div className="p-6 rounded-xl border border-slate-800 bg-slate-900/40">
+                        <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
+                            <Calendar className="w-4 h-4 text-blue-400" /><h3 className="text-sm font-bold text-white">Takvim</h3>
                         </div>
-                    </GlowCard>
+                        <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                            {Object.entries(earningsDates).map(([sym, time]) => {
+                                const days = Math.ceil((time - Date.now()) / (86400000));
+                                if (days < -30) return null;
+                                return (
+                                    <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs">
+                                        <span className="font-bold">{sym}</span>
+                                        <span className={days > 0 ? "text-blue-400" : "text-slate-500"}>{days > 0 ? `${days} GÜN` : "AÇIKLANDI"}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                    <GlowCard customSize glowColor="navy" className="h-auto">
-                        <div className="p-6">
-                            <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
-                                <Activity className="w-4 h-4 text-blue-400" /><h3 className="text-sm font-bold text-white">Fiyat Analizi</h3>
-                            </div>
-                            <div className="space-y-3">
-                                {Object.entries(priceExtremes).map(([sym, ext]) => {
-                                    const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
-                                    return (
-                                        <div key={sym} className="space-y-1">
-                                            <div className="flex justify-between text-[10px] font-bold"><span>{sym}</span><span className="text-white">{formatCurrency(ext.current)}</span></div>
-                                            <div className="h-1 bg-slate-800 rounded-full relative overflow-hidden"><div className="absolute top-0 bottom-0 bg-white w-1" style={{ left: `${pos}%` }} /></div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    {/* Fiyat Analizi Widget */}
+                    <div className="p-6 rounded-xl border border-slate-800 bg-slate-900/40">
+                        <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
+                            <Activity className="w-4 h-4 text-blue-400" /><h3 className="text-sm font-bold text-white">Fiyat Analizi</h3>
                         </div>
-                    </GlowCard>
+                        <div className="space-y-3">
+                            {Object.entries(priceExtremes).map(([sym, ext]) => {
+                                const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
+                                return (
+                                    <div key={sym} className="space-y-1">
+                                        <div className="flex justify-between text-[10px] font-bold"><span>{sym}</span><span className="text-white">{formatCurrency(ext.current)}</span></div>
+                                        <div className="h-1 bg-slate-800 rounded-full relative overflow-hidden"><div className="absolute top-0 bottom-0 bg-white w-1" style={{ left: `${pos}%` }} /></div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                    <GlowCard customSize glowColor="green" className="h-auto">
-                        <div className="p-6">
-                            <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
-                                <Wallet className="w-4 h-4 text-emerald-400" /><h3 className="text-sm font-bold text-white">Nakit Akışı</h3>
-                            </div>
-                            <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                                {Object.entries(dividendData).map(([sym, data]) => {
-                                    const days = Math.ceil((data.date - Date.now()) / (86400000));
-                                    return (
-                                        <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs">
-                                            <span className="font-bold">{sym}</span>
-                                            <span className="text-emerald-400 font-bold">{formatCurrency(data.amount)}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    {/* Nakit Akışı Widget */}
+                    <div className="p-6 rounded-xl border border-slate-800 bg-slate-900/40">
+                        <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
+                            <Wallet className="w-4 h-4 text-emerald-400" /><h3 className="text-sm font-bold text-white">Nakit Akışı</h3>
                         </div>
-                    </GlowCard>
+                        <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
+                            {Object.entries(dividendData).map(([sym, data]) => {
+                                const days = Math.ceil((data.date - Date.now()) / (86400000));
+                                return (
+                                    <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs">
+                                        <span className="font-bold">{sym}</span>
+                                        <span className="text-emerald-400 font-bold">{formatCurrency(data.amount)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
             </div>
 
