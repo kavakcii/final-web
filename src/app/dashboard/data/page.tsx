@@ -580,7 +580,7 @@ export default function DataPage() {
                                                                             </ul>
                                                                             <div className="mt-4 pt-4 border-t border-blue-200">
                                                                                 <a
-                                                                                    href={`https://www.google.com/search?q=site%3Akap.org.tr+${fund.code}+portföy+dağılım+raporu`}
+                                                                                    href={`/api/kap-link?symbol=${fund.code}&type=fund`}
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
                                                                                     className="flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline transition-colors bg-blue-100 p-3 rounded-lg border border-blue-200"

@@ -23,7 +23,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm text-slate-400">
                             <li><Link href="#features" className="hover:text-blue-400 transition-colors">Özellikler</Link></li>
                             <li><Link href="#pricing" className="hover:text-blue-400 transition-colors">Fiyatlandırma</Link></li>
-                            <li><Link href="/dashboard" className="hover:text-blue-400 transition-colors">Giriş Yap</Link></li>
+                            <li><Link href="/login" className="hover:text-blue-400 transition-colors">Giriş Yap</Link></li>
                         </ul>
                     </div>
 

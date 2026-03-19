@@ -1,4 +1,6 @@
-"use client";
+const fs = require('fs');
+
+const content = `"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -92,7 +94,7 @@ export default function Home() {
         <div
           className="absolute inset-0 opacity-[0.3]"
           style={{
-            backgroundImage: `radial-gradient(circle, #cbd5e1 1.5px, transparent 1px)`,
+            backgroundImage: \`radial-gradient(circle, #cbd5e1 1.5px, transparent 1px)\`,
             backgroundSize: '32px 32px',
           }}
         />
@@ -296,4 +298,7 @@ export default function Home() {
       <FinAiChatWidget />
     </div>
   );
-"
+"`;
+
+fs.writeFileSync('d:\\Salih KAVAKCI\\Yeni klasör\\FinAl\\final-web\\src\\app\\page.tsx', content, 'utf8');
+console.log('Saved page.tsx correctly!');

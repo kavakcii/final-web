@@ -38,7 +38,28 @@ export async function GET(request: Request) {
         });
 
         try {
-            const yahooResults = await yahooFinance.quote(Array.from(symbolsToFetch));
+            const symbolsArray = Array.from(symbolsToFetch);
+            const yahooResults = await yahooFinance.quote(symbolsArray);
+            
+            // 3 Aylık Zirve/Dip (3-Month High/Low) Hesaplama
+            const d = new Date();
+            d.setMonth(d.getMonth() - 3);
+            const period1 = d.toISOString().split('T')[0];
+
+            await Promise.all(yahooResults.map(async (r: any) => {
+                try {
+                    const hist = await yahooFinance.historical(r.symbol, { period1, interval: '1d' });
+                    if (hist && hist.length > 0) {
+                        const highs = hist.map((h:any) => h.high).filter((x:any) => x != null);
+                        const lows = hist.map((h:any) => h.low).filter((x:any) => x != null);
+                        if(highs.length > 0) r.threeMonthHigh = Math.max(...highs);
+                        if(lows.length > 0) r.threeMonthLow = Math.min(...lows);
+                    }
+                } catch (e) {
+                    // Sessizce geç, API limitine takılırsa 52 hafta verisi ui'da fallback olabilir
+                }
+            }));
+
             results.push(...yahooResults);
         } catch (error) {
             console.error('Yahoo Finance Error:', error);

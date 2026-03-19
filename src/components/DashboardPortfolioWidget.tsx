@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ArrowUpRight, PieChart, Wallet, Zap, RotateCcw, CheckCircle2 } from "lucide-react";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Link from "next/link";
+import { GlowCard } from "@/components/ui/spotlight-card";
 
 export function DashboardPortfolioWidget() {
     const [recommendation, setRecommendation] = useState<any>(null);
@@ -144,8 +145,9 @@ export function DashboardPortfolioWidget() {
 
     if (recommendation) {
         return (
-            <div className="lg:col-span-2 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl p-6 relative overflow-hidden flex flex-col md:flex-row items-center gap-8">
-                <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto">
+                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-6">
+                    <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
 
                 {/* Chart Side */}
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
@@ -243,15 +245,17 @@ export function DashboardPortfolioWidget() {
                             Testi Tekrarla
                         </button>
                     </div>
+                    </div>
                 </div>
-            </div>
+            </GlowCard>
         );
     }
 
     // Default "Start Test" View
     return (
-        <div className="lg:col-span-2 bg-gradient-to-br from-blue-900/40 to-slate-900 border border-blue-500/20 rounded-2xl p-8 relative overflow-hidden flex flex-col justify-center items-center text-center">
-            <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+        <GlowCard customSize glowColor="blue" className="lg:col-span-2 h-auto">
+            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-8">
+                <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
 
             <div className="relative z-10 max-w-lg mx-auto">
                 <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-400 ring-4 ring-blue-500/10">
@@ -288,7 +292,8 @@ export function DashboardPortfolioWidget() {
                         Ücretsiz
                     </span>
                 </div>
+                </div>
             </div>
-        </div>
+        </GlowCard>
     );
 }

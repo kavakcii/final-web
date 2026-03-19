@@ -11,7 +11,7 @@ type EmailFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semiann
 interface ReportInstruction {
     id: string;
     label: string;
-    type: 'basic' | 'risk_radar' | 'growth' | 'rotation' | 'resilience' | 'tax_fees';
+    type: 'basic';
     frequency: EmailFrequency;
     includeAnalysis: boolean;
     includePortfolioDetails: boolean;
@@ -22,12 +22,7 @@ interface ReportInstruction {
 }
 
 const REPORT_TYPES = [
-    { id: 'risk_radar', label: 'Haftalık Risk Radarı', icon: '📡', description: 'Kritik olayların portföye etkisi ve haber duyarlılığı.', frequency: 'weekly' },
-    { id: 'growth', label: 'Gerçek Büyüme Raporu', icon: '📈', description: 'Enflasyondan arındırılmış reel getiri ve alım gücü analizi.', frequency: 'monthly' },
-    { id: 'rotation', label: 'Fon Rotasyon Analizi', icon: '🔄', description: 'SPK uyumlu fon kıyaslaması ve alternatif izleme listesi.', frequency: 'monthly' },
-    { id: 'resilience', label: 'Yatırım Dayanıklılık Raporu', icon: '🛡️', description: 'Kriz testleri ve siyah kuğu senaryo analizleri.', frequency: 'annually' },
-    { id: 'tax_fees', label: 'Yıllık Vergi ve Kesinti Tablosu', icon: '📑', description: 'Stopaj tahminleri ve gizli maliyet dökümü.', frequency: 'annually' },
-    { id: 'basic', label: 'Genel Portföy Raporu', icon: '📊', description: 'Standart varlık dağılımı ve haftalık özet.', frequency: 'weekly' },
+    { id: 'basic', label: 'FinAi Robotum Raporu', icon: '🤖', description: 'Yapay zeka analizleri, varlık performans nedenleri ve gelecek haber tahminlerini içeren tam kapsamlı rapor.', frequency: 'weekly' },
 ];
 
 const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
@@ -501,24 +496,6 @@ export default function ReportsPage() {
                                                 onChange={(e) => setTempLabel(e.target.value)}
                                                 className="w-full bg-slate-900 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
                                             />
-                                        </div>
-
-                                        <div className="space-y-2 pt-2">
-                                            <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 block tracking-widest">İçerik Tercihleri</label>
-                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempAnalysis ? 'bg-purple-500/10 border-purple-500/30' : 'bg-slate-900 border-white/5'}`}>
-                                                <input type="checkbox" checked={tempAnalysis} onChange={(e) => { setTempAnalysis(e.target.checked); }} className="mt-1" />
-                                                <div>
-                                                    <span className="block font-bold text-white text-xs">Yapay Zeka Analizi</span>
-                                                    <span className="text-[10px] text-slate-500">Piyasa yorumları.</span>
-                                                </div>
-                                            </label>
-                                            <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${tempDetails ? 'bg-blue-500/10 border-blue-500/30' : 'bg-slate-900 border-white/5'}`}>
-                                                <input type="checkbox" checked={tempDetails} onChange={(e) => setTempDetails(e.target.checked)} className="mt-1" />
-                                                <div>
-                                                    <span className="block font-bold text-white text-xs">Portföy Tablosu</span>
-                                                    <span className="text-[10px] text-slate-500">Varlık listesi.</span>
-                                                </div>
-                                            </label>
                                         </div>
 
                                         <div className="flex gap-2 mt-4">

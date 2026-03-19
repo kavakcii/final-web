@@ -1,0 +1,78 @@
+const https = require('https');
+
+function tefasRequest(url, payload, cookies) {
+    const postData = new URLSearchParams(payload).toString();
+    return new Promise((resolve) => {
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'Referer': 'https://www.tefas.gov.tr/FonKarsilastirma.aspx',
+                'X-Requested-With': 'XMLHttpRequest',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Origin': 'https://www.tefas.gov.tr',
+                'Cookie': cookies,
+                'Content-Length': Buffer.byteLength(postData).toString()
+            },
+            rejectUnauthorized: false,
+            ciphers: 'DEFAULT@SECLEVEL=1',
+            minVersion: 'TLSv1',
+            secureOptions: require('constants').SSL_OP_LEGACY_SERVER_CONNECT
+        };
+
+        const req = https.request(url, options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    resolve(json);
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        });
+
+        req.on('error', (e) => {
+            console.error('Request error:', e);
+            resolve(null)
+        });
+        req.write(postData);
+        req.end();
+    });
+}
+
+async function test() {
+    console.log('Fetching cookies...');
+    const cookieHeader = await new Promise((resolve) => {
+        https.get('https://www.tefas.gov.tr/FonKarsilastirma.aspx', { rejectUnauthorized: false }, (res) => {
+            const cookies = res.headers['set-cookie'];
+            resolve(cookies ? cookies.map(c => c.split(';')[0]).join('; ') : '');
+        });
+    });
+
+    const dateStr = "03.03.2026";
+    const payload = {
+        "calismatipi": "2", "fontip": "YAT", "sfontur": "", "kurucukod": "", "fongrup": "",
+        "bastarih": dateStr, "bittarih": dateStr, "fonturkod": "", "fonunvantip": "",
+        "strperiod": "1,1,1,1,1,1,1", "islemdurum": ""
+    };
+
+    console.log(`Testing with date: ${dateStr}`);
+    const res = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', payload, cookieHeader);
+    if (res && res.data && res.data.length > 0) {
+        console.log(`Found ${res.data.length} funds for ${dateStr}`);
+    } else {
+        console.log(`No data for ${dateStr}, trying 02.03.2026`);
+        payload.bastarih = "02.03.2026";
+        payload.bittarih = "02.03.2026";
+        const res2 = await tefasRequest('https://www.tefas.gov.tr/api/DB/BindComparisonFundSizes', payload, cookieHeader);
+        if (res2 && res2.data && res2.data.length > 0) {
+            console.log(`Found ${res2.data.length} funds for 02.03.2026`);
+        } else {
+            console.log("Still no data. Maybe weekend adjustment?");
+        }
+    }
+}
+
+test();

@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface PricingFeature {
     text: string;
@@ -69,16 +70,18 @@ export default function PricingCard({
                 ))}
             </ul>
 
-            <button
-                className={cn(
-                    "w-full py-3 px-6 rounded-lg font-medium transition-all duration-200",
-                    isPopular
-                        ? "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40"
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                )}
-            >
-                Hemen Başla
-            </button>
+            <Link href="/login?tab=register" className="w-full">
+                <button
+                    className={cn(
+                        "w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 active:scale-[0.98] relative z-20",
+                        isPopular
+                            ? "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40"
+                            : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    )}
+                >
+                    Hemen Başla
+                </button>
+            </Link>
         </motion.div>
     );
 }

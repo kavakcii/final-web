@@ -54,9 +54,9 @@ export const GradientBackground = () => (
                 <linearGradient id="rev_grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style={{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }} /><stop offset="100%" style={{ stopColor: 'var(--color-chart-3)', stopOpacity: 0.6 }} /></linearGradient>
                 <linearGradient id="rev_grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style={{ stopColor: 'var(--color-chart-4)', stopOpacity: 0.9 }} /><stop offset="50%" style={{ stopColor: 'var(--color-secondary)', stopOpacity: 0.7 }} /><stop offset="100%" style={{ stopColor: 'var(--color-chart-1)', stopOpacity: 0.6 }} /></linearGradient>
                 <radialGradient id="rev_grad3" cx="50%" cy="50%" r="50%"><stop offset="0%" style={{ stopColor: 'var(--color-destructive)', stopOpacity: 0.8 }} /><stop offset="100%" style={{ stopColor: 'var(--color-chart-5)', stopOpacity: 0.4 }} /></radialGradient>
-                <filter id="rev_blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="35" /></filter>
-                <filter id="rev_blur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="25" /></filter>
-                <filter id="rev_blur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="45" /></filter>
+                <filter id="rev_blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20" /></filter>
+                <filter id="rev_blur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="15" /></filter>
+                <filter id="rev_blur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="25" /></filter>
             </defs>
             <g style={{ animation: 'float1 20s ease-in-out infinite' }}>
                 <ellipse cx="200" cy="500" rx="250" ry="180" fill="url(#rev_grad1)" filter="url(#rev_blur1)" transform="rotate(-30 200 500)" />
@@ -300,7 +300,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", cla
 
     return (
         <div className={cn("relative flex flex-col items-center justify-center min-h-screen w-full overflow-hidden bg-[#020817]", className)}>
-            <Confetti ref={confettiRef} className="absolute left-0 top-0 z-0 size-full" onMouseEnter={() => { fireSideCanons(); }} />
+            <Confetti ref={confettiRef} className="absolute left-0 top-0 z-0 size-full pointer-events-none" onMouseEnter={() => { fireSideCanons(); }} />
             <div className="absolute inset-0 z-0 opacity-40"><GradientBackground /></div>
 
             <div className="relative z-10 w-full max-w-[480px] p-6">
@@ -458,7 +458,7 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", cla
                                 <button
                                     type="submit"
                                     disabled={modalStatus === 'loading'}
-                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-6"
                                 >
                                     {modalStatus === 'loading' ? (
                                         <span className="flex items-center justify-center gap-2">

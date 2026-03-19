@@ -90,3 +90,9 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
 }
+
+@media (max-width: 767px) {
+  html {
+    font-size: 65%;
+  }
+}
