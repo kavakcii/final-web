@@ -178,9 +178,9 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8"
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 relative z-50 pointer-events-auto"
               >
-                <Link href="/login?tab=register" className="w-full sm:w-auto relative z-30 pointer-events-auto">
+                <Link href="/login?tab=register" className="w-full sm:w-auto relative z-50 pointer-events-auto group">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

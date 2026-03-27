@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import { GlowCard } from "@/components/ui/spotlight-card";
+import { getKapUrl } from "@/lib/kap-member-map";
 
 // Grouped Asset Type
 interface GroupedAsset {
@@ -131,8 +132,19 @@ export default function PortfolioPage() {
                                 if (symbol.endsWith('.IS')) { priceMap[symbol.replace('.IS', '')] = r.regularMarketPrice; }
 
                                 const baseSymbol = symbol.replace('.IS', '');
-                                if (r.threeMonthLow && r.threeMonthHigh) {
-                                    extremesMap[baseSymbol] = { low: r.threeMonthLow, high: r.threeMonthHigh, current: r.regularMarketPrice, target: r.targetMeanPrice || undefined, rating: r.recommendationKey || undefined };
+                                
+                                // Priority: 52-Week Data for long-term perspective
+                                const low = r.fiftyTwoWeekLow || r.threeMonthLow;
+                                const high = r.fiftyTwoWeekHigh || r.threeMonthHigh;
+
+                                if (low && high) {
+                                    extremesMap[baseSymbol] = { 
+                                        low: low, 
+                                        high: high, 
+                                        current: r.regularMarketPrice, 
+                                        target: r.targetMeanPrice || undefined, 
+                                        rating: r.recommendationKey || undefined 
+                                    };
                                 }
                                 const rawTime = r.earningsTimestamp || r.earningsTimestampStart;
                                 if (rawTime) {
@@ -279,7 +291,7 @@ export default function PortfolioPage() {
     const profitRatio = totalCostValue > 0 ? (totalProfit / totalCostValue) * 100 : 0;
 
     return (
-        <div className="p-6 md:p-8 space-y-8 min-h-[calc(100vh-2rem)] bg-gradient-to-br from-white via-indigo-50/30 to-slate-900 rounded-[2.5rem] shadow-xl overflow-y-auto pb-24 relative isolate m-2 xl:m-4 border border-white/20">
+        <div className="p-6 md:p-8 space-y-8 min-h-full bg-gradient-to-br from-white via-indigo-50/30 to-slate-900 rounded-[2.5rem] shadow-xl pb-24 relative isolate m-2 xl:m-4 border border-white/20">
             {/* Reduced blur size for better performance */}
             <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/5 blur-[40px] rounded-full pointer-events-none" />
             
@@ -405,30 +417,60 @@ export default function PortfolioPage() {
 
                                     return (
                                         <React.Fragment key={group.symbol}>
-                                            <tr className="group cursor-pointer hover:bg-white/[0.02]" onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}>
-                                                <td className="py-4 px-1">
+                                            <motion.tr 
+                                                initial={false}
+                                                whileHover="hover"
+                                                className="group cursor-pointer border-b border-white/5 relative overflow-hidden transition-colors" 
+                                                onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
+                                                onMouseMove={(e) => {
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const x = e.clientX - rect.left;
+                                                    const y = e.clientY - rect.top;
+                                                    e.currentTarget.style.setProperty("--mouse-x", `${x}px`);
+                                                    e.currentTarget.style.setProperty("--mouse-y", `${y}px`);
+                                                }}
+                                            >
+                                                {/* Advanced Spotlight Glow */}
+                                                <div 
+                                                    className="pointer-events-none absolute -inset-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                                    style={{
+                                                        background: `radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(59, 130, 246, 0.08), transparent 40%)`
+                                                    }}
+                                                />
+                                                <td className="py-4 px-1 relative z-10">
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-bold text-slate-200">{group.symbol}</span>
-                                                        <span className="text-[9px] px-1 border border-white/10 text-slate-500 uppercase">{group.type}</span>
+                                                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-500 uppercase tracking-tighter">{group.type}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-1">
+                                                <td className="py-4 px-1 relative z-10">
                                                     <div className="flex flex-col text-xs">
-                                                        <span>{group.totalQuantity} adet</span>
-                                                        <span className="text-slate-500">{formatCurrency(group.avgCost)}</span>
+                                                        <span className="text-slate-200">{group.totalQuantity} adet</span>
+                                                        <span className="text-slate-500 font-medium">{formatCurrency(group.avgCost)}</span>
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-1">{currentPrice > 0 ? formatCurrency(currentPrice) : "-"}</td>
-                                                <td className="py-4 px-1 font-bold text-white">{formatCurrency(marketValue)}</td>
-                                                <td className="py-4 px-1">
-                                                    <div className={isProfit ? "text-emerald-400" : "text-rose-400"}>
-                                                        <span className="font-bold">{isProfit ? "+" : ""}{formatCurrency(profit)}</span>
+                                                <td className="py-4 px-1 relative z-10 font-medium text-slate-300">
+                                                    {currentPrice > 0 ? formatCurrency(currentPrice) : "-"}
+                                                </td>
+                                                <td className="py-4 px-1 relative z-10 font-black text-white">{formatCurrency(marketValue)}</td>
+                                                <td className="py-4 px-1 relative z-10">
+                                                    <div className={cn("inline-flex items-center px-2 py-1 rounded-lg font-bold text-xs", isProfit ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400")}>
+                                                        {isProfit ? "+" : ""}{formatCurrency(profit)}
                                                     </div>
                                                 </td>
-                                                <td className="py-4 px-1 text-right">
-                                                    <button onClick={(e) => { e.stopPropagation(); handleAnalyze(group.symbol, group.type); }} className="p-1 hover:bg-white/10 text-slate-500 rounded"><Brain className="w-3.5 h-3.5" /></button>
+                                                <td className="py-4 px-1 text-right relative z-10">
+                                                    <div className="flex items-center justify-end gap-1">
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); handleAnalyze(group.symbol, group.type); }} 
+                                                            className="p-1.5 hover:bg-blue-500/20 text-slate-500 hover:text-blue-400 rounded-lg transition-colors"
+                                                            title="AI Analizi"
+                                                        >
+                                                            <Brain className="w-4 h-4" />
+                                                        </button>
+                                                        <ChevronRight className={cn("w-4 h-4 text-slate-600 transition-transform", isExpanded && "rotate-90")} />
+                                                    </div>
                                                 </td>
-                                            </tr>
+                                            </motion.tr>
                                             {isExpanded && (
                                                 <tr>
                                                     <td colSpan={6} className="bg-black/20 p-4">
@@ -463,10 +505,31 @@ export default function PortfolioPage() {
                             {Object.entries(earningsDates).map(([sym, time]) => {
                                 const days = Math.ceil((time - Date.now()) / (86400000));
                                 if (days < -30) return null;
+                                const isReported = days <= 0;
+                                const kapUrl = isReported ? getKapUrl(sym, 'finansal') : null;
+
                                 return (
-                                    <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs">
-                                        <span className="font-bold">{sym}</span>
-                                        <span className={days > 0 ? "text-blue-400" : "text-slate-500"}>{days > 0 ? `${days} GÜN` : "AÇIKLANDI"}</span>
+                                    <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs items-center group/item">
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-200">{sym}</span>
+                                            <span className="text-[9px] text-slate-500 uppercase">Bilanço Dönemi</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={days > 0 ? "text-blue-400" : "text-slate-500"}>
+                                                {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
+                                            </span>
+                                            {kapUrl && (
+                                                <a 
+                                                    href={kapUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-blue-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                                                    title="Raporu Gör (KAP)"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -482,9 +545,32 @@ export default function PortfolioPage() {
                             {Object.entries(priceExtremes).map(([sym, ext]) => {
                                 const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
                                 return (
-                                    <div key={sym} className="space-y-1">
-                                        <div className="flex justify-between text-[10px] font-bold"><span>{sym}</span><span className="text-white">{formatCurrency(ext.current)}</span></div>
-                                        <div className="h-1 bg-slate-800 rounded-full relative overflow-hidden"><div className="absolute top-0 bottom-0 bg-white w-1" style={{ left: `${pos}%` }} /></div>
+                                    <div key={sym} className="space-y-2 p-3 bg-white/5 rounded-xl border border-white/5">
+                                        <div className="flex justify-between text-[11px] font-bold">
+                                            <span className="text-slate-300">{sym}</span>
+                                            <span className="text-white bg-blue-500/20 px-2 py-0.5 rounded text-[10px]">
+                                                {formatCurrency(ext.current)}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="relative">
+                                            <div className="h-1.5 bg-slate-800 rounded-full w-full overflow-hidden flex">
+                                                <div 
+                                                    className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 relative transition-all duration-1000"
+                                                    style={{ width: `${pos}%` }}
+                                                />
+                                            </div>
+                                            {/* Dot on current price */}
+                                            <div 
+                                                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-blue-500 shadow-lg shadow-blue-500/50 z-10 transition-all duration-1000 ring-4 ring-white/10"
+                                                style={{ left: `calc(${pos}% - 6px)` }}
+                                            />
+                                        </div>
+
+                                        <div className="flex justify-between text-[9px] text-slate-500 font-bold uppercase tracking-tighter">
+                                            <span>52H DÜŞÜK: {formatCurrency(ext.low)}</span>
+                                            <span>52H YÜKSEK: {formatCurrency(ext.high)}</span>
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -499,13 +585,40 @@ export default function PortfolioPage() {
                         <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                             {Object.entries(dividendData).map(([sym, data]) => {
                                 const days = Math.ceil((data.date - Date.now()) / (86400000));
+                                const portfolioItem = groupedAssets.find(a => a.symbol === sym);
+                                const quantity = portfolioItem?.totalQuantity || 0;
+                                const totalGross = quantity * data.amount;
+
                                 return (
-                                    <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs">
-                                        <span className="font-bold">{sym}</span>
-                                        <span className="text-emerald-400 font-bold">{formatCurrency(data.amount)}</span>
+                                    <div key={sym} className="flex flex-col gap-2 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10 mb-2">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-100">{sym}</span>
+                                                <span className="text-[10px] text-slate-500">Temettü Tahmini</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <span className="text-emerald-400 font-black block">{formatCurrency(totalGross)}</span>
+                                                <span className="text-[9px] text-slate-500 font-bold">BRÜT TUTAR</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-white/5">
+                                            <div className="flex items-center gap-1 text-slate-400">
+                                                <Calendar className="w-3 h-3" />
+                                                <span>{formatDate(new Date(data.date).toISOString())}</span>
+                                            </div>
+                                            <div className="text-slate-500">
+                                                {formatCurrency(data.amount)} / Pay
+                                            </div>
+                                        </div>
                                     </div>
                                 );
                             })}
+                        </div>
+                        <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-2">
+                            <Info className="w-4 h-4 text-amber-500 shrink-0" />
+                            <p className="text-[9px] text-amber-200/80 leading-tight">
+                                <b>Bilgilendirme:</b> Yukarıda hesaplanan tutarlar Brüt (Brüt) değerlerdir. BIST hisselerinde %10 yasal stopaj kesintisi uygulama sırasında aracı kurumunuz tarafından otomatik olarak düşülecektir.
+                            </p>
                         </div>
                     </div>
                 </div>
