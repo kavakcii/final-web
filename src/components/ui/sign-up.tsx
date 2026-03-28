@@ -1,105 +1,69 @@
-"use client";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle, useMemo, useCallback, createContext, Children } from "react";
-// Importing class-variance-authority for the built-in button component
-import { cva, type VariantProps } from "class-variance-authority";
-// Importing icons from lucide-react
-import { ArrowRight, Mail, Gem, Lock, Eye, EyeOff, ArrowLeft, X, AlertCircle, PartyPopper, Loader, User, Calendar, Briefcase } from "lucide-react";
-// Importing animation components from framer-motion
-import { AnimatePresence, motion, useInView, Variants, Transition } from "framer-motion";
-import { TypewriterEffect } from "./typewriter-effect";
+import { ArrowLeft, AlertCircle, Loader, Eye, EyeOff, Check, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FinAiLogo } from "@/components/ui/logo";
+import Link from "next/link";
 
-import { useRouter } from "next/navigation";
-
-// --- CONFETTI LOGIC ---
-// import type { ReactNode } from "react"
-import type { GlobalOptions as ConfettiGlobalOptions, CreateTypes as ConfettiInstance, Options as ConfettiOptions } from "canvas-confetti"
-import confetti from "canvas-confetti"
-
-type Api = { fire: (options?: ConfettiOptions) => void }
-export type ConfettiRef = Api | null
-const ConfettiContext = createContext<Api>({} as Api)
-
-const Confetti = forwardRef<ConfettiRef, React.ComponentPropsWithRef<"canvas"> & { options?: ConfettiOptions; globalOptions?: ConfettiGlobalOptions; manualstart?: boolean }>((props, ref) => {
-    const { options, globalOptions = { resize: true, useWorker: true }, manualstart = false, ...rest } = props
-    const instanceRef = useRef<ConfettiInstance | null>(null)
-    const canvasRef = useCallback((node: HTMLCanvasElement) => {
-        if (node !== null) {
-            if (instanceRef.current) return
-            instanceRef.current = confetti.create(node, { ...globalOptions, resize: true })
-        } else {
-            if (instanceRef.current) {
-                instanceRef.current.reset()
-                instanceRef.current = null
-            }
-        }
-    }, [globalOptions])
-    const fire = useCallback((opts = {}) => instanceRef.current?.({ ...options, ...opts }), [options])
-    const api = useMemo(() => ({ fire }), [fire])
-    useImperativeHandle(ref, () => api, [api])
-    useEffect(() => { if (!manualstart) fire() }, [manualstart, fire])
-    return <canvas ref={canvasRef} {...rest} />
-})
-Confetti.displayName = "Confetti";
-
-// --- THEME-AWARE SVG GRADIENT BACKGROUND WITH SUBTLE ANIMATION ---
-export const GradientBackground = () => (
-    <>
-        <style>
-            {` @keyframes float1 { 0% { transform: translate(0, 0); } 50% { transform: translate(-10px, 10px); } 100% { transform: translate(0, 0); } } @keyframes float2 { 0% { transform: translate(0, 0); } 50% { transform: translate(10px, -10px); } 100% { transform: translate(0, 0); } } `}
-        </style>
-        <svg width="100%" height="100%" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" className="absolute top-0 left-0 w-full h-full">
-            <defs>
-                <linearGradient id="rev_grad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style={{ stopColor: 'var(--color-primary)', stopOpacity: 0.8 }} /><stop offset="100%" style={{ stopColor: 'var(--color-chart-3)', stopOpacity: 0.6 }} /></linearGradient>
-                <linearGradient id="rev_grad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style={{ stopColor: 'var(--color-chart-4)', stopOpacity: 0.9 }} /><stop offset="50%" style={{ stopColor: 'var(--color-secondary)', stopOpacity: 0.7 }} /><stop offset="100%" style={{ stopColor: 'var(--color-chart-1)', stopOpacity: 0.6 }} /></linearGradient>
-                <radialGradient id="rev_grad3" cx="50%" cy="50%" r="50%"><stop offset="0%" style={{ stopColor: 'var(--color-destructive)', stopOpacity: 0.8 }} /><stop offset="100%" style={{ stopColor: 'var(--color-chart-5)', stopOpacity: 0.4 }} /></radialGradient>
-                <filter id="rev_blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="20" /></filter>
-                <filter id="rev_blur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="15" /></filter>
-                <filter id="rev_blur3" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="25" /></filter>
-            </defs>
-            <g style={{ animation: 'float1 20s ease-in-out infinite' }}>
-                <ellipse cx="200" cy="500" rx="250" ry="180" fill="url(#rev_grad1)" filter="url(#rev_blur1)" transform="rotate(-30 200 500)" />
-                <rect x="500" y="100" width="300" height="250" rx="80" fill="url(#rev_grad2)" filter="url(#rev_blur2)" transform="rotate(15 650 225)" />
-            </g>
-            <g style={{ animation: 'float2 25s ease-in-out infinite' }}>
-                <circle cx="650" cy="450" r="150" fill="url(#rev_grad3)" filter="url(#rev_blur3)" opacity="0.7" />
-                <ellipse cx="50" cy="150" rx="180" ry="120" fill="var(--color-accent)" filter="url(#rev_blur2)" opacity="0.8" />
-            </g>
-        </svg>
-    </>
+// ----------------------------------------------------------------------
+// HELPER COMPONENTS
+// ----------------------------------------------------------------------
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"> 
+        <g fillRule="evenodd" fill="none"> <g fillRule="nonzero" transform="translate(3, 2)"> <path fill="#4285F4" d="M57.8123233,30.1515267 C57.8123233,27.7263183 57.6155321,25.9565533 57.1896408,24.1212666 L29.4960833,24.1212666 L29.4960833,35.0674653 L45.7515771,35.0674653 C45.4239683,37.7877475 43.6542033,41.8844383 39.7213169,44.6372555 L39.6661883,45.0037254 L48.4223791,51.7870338 L49.0290201,51.8475849 C54.6004021,46.7020943 57.8123233,39.1313952 57.8123233,30.1515267"></path> <path fill="#34A853" d="M29.4960833,58.9921667 C37.4599129,58.9921667 44.1456164,56.3701671 49.0290201,51.8475849 L39.7213169,44.6372555 C37.2305867,46.3742596 33.887622,47.5868638 29.4960833,47.5868638 C21.6960582,47.5868638 15.0758763,42.4415991 12.7159637,35.3297782 L12.3700541,35.3591501 L3.26524241,42.4054492 L3.14617358,42.736447 C7.9965904,52.3717589 17.959737,58.9921667 29.4960833,58.9921667"></path> <path fill="#FBBC05" d="M12.7159637,35.3297782 C12.0932812,33.4944915 11.7329116,31.5279353 11.7329116,29.4960833 C11.7329116,27.4640054 12.0932812,25.4976752 12.6832029,23.6623884 L12.6667095,23.2715173 L3.44779955,16.1120237 L3.14617358,16.2554937 C1.14708246,20.2539019 0,24.7439491 0,29.4960833 C0,34.2482175 1.14708246,38.7380388 3.14617358,42.736447 L12.7159637,35.3297782"></path> <path fill="#EB4335" d="M29.4960833,11.4050769 C35.0347044,11.4050769 38.7707997,13.7975244 40.9011602,15.7968415 L49.2255853,7.66898166 C44.1130815,2.91684746 37.4599129,0 29.4960833,0 C17.959737,0 7.9965904,6.62018183 3.14617358,16.2554937 L12.6832029,23.6623884 C15.0758763,16.5505675 21.6960582,11.4050769 29.4960833,11.4050769"></path> </g> </g>
+    </svg>
 );
 
+// Animated Input Component (21st.dev style)
+const PremiumInput = ({ label, type, placeholder, value, onChange, colSpan = 1, showToggle = false, toggleState, onToggle }: any) => {
+    return (
+        <div className={cn("relative group font-sans flex flex-col gap-1.5", colSpan === 2 ? "col-span-2" : "col-span-1")}>
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-1 tracking-wide">{label}</label>
+            <div className="relative">
+                <input
+                    type={type}
+                    placeholder={placeholder}
+                    value={value}
+                    onChange={onChange}
+                    className={cn(
+                        "w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-base text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all duration-300",
+                        "focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm",
+                        showToggle ? "pr-12" : ""
+                    )}
+                />
+                {showToggle && (
+                    <button
+                        type="button"
+                        onClick={onToggle}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-2 transition-colors rounded-full"
+                    >
+                        {toggleState ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
-// --- CHILD COMPONENTS ---
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="w-6 h-6"> <g fillRule="evenodd" fill="none"> <g fillRule="nonzero" transform="translate(3, 2)"> <path fill="#4285F4" d="M57.8123233,30.1515267 C57.8123233,27.7263183 57.6155321,25.9565533 57.1896408,24.1212666 L29.4960833,24.1212666 L29.4960833,35.0674653 L45.7515771,35.0674653 C45.4239683,37.7877475 43.6542033,41.8844383 39.7213169,44.6372555 L39.6661883,45.0037254 L48.4223791,51.7870338 L49.0290201,51.8475849 C54.6004021,46.7020943 57.8123233,39.1313952 57.8123233,30.1515267"></path> <path fill="#34A853" d="M29.4960833,58.9921667 C37.4599129,58.9921667 44.1456164,56.3701671 49.0290201,51.8475849 L39.7213169,44.6372555 C37.2305867,46.3742596 33.887622,47.5868638 29.4960833,47.5868638 C21.6960582,47.5868638 15.0758763,42.4415991 12.7159637,35.3297782 L12.3700541,35.3591501 L3.26524241,42.4054492 L3.14617358,42.736447 C7.9965904,52.3717589 17.959737,58.9921667 29.4960833,58.9921667"></path> <path fill="#FBBC05" d="M12.7159637,35.3297782 C12.0932812,33.4944915 11.7329116,31.5279353 11.7329116,29.4960833 C11.7329116,27.4640054 12.0932812,25.4976752 12.6832029,23.6623884 L12.6667095,23.2715173 L3.44779955,16.1120237 L3.14617358,16.2554937 C1.14708246,20.2539019 0,24.7439491 0,29.4960833 C0,34.2482175 1.14708246,38.7380388 3.14617358,42.736447 L12.7159637,35.3297782"></path> <path fill="#EB4335" d="M29.4960833,11.4050769 C35.0347044,11.4050769 38.7707997,13.7975244 40.9011602,15.7968415 L49.2255853,7.66898166 C44.1130815,2.91684746 37.4599129,0 29.4960833,0 C17.959737,0 7.9965904,6.62018183 3.14617358,16.2554937 L12.6832029,23.6623884 C15.0758763,16.5505675 21.6960582,11.4050769 29.4960833,11.4050769"></path> </g> </g></svg>);
-
-const DefaultLogo = () => (<div className="bg-primary text-primary-foreground rounded-md p-1.5"> <Gem className="h-4 w-4" /> </div>);
-
-// Helper for input styling
-const InputField = ({ label, type, placeholder, value, onChange, colSpan = 1 }: any) => (
-    <div className={cn("space-y-2", colSpan === 2 ? "col-span-2" : "col-span-1")}>
-        <label className="text-sm font-medium text-slate-200">{label}</label>
-        <input
-            type={type}
-            placeholder={placeholder}
-            value={value}
-            onChange={onChange}
-            className="w-full bg-slate-900/50 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500 transition-colors"
-        />
-    </div>
-);
-
-// --- MAIN COMPONENT ---
+// ----------------------------------------------------------------------
+// MAIN COMPONENT
+// ----------------------------------------------------------------------
 interface AuthComponentProps {
-    logo?: React.ReactNode;
     brandName?: string;
     className?: string;
-    isTransparent?: boolean;
     onAuthSuccess?: () => void;
 }
 
-export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", className, isTransparent = false, onAuthSuccess }: AuthComponentProps) => {
+export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }: AuthComponentProps) => {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    
+    // Check URL params if user requested register tab explicitly
+    const requestedTab = searchParams?.get('tab');
+    const initialMode = requestedTab !== 'register'; 
+
     // FORM STATE
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -115,36 +79,38 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", cla
     // UI STATE
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoginMode, setIsLoginMode] = useState(true); // DEFAULT TO LOGIN
+    const [isLoginMode, setIsLoginMode] = useState(initialMode);
 
     // MODAL STATE
-    const [modalStatus, setModalStatus] = useState<'closed' | 'loading' | 'error' | 'success'>('closed');
-    const [modalErrorMessage, setModalErrorMessage] = useState('');
-    const confettiRef = useRef<ConfettiRef>(null);
-    const router = useRouter();
+    // 'closed' -> normal form state, 'loading' -> submitting, 'error' -> generic error
+    const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
+    const [errorMessage, setErrorMessage] = useState('');
 
     // TOGGLE MODE
     const toggleAuthMode = () => {
         setIsLoginMode(!isLoginMode);
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        setFirstName("");
-        setLastName("");
-        setPhone("");
-        setTermsAccepted(false);
-        setMarketingAccepted(false);
-        setModalStatus("closed");
-        setModalErrorMessage("");
+        setEmail(""); setPassword(""); setConfirmPassword("");
+        setFirstName(""); setLastName(""); setPhone("");
+        setTermsAccepted(false); setMarketingAccepted(false);
+        setStatus("idle"); setErrorMessage("");
     };
+
+    // Check for existing session on mount
+    useEffect(() => {
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                router.push("/dashboard");
+            }
+        };
+        checkSession();
+    }, [router]);
 
     const handleGoogleLogin = async () => {
         try {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/dashboard/portfolio`
-                }
+                options: { redirectTo: `${window.location.origin}/dashboard` }
             });
             if (error) throw error;
         } catch (error) {
@@ -152,93 +118,41 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", cla
         }
     };
 
-    // Check for existing session
-    useEffect(() => {
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                // Directly redirect without showing success modal
-                router.push("/dashboard");
-            }
-        };
-        checkSession();
-    }, []);
-
-    const fireSideCanons = () => {
-        const fire = confettiRef.current?.fire;
-        if (fire) {
-            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
-            const particleCount = 50;
-            fire({ ...defaults, particleCount, origin: { x: 0, y: 1 }, angle: 60 });
-            fire({ ...defaults, particleCount, origin: { x: 1, y: 1 }, angle: 120 });
-        }
-    };
-
-    const handleForgotPassword = async () => {
-        if (modalStatus === 'loading') return;
-
-        if (!email) {
-            setModalErrorMessage("Lütfen şifrenizi sıfırlamak için e-posta adresinizi giriniz.");
-            setModalStatus('error');
-            return;
-        }
-        setModalStatus('loading');
-        try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email);
-            if (error) throw error;
-            setModalErrorMessage("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen kutunuzu kontrol ediniz.");
-            setModalStatus('success');
-        } catch (error: any) {
-            console.error("Forgot password error:", error);
-            let errorMessage = error.message || "Şifre sıfırlama e-postası gönderilemedi.";
-            if (errorMessage.includes("rate limit") || errorMessage.includes("Email rate limit exceeded")) {
-                errorMessage = "Güvenlik nedeniyle çok fazla deneme yapıldı. Lütfen bir süre bekleyip tekrar deneyin.";
-            }
-            setModalErrorMessage(errorMessage);
-            setModalStatus('error');
-        }
-    };
-
     const handleFinalSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Basic validations
         if (isLoginMode) {
             if (!email || !password) {
-                setModalErrorMessage("Lütfen tüm alanları doldurunuz.");
-                setModalStatus('error');
+                setErrorMessage("Lütfen tüm alanları doldurunuz.");
+                setStatus('error');
                 return;
             }
         } else {
-            // Register Validation
             if (!email || !password || !firstName || !lastName || !phone) {
-                setModalErrorMessage("Lütfen tüm alanları doldurunuz.");
-                setModalStatus('error');
+                setErrorMessage("Lütfen tüm alanları doldurunuz.");
+                setStatus('error');
                 return;
             }
             if (password !== confirmPassword) {
-                setModalErrorMessage("Şifreler uyuşmuyor!");
-                setModalStatus('error');
+                setErrorMessage("Şifreler eşleşmiyor!");
+                setStatus('error');
                 return;
             }
             if (!termsAccepted) {
-                setModalErrorMessage("Lütfen Kullanıcı Aydınlatma Metni'ni onaylayınız.");
-                setModalStatus('error');
+                setErrorMessage("Hesap oluşturmak için kullanıcı sözleşmesini onaylamalısınız.");
+                setStatus('error');
                 return;
             }
         }
 
-        setModalStatus('loading');
+        setStatus('loading');
 
         try {
             if (isLoginMode) {
-                // LOGIN FLOW
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password
-                });
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
             } else {
-                // REGISTER FLOW
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -255,227 +169,253 @@ export const AuthComponent = ({ logo = <DefaultLogo />, brandName = "FinAi", cla
 
                 if (error) {
                     if (error.message.includes("already registered")) {
-                        setModalErrorMessage("Bu hesap zaten kayıtlı! Lütfen giriş yapınız.");
-                        setModalStatus('error');
+                        setErrorMessage("Bu e-posta kayıtlı. Giriş yapmayı deneyin.");
+                        setStatus('error');
                         return;
                     }
                     throw error;
                 }
             }
 
-            // Success
-            if (onAuthSuccess) {
-                onAuthSuccess();
-            }
+            // SUCCESS - DIRECT LOGIN W/O CONFIRMATION (assuming dashboard setting disabled confirmation)
+            if (onAuthSuccess) onAuthSuccess();
             router.push("/dashboard");
 
         } catch (error: any) {
             console.error("Auth error:", error);
-            let errorMessage = error.message || "Bir hata oluştu.";
-
-            // Translate common Supabase errors
-            if (errorMessage.includes("rate limit") || errorMessage.includes("Email rate limit exceeded")) {
-                errorMessage = "Çok fazla deneme yaptınız. Lütfen biraz bekleyip tekrar deneyin.";
-            } else if (errorMessage.includes("Invalid login credentials")) {
-                errorMessage = "Hatalı e-posta veya şifre.";
+            let msg = error.message || "Bilinmeyen bir hata oluştu.";
+            if (msg.includes("rate limit") || msg.includes("Email rate limit exceeded")) {
+                msg = "Sistemimizi korumak için oran sınırına takıldınız. Lütfen bekleyip tekrar deneyin.";
+            } else if (msg.includes("Invalid login credentials") || msg.includes("Invalid login")) {
+                msg = "Hatalı e-posta veya şifre girdiniz.";
             }
 
-            setModalErrorMessage(errorMessage);
-            setModalStatus('error');
+            setErrorMessage(msg);
+            setStatus('error');
         }
     };
-
-    const closeModal = () => {
-        setModalStatus('closed');
-        setModalErrorMessage('');
-    };
-
-    useEffect(() => {
-        if (modalStatus === 'success' && !isLoginMode) {
-            fireSideCanons();
-        }
-    }, [modalStatus, isLoginMode]);
-
-
 
     return (
-        <div className={cn("relative flex flex-col items-center justify-center min-h-screen w-full overflow-hidden bg-[#020817]", className)}>
-            <Confetti ref={confettiRef} className="absolute left-0 top-0 z-0 size-full pointer-events-none" onMouseEnter={() => { fireSideCanons(); }} />
-            <div className="absolute inset-0 z-0 opacity-40"><GradientBackground /></div>
+        <div className={cn("flex min-h-screen w-full font-sans tracking-tight", className)}>
+            
+            {/* === SPLIT: LEFT (FORM SIDE) - CLEAN, WHITE/LIGHT, AIRY === */}
+            <div className="w-full lg:w-[45%] flex flex-col bg-white dark:bg-[#020817] p-8 sm:p-12 lg:p-16 xl:p-24 relative overflow-y-auto custom-scrollbar shadow-2xl z-20">
+                
+                {/* Back Button */}
+                <Link href="/" className="group flex items-center gap-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors absolute top-8 sm:top-12">
+                    <div className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-slate-50 dark:group-hover:bg-white/5 transition-colors">
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                    </div>
+                    Ana Sayfaya Dön
+                </Link>
 
-            <div className="relative z-10 w-full max-w-[480px] p-6">
-                <AnimatePresence mode="wait">
-                    {modalStatus === 'success' ? (
+                <div className="w-full max-w-[420px] mx-auto mt-16 sm:mt-8 relative h-full flex flex-col justify-center">
+                    
+                    {/* Header Animation */}
+                    <AnimatePresence mode="popLayout" initial={false}>
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center shadow-2xl"
+                            key={isLoginMode ? 'header-login' : 'header-register'}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
+                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                            className="text-left mb-8"
                         >
-                            {modalErrorMessage ? (
-                                <>
-                                    <Mail className="w-16 h-16 text-blue-500 mx-auto mb-4" />
-                                    <h2 className="text-2xl font-bold text-white mb-2">E-posta Gönderildi</h2>
-                                    <p className="text-slate-400 mb-4">{modalErrorMessage}</p>
-                                    <button
-                                        onClick={closeModal}
-                                        className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors font-medium"
-                                    >
-                                        Tamam
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <PartyPopper className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                                    <h2 className="text-2xl font-bold text-white mb-2">Hoşgeldin!</h2>
-                                    <p className="text-slate-400">Giriş başarılı, yönlendiriliyorsunuz...</p>
-                                </>
-                            )}
+                            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-4 mb-2">
+                                {isLoginMode ? "Tekrar Hoş Geldin." : "Ayrıcalığa Katıl."}
+                            </h1>
+                            <p className="text-slate-500 font-medium text-[15px]">
+                                {isLoginMode 
+                                    ? "Yatırımlarınızı yönetmeye kaldığınız yerden devam edin." 
+                                    : "Yeni nesil yapay zeka asistanınla tanışmanın tam zamanı."}
+                            </p>
                         </motion.div>
-                    ) : (
-                        <motion.div
-                            key={isLoginMode ? "login" : "register"}
+                    </AnimatePresence>
+
+                    {/* OAuth Area */}
+                    <div className="flex flex-col gap-4 w-full">
+                        <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            className="relative flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#020817] px-4 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:shadow-sm active:scale-[0.98]"
+                        >
+                            <GoogleIcon className="w-5 h-5 flex-shrink-0" />
+                            Google ile Devam Et
+                        </button>
+
+                        <div className="relative flex items-center py-4">
+                            <span className="w-full border-t border-slate-100 dark:border-slate-800"></span>
+                            <span className="bg-white dark:bg-[#020817] px-4 text-xs font-semibold text-slate-400 uppercase tracking-widest shrink-0">Veya E-posta İle</span>
+                            <span className="w-full border-t border-slate-100 dark:border-slate-800"></span>
+                        </div>
+                    </div>
+
+                    {/* Main Auth Form Animation */}
+                    <AnimatePresence mode="wait">
+                        <motion.form
+                            key={isLoginMode ? "form-login" : "form-register"}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.3 }}
-                            className="w-full"
+                            exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
+                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                            onSubmit={handleFinalSubmit}
+                            className="flex flex-col gap-5 w-full"
                         >
-                            <div className="mb-8">
-                                <h1 className="text-3xl font-bold text-white mb-2">
-                                    {isLoginMode ? "Tekrar Hoşgeldiniz" : "Yeni hesap oluşturun"}
-                                </h1>
-                                <p className="text-slate-400">
-                                    {isLoginMode ? "Hesabınız yok mu? " : "Hesabınız var mı? "}
-                                    <button onClick={toggleAuthMode} className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
-                                        {isLoginMode ? "Kayıt olun" : "Giriş yapın"}
-                                    </button>
-                                </p>
-                            </div>
+                            {!isLoginMode ? (
+                                /* REGISTER FORM */
+                                <div className="grid grid-cols-2 gap-5 w-full">
+                                    <PremiumInput label="Ad" type="text" placeholder="Mehmet" value={firstName} onChange={(e: any) => setFirstName(e.target.value)} />
+                                    <PremiumInput label="Soyad" type="text" placeholder="Yılmaz" value={lastName} onChange={(e: any) => setLastName(e.target.value)} />
+                                    <PremiumInput label="Telefon" type="tel" placeholder="05XX XXX XX XX" value={phone} onChange={(e: any) => setPhone(e.target.value)} colSpan={2} />
+                                    <PremiumInput label="E-Posta" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} colSpan={2} />
+                                    <PremiumInput 
+                                        label="Şifre" 
+                                        type={showPassword ? "text" : "password"} 
+                                        placeholder="••••••••" 
+                                        value={password} 
+                                        onChange={(e: any) => setPassword(e.target.value)} 
+                                        showToggle={true} 
+                                        toggleState={showPassword} 
+                                        onToggle={() => setShowPassword(!showPassword)}
+                                        colSpan={2} 
+                                    />
+                                    <PremiumInput 
+                                        label="Şifre (Tekrar)" 
+                                        type={showConfirmPassword ? "text" : "password"} 
+                                        placeholder="••••••••" 
+                                        value={confirmPassword} 
+                                        onChange={(e: any) => setConfirmPassword(e.target.value)} 
+                                        showToggle={true} 
+                                        toggleState={showConfirmPassword} 
+                                        onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        colSpan={2} 
+                                    />
 
-                            <form onSubmit={handleFinalSubmit} className="space-y-4">
-                                {!isLoginMode ? (
-                                    // REGISTER FORM
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <InputField
-                                            label="İsim"
-                                            type="text"
-                                            value={firstName}
-                                            onChange={(e: any) => setFirstName(e.target.value)}
-                                        />
-                                        <InputField
-                                            label="Soyisim"
-                                            type="text"
-                                            value={lastName}
-                                            onChange={(e: any) => setLastName(e.target.value)}
-                                        />
-
-                                        <InputField
-                                            label="Telefon numarası"
-                                            type="tel"
-                                            colSpan={2}
-                                            value={phone}
-                                            onChange={(e: any) => setPhone(e.target.value)}
-                                        />
-
-                                        <InputField
-                                            label="E-mail adresi"
-                                            type="email"
-                                            colSpan={2}
-                                            value={email}
-                                            onChange={(e: any) => setEmail(e.target.value)}
-                                        />
-
-                                        <InputField
-                                            label="Şifre"
-                                            type="password"
-                                            value={password}
-                                            onChange={(e: any) => setPassword(e.target.value)}
-                                        />
-                                        <InputField
-                                            label="Şifre tekrarı"
-                                            type="password"
-                                            value={confirmPassword}
-                                            onChange={(e: any) => setConfirmPassword(e.target.value)}
-                                        />
-
-                                        <div className="col-span-2 space-y-3 mt-2">
-                                            <label className="flex items-start gap-3 cursor-pointer group">
-                                                <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${termsAccepted ? "bg-blue-600 border-blue-600" : "border-slate-600 group-hover:border-slate-500"}`}>
-                                                    {termsAccepted && <ArrowRight className="w-3 h-3 text-white rotate-[-45deg] mt-[-2px]" />}
-                                                    <input type="checkbox" className="hidden" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />
-                                                </div>
-                                                <span className="text-sm text-slate-400 flex-1">
-                                                    <button type="button" className="text-white hover:underline">Kullanıcı Aydınlatma Metni'ni</button> okudum.*
-                                                </span>
-                                            </label>
-
-                                            <label className="flex items-start gap-3 cursor-pointer group">
-                                                <div className={`mt-1 w-5 h-5 rounded border flex items-center justify-center transition-colors ${marketingAccepted ? "bg-blue-600 border-blue-600" : "border-slate-600 group-hover:border-slate-500"}`}>
-                                                    {marketingAccepted && <ArrowRight className="w-3 h-3 text-white rotate-[-45deg] mt-[-2px]" />}
-                                                    <input type="checkbox" className="hidden" checked={marketingAccepted} onChange={(e) => setMarketingAccepted(e.target.checked)} />
-                                                </div>
-                                                <span className="text-sm text-slate-400 flex-1">
-                                                    {brandName} tarafından ticari elektronik ileti gönderilmesine <span className="text-white hover:underline">izin veriyorum.</span>
-                                                </span>
-                                            </label>
-                                        </div>
+                                    <div className="col-span-2 space-y-4 mt-2 bg-slate-50 dark:bg-slate-900/40 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <div className={cn("mt-0.5 w-5 h-5 rounded-[4px] border shrink-0 flex items-center justify-center transition-all duration-200", termsAccepted ? "bg-slate-900 dark:bg-white border-slate-900 dark:border-white" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400")}>
+                                                {termsAccepted && <Check className="w-3.5 h-3.5 text-white dark:text-slate-900 stroke-[3]" />}
+                                            </div>
+                                            <span className="text-[13px] text-slate-500 font-medium leading-relaxed">
+                                                <button type="button" className="text-slate-900 dark:text-slate-300 font-semibold hover:underline">Kullanım Şartları</button> ve <button type="button" className="text-slate-900 dark:text-slate-300 font-semibold hover:underline">Aydınlatma Metnini</button> okudum, anladım ve kabul ediyorum.
+                                            </span>
+                                        </label>
+                                        <label className="flex items-start gap-3 cursor-pointer group">
+                                            <div className={cn("mt-0.5 w-5 h-5 rounded-[4px] border shrink-0 flex items-center justify-center transition-all duration-200", marketingAccepted ? "bg-slate-900 dark:bg-white border-slate-900 dark:border-white" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400")}>
+                                                {marketingAccepted && <Check className="w-3.5 h-3.5 text-white dark:text-slate-900 stroke-[3]" />}
+                                            </div>
+                                            <span className="text-[13px] text-slate-500 font-medium leading-relaxed">
+                                                Tarafıma finansal bülten ve teklifler için ticari elektronik ileti gönderilmesine onay veriyorum.
+                                            </span>
+                                        </label>
                                     </div>
+                                </div>
+                            ) : (
+                                /* LOGIN FORM */
+                                <div className="space-y-5 w-full">
+                                    <PremiumInput label="E-Posta Adresi" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} />
+                                    
+                                    <div className="relative">
+                                        <PremiumInput 
+                                            label="Şifre" 
+                                            type={showPassword ? "text" : "password"} 
+                                            placeholder="••••••••" 
+                                            value={password} 
+                                            onChange={(e: any) => setPassword(e.target.value)} 
+                                            showToggle={true} 
+                                            toggleState={showPassword} 
+                                            onToggle={() => setShowPassword(!showPassword)} 
+                                        />
+                                        <button type="button" className="absolute right-0 top-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">Şifremi Unuttum</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Error Msg */}
+                            <AnimatePresence>
+                                {status === 'error' && (
+                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                        <div className="flex items-center gap-2.5 p-3.5 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 dark:border dark:border-red-500/20 rounded-xl text-sm font-medium mt-1">
+                                            <AlertCircle className="w-4 h-4 shrink-0" />
+                                            <p>{errorMessage}</p>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Submit Button */}
+                            <button
+                                type="submit"
+                                disabled={status === 'loading'}
+                                className="group relative w-full flex items-center justify-center p-4 mt-2 text-base font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_20px_-10px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.2)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                            >
+                                {status === 'loading' ? (
+                                    <Loader className="w-5 h-5 animate-spin" />
                                 ) : (
-                                    // LOGIN FORM
-                                    <div className="space-y-4">
-                                        <InputField
-                                            label="E-mail adresi"
-                                            type="email"
-                                            value={email}
-                                            onChange={(e: any) => setEmail(e.target.value)}
-                                        />
-                                        <InputField
-                                            label="Şifre"
-                                            type="password"
-                                            value={password}
-                                            onChange={(e: any) => setPassword(e.target.value)}
-                                        />
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="button"
-                                                onClick={handleForgotPassword}
-                                                disabled={modalStatus === 'loading'}
-                                                className="text-sm text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                            >
-                                                Şifremi unuttum?
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <span>{isLoginMode ? "Giriş Yap" : "Hesap Oluştur"}</span>
                                 )}
+                            </button>
 
-                                {modalStatus === 'error' && (
-                                    <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-2 text-red-400 text-sm">
-                                        <AlertCircle className="w-4 h-4" />
-                                        {modalErrorMessage}
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={modalStatus === 'loading'}
-                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-6"
-                                >
-                                    {modalStatus === 'loading' ? (
-                                        <span className="flex items-center justify-center gap-2">
-                                            <Loader className="w-5 h-5 animate-spin" />
-                                            İşleniyor...
-                                        </span>
-                                    ) : (
-                                        isLoginMode ? "Giriş Yap" : "Kayıt Ol"
-                                    )}
+                            {/* Toggle Mode */}
+                            <p className="text-center text-[14px] font-medium text-slate-500 mt-4">
+                                {isLoginMode ? "Henüz hesabınız yok mu?" : "Zaten hesabınız var mı?"}{" "}
+                                <button type="button" onClick={toggleAuthMode} className="text-slate-900 dark:text-white font-bold hover:underline underline-offset-4 decoration-2">
+                                    {isLoginMode ? "Hemen Kaydol" : "Giriş Yap"}
                                 </button>
-
-
-                            </form>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            </p>
+                        </motion.form>
+                    </AnimatePresence>
+                </div>
             </div>
+
+            {/* === SPLIT: RIGHT (PREMIUM BRAND AREA) - DEEP NAVY AURA === */}
+            <div className="hidden lg:flex w-[55%] relative items-center justify-center bg-gradient-to-br from-[#0a192f] via-[#050b14] to-black overflow-hidden pointer-events-none">
+                
+                {/* Abstract Background Noise & Grid */}
+                <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:40px_40px] z-0" />
+                
+                {/* Glowing Orbs */}
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/10 blur-[100px] rounded-full mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none" />
+
+                <div className="relative z-10 w-full max-w-lg px-12 flex flex-col items-start justify-center text-left">
+                    <div className="mb-10 w-24 h-24 bg-white/5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center justify-center rounded-3xl backdrop-blur-xl">
+                        <FinAiLogo showText={false} className="w-14 h-auto text-white" />
+                    </div>
+                    
+                    <h2 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6 tracking-tight drop-shadow-sm">
+                        Yapay zeka ile<br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">akıllı yatırım</span> devri.
+                    </h2>
+                    
+                    <p className="text-lg text-slate-400 font-medium leading-relaxed mb-12 max-w-md">
+                        Portföyünüzün tüm potansiyelini keşfedin. Kişiselleştirilmiş içgörüler, detaylı analizler ve veri destekli stratejilerle finansal hedeflerinize emin adımlarla ilerleyin.
+                    </p>
+
+                    <div className="flex flex-col gap-6">
+                        <div className="flex items-center gap-4 text-slate-300">
+                            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <p className="text-[15px] font-semibold tracking-wide">AI Destekli Portföy Röntgeni</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-slate-300">
+                            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <p className="text-[15px] font-semibold tracking-wide">BIST & TEFAS Fonları İzleme</p>
+                        </div>
+                        <div className="flex items-center gap-4 text-slate-300">
+                            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-4 h-4 text-blue-400" />
+                            </div>
+                            <p className="text-[15px] font-semibold tracking-wide">Risksiz ve Şifreli Veri Altyapısı</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     );
 };
