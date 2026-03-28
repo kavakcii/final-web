@@ -87,11 +87,8 @@ function DashboardShell({
 
     return (
         <div className="min-h-screen flex text-slate-800 relative selection:bg-blue-500/30 overflow-hidden font-sans bg-slate-50">
-            {/* FULL BACKGROUND GRADIENT */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a192f] to-white opacity-100 mix-blend-normal" />
-            
-            {/* Ambient Lighting Orbs */}
-            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-500/20 blur-[130px] rounded-full mix-blend-overlay -translate-y-1/3 pointer-events-none z-0" />
+            {/* RADIAL BACKGROUND (Merkez Beyaz, Dışlar Lacivert) */}
+            <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#ffffff_10%,_#1e3a8a_60%,_#0a192f_100%)]" />
 
             {/* FROSTED GLASS MAIN WRAPPER (LIGHT APPLE GLASS) */}
             <div className="relative z-10 w-full h-full min-h-screen p-0 md:p-4 lg:p-6 flex max-w-[1920px] mx-auto">
