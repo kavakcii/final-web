@@ -193,7 +193,7 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
         <div className={cn("flex min-h-screen w-full font-sans tracking-tight items-center justify-center relative overflow-x-hidden p-4 sm:p-8", className)}>
             
             {/* === GORGEOUS BACKGROUND GRADIENT (Dark Navy to White) === */}
-            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a192f] via-slate-200 to-white opacity-100 mix-blend-normal" />
+            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a192f] to-white opacity-100 mix-blend-normal" />
             
             {/* Ambient Lighting Orbs */}
             <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-500/20 blur-[130px] rounded-full mix-blend-overlay -translate-y-1/3 pointer-events-none z-0" />
