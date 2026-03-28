@@ -16,7 +16,10 @@ export const metadata: Metadata = {
   },
 };
 
+import { Inter } from "next/font/google";
 import { UserProvider } from "@/components/providers/UserProvider";
+
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"], variable: '--font-inter' });
 
 export default function RootLayout({
   children,
@@ -24,13 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body className="antialiased bg-[#020617] text-slate-200 min-h-screen" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <html lang="tr" className={`dark ${inter.variable}`}>
+      <body className="antialiased font-sans bg-[#020617] text-slate-200 min-h-screen">
         <UserProvider>
           {children}
         </UserProvider>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, AlertCircle, Loader, Eye, EyeOff, Check, Sparkles } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader, Eye, EyeOff, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,11 +16,11 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     </svg>
 );
 
-// Animated Input Component (21st.dev style)
+// Animated Input Component
 const PremiumInput = ({ label, type, placeholder, value, onChange, colSpan = 1, showToggle = false, toggleState, onToggle }: any) => {
     return (
         <div className={cn("relative group font-sans flex flex-col gap-1.5", colSpan === 2 ? "col-span-2" : "col-span-1")}>
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-1 tracking-wide">{label}</label>
+            <label className="text-[13px] font-semibold text-slate-700 ml-1 tracking-wide">{label}</label>
             <div className="relative">
                 <input
                     type={type}
@@ -28,8 +28,8 @@ const PremiumInput = ({ label, type, placeholder, value, onChange, colSpan = 1, 
                     value={value}
                     onChange={onChange}
                     className={cn(
-                        "w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3.5 text-base text-slate-900 dark:text-white placeholder:text-slate-400 outline-none transition-all duration-300",
-                        "focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm",
+                        "w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3.5 text-[15px] font-medium text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-300",
+                        "focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 shadow-sm",
                         showToggle ? "pr-12" : ""
                     )}
                 />
@@ -37,7 +37,7 @@ const PremiumInput = ({ label, type, placeholder, value, onChange, colSpan = 1, 
                     <button
                         type="button"
                         onClick={onToggle}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-2 transition-colors rounded-full"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-2 transition-colors rounded-full"
                     >
                         {toggleState ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -72,21 +72,16 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
     const [lastName, setLastName] = useState("");
     const [phone, setPhone] = useState("");
 
-    // AGREEMENTS
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [marketingAccepted, setMarketingAccepted] = useState(false);
 
-    // UI STATE
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoginMode, setIsLoginMode] = useState(initialMode);
 
-    // MODAL STATE
-    // 'closed' -> normal form state, 'loading' -> submitting, 'error' -> generic error
     const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
 
-    // TOGGLE MODE
     const toggleAuthMode = () => {
         setIsLoginMode(!isLoginMode);
         setEmail(""); setPassword(""); setConfirmPassword("");
@@ -95,7 +90,6 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
         setStatus("idle"); setErrorMessage("");
     };
 
-    // Check for existing session on mount
     useEffect(() => {
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -177,7 +171,7 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                 }
             }
 
-            // SUCCESS - DIRECT LOGIN W/O CONFIRMATION (assuming dashboard setting disabled confirmation)
+            // SUCCESS - DIRECT LOGIN
             if (onAuthSuccess) onAuthSuccess();
             router.push("/dashboard");
 
@@ -196,22 +190,31 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
     };
 
     return (
-        <div className={cn("flex min-h-screen w-full font-sans tracking-tight", className)}>
+        <div className={cn("flex min-h-screen w-full font-sans tracking-tight items-center justify-center relative overflow-x-hidden p-4 sm:p-8", className)}>
             
-            {/* === SPLIT: LEFT (FORM SIDE) - CLEAN, WHITE/LIGHT, AIRY === */}
-            <div className="w-full lg:w-[45%] flex flex-col bg-white dark:bg-[#020817] p-8 sm:p-12 lg:p-16 xl:p-24 relative overflow-y-auto custom-scrollbar shadow-2xl z-20">
-                
-                {/* Back Button */}
-                <Link href="/" className="group flex items-center gap-2 text-[13px] font-semibold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors absolute top-8 sm:top-12">
-                    <div className="w-6 h-6 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center group-hover:bg-slate-50 dark:group-hover:bg-white/5 transition-colors">
-                        <ArrowLeft className="w-3.5 h-3.5" />
-                    </div>
-                    Ana Sayfaya Dön
-                </Link>
+            {/* === GORGEOUS BACKGROUND GRADIENT (Dark Navy to White) === */}
+            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a192f] via-slate-200 to-white opacity-100 mix-blend-normal" />
+            
+            {/* Ambient Lighting Orbs */}
+            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-500/20 blur-[130px] rounded-full mix-blend-overlay -translate-y-1/3 pointer-events-none z-0" />
+            
+            {/* Back Button (Floating outside the card) */}
+            <Link href="/" className="group flex items-center gap-2 text-[14px] font-semibold text-slate-300 hover:text-white transition-colors absolute top-6 left-6 sm:top-8 sm:left-8 z-20">
+                <div className="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center group-hover:bg-white/10 transition-colors bg-white/5 backdrop-blur-md">
+                    <ArrowLeft className="w-4 h-4" />
+                </div>
+                Ana Sayfa
+            </Link>
 
-                <div className="w-full max-w-[420px] mx-auto mt-16 sm:mt-8 relative h-full flex flex-col justify-center">
+            {/* === FROSTED GLASS APPLE-STYLE CARD === */}
+            <div className="relative z-10 w-full max-w-[480px] bg-white/80 backdrop-blur-3xl border border-white/50 rounded-[2rem] p-8 sm:p-12 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1),_0_0_0_1px_rgba(255,255,255,0.4)_inset]">
+                
+                {/* Logo & Header */}
+                <div className="flex flex-col items-center text-center mb-10 w-full">
+                    <div className="mb-6 drop-shadow-xl hover:scale-105 transition-transform duration-500 cursor-default">
+                        <FinAiLogo showText={false} className="w-16 h-auto" />
+                    </div>
                     
-                    {/* Header Animation */}
                     <AnimatePresence mode="popLayout" initial={false}>
                         <motion.div
                             key={isLoginMode ? 'header-login' : 'header-register'}
@@ -219,55 +222,103 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, filter: "blur(4px)" }}
                             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                            className="text-left mb-8"
                         >
-                            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mt-4 mb-2">
-                                {isLoginMode ? "Tekrar Hoş Geldin." : "Ayrıcalığa Katıl."}
+                            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2 mb-2 tracking-tight">
+                                {isLoginMode ? "Tekrar Hoş Geldin" : "Ayrıcalığa Katıl"}
                             </h1>
                             <p className="text-slate-500 font-medium text-[15px]">
                                 {isLoginMode 
-                                    ? "Yatırımlarınızı yönetmeye kaldığınız yerden devam edin." 
-                                    : "Yeni nesil yapay zeka asistanınla tanışmanın tam zamanı."}
+                                    ? "Yatırımlarını yönetmeye devam et." 
+                                    : "Yeni nesil yapay zeka asistanınla tanış."}
                             </p>
                         </motion.div>
                     </AnimatePresence>
+                </div>
 
-                    {/* OAuth Area */}
-                    <div className="flex flex-col gap-4 w-full">
-                        <button
-                            type="button"
-                            onClick={handleGoogleLogin}
-                            className="relative flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#020817] px-4 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:shadow-sm active:scale-[0.98]"
-                        >
-                            <GoogleIcon className="w-5 h-5 flex-shrink-0" />
-                            Google ile Devam Et
-                        </button>
+                {/* OAuth Area */}
+                <div className="flex flex-col gap-4 w-full mb-6">
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
+                        className="relative flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white shadow-sm px-4 py-3.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all hover:border-slate-300 active:scale-[0.98]"
+                    >
+                        <GoogleIcon className="w-5 h-5 flex-shrink-0" />
+                        Google ile Devam Et
+                    </button>
 
-                        <div className="relative flex items-center py-4">
-                            <span className="w-full border-t border-slate-100 dark:border-slate-800"></span>
-                            <span className="bg-white dark:bg-[#020817] px-4 text-xs font-semibold text-slate-400 uppercase tracking-widest shrink-0">Veya E-posta İle</span>
-                            <span className="w-full border-t border-slate-100 dark:border-slate-800"></span>
-                        </div>
+                    <div className="relative flex items-center py-2">
+                        <span className="w-full border-t border-slate-200"></span>
+                        <span className="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Veya E-posta İle</span>
+                        <span className="w-full border-t border-slate-200"></span>
                     </div>
+                </div>
 
-                    {/* Main Auth Form Animation */}
-                    <AnimatePresence mode="wait">
-                        <motion.form
-                            key={isLoginMode ? "form-login" : "form-register"}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
-                            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                            onSubmit={handleFinalSubmit}
-                            className="flex flex-col gap-5 w-full"
-                        >
-                            {!isLoginMode ? (
-                                /* REGISTER FORM */
-                                <div className="grid grid-cols-2 gap-5 w-full">
-                                    <PremiumInput label="Ad" type="text" placeholder="Mehmet" value={firstName} onChange={(e: any) => setFirstName(e.target.value)} />
-                                    <PremiumInput label="Soyad" type="text" placeholder="Yılmaz" value={lastName} onChange={(e: any) => setLastName(e.target.value)} />
-                                    <PremiumInput label="Telefon" type="tel" placeholder="05XX XXX XX XX" value={phone} onChange={(e: any) => setPhone(e.target.value)} colSpan={2} />
-                                    <PremiumInput label="E-Posta" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} colSpan={2} />
+                {/* Main Auth Form Animation */}
+                <AnimatePresence mode="wait">
+                    <motion.form
+                        key={isLoginMode ? "form-login" : "form-register"}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20, filter: "blur(4px)" }}
+                        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                        onSubmit={handleFinalSubmit}
+                        className="flex flex-col gap-4 w-full"
+                    >
+                        {!isLoginMode ? (
+                            /* REGISTER FORM */
+                            <div className="grid grid-cols-2 gap-4 w-full">
+                                <PremiumInput label="Ad" type="text" placeholder="Ahmet" value={firstName} onChange={(e: any) => setFirstName(e.target.value)} />
+                                <PremiumInput label="Soyad" type="text" placeholder="Yılmaz" value={lastName} onChange={(e: any) => setLastName(e.target.value)} />
+                                <PremiumInput label="Telefon" type="tel" placeholder="05XX XXX XX XX" value={phone} onChange={(e: any) => setPhone(e.target.value)} colSpan={2} />
+                                <PremiumInput label="E-Posta" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} colSpan={2} />
+                                <PremiumInput 
+                                    label="Şifre" 
+                                    type={showPassword ? "text" : "password"} 
+                                    placeholder="••••••••" 
+                                    value={password} 
+                                    onChange={(e: any) => setPassword(e.target.value)} 
+                                    showToggle={true} 
+                                    toggleState={showPassword} 
+                                    onToggle={() => setShowPassword(!showPassword)}
+                                    colSpan={2} 
+                                />
+                                <PremiumInput 
+                                    label="Şifre (Tekrar)" 
+                                    type={showConfirmPassword ? "text" : "password"} 
+                                    placeholder="••••••••" 
+                                    value={confirmPassword} 
+                                    onChange={(e: any) => setConfirmPassword(e.target.value)} 
+                                    showToggle={true} 
+                                    toggleState={showConfirmPassword} 
+                                    onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    colSpan={2} 
+                                />
+
+                                <div className="col-span-2 space-y-3 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-200/50">
+                                    <label className="flex items-start gap-3 cursor-pointer group">
+                                        <div className={cn("mt-0.5 w-[18px] h-[18px] rounded-[5px] border shrink-0 flex items-center justify-center transition-all duration-200", termsAccepted ? "bg-slate-900 border-slate-900" : "border-slate-300 bg-white group-hover:border-slate-400")}>
+                                            {termsAccepted && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                                        </div>
+                                        <span className="text-[12px] text-slate-500 font-medium leading-[1.4]">
+                                            <button type="button" className="text-slate-800 font-bold hover:underline">Kullanım Şartları</button> ve <button type="button" className="text-slate-800 font-bold hover:underline">Aydınlatma Metnini</button> onaylıyorum.
+                                        </span>
+                                    </label>
+                                    <label className="flex items-start gap-3 cursor-pointer group">
+                                        <div className={cn("mt-0.5 w-[18px] h-[18px] rounded-[5px] border shrink-0 flex items-center justify-center transition-all duration-200", marketingAccepted ? "bg-slate-900 border-slate-900" : "border-slate-300 bg-white group-hover:border-slate-400")}>
+                                            {marketingAccepted && <Check className="w-3 h-3 text-white stroke-[3]" />}
+                                        </div>
+                                        <span className="text-[12px] text-slate-500 font-medium leading-[1.4]">
+                                            Yenilikler için e-posta gönderilmesine izin veriyorum.
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        ) : (
+                            /* LOGIN FORM */
+                            <div className="space-y-4 w-full">
+                                <PremiumInput label="E-Posta Adresi" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} />
+                                
+                                <div className="relative">
                                     <PremiumInput 
                                         label="Şifre" 
                                         type={showPassword ? "text" : "password"} 
@@ -276,146 +327,48 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                                         onChange={(e: any) => setPassword(e.target.value)} 
                                         showToggle={true} 
                                         toggleState={showPassword} 
-                                        onToggle={() => setShowPassword(!showPassword)}
-                                        colSpan={2} 
+                                        onToggle={() => setShowPassword(!showPassword)} 
                                     />
-                                    <PremiumInput 
-                                        label="Şifre (Tekrar)" 
-                                        type={showConfirmPassword ? "text" : "password"} 
-                                        placeholder="••••••••" 
-                                        value={confirmPassword} 
-                                        onChange={(e: any) => setConfirmPassword(e.target.value)} 
-                                        showToggle={true} 
-                                        toggleState={showConfirmPassword} 
-                                        onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        colSpan={2} 
-                                    />
+                                    <button type="button" className="absolute right-1 -top-1 text-[12px] font-bold text-blue-600 hover:text-blue-700 transition-colors">Şifremi Unuttum</button>
+                                </div>
+                            </div>
+                        )}
 
-                                    <div className="col-span-2 space-y-4 mt-2 bg-slate-50 dark:bg-slate-900/40 p-5 rounded-2xl border border-slate-100 dark:border-slate-800">
-                                        <label className="flex items-start gap-3 cursor-pointer group">
-                                            <div className={cn("mt-0.5 w-5 h-5 rounded-[4px] border shrink-0 flex items-center justify-center transition-all duration-200", termsAccepted ? "bg-slate-900 dark:bg-white border-slate-900 dark:border-white" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400")}>
-                                                {termsAccepted && <Check className="w-3.5 h-3.5 text-white dark:text-slate-900 stroke-[3]" />}
-                                            </div>
-                                            <span className="text-[13px] text-slate-500 font-medium leading-relaxed">
-                                                <button type="button" className="text-slate-900 dark:text-slate-300 font-semibold hover:underline">Kullanım Şartları</button> ve <button type="button" className="text-slate-900 dark:text-slate-300 font-semibold hover:underline">Aydınlatma Metnini</button> okudum, anladım ve kabul ediyorum.
-                                            </span>
-                                        </label>
-                                        <label className="flex items-start gap-3 cursor-pointer group">
-                                            <div className={cn("mt-0.5 w-5 h-5 rounded-[4px] border shrink-0 flex items-center justify-center transition-all duration-200", marketingAccepted ? "bg-slate-900 dark:bg-white border-slate-900 dark:border-white" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 group-hover:border-slate-400")}>
-                                                {marketingAccepted && <Check className="w-3.5 h-3.5 text-white dark:text-slate-900 stroke-[3]" />}
-                                            </div>
-                                            <span className="text-[13px] text-slate-500 font-medium leading-relaxed">
-                                                Tarafıma finansal bülten ve teklifler için ticari elektronik ileti gönderilmesine onay veriyorum.
-                                            </span>
-                                        </label>
+                        {/* Error Msg */}
+                        <AnimatePresence>
+                            {status === 'error' && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                                    <div className="flex items-center gap-2 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-semibold mt-1">
+                                        <AlertCircle className="w-4 h-4 shrink-0" />
+                                        <p>{errorMessage}</p>
                                     </div>
-                                </div>
-                            ) : (
-                                /* LOGIN FORM */
-                                <div className="space-y-5 w-full">
-                                    <PremiumInput label="E-Posta Adresi" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} />
-                                    
-                                    <div className="relative">
-                                        <PremiumInput 
-                                            label="Şifre" 
-                                            type={showPassword ? "text" : "password"} 
-                                            placeholder="••••••••" 
-                                            value={password} 
-                                            onChange={(e: any) => setPassword(e.target.value)} 
-                                            showToggle={true} 
-                                            toggleState={showPassword} 
-                                            onToggle={() => setShowPassword(!showPassword)} 
-                                        />
-                                        <button type="button" className="absolute right-0 top-0 text-[13px] font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">Şifremi Unuttum</button>
-                                    </div>
-                                </div>
+                                </motion.div>
                             )}
+                        </AnimatePresence>
 
-                            {/* Error Msg */}
-                            <AnimatePresence>
-                                {status === 'error' && (
-                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                                        <div className="flex items-center gap-2.5 p-3.5 bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 dark:border dark:border-red-500/20 rounded-xl text-sm font-medium mt-1">
-                                            <AlertCircle className="w-4 h-4 shrink-0" />
-                                            <p>{errorMessage}</p>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            disabled={status === 'loading'}
+                            className="group relative w-full flex items-center justify-center p-4 mt-2 text-[15px] font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-lg active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                        >
+                            {status === 'loading' ? (
+                                <Loader className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <span>{isLoginMode ? "Giriş Yap" : "Hesap Oluştur"}</span>
+                            )}
+                        </button>
 
-                            {/* Submit Button */}
-                            <button
-                                type="submit"
-                                disabled={status === 'loading'}
-                                className="group relative w-full flex items-center justify-center p-4 mt-2 text-base font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 rounded-xl transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_20px_-10px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_10px_20px_-10px_rgba(255,255,255,0.2)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
-                            >
-                                {status === 'loading' ? (
-                                    <Loader className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <span>{isLoginMode ? "Giriş Yap" : "Hesap Oluştur"}</span>
-                                )}
+                        {/* Toggle Mode */}
+                        <p className="text-center text-[13px] font-semibold text-slate-500 mt-4">
+                            {isLoginMode ? "Henüz hesabınız yok mu?" : "Zaten hesabınız var mı?"}{" "}
+                            <button type="button" onClick={toggleAuthMode} className="text-slate-900 font-bold hover:underline underline-offset-4 decoration-2">
+                                {isLoginMode ? "Hemen Kaydol" : "Giriş Yap"}
                             </button>
-
-                            {/* Toggle Mode */}
-                            <p className="text-center text-[14px] font-medium text-slate-500 mt-4">
-                                {isLoginMode ? "Henüz hesabınız yok mu?" : "Zaten hesabınız var mı?"}{" "}
-                                <button type="button" onClick={toggleAuthMode} className="text-slate-900 dark:text-white font-bold hover:underline underline-offset-4 decoration-2">
-                                    {isLoginMode ? "Hemen Kaydol" : "Giriş Yap"}
-                                </button>
-                            </p>
-                        </motion.form>
-                    </AnimatePresence>
-                </div>
+                        </p>
+                    </motion.form>
+                </AnimatePresence>
             </div>
-
-            {/* === SPLIT: RIGHT (PREMIUM BRAND AREA) - DEEP NAVY AURA === */}
-            <div className="hidden lg:flex w-[55%] relative items-center justify-center bg-gradient-to-br from-[#0a192f] via-[#050b14] to-black overflow-hidden pointer-events-none">
-                
-                {/* Abstract Background Noise & Grid */}
-                <div className="absolute inset-0 z-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:40px_40px] z-0" />
-                
-                {/* Glowing Orbs */}
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-600/10 blur-[120px] rounded-full mix-blend-screen translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-indigo-500/10 blur-[100px] rounded-full mix-blend-screen -translate-x-1/3 translate-y-1/3 pointer-events-none" />
-
-                <div className="relative z-10 w-full max-w-lg px-12 flex flex-col items-start justify-center text-left">
-                    <div className="mb-10 w-24 h-24 bg-white/5 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center justify-center rounded-3xl backdrop-blur-xl">
-                        <FinAiLogo showText={false} className="w-14 h-auto text-white" />
-                    </div>
-                    
-                    <h2 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6 tracking-tight drop-shadow-sm">
-                        Yapay zeka ile<br/>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">akıllı yatırım</span> devri.
-                    </h2>
-                    
-                    <p className="text-lg text-slate-400 font-medium leading-relaxed mb-12 max-w-md">
-                        Portföyünüzün tüm potansiyelini keşfedin. Kişiselleştirilmiş içgörüler, detaylı analizler ve veri destekli stratejilerle finansal hedeflerinize emin adımlarla ilerleyin.
-                    </p>
-
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-center gap-4 text-slate-300">
-                            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                                <Sparkles className="w-4 h-4 text-blue-400" />
-                            </div>
-                            <p className="text-[15px] font-semibold tracking-wide">AI Destekli Portföy Röntgeni</p>
-                        </div>
-                        <div className="flex items-center gap-4 text-slate-300">
-                            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                                <Sparkles className="w-4 h-4 text-blue-400" />
-                            </div>
-                            <p className="text-[15px] font-semibold tracking-wide">BIST & TEFAS Fonları İzleme</p>
-                        </div>
-                        <div className="flex items-center gap-4 text-slate-300">
-                            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                                <Sparkles className="w-4 h-4 text-blue-400" />
-                            </div>
-                            <p className="text-[15px] font-semibold tracking-wide">Risksiz ve Şifreli Veri Altyapısı</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
     );
 };
