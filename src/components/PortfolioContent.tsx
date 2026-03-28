@@ -38,7 +38,7 @@ export default function PortfolioPage() {
     const [prices, setPrices] = useState<Record<string, number>>({});
     const [priceExtremes, setPriceExtremes] = useState<Record<string, {low: number, high: number, current: number, target?: number, rating?: string}>>({});
     const [earningsDates, setEarningsDates] = useState<Record<string, number>>({});
-    const [dividendData, setDividendData] = useState<Record<string, { date: number, amount: number }>>({});
+    const [dividendData, setDividendData] = useState<Record<string, { date: number, amount: number, isEstimate?: boolean }>>({});
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
@@ -123,7 +123,7 @@ export default function PortfolioPage() {
                         const priceMap: Record<string, number> = {};
                         const extremesMap: Record<string, {low: number, high: number, current: number, target?: number, rating?: string}> = {};
                         const earningsMap: Record<string, number> = {};
-                        const dividendMap: Record<string, { date: number, amount: number }> = {};
+                        const dividendMap: Record<string, { date: number, amount: number, isEstimate?: boolean }> = {};
 
                         json.results.forEach((r: any) => {
                             if (r.symbol && r.regularMarketPrice) {
@@ -154,13 +154,15 @@ export default function PortfolioPage() {
                                 if (r.dividendDate) { dividendMap[baseSymbol] = { date: r.dividendDate * 1000, amount: 0 }; }
                             }
                         });
-                        
-                        // Entegre Temettü API'si (Kesin Veri)
+                        // Gelişmiş Gerçek Temettü API'si (Fintables/Yahoo)
                         if (divResponse && divResponse.ok) {
                             const divJson = await divResponse.json();
-                            if (divJson.results) {
-                                divJson.results.forEach((d: any) => {
-                                    dividendMap[d.symbol] = { date: new Date(d.date).getTime(), amount: d.amount || 0 };
+                            // divJson is an object { THYAO: { date: number, amount: number }, ... }
+                            if (divJson && !divJson.error) {
+                                Object.entries(divJson).forEach(([sym, data]: [string, any]) => {
+                                    if (data && data.amount > 0) {
+                                        dividendMap[sym] = { date: data.date, amount: data.amount, isEstimate: data.isEstimate };
+                                    }
                                 });
                             }
                         }
@@ -506,30 +508,33 @@ export default function PortfolioPage() {
                                 const days = Math.ceil((time - Date.now()) / (86400000));
                                 if (days < -30) return null;
                                 const isReported = days <= 0;
-                                const kapUrl = isReported ? getKapUrl(sym, 'finansal') : null;
+                                // KAP özet sayfası genellikle en doğru bilanço bilgilerine erişim sağlar
+                                const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
 
                                 return (
-                                    <div key={sym} className="flex justify-between py-2 border-b border-white/5 text-xs items-center group/item">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-slate-200">{sym}</span>
-                                            <span className="text-[9px] text-slate-500 uppercase">Bilanço Dönemi</span>
+                                    <div key={sym} className="flex flex-col py-2 border-b border-white/5 text-xs gap-1">
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-slate-200">{sym}</span>
+                                                <span className="text-[9px] text-slate-500 uppercase">Bilanço Dönemi</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={days > 0 ? "text-blue-400 font-medium" : "text-emerald-400 font-bold"}>
+                                                    {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className={days > 0 ? "text-blue-400" : "text-slate-500"}>
-                                                {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
-                                            </span>
-                                            {kapUrl && (
-                                                <a 
-                                                    href={kapUrl} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="p-1.5 hover:bg-white/10 rounded-lg text-blue-400 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                                                    title="Raporu Gör (KAP)"
-                                                >
-                                                    <ExternalLink className="w-3 h-3" />
-                                                </a>
-                                            )}
-                                        </div>
+                                        {kapUrl && (
+                                            <a 
+                                                href={kapUrl} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="flex items-center gap-1.5 text-[10px] text-blue-400 hover:text-blue-300 transition-colors bg-blue-500/10 hover:bg-blue-500/20 px-2 py-1 rounded w-fit mt-1"
+                                            >
+                                                <ExternalLink className="w-3 h-3" />
+                                                Bilançoya ulaşmak için tıklayınız
+                                            </a>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -555,14 +560,15 @@ export default function PortfolioPage() {
                                         
                                         <div className="relative">
                                             <div className="h-1.5 bg-slate-800 rounded-full w-full overflow-hidden flex">
+                                                {/* Premium Renk Geçişli Yatay Çubuk (Kırmızı -> Sarı -> Yeşil) */}
                                                 <div 
-                                                    className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 relative transition-all duration-1000"
+                                                    className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 relative transition-all duration-1000"
                                                     style={{ width: `${pos}%` }}
                                                 />
                                             </div>
                                             {/* Dot on current price */}
                                             <div 
-                                                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-blue-500 shadow-lg shadow-blue-500/50 z-10 transition-all duration-1000 ring-4 ring-white/10"
+                                                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full border-2 border-slate-700 shadow-[0_0_10px_rgba(255,255,255,0.5)] z-10 transition-all duration-1000 ring-2 ring-black/50"
                                                 style={{ left: `calc(${pos}% - 6px)` }}
                                             />
                                         </div>
@@ -583,18 +589,25 @@ export default function PortfolioPage() {
                             <Wallet className="w-4 h-4 text-emerald-400" /><h3 className="text-sm font-bold text-white">Nakit Akışı</h3>
                         </div>
                         <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                            {Object.entries(dividendData).map(([sym, data]) => {
+                            {Object.entries(dividendData)
+                                .filter(([_, data]) => data.amount > 0)
+                                .sort((a, b) => b[1].date - a[1].date) // En yakından en uzağa (veya tersi)
+                                .map(([sym, data]) => {
                                 const days = Math.ceil((data.date - Date.now()) / (86400000));
+                                const isPast = days < 0;
+                                const isEstimate = data.isEstimate;
                                 const portfolioItem = groupedAssets.find(a => a.symbol === sym);
                                 const quantity = portfolioItem?.totalQuantity || 0;
                                 const totalGross = quantity * data.amount;
 
                                 return (
-                                    <div key={sym} className="flex flex-col gap-2 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10 mb-2">
+                                    <div key={sym} className={cn("flex flex-col gap-2 p-3 rounded-xl border mb-2", isPast && !isEstimate ? "bg-slate-800/30 border-slate-700/50" : isEstimate ? "bg-amber-500/10 border-amber-500/20" : "bg-emerald-500/5 border-emerald-500/10")}>
                                         <div className="flex justify-between items-center">
                                             <div className="flex flex-col">
                                                 <span className="font-bold text-slate-100">{sym}</span>
-                                                <span className="text-[10px] text-slate-500">Temettü Tahmini</span>
+                                                <span className={cn("text-[10px] font-bold uppercase", isEstimate ? "text-amber-400" : isPast ? "text-slate-400" : "text-emerald-500")}>
+                                                    {isEstimate ? "BEKLENEN TEMETTÜ" : isPast ? "ÖDENMİŞ TEMETTÜ" : "KESİNLEŞEN TEMETTÜ"}
+                                                </span>
                                             </div>
                                             <div className="text-right">
                                                 <span className="text-emerald-400 font-black block">{formatCurrency(totalGross)}</span>

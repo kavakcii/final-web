@@ -29,15 +29,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(kapFundUrl, 302);
     }
 
-    // BIST hissesi → statik mapping'den tam KAP özet URL'si bul
+    // 1) Eğer Statik Listemizde Varsa (Emin olduğumuz hisseler)
     const exactUrl = getKapUrl(symbol, 'ozet');
-
     if (exactUrl) {
-        // Mapping'de var → doğrudan şirket sayfasına yönlendir (örn: /ozet/1107-turk-hava-yollari-a-o)
         return NextResponse.redirect(exactUrl, 302);
     }
 
-    // Mapping'de yok → KAP'ın BIST şirket listesine yönlendir (kullanıcı orada aratabilir)
-    const fallbackUrl = `https://www.kap.org.tr/tr/bist-sirketler`;
+    // 2) Kapsam Dışı İse Otomatik Arama (Yedeğin Yedeği Kap Arama Yönlendirmesi)
+    const fallbackUrl = `https://www.kap.org.tr/tr/arama/sirket-arama?query=${symbol}`;
     return NextResponse.redirect(fallbackUrl, 302);
 }
