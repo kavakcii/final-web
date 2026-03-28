@@ -59,10 +59,8 @@ function DashboardShell({
         return (
             <div className="min-h-screen bg-black relative flex items-center justify-center">
                 <AuthComponent
-                    logo={<div className="bg-blue-500 text-white rounded-md p-1.5"><TrendingUp className="w-4 h-4" /></div>}
                     brandName="FinAi"
                     className="w-full"
-                    isTransparent={true}
                 />
             </div>
         );
