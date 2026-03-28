@@ -86,49 +86,59 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex bg-black text-white selection:bg-blue-500/30">
-            {/* Sidebar */}
-            <aside className="w-20 hover:w-64 border-r border-white/10 bg-black hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 overflow-hidden shrink-0 h-screen sticky top-0">
-                <div className="p-6 flex items-center h-20 shrink-0">
-                    <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
-                        <div className="flex-shrink-0">
-                            <TrendingUp className="w-8 h-8 text-blue-500" />
-                        </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
-                            FinAi
-                        </span>
-                    </Link>
-                </div>
+        <div className="min-h-screen flex text-white relative selection:bg-blue-500/30 overflow-hidden font-sans bg-black">
+            {/* FULL BACKGROUND GRADIENT */}
+            <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#0a192f] via-slate-200 to-white opacity-100 mix-blend-normal" />
+            
+            {/* Ambient Lighting Orbs */}
+            <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-500/20 blur-[130px] rounded-full mix-blend-overlay -translate-y-1/3 pointer-events-none z-0" />
 
-                <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-                    {menuItems.map((item, idx) => {
-                        const isActive = pathname === item.href;
-                        return (
-                            <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <item.icon className="w-5 h-5 flex-shrink-0" />
-                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
-                                    {item.label}
+            {/* FROSTED GLASS MAIN WRAPPER */}
+            <div className="relative z-10 w-full h-full min-h-screen p-0 md:p-4 lg:p-6 flex max-w-[1920px] mx-auto">
+                <div className="flex-1 flex overflow-hidden md:rounded-[2rem] bg-slate-950/80 backdrop-blur-3xl border-0 md:border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]">
+                    
+                    {/* Sidebar */}
+                    <aside className="w-20 hover:w-64 border-r border-white/10 bg-transparent hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
+                        <div className="p-6 flex items-center h-20 shrink-0">
+                            <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
+                                <div className="flex-shrink-0">
+                                    <TrendingUp className="w-8 h-8 text-blue-500" />
+                                </div>
+                                <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-2">
+                                    FinAi
                                 </span>
                             </Link>
-                        );
-                    })}
-                </nav>
+                        </div>
 
-                <div className="p-4 border-t border-white/10 shrink-0">
-                    <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 w-full text-left">
-                        <LogOut className="w-5 h-5 flex-shrink-0" />
-                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
-                            Çıkış Yap
-                        </span>
-                    </button>
-                </div>
-            </aside>
+                        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+                            {menuItems.map((item, idx) => {
+                                const isActive = pathname === item.href;
+                                return (
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                        <item.icon className="w-5 h-5 flex-shrink-0" />
+                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
+                                            {item.label}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </nav>
 
-            {/* Main Content */}
-            <main className="flex-1 bg-black relative overflow-hidden flex flex-col min-w-0">
-                {/* Header */}
-                <header className="h-16 border-b border-white/10 bg-black flex items-center justify-between px-6 sticky top-0 z-40 backdrop-blur-md bg-black/80 flex-shrink-0">
-                    <h1 className="text-lg font-semibold text-white">FinAi</h1>
+                        <div className="p-4 border-t border-white/10 shrink-0">
+                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 w-full text-left">
+                                <LogOut className="w-5 h-5 flex-shrink-0" />
+                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
+                                    Çıkış Yap
+                                </span>
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
+                        {/* Header */}
+                        <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-transparent flex-shrink-0">
+                            <h1 className="text-lg font-semibold text-white">FinAi</h1>
                     <div className="flex items-center space-x-4">
                         <div className="relative hidden sm:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -176,10 +186,12 @@ function DashboardShell({
 
                 <FinancialTicker />
 
-                <div className="flex-1 overflow-auto bg-black p-0 relative">
-                    {children}
+                        <div className="flex-1 overflow-auto bg-transparent p-0 relative custom-scrollbar">
+                            {children}
+                        </div>
+                    </main>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
