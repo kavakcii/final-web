@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { FinAiLogo } from "@/components/ui/logo";
 
 import {
   Accordion,
@@ -91,7 +92,7 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)]" />
                 
                 <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/10 transition-transform duration-700 hover:scale-105 z-10">
-                    <span className="text-white font-bold text-5xl tracking-tighter drop-shadow-md">FA</span>
+                    <FinAiLogo showText={false} className="w-20 h-auto text-white drop-shadow-md" />
                 </div>
                 <h3 className="mt-6 text-4xl font-black text-white tracking-tight z-10 drop-shadow-md">FinAi<span className="text-blue-400">.</span></h3>
              </div>

@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { TubelightNavbar } from "@/components/ui/tubelight-navbar";
 import { Home, Compass, Info, ShieldCheck } from "lucide-react";
 import { Menu as LucideMenu, X } from "lucide-react";
+import { FinAiLogo } from "@/components/ui/logo";
 
 export default function Navbar() {
     const [isOpen, setIsOpen] = useState(false);
@@ -41,11 +42,8 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 relative flex items-center justify-between">
                 
                 {/* Sol Taraf - Logo */}
-                <Link href="/" className="flex items-center space-x-2.5 group relative z-50">
-                    <div className="w-10 h-10 bg-gradient-to-br from-[#0a192f] to-blue-800 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20 group-hover:scale-105 transition-transform">
-                        <span className="text-white font-bold text-base tracking-tighter">FA</span>
-                    </div>
-                    <span className="text-2xl font-black text-[#0a192f] tracking-tight group-hover:text-blue-700 transition-colors hidden sm:block">FinAi</span>
+                <Link href="/" className="flex items-center group relative z-50 transition-transform hover:scale-105">
+                    <FinAiLogo className="h-10 sm:h-12 w-auto" />
                 </Link>
 
                 {/* Orta Taraf - Tubelight Menu (Sadece Desktoptan Görünür) */}
