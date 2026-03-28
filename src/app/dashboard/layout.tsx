@@ -86,7 +86,7 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex text-slate-800 relative selection:bg-blue-500/30 overflow-hidden font-sans bg-[#f8fafc]">
+        <div className="min-h-screen flex text-white relative selection:bg-blue-500/30 overflow-hidden font-sans bg-[#f8fafc]">
             {/* === ULTRA PREMIUM LIGHT MESH BACKGROUND (Stripe / Vercel Style) === */}
             <div className="absolute inset-0 z-0 overflow-hidden">
                 {/* Abstract Ambient Glows */}
@@ -98,12 +98,12 @@ function DashboardShell({
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
             </div>
 
-            {/* FROSTED GLASS MAIN WRAPPER (LIGHT APPLE GLASS) */}
+            {/* FROSTED GLASS MAIN WRAPPER (DARK OBSIDIAN GLASS) */}
             <div className="relative z-10 w-full h-full min-h-screen p-0 md:p-4 lg:p-6 flex max-w-[1920px] mx-auto">
-                <div className="flex-1 flex overflow-hidden md:rounded-[2rem] bg-white/60 backdrop-blur-3xl border-0 md:border border-white/60 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)]">
+                <div className="flex-1 flex overflow-hidden md:rounded-[2rem] bg-slate-950/80 backdrop-blur-3xl border-0 md:border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]">
                     
                     {/* Sidebar */}
-                    <aside className="w-20 hover:w-64 border-r border-slate-200/50 bg-transparent hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
+                    <aside className="w-20 hover:w-64 border-r border-white/10 bg-transparent hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
                         <div className="p-6 flex items-center h-20 shrink-0">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">
@@ -119,7 +119,7 @@ function DashboardShell({
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-blue-700 bg-blue-500/10 border border-blue-500/20 shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-900/5'}`}>
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                                         <item.icon className="w-5 h-5 flex-shrink-0" />
                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
                                             {item.label}
@@ -129,8 +129,8 @@ function DashboardShell({
                             })}
                         </nav>
 
-                        <div className="p-4 border-t border-slate-200/50 shrink-0">
-                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 w-full text-left">
+                        <div className="p-4 border-t border-white/10 shrink-0">
+                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 w-full text-left">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
                                     Çıkış Yap
@@ -142,22 +142,22 @@ function DashboardShell({
                     {/* Main Content */}
                     <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
                         {/* Header */}
-                        <header className="h-16 border-b border-slate-200/50 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/40 backdrop-blur-md flex-shrink-0 shadow-sm">
-                            <h1 className="text-lg font-bold text-slate-800 tracking-tight">FinAi</h1>
+                        <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-black/20 backdrop-blur-md flex-shrink-0 shadow-sm">
+                            <h1 className="text-lg font-bold text-white tracking-tight">FinAi</h1>
                     <div className="flex items-center space-x-4">
                         <div className="relative hidden sm:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input
                                 type="text"
                                 placeholder="Hisse senedi ara..."
-                                className="bg-white/80 border border-slate-200 rounded-full py-2 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-64 text-slate-800 placeholder:text-slate-400 shadow-sm transition-all"
+                                className="bg-slate-800/50 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-64 text-white placeholder:text-slate-400 shadow-sm transition-all"
                             />
                         </div>
 
                         <div className="relative" ref={profileRef}>
                             <button
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="w-9 h-9 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 font-bold hover:bg-blue-100 transition-colors focus:outline-none focus:ring-4 focus:ring-blue-500/20 overflow-hidden shadow-sm"
+                                className="w-9 h-9 rounded-full bg-slate-800 border border-white/20 flex items-center justify-center text-blue-400 font-bold hover:bg-slate-700 transition-colors focus:outline-none focus:ring-4 focus:ring-blue-500/20 overflow-hidden shadow-sm"
                             >
                                 {avatarUrl ? (
                                     <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
@@ -167,18 +167,18 @@ function DashboardShell({
                             </button>
 
                             {isProfileOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                                    <div className="px-4 py-3 border-b border-slate-100">
-                                        <p className="text-sm font-bold text-slate-800">{userName || "Kullanıcı"}</p>
+                                <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                    <div className="px-4 py-3 border-b border-white/10">
+                                        <p className="text-sm font-bold text-white">{userName || "Kullanıcı"}</p>
                                     </div>
                                     <div className="py-1">
-                                        <Link href="/dashboard/settings" className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                                        <Link href="/dashboard/settings" className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors">
                                             <Settings className="w-4 h-4" />
                                             Kullanıcı Ayarları
                                         </Link>
                                     </div>
-                                    <div className="border-t border-slate-100 mt-1 py-1">
-                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 flex items-center gap-2 transition-colors">
+                                    <div className="border-t border-white/10 mt-1 py-1">
+                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition-colors">
                                             <LogOut className="w-4 h-4" />
                                             Çıkış Yap
                                         </button>
