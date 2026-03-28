@@ -190,10 +190,18 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
     };
 
     return (
-        <div className={cn("flex min-h-screen w-full font-sans tracking-tight items-center justify-center relative overflow-x-hidden p-4 sm:p-8", className)}>
+        <div className={cn("flex min-h-screen w-full font-sans tracking-tight items-center justify-center relative overflow-x-hidden p-4 sm:p-8 bg-[#f8fafc]", className)}>
             
-            {/* === RADIAL BACKGROUND (Merkez Beyaz, Dışlar Lacivert) === */}
-            <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#ffffff_10%,_#1e3a8a_60%,_#0a192f_100%)] opacity-100" />
+            {/* === ULTRA PREMIUM LIGHT MESH BACKGROUND (Stripe / Vercel Style) === */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
+                {/* Abstract Ambient Glows */}
+                <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-400/20 blur-[120px] mix-blend-multiply pointer-events-none" />
+                <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-indigo-300/20 blur-[130px] mix-blend-multiply pointer-events-none" />
+                <div className="absolute bottom-[-20%] left-[10%] w-[80vw] h-[80vw] rounded-full bg-sky-200/30 blur-[140px] mix-blend-multiply pointer-events-none" />
+                
+                {/* Tech / Finance Subtle Grid with Top Fade */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+            </div>
             
             {/* Back Button (Floating outside the card) */}
             <Link href="/" className="group flex items-center gap-2 text-[14px] font-semibold text-slate-300 hover:text-white transition-colors absolute top-6 left-6 sm:top-8 sm:left-8 z-20">

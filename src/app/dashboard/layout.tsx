@@ -86,9 +86,17 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex text-slate-800 relative selection:bg-blue-500/30 overflow-hidden font-sans bg-slate-50">
-            {/* RADIAL BACKGROUND (Merkez Beyaz, Dışlar Lacivert) */}
-            <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_center,_#ffffff_10%,_#1e3a8a_60%,_#0a192f_100%)]" />
+        <div className="min-h-screen flex text-slate-800 relative selection:bg-blue-500/30 overflow-hidden font-sans bg-[#f8fafc]">
+            {/* === ULTRA PREMIUM LIGHT MESH BACKGROUND (Stripe / Vercel Style) === */}
+            <div className="absolute inset-0 z-0 overflow-hidden">
+                {/* Abstract Ambient Glows */}
+                <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-400/20 blur-[120px] mix-blend-multiply pointer-events-none" />
+                <div className="absolute top-[20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-indigo-300/20 blur-[130px] mix-blend-multiply pointer-events-none" />
+                <div className="absolute bottom-[-20%] left-[10%] w-[80vw] h-[80vw] rounded-full bg-sky-200/30 blur-[140px] mix-blend-multiply pointer-events-none" />
+                
+                {/* Tech / Finance Subtle Grid with Top Fade */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+            </div>
 
             {/* FROSTED GLASS MAIN WRAPPER (LIGHT APPLE GLASS) */}
             <div className="relative z-10 w-full h-full min-h-screen p-0 md:p-4 lg:p-6 flex max-w-[1920px] mx-auto">
