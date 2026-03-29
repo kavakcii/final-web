@@ -137,7 +137,7 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.25)_100%)] ring-1 ring-[#0a192f]/[0.1] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[300px]">
+            <div className="lg:col-span-2 bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(30,64,175,0.12)_100%)] ring-1 ring-[#0a192f]/[0.1] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[300px]">
                 <div className="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
             </div>
         );
@@ -145,7 +145,7 @@ export function DashboardPortfolioWidget() {
 
     if (recommendation) {
         return (
-            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-transform duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.1] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.25)_100%)]">
+            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-transform duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.1] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(30,64,175,0.15)_100%)]">
                 <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-8">
 
                 {/* Chart Side */}
@@ -252,7 +252,7 @@ export function DashboardPortfolioWidget() {
 
     // Default "Start Test" View
     return (
-        <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-all duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.1] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.25)_100%)]">
+        <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-all duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.1] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(30,64,175,0.15)_100%)]">
             <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-10">
 
             <div className="relative z-10 max-w-lg mx-auto mt-4">
