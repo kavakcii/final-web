@@ -136,20 +136,16 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
-                <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+            <div className="lg:col-span-2 bg-[#0a192f] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[300px] shadow-2xl">
+                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (recommendation) {
         return (
-            <div className="lg:col-span-2 relative bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden group shadow-2xl">
-                {/* 21st.dev Vibe Background Textures */}
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.08)_0%,_transparent_60%)] pointer-events-none" />
-                
-                <div className="relative flex flex-col md:flex-row items-center gap-8 p-8 z-10">
+            <div className="lg:col-span-2 relative bg-[#0a192f] rounded-[1.5rem] overflow-hidden group shadow-2xl">
+                <div className="relative flex flex-col md:flex-row items-center gap-8 p-8 z-10 w-full h-full">
 
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
                     <ResponsiveContainer width="100%" height="100%">
@@ -165,28 +161,28 @@ export function DashboardPortfolioWidget() {
                                 stroke="none"
                             >
                                 {recommendation.allocation.map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.02)" strokeWidth={2} />
+                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="#0a192f" strokeWidth={2} />
                                 ))}
                             </Pie>
                                 <Tooltip
-                                contentStyle={{ backgroundColor: '#09090b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
-                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                contentStyle={{ backgroundColor: '#ffffff', borderColor: 'transparent', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
+                                itemStyle={{ color: '#0a192f', fontWeight: 'bold' }}
                                 formatter={(value: any) => [`%${value}`, 'Oran']}
                             />
                         </RechartsPie>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-zinc-500 text-[10px] font-semibold uppercase tracking-widest mt-1">Önerilen</span>
-                        <span className="text-white font-bold text-sm text-center px-4 leading-tight">{recommendation.title}</span>
+                        <span className="text-slate-300 text-[10px] font-bold uppercase tracking-widest mt-1">Önerilen</span>
+                        <span className="text-white font-black text-sm text-center px-4 leading-tight">{recommendation.title}</span>
                     </div>
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-2 px-2.5 py-1 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full ring-1 ring-white/5">
-                                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: item.color, color: item.color }}></div>
-                                <span className="text-[10px] text-zinc-300 font-medium whitespace-nowrap">
-                                    {item.name} <span className="text-white font-bold ml-1">%{item.value}</span>
+                            <div key={idx} className="flex items-center gap-2 px-2.5 py-1 bg-white/10 rounded-full">
+                                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color, color: item.color }}></div>
+                                <span className="text-[10px] text-white font-bold whitespace-nowrap">
+                                    {item.name} <span className="font-black ml-1">%{item.value}</span>
                                     {item.amountStr && (
-                                        <span className="text-zinc-500 ml-1">({item.amountStr})</span>
+                                        <span className="text-slate-300 ml-1">({item.amountStr})</span>
                                     )}
                                 </span>
                             </div>
@@ -196,28 +192,28 @@ export function DashboardPortfolioWidget() {
 
                 <div className="w-full md:w-1/2 relative z-10 text-center md:text-left">
                     <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400 ring-1 ring-emerald-500/20">
+                        <div className="p-1.5 bg-white/10 rounded-lg text-white">
                             <PieChart className="w-4 h-4" />
                         </div>
-                        <span className="text-emerald-400 font-medium text-xs tracking-wide">AI Analizi</span>
-                        <div className="text-[10px] font-bold text-white bg-zinc-800 px-2 py-0.5 rounded-full ring-1 ring-white/10 ml-2 uppercase tracking-widest">
+                        <span className="text-white font-black text-xs tracking-wide">AI Analizi</span>
+                        <div className="text-[10px] font-bold text-[#0a192f] bg-white px-2 py-0.5 rounded-full ml-2 uppercase tracking-widest">
                             {recommendation.persona}
                         </div>
                     </div>
 
-                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{recommendation.title}</h3>
-                    <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
+                    <h3 className="text-2xl font-black text-white mb-2 tracking-tight">{recommendation.title}</h3>
+                    <p className="text-slate-300 text-sm mb-6 leading-relaxed">
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-5 bg-zinc-900/50 rounded-xl border border-white/5 mb-6 text-sm text-zinc-400 leading-relaxed ring-1 ring-white/5 backdrop-blur-sm">
-                        <strong className="text-white block mb-2 font-semibold">Neden Bu?</strong>
+                    <div className="p-5 bg-white/5 rounded-xl mb-6 text-sm text-slate-300 leading-relaxed">
+                        <strong className="text-white block mb-2 font-black">Neden Bu?</strong>
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-emerald-400 font-medium">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
                         )}
 
                         {recommendation.advantages && (
-                            <div className="mt-5 pt-4 border-t border-white/5">
+                            <div className="mt-5 pt-4 border-t border-white/10">
                                 <ul className="space-y-2">
                                     {recommendation.advantages.map((adv: string, i: number) => (
                                         <li key={i} className="flex items-start gap-2 text-xs">
@@ -236,7 +232,7 @@ export function DashboardPortfolioWidget() {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
                             }}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium text-sm transition-all ring-1 ring-white/10"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm transition-all"
                         >
                             <RotateCcw className="w-4 h-4" />
                             Testi Tekrarla
@@ -249,37 +245,35 @@ export function DashboardPortfolioWidget() {
     }
 
     return (
-        <div className="lg:col-span-2 relative bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden group shadow-2xl">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+        <div className="lg:col-span-2 relative bg-[#0a192f] rounded-[1.5rem] overflow-hidden group shadow-2xl">
             
-            <div className="relative flex flex-col justify-center items-center text-center p-12 z-10">
+            <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
 
             <div className="relative z-10 max-w-lg mx-auto mt-4">
-                <div className="w-16 h-16 bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white ring-1 ring-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
+                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white">
                     <Wallet className="w-8 h-8" />
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">
+                <h2 className="text-3xl font-black text-white mb-4 tracking-tight">
                     Optimum Portföyünüzü Bulun
                 </h2>
 
-                <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                <p className="text-slate-300 text-sm mb-8 leading-relaxed">
                     AI Destekli analizimizle risk profilinizi ölçün, saniyeler içinde BIST & TEFAS piyasasında size en uygun dağılımı keşfedin.
                 </p>
 
                 <button
                     onClick={() => window.location.href = "/dashboard/market"}
-                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-zinc-950 font-semibold rounded-lg overflow-hidden transition-all hover:scale-105 active:scale-95 ring-1 ring-white/20"
+                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg overflow-hidden transition-all hover:bg-blue-500 active:scale-95"
                 >   
                     <span className="relative z-10 flex items-center gap-2">
                         Analizi Başlat <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </span>
-                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity" />
                 </button>
 
-                <div className="mt-8 flex items-center justify-center gap-6 text-xs text-zinc-500 font-medium">
+                <div className="mt-8 flex items-center justify-center gap-6 text-xs text-slate-300 font-bold">
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                         Bilimsel Analiz
                     </span>
                     <span className="flex items-center gap-1.5">

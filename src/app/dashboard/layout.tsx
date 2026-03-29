@@ -95,17 +95,17 @@ function DashboardShell({
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar (Ultra Minimal Dark) */}
-                    <aside className="w-20 hover:w-64 border-r border-white/5 bg-[#09090b]/80 backdrop-blur-2xl hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
-                        <div className="p-6 flex items-center h-20 shrink-0">
+                    {/* Sidebar (Solid Navy Blue) */}
+                    <aside className="w-20 hover:w-64 border-r border-[#0a192f] bg-[#0a192f] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
+                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/5">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 bg-zinc-900 rounded-lg flex items-center justify-center ring-1 ring-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/10">
                                         <TrendingUp className="w-5 h-5 text-white" />
                                     </div>
                                 </div>
                                 <span className="text-xl font-bold tracking-tight text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                                    FinAi<span className="text-emerald-500">.</span>
+                                    FinAi<span className="text-blue-400">.</span>
                                 </span>
                             </Link>
                         </div>
@@ -114,21 +114,18 @@ function DashboardShell({
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-zinc-900 ring-1 ring-white/10' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}>
-                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-zinc-500 group-hover/nav:text-white transition-colors'}`} />
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-[#0a192f] bg-white' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}>
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-[#0a192f]' : 'text-slate-300 group-hover/nav:text-white transition-colors'}`} />
                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
                                             {item.label}
                                         </span>
-                                        {isActive && (
-                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-r-full" />
-                                        )}
                                     </Link>
                                 );
                             })}
                         </nav>
 
                         <div className="p-4 border-t border-white/5 shrink-0">
-                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-zinc-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left">
+                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-slate-400 hover:text-rose-400 hover:bg-white/5 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
                                     Çıkış Yap
@@ -140,7 +137,7 @@ function DashboardShell({
                     {/* Main Content */}
                     <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
                         {/* Header */}
-                        <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-40 bg-[#09090b]/80 backdrop-blur-xl flex-shrink-0">
+                        <header className="h-16 border-b border-white/5 flex items-center justify-between px-6 sticky top-0 z-40 bg-[#09090b]/80 backdrop-blur-xl flex-shrink-0 relative">
                             <h1 className="text-sm font-medium text-zinc-400 tracking-wider uppercase">FinAi Workspace</h1>
                     <div className="flex items-center space-x-4">
                         <div className="relative hidden sm:block">
@@ -175,7 +172,7 @@ function DashboardShell({
                                             Kullanıcı Ayarları
                                         </Link>
                                     </div>
-                                    <div className="border-t border-slate-100 mt-1 py-1">
+                                    <div className="border-t border-white/5 mt-1 py-1">
                                         <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-medium text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors">
                                             <LogOut className="w-4 h-4" />
                                             Çıkış Yap
