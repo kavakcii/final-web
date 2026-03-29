@@ -173,12 +173,12 @@ export default function HomeClient() {
                 Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#0a192f]">profesyonel bir güçle</b> yönetin.
               </motion.p>
 
-              {/* CTAs */}
+              {/* CTAs (Sadece Mobilde Görünür) */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 relative z-[9999] pointer-events-auto"
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 relative z-[9999] pointer-events-auto sm:hidden"
                 style={{ zIndex: 9999 }}
               >
                 <div className="w-full sm:w-auto relative z-[9999] pointer-events-auto group">
