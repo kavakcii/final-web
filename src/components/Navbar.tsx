@@ -54,34 +54,34 @@ export default function Navbar() {
                 {/* Sağ Taraf - Butonlar / Mobil Menü Butonu */}
                 <div className="flex items-center gap-3 relative z-50">
                     {isAuthenticated ? (
-                        <Link href="/dashboard" passHref className="hidden sm:block">
-                            <motion.div
+                        <Link href="/dashboard" passHref legacyBehavior>
+                            <motion.a
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0a192f] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all"
+                                className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0a192f] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all hidden sm:block"
                             >
                                 Panoya Git
-                            </motion.div>
+                            </motion.a>
                         </Link>
                     ) : (
                         <div className="hidden sm:flex items-center gap-3">
-                            <Link href="/login" passHref>
-                                <motion.div
+                            <Link href="/login" passHref legacyBehavior>
+                                <motion.a
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-[#0a192f] hover:bg-slate-100 rounded-full border-2 border-slate-200 hover:border-[#0a192f] transition-all bg-white relative z-50"
+                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-[#0a192f] hover:bg-slate-100 rounded-full border-2 border-slate-200 hover:border-[#0a192f] transition-all bg-white relative z-50 block"
                                 >
                                     Giriş Yap
-                                </motion.div>
+                                </motion.a>
                             </Link>
-                            <Link href="/login?tab=register" passHref>
-                                <motion.div
+                            <Link href="/login?tab=register" passHref legacyBehavior>
+                                <motion.a
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0a192f] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all relative z-50"
+                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0a192f] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all relative z-50 block"
                                 >
                                     Kaydol
-                                </motion.div>
+                                </motion.a>
                             </Link>
                         </div>
                     )}
