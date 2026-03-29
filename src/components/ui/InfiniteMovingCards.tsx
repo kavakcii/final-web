@@ -106,7 +106,7 @@ export const InfiniteMovingCards = ({
                                     {item.initials}
                                 </div>
                                 <div>
-                                    <span className="block text-base font-bold text-[#0f3eaf]">
+                                    <span className="block text-base font-bold text-[#0a192f]">
                                         {item.name}
                                     </span>
                                     <span className="block text-xs text-slate-500 font-medium">
@@ -115,7 +115,7 @@ export const InfiniteMovingCards = ({
                                 </div>
                             </div>
 
-                            <span className="relative z-20 text-sm leading-[1.6] text-[#0f3eaf] font-medium block mb-4">
+                            <span className="relative z-20 text-sm leading-[1.6] text-[#0a192f] font-medium block mb-4">
                                 "{item.quote}"
                             </span>
 

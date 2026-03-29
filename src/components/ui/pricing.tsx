@@ -90,7 +90,7 @@ export function Pricing({
                         />
                     </Label>
                 </label>
-                <span className="ml-2 font-semibold text-[#0f3eaf]">
+                <span className="ml-2 font-semibold text-[#0a192f]">
                     Yıllık Ödeme <span className="text-blue-600">(%20 Tasarruf Et)</span>
                 </span>
             </div>
@@ -123,7 +123,7 @@ export function Pricing({
                             className={cn(
                                 `rounded-2xl border p-8 text-center lg:flex lg:flex-col lg:justify-center relative transition-colors duration-300`,
                                 isPremium
-                                    ? "bg-[#0f3eaf] border-blue-900 shadow-2xl z-10"
+                                    ? "bg-[#0a192f] border-blue-900 shadow-2xl z-10"
                                     : "bg-white border-slate-200 shadow-lg hover:border-blue-200 z-0",
                                 "flex flex-col",
                                 !isPremium && "mt-5"
@@ -144,7 +144,7 @@ export function Pricing({
                                     {plan.name}
                                 </p>
                                 <div className="mt-4 flex items-center justify-center gap-x-1">
-                                    <span className={cn("text-5xl font-bold tracking-tight", isPremium ? "text-white" : "text-[#0f3eaf]")}>
+                                    <span className={cn("text-5xl font-bold tracking-tight", isPremium ? "text-white" : "text-[#0a192f]")}>
                                         <NumberFlow
                                             value={
                                                 isMonthly ? Number(plan.price) : Number(plan.yearlyPrice)
@@ -193,7 +193,7 @@ export function Pricing({
                                             "w-full block py-3 px-6 rounded-xl font-bold transition-all duration-200 shadow-md hover:shadow-lg transform active:scale-95",
                                             isPremium
                                                 ? "bg-blue-600 text-white hover:bg-blue-500 ring-4 ring-blue-900/20"
-                                                : "bg-[#0f3eaf] text-white hover:bg-[#112240] hover:ring-4 hover:ring-slate-200"
+                                                : "bg-[#0a192f] text-white hover:bg-[#112240] hover:ring-4 hover:ring-slate-200"
                                         )}
                                     >
                                         {plan.buttonText}

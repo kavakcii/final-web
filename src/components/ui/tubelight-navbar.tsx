@@ -56,8 +56,8 @@ export function TubelightNavbar({ items, className }: NavBarProps) {
               onClick={() => setActiveTab(item.name)}
               className={cn(
                 "relative cursor-pointer text-sm font-bold px-6 py-2.5 rounded-full transition-colors duration-300",
-                "text-slate-500 hover:text-[#0f3eaf]", // Inaktif renk
-                isActive && "text-[#0f3eaf]", // Aktif yazı rengi (Lacivert)
+                "text-slate-500 hover:text-[#0a192f]", // Inaktif renk
+                isActive && "text-[#0a192f]", // Aktif yazı rengi (Lacivert)
               )}
             >
               <span className="hidden md:inline whitespace-nowrap">{item.name}</span>
@@ -76,8 +76,8 @@ export function TubelightNavbar({ items, className }: NavBarProps) {
                     damping: 30,
                   }}
                 >
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-[#0f3eaf] via-blue-600 to-white rounded-t-full">
-                    <div className="absolute w-12 h-6 bg-[#0f3eaf]/30 rounded-full blur-md -top-2 -left-2" />
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-[#0a192f] via-blue-600 to-white rounded-t-full">
+                    <div className="absolute w-12 h-6 bg-[#0a192f]/30 rounded-full blur-md -top-2 -left-2" />
                     <div className="absolute w-8 h-6 bg-blue-500/20 rounded-full blur-md -top-1" />
                     <div className="absolute w-4 h-4 bg-white/40 rounded-full blur-sm top-0 left-2" />
                   </div>

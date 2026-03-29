@@ -58,7 +58,7 @@ export default function Navbar() {
                             <motion.a
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0f3eaf] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all hidden sm:block"
+                                className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0a192f] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all hidden sm:block"
                             >
                                 Giriş Yap
                             </motion.a>
@@ -69,7 +69,7 @@ export default function Navbar() {
                                 <motion.a
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-[#0f3eaf] hover:bg-slate-100 rounded-full border-2 border-slate-200 hover:border-[#0f3eaf] transition-all bg-white relative z-50 block"
+                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-[#0a192f] hover:bg-slate-100 rounded-full border-2 border-slate-200 hover:border-[#0a192f] transition-all bg-white relative z-50 block"
                                 >
                                     Giriş Yap
                                 </motion.a>
@@ -78,7 +78,7 @@ export default function Navbar() {
                                 <motion.a
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0f3eaf] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all relative z-50 block"
+                                    className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#0a192f] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(10,25,47,0.4)] transition-all relative z-50 block"
                                 >
                                     Kaydol
                                 </motion.a>
@@ -89,7 +89,7 @@ export default function Navbar() {
                     {/* Mobile Hamburger Button */}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="p-2.5 bg-white/80 backdrop-blur-md rounded-xl border border-slate-200/50 shadow-sm text-[#0f3eaf] sm:hidden"
+                        className="p-2.5 bg-white/80 backdrop-blur-md rounded-xl border border-slate-200/50 shadow-sm text-[#0a192f] sm:hidden"
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <LucideMenu className="w-6 h-6" />}
                     </button>
@@ -108,7 +108,7 @@ export default function Navbar() {
                     >
                         <div className="px-5 py-6 space-y-3">
                             {navItems.map((item) => (
-                                <Link key={item.name} href={item.url} onClick={() => setIsOpen(false)} className="flex items-center gap-4 px-4 py-3.5 text-base font-bold text-[#0f3eaf] hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-2xl transition-all">
+                                <Link key={item.name} href={item.url} onClick={() => setIsOpen(false)} className="flex items-center gap-4 px-4 py-3.5 text-base font-bold text-[#0a192f] hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-2xl transition-all">
                                     <item.icon className="w-5 h-5 text-blue-600" />
                                     {item.name}
                                 </Link>
@@ -118,7 +118,7 @@ export default function Navbar() {
                                     <Link
                                         href="/login?tab=register"
                                         onClick={() => setIsOpen(false)}
-                                        className="block w-full text-center px-4 py-3.5 text-base font-bold text-white bg-[#0f3eaf] hover:bg-black rounded-2xl shadow-lg shadow-[#0f3eaf]/20 transition-all"
+                                        className="block w-full text-center px-4 py-3.5 text-base font-bold text-white bg-[#0a192f] hover:bg-black rounded-2xl shadow-lg shadow-[#0a192f]/20 transition-all"
                                     >
                                         Kaydol
                                     </Link>
@@ -126,7 +126,7 @@ export default function Navbar() {
                                 <Link
                                     href={isAuthenticated ? "/dashboard" : "/login"}
                                     onClick={() => setIsOpen(false)}
-                                    className="block w-full text-center px-4 py-3.5 text-base font-bold text-[#0f3eaf] bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-2xl transition-all"
+                                    className="block w-full text-center px-4 py-3.5 text-base font-bold text-[#0a192f] bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-2xl transition-all"
                                 >
                                     {isAuthenticated ? "Giriş Yap" : "Giriş Yap"}
                                 </Link>

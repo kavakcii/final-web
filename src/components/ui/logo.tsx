@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 
 export const FinAiLogo = ({ className, showText = true }: { className?: string, showText?: boolean }) => (
-  <svg viewBox="0 0 320 100" className={cn("text-[#0f3eaf] dark:text-white", className || "w-48 h-auto")} fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 320 100" className={cn("text-[#0a192f] dark:text-white", className || "w-48 h-auto")} fill="none" xmlns="http://www.w3.org/2000/svg">
     
     {/* --- APPLE-STYLE SQUIRCLE ICON --- */}
     <g transform={showText ? "translate(0, 5)" : "translate(110, 5)"}>

@@ -36,7 +36,7 @@ export default function HomeClient() {
       quote: "Portföyümdeki riskleri daha iyi yönetiyorum. Uygulama çok yönlendirici ve anlaşılır.",
       tags: [{ text: 'Premium', type: 'featured' as const }, { text: 'BIST', type: 'default' as const }],
       stats: [{ icon: TrendingUp, text: 'Karlı' }],
-      avatarGradient: 'linear-gradient(135deg, #0f3eaf, #1e3a8a)',
+      avatarGradient: 'linear-gradient(135deg, #0a192f, #1e3a8a)',
     },
     {
       id: 2,
@@ -132,16 +132,16 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-                className="text-[65px] sm:text-[80px] md:text-[120px] leading-[1.0] font-black tracking-tighter text-[#0f3eaf] py-4 relative flex justify-center items-center w-full mx-auto"
+                className="text-[65px] sm:text-[80px] md:text-[120px] leading-[1.0] font-black tracking-tighter text-[#0a192f] py-4 relative flex justify-center items-center w-full mx-auto"
               >
                 {/* Glow behind the text: soft transition from inner white to outer navy */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[800px] sm:h-[800px] bg-[radial-gradient(circle,_rgba(255,255,255,1)_10%,_rgba(10,25,47,0.15)_50%,_transparent_80%)] -z-10 rounded-full blur-[20px] pointer-events-none" />
                 
                 <span className="relative inline-block z-10 mt-10 sm:mt-0">
-                  <span className="text-[#0f3eaf] px-2 font-black">
+                  <span className="text-[#0a192f] px-2 font-black">
                     FinAi
                   </span>
-                  <svg className="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-[#0f3eaf] opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
+                  <svg className="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-[#0a192f] opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
                     <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="6" fill="transparent" />
                   </svg>
                 </span>
@@ -170,7 +170,7 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="text-base sm:text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
               >
-                Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#0f3eaf]">profesyonel bir güçle</b> yönetin.
+                Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#0a192f]">profesyonel bir güçle</b> yönetin.
               </motion.p>
 
               {/* CTAs (Sadece Mobilde Görünür) */}
@@ -182,14 +182,14 @@ export default function HomeClient() {
                 style={{ zIndex: 9999 }}
               >
                 <div className="relative z-[9999] pointer-events-auto group">
-                    <a href="/login?tab=register" className="cursor-pointer flex items-center justify-center gap-1.5 px-6 py-3 bg-[#0f3eaf] hover:bg-[#0b2d82] text-white font-bold rounded-full shadow-lg transition-all text-sm tracking-wide border border-transparent" style={{ cursor: "pointer", pointerEvents: "auto" }}>
+                    <a href="/login?tab=register" className="cursor-pointer flex items-center justify-center gap-1.5 px-6 py-3 bg-[#0a192f] hover:bg-[#0b2d82] text-white font-bold rounded-full shadow-lg transition-all text-sm tracking-wide border border-transparent" style={{ cursor: "pointer", pointerEvents: "auto" }}>
                         Ücretsiz Dene
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </a>
                 </div>
                 
                 <div className="relative z-[9999] pointer-events-auto">
-                    <a href="/login" className="cursor-pointer flex items-center justify-center px-6 py-3 bg-white hover:bg-slate-50 text-[#0f3eaf] font-bold rounded-full border border-slate-200 hover:border-[#0f3eaf] shadow-sm transition-all text-sm tracking-wide" style={{ cursor: "pointer", pointerEvents: "auto" }}>
+                    <a href="/login" className="cursor-pointer flex items-center justify-center px-6 py-3 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-full border border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-sm tracking-wide" style={{ cursor: "pointer", pointerEvents: "auto" }}>
                         Giriş Yap
                     </a>
                 </div>
@@ -201,10 +201,10 @@ export default function HomeClient() {
         {/* 
             TESTIMONIALS (Moved out of hero completely)
         */}
-        <section className="w-full bg-gradient-to-b from-white via-[#0f3eaf] to-white pt-24 pb-20 relative z-20 overflow-hidden">
+        <section className="w-full bg-gradient-to-b from-white via-[#0a192f] to-white pt-24 pb-20 relative z-20 overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-px bg-slate-200/50" />
             <div className="text-center mb-12 relative z-30">
-               <span className="text-white/80 text-sm font-bold tracking-widest uppercase bg-[#0f3eaf]/50 px-6 py-2 rounded-full border border-white/10 backdrop-blur-md">Kullanıcılarımız Ne Diyor?</span>
+               <span className="text-white/80 text-sm font-bold tracking-widest uppercase bg-[#0a192f]/50 px-6 py-2 rounded-full border border-white/10 backdrop-blur-md">Kullanıcılarımız Ne Diyor?</span>
             </div>
             {/* Infinite Moving Cards inside the Gradient Block */}
             <InfiniteMovingCards items={testimonialsData} direction="right" speed="slow" />
