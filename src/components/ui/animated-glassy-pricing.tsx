@@ -249,7 +249,7 @@ export const ModernPricingPage = ({
             {showAnimatedBackground && <ShaderCanvas />}
             <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-8">
                 <div className="text-center mb-14">
-                    <h1 className="text-4xl md:text-6xl font-[family-name:var(--font-playfair)] italic font-semibold text-[#0a192f] mb-4">
+                    <h1 className="text-4xl md:text-6xl font-[family-name:var(--font-libre)] italic font-bold text-[#0a192f] mb-4">
                         {title}
                     </h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
