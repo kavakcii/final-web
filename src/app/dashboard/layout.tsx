@@ -95,28 +95,28 @@ function DashboardShell({
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar (Solid Navy Blue) */}
-                    <aside className="w-20 hover:w-64 border-r border-[#0a192f] bg-[#0a192f] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
-                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/5">
+                    {/* Sidebar (Radial Gradient White to Navy) */}
+                    <aside className="w-20 hover:w-64 border-r border-[#0a192f]/10 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[5px_0_30px_rgba(10,25,47,0.15)]">
+                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-[#0a192f]/10">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/10">
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#0a192f] shadow-md">
                                         <TrendingUp className="w-5 h-5 text-white" />
                                     </div>
                                 </div>
-                                <span className="text-xl font-bold tracking-tight text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                                    FinAi<span className="text-blue-400">.</span>
+                                <span className="text-xl font-black tracking-tight text-[#0a192f] opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap drop-shadow-sm">
+                                    FinAi<span className="text-white drop-shadow-md">.</span>
                                 </span>
                             </Link>
                         </div>
 
-                        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+                        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-thin scrollbar-thumb-[#0a192f]/20">
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-[#0a192f] bg-white' : 'text-slate-300 hover:text-white hover:bg-white/10'}`}>
-                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-[#0a192f]' : 'text-slate-300 group-hover/nav:text-white transition-colors'}`} />
-                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-black rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#0a192f] shadow-lg border border-[#0a192f]/20' : 'text-[#0a192f] hover:text-white hover:bg-[#0a192f] hover:shadow-md'}`}>
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#0a192f] group-hover/nav:text-white transition-colors'}`} />
+                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 drop-shadow-sm">
                                             {item.label}
                                         </span>
                                     </Link>
@@ -124,10 +124,10 @@ function DashboardShell({
                             })}
                         </nav>
 
-                        <div className="p-4 border-t border-white/5 shrink-0">
-                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-slate-400 hover:text-rose-400 hover:bg-white/5 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left">
+                        <div className="p-4 border-t border-[#0a192f]/10 shrink-0">
+                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-black text-rose-700 hover:text-white hover:bg-rose-600 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left shadow-sm group/out">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
-                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
+                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 drop-shadow-sm">
                                     Çıkış Yap
                                 </span>
                             </button>

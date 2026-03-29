@@ -178,13 +178,13 @@ export function DashboardPortfolioWidget() {
                     </div>
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-white/40 backdrop-blur-md rounded-xl shadow-lg border border-white/50 min-w-[80px]">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color, color: item.color }}></div>
-                                <span className="text-[10px] text-[#0a192f] font-bold whitespace-nowrap text-center flex flex-col gap-0.5">
+                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] rounded-xl shadow-xl ring-1 ring-[#0a192f]/20 min-w-[80px] group/box hover:scale-105 transition-transform duration-300">
+                                <div className="w-3 h-3 rounded-full shadow-md" style={{ backgroundColor: item.color }}></div>
+                                <span className="text-[10px] text-white group-hover/box:text-white font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 drop-shadow-md">
                                     {item.name} 
-                                    <span className="font-black text-lg leading-none">%{item.value}</span>
+                                    <span className="font-black text-lg leading-none text-[#0a192f] mt-0.5">{`%${item.value}`}</span>
                                     {item.amountStr && (
-                                        <span className="text-slate-600 block">({item.amountStr})</span>
+                                        <span className="text-[#0a192f] font-bold block mt-0.5">({item.amountStr})</span>
                                     )}
                                 </span>
                             </div>
@@ -208,11 +208,13 @@ export function DashboardPortfolioWidget() {
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-6 bg-white/40 backdrop-blur-md rounded-2xl mb-8 text-sm text-slate-700 leading-relaxed text-center border border-white/50 shadow-lg w-full max-w-lg mx-auto">
+                    <div className="p-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] rounded-2xl mb-8 text-sm text-slate-700 leading-relaxed text-center shadow-2xl ring-1 ring-[#0a192f]/10 w-full max-w-lg mx-auto">
                         <strong className="text-[#0a192f] block mb-3 font-black text-lg">Neden Bu Optimizasyon?</strong>
+                        <p className="text-left font-medium text-white px-2 mt-2 drop-shadow-sm">
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-[#0a192f] font-bold bg-[#0a192f]/5 px-1 rounded mx-0.5">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-white font-black bg-[#0a192f]/20 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
                         )}
+                        </p>
 
                         {recommendation.advantages && (
                             <div className="mt-6 pt-5 border-t border-[#0a192f]/10 grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center text-center">
