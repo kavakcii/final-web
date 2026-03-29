@@ -137,7 +137,7 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-white border border-[#0a192f]/15 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_40px_rgba(10,25,47,0.04)] rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
+            <div className="lg:col-span-2 bg-white ring-1 ring-[#0a192f]/5 shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[300px]">
                 <div className="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
             </div>
         );
@@ -145,8 +145,8 @@ export function DashboardPortfolioWidget() {
 
     if (recommendation) {
         return (
-            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f]">
-                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-6 bg-white rounded-2xl border border-[#0a192f]/10 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_60px_rgba(10,25,47,0.03)]">
+            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-transform duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.08] bg-white">
+                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-8">
 
                 {/* Chart Side */}
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
@@ -252,8 +252,8 @@ export function DashboardPortfolioWidget() {
 
     // Default "Start Test" View
     return (
-        <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f]">
-            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-8 bg-white rounded-2xl border border-[#0a192f]/10 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_60px_rgba(10,25,47,0.03)]">
+        <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-all duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.08] bg-white">
+            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-10">
 
             <div className="relative z-10 max-w-lg mx-auto mt-4">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 ring-4 ring-blue-100 shadow-inner">

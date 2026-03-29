@@ -86,19 +86,16 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex text-[#0a192f] relative selection:bg-blue-500/30 overflow-hidden font-sans bg-slate-50">
-            {/* Soft Background Blobs to make Glassmorphism visible */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-100/50 blur-[100px]" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-100/30 blur-[120px]" />
-            </div>
+        <div className="min-h-screen flex text-[#0a192f] relative selection:bg-blue-500/30 overflow-hidden font-sans bg-[#f4f6f8]">
+            {/* Extremely Subtle Mac OS Like Background Gradient / Glare */}
+            <div className="absolute inset-0 z-0 bg-gradient-to-br from-white/60 to-transparent pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
-            <div className="relative z-10 w-full h-full min-h-screen flex mx-auto">
+            <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar (Buzlu Cam - Frosted Glass) */}
-                    <aside className="w-20 hover:w-64 border-r border-[#0a192f]/10 bg-white/40 backdrop-blur-xl hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[4px_0_24px_-10px_rgba(10,25,47,0.05)]">
+                    {/* Sidebar (Clean & Minimal) */}
+                    <aside className="w-20 hover:w-64 border-r border-[#0a192f]/[0.06] bg-[#f4f6f8]/80 backdrop-blur-2xl hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative z-50">
                         <div className="p-6 flex items-center h-20 shrink-0">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">
@@ -114,7 +111,7 @@ function DashboardShell({
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-blue-600 bg-blue-50 border border-blue-500/20' : 'text-slate-500 hover:text-[#0a192f] hover:bg-slate-50'}`}>
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 ${isActive ? 'text-[#0a192f] bg-white shadow-sm ring-1 ring-slate-900/5' : 'text-slate-500 hover:text-[#0a192f] hover:bg-white/50'}`}>
                                         <item.icon className="w-5 h-5 flex-shrink-0" />
                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
                                             {item.label}
@@ -124,8 +121,8 @@ function DashboardShell({
                             })}
                         </nav>
 
-                        <div className="p-4 border-t border-[#0a192f]/10 shrink-0">
-                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition-colors overflow-hidden whitespace-nowrap h-12 w-full text-left">
+                        <div className="p-4 border-t border-[#0a192f]/[0.06] shrink-0">
+                            <button onClick={handleLogout} className="flex items-center px-4 py-3 text-sm font-semibold text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
                                 <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3">
                                     Çıkış Yap
@@ -137,7 +134,7 @@ function DashboardShell({
                     {/* Main Content */}
                     <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
                         {/* Header */}
-                        <header className="h-16 border-b border-[#0a192f]/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/50 backdrop-blur-xl flex-shrink-0 shadow-sm">
+                        <header className="h-16 border-b border-[#0a192f]/[0.06] flex items-center justify-between px-6 sticky top-0 z-40 bg-[#f4f6f8]/90 backdrop-blur-xl flex-shrink-0">
                             <h1 className="text-lg font-bold text-[#0a192f] tracking-tight">FinAi</h1>
                     <div className="flex items-center space-x-4">
                         <div className="relative hidden sm:block">
@@ -145,14 +142,14 @@ function DashboardShell({
                             <input
                                 type="text"
                                 placeholder="Hisse senedi ara..."
-                                className="bg-slate-50 border border-[#0a192f]/10 rounded-full py-2 pl-10 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 w-64 text-[#0a192f] placeholder:text-slate-400 shadow-sm transition-all"
+                                className="bg-white ring-1 ring-[#0a192f]/5 rounded-xl py-2 pl-10 pr-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#0a192f]/20 w-64 text-[#0a192f] placeholder:text-slate-400 shadow-sm transition-all hover:bg-slate-50"
                             />
                         </div>
 
                         <div className="relative" ref={profileRef}>
                             <button
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="w-9 h-9 rounded-full bg-slate-100 border border-[#0a192f]/10 flex items-center justify-center text-blue-600 font-bold hover:bg-slate-200 transition-colors focus:outline-none focus:ring-4 focus:ring-blue-500/20 overflow-hidden shadow-sm"
+                                className="w-9 h-9 rounded-xl bg-white ring-1 ring-[#0a192f]/5 flex items-center justify-center text-[#0a192f] font-bold hover:shadow-md transition-all focus:outline-none overflow-hidden shadow-sm hover:-translate-y-0.5"
                             >
                                 {avatarUrl ? (
                                     <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
@@ -162,9 +159,9 @@ function DashboardShell({
                             </button>
 
                             {isProfileOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white border border-[#0a192f]/10 rounded-2xl shadow-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                                    <div className="px-4 py-3 border-b border-slate-100">
-                                        <p className="text-sm font-bold text-[#0a192f]">{userName || "Kullanıcı"}</p>
+                                <div className="absolute right-0 mt-3 w-56 bg-white ring-1 ring-[#0a192f]/5 rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                    <div className="px-5 py-3 border-b border-slate-100 mb-1">
+                                        <p className="text-sm font-extrabold text-[#0a192f]">{userName || "Kullanıcı"}</p>
                                     </div>
                                     <div className="py-1">
                                         <Link href="/dashboard/settings" className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-[#0a192f] flex items-center gap-2 transition-colors">

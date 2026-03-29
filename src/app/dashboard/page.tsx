@@ -72,7 +72,7 @@ export default function Dashboard() {
                         transition={{ duration: 0.5 }}
                         className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020617]/80 backdrop-blur-xl"
                     >
-                        <div className="w-full max-w-md p-8 rounded-3xl bg-white border border-[#0a192f]/10 shadow-2xl relative overflow-hidden text-center">
+                        <div className="w-full max-w-md p-8 rounded-[2rem] bg-white ring-1 ring-[#0a192f]/5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.12)] relative overflow-hidden text-center">
                             {/* Animated Background Gradient */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#0a192f]/5 via-transparent to-transparent animate-pulse" />
 
@@ -138,9 +138,7 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className={cn(
-                            "bg-white border hover:border-blue-300 rounded-2xl p-6 relative overflow-hidden group transition-all duration-300",
-                            "shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_40px_rgba(10,25,47,0.04)]",
-                            stat?.border ? stat.border.replace("white/5", "[#0a192f]/10") : "border-[#0a192f]/15"
+                            "bg-white ring-1 ring-[#0a192f]/[0.08] hover:ring-[#0a192f]/15 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-[1.5rem] p-6 relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 shadow-sm"
                         )}
                     >
                         {!isDataLoaded ? (
@@ -152,17 +150,19 @@ export default function Dashboard() {
                         ) : (
                             <>
                                 <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className="p-2 bg-slate-50 rounded-lg text-blue-600 transition-colors border border-slate-100 group-hover:bg-blue-50">
-                                            <stat.icon className="w-6 h-6" />
+                                    <div className="flex justify-between items-start mb-6">
+                                        <div className="p-2.5 bg-[#f4f6f8] rounded-xl text-blue-600 transition-colors group-hover:scale-110 duration-500">
+                                            <stat.icon className="w-5 h-5 flex-shrink-0" />
                                         </div>
-                                        <div className={`flex items-center gap-1 text-sm font-bold px-3 py-1.5 rounded-full ${stat.isPositive ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}>
+                                        <div className={`flex items-center gap-1.5 text-[0.8rem] font-bold px-3 py-1.5 rounded-xl ${stat.isPositive ? 'text-emerald-700 bg-emerald-50 ring-1 ring-emerald-600/10' : 'text-rose-700 bg-rose-50 ring-1 ring-rose-600/10'}`}>
                                             {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                                             {stat.change}
                                         </div>
                                     </div>
-                                    <h3 className="text-slate-500 text-sm font-semibold mb-1 uppercase tracking-wider">{stat.title}</h3>
-                                    <p className="text-3xl font-black text-[#0a192f] tracking-tight">{stat.value}</p>
+                                    <div>
+                                        <h3 className="text-slate-500 text-[0.8rem] font-bold mb-1.5 uppercase tracking-widest">{stat.title}</h3>
+                                        <p className="text-3xl font-black text-[#0a192f] tracking-tight">{stat.value}</p>
+                                    </div>
                                 </div>
                             </>
                         )}
@@ -175,8 +175,8 @@ export default function Dashboard() {
                 <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
-                <div className="bg-white border border-[#0a192f]/15 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_40px_rgba(10,25,47,0.04)] rounded-2xl p-6 flex flex-col relative overflow-hidden">
-                    <h2 className="text-lg font-black text-[#0a192f] mb-6 relative z-10 tracking-tight">Varlıklarım</h2>
+                <div className="bg-white ring-1 ring-[#0a192f]/[0.08] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-7 flex flex-col relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
+                    <h2 className="text-xl font-black text-[#0a192f] mb-6 relative z-10 tracking-tight">Varlıklarım</h2>
                     <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-200 relative z-10">
                         {!isDataLoaded ? (
                             Array(3).fill(null).map((_, i) => (
@@ -196,25 +196,25 @@ export default function Dashboard() {
                                         key={i}
                                         onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                         className={cn(
-                                            "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border",
+                                            "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer bg-white group hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.1)]",
                                             selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                ? "bg-blue-50 border-blue-200 text-blue-900 shadow-sm"
-                                                : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50"
+                                                ? "ring-2 ring-blue-500/30 shadow-sm"
+                                                : "ring-1 ring-slate-900/5 hover:ring-slate-900/10"
                                         )}
                                     >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-[#0a192f] border border-slate-200">
+                                        <div className="flex items-center gap-3.5">
+                                            <div className="w-10 h-10 rounded-[0.8rem] bg-[#f4f6f8] group-hover:bg-blue-50 flex items-center justify-center text-[11px] font-black text-[#0a192f] group-hover:text-blue-700 transition-colors">
                                                 {asset.symbol.substring(0, 2)}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-[#0a192f]">{asset.symbol}</p>
-                                                <p className="text-[10px] text-slate-500 font-medium">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
+                                                <p className="text-sm font-black text-[#0a192f]">{asset.symbol}</p>
+                                                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className={cn(
-                                                "text-xs font-black",
-                                                change >= 0 ? "text-green-600" : "text-red-500"
+                                                "text-[13px] font-black",
+                                                change >= 0 ? "text-emerald-600" : "text-rose-600"
                                             )}>
                                                 {change >= 0 ? '+' : ''}{change.toFixed(1)}%
                                             </p>
@@ -229,12 +229,12 @@ export default function Dashboard() {
                         <div
                             onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                             className={cn(
-                                "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border mt-4",
-                                selectedAsset === "FOREKS:XU100" ? "bg-slate-100 border-[#0a192f]/20 shadow-sm" : "bg-transparent border-dashed border-slate-200 hover:bg-slate-50"
+                                "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer bg-white group hover:shadow-md mt-4",
+                                selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500/30 shadow-sm" : "ring-1 ring-slate-900/5 ring-dashed hover:ring-slate-900/10"
                             )}
                         >
-                            <span className="text-xs font-bold text-[#0a192f]">BIST 100 Endeksi</span>
-                            <Activity className="w-4 h-4 text-[#0a192f]" />
+                            <span className="text-xs font-black text-[#0a192f] uppercase tracking-wider">BIST 100 Endeksi</span>
+                            <Activity className="w-4 h-4 text-slate-400 group-hover:text-[#0a192f] transition-colors" />
                         </div>
                     </div>
                 </div>
