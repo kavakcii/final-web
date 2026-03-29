@@ -1,10 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUpRight, PieChart, Wallet, Zap, RotateCcw, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, PieChart, Battery, ArrowDownRight, CheckCircle2, RotateCcw, ChevronRight, Wallet, Zap } from "lucide-react";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Link from "next/link";
-import { GlowCard } from "@/components/ui/spotlight-card";
 
 export function DashboardPortfolioWidget() {
     const [recommendation, setRecommendation] = useState<any>(null);
@@ -137,18 +136,21 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(30,64,175,0.12)_100%)] ring-1 ring-[#0a192f]/[0.1] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[300px]">
-                <div className="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
+            <div className="lg:col-span-2 bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
+                <div className="w-8 h-8 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (recommendation) {
         return (
-            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-transform duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.1] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(30,64,175,0.15)_100%)]">
-                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-8">
+            <div className="lg:col-span-2 relative bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden group shadow-2xl">
+                {/* 21st.dev Vibe Background Textures */}
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_top_right,_rgba(16,185,129,0.08)_0%,_transparent_60%)] pointer-events-none" />
+                
+                <div className="relative flex flex-col md:flex-row items-center gap-8 p-8 z-10">
 
-                {/* Chart Side */}
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
                     <ResponsiveContainer width="100%" height="100%">
                         <RechartsPie width={400} height={250}>
@@ -156,37 +158,35 @@ export function DashboardPortfolioWidget() {
                                 data={recommendation.allocation}
                                 cx="50%"
                                 cy="50%"
-                                innerRadius={60}
-                                outerRadius={80}
+                                innerRadius={70}
+                                outerRadius={90}
                                 paddingAngle={5}
                                 dataKey="value"
-                                isAnimationActive={true}
+                                stroke="none"
                             >
                                 {recommendation.allocation.map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
+                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.02)" strokeWidth={2} />
                                 ))}
                             </Pie>
                                 <Tooltip
-                                contentStyle={{ backgroundColor: '#ffffff', borderColor: 'rgba(10,25,47,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
-                                itemStyle={{ color: '#0a192f', fontWeight: 'bold' }}
+                                contentStyle={{ backgroundColor: '#09090b', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
+                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
                                 formatter={(value: any) => [`%${value}`, 'Oran']}
                             />
                         </RechartsPie>
                     </ResponsiveContainer>
-                    {/* Centered Title */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-slate-500 text-xs font-semibold uppercase tracking-widest">Önerilen</span>
-                        <span className="text-[#0a192f] font-black text-sm text-center px-4 mt-1">{recommendation.title}</span>
+                        <span className="text-zinc-500 text-[10px] font-semibold uppercase tracking-widest mt-1">Önerilen</span>
+                        <span className="text-white font-bold text-sm text-center px-4 leading-tight">{recommendation.title}</span>
                     </div>
-                    {/* Legend */}
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-[#0a192f]/5 rounded-full">
-                                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                <span className="text-[10px] text-[#0a192f] font-bold whitespace-nowrap">
-                                    {item.name} <span className="text-blue-700 font-black">%{item.value}</span>
+                            <div key={idx} className="flex items-center gap-2 px-2.5 py-1 bg-zinc-900/80 backdrop-blur-md border border-white/5 rounded-full ring-1 ring-white/5">
+                                <div className="w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: item.color, color: item.color }}></div>
+                                <span className="text-[10px] text-zinc-300 font-medium whitespace-nowrap">
+                                    {item.name} <span className="text-white font-bold ml-1">%{item.value}</span>
                                     {item.amountStr && (
-                                        <span className="text-slate-500 ml-1">({item.amountStr})</span>
+                                        <span className="text-zinc-500 ml-1">({item.amountStr})</span>
                                     )}
                                 </span>
                             </div>
@@ -194,37 +194,35 @@ export function DashboardPortfolioWidget() {
                     </div>
                 </div>
 
-                {/* Info Side */}
                 <div className="w-full md:w-1/2 relative z-10 text-center md:text-left">
                     <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <div className="p-2 bg-green-100 rounded-lg text-green-700 border border-green-200">
-                            <PieChart className="w-5 h-5" />
+                        <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400 ring-1 ring-emerald-500/20">
+                            <PieChart className="w-4 h-4" />
                         </div>
-                        <span className="text-green-700 font-black text-sm">Analiz Tamamlandı</span>
-                        <div className="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full border border-blue-200 ml-2">
+                        <span className="text-emerald-400 font-medium text-xs tracking-wide">AI Analizi</span>
+                        <div className="text-[10px] font-bold text-white bg-zinc-800 px-2 py-0.5 rounded-full ring-1 ring-white/10 ml-2 uppercase tracking-widest">
                             {recommendation.persona}
                         </div>
                     </div>
 
-                    <h3 className="text-2xl font-black text-[#0a192f] mb-2">{recommendation.title}</h3>
-                    <p className="text-slate-600 text-sm mb-5 leading-relaxed font-medium">
+                    <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">{recommendation.title}</h3>
+                    <p className="text-zinc-400 text-sm mb-6 leading-relaxed">
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-4 bg-slate-50 rounded-xl border border-[#0a192f]/10 mb-6 text-xs text-slate-600 leading-relaxed shadow-inner">
-                        <strong className="text-[#0a192f] block mb-2 font-black">Neden bu dağılım?</strong>
+                    <div className="p-5 bg-zinc-900/50 rounded-xl border border-white/5 mb-6 text-sm text-zinc-400 leading-relaxed ring-1 ring-white/5 backdrop-blur-sm">
+                        <strong className="text-white block mb-2 font-semibold">Neden Bu?</strong>
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-blue-700 font-bold">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-emerald-400 font-medium">{part}</span> : part
                         )}
 
                         {recommendation.advantages && (
-                            <div className="mt-4 pt-4 border-t border-[#0a192f]/10">
-                                <strong className="text-[#0a192f] block mb-2 font-black">Avantajlar:</strong>
-                                <ul className="space-y-1.5">
+                            <div className="mt-5 pt-4 border-t border-white/5">
+                                <ul className="space-y-2">
                                     {recommendation.advantages.map((adv: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-2">
-                                            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
-                                            <span className="font-medium">{adv}</span>
+                                        <li key={i} className="flex items-start gap-2 text-xs">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                            <span>{adv}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -238,45 +236,48 @@ export function DashboardPortfolioWidget() {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
                             }}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0a192f] rounded-xl font-bold text-sm transition-all border-2 border-slate-200 hover:border-blue-300 hover:text-blue-700 shadow-sm"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg font-medium text-sm transition-all ring-1 ring-white/10"
                         >
                             <RotateCcw className="w-4 h-4" />
                             Testi Tekrarla
                         </button>
                     </div>
-                    </div>
                 </div>
-            </GlowCard>
+            </div>
+        </div>
         );
     }
 
-    // Default "Start Test" View
     return (
-        <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f] hover:-translate-y-1 transition-all duration-500 rounded-[1.5rem] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] hover:shadow-[0_25px_50px_-15px_rgba(0,0,0,0.1)] ring-1 ring-[#0a192f]/[0.1] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(30,64,175,0.15)_100%)]">
-            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-10">
+        <div className="lg:col-span-2 relative bg-zinc-900/40 backdrop-blur-xl border border-white/5 rounded-2xl overflow-hidden group shadow-2xl">
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none" />
+            
+            <div className="relative flex flex-col justify-center items-center text-center p-12 z-10">
 
             <div className="relative z-10 max-w-lg mx-auto mt-4">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 ring-4 ring-blue-100 shadow-inner">
+                <div className="w-16 h-16 bg-zinc-800 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white ring-1 ring-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
                     <Wallet className="w-8 h-8" />
                 </div>
 
-                <h2 className="text-3xl font-black text-[#0a192f] mb-4 tracking-tight">
-                    Size Özel Portföy Dağılımını Bulun
+                <h2 className="text-3xl font-bold text-white mb-4 tracking-tight">
+                    Optimum Portföyünüzü Bulun
                 </h2>
 
-                <p className="text-slate-500 text-lg mb-8 leading-relaxed font-medium">
-                    Yatırım hedeflerinize ve risk profilinize en uygun dağılımı 1 dakikalık akıllı testimizle belirleyin.
+                <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                    AI Destekli analizimizle risk profilinizi ölçün, saniyeler içinde BIST & TEFAS piyasasında size en uygun dağılımı keşfedin.
                 </p>
 
-                <Link
-                    href="/dashboard/market"
-                    className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-lg transition-all hover:scale-105 shadow-lg shadow-blue-900/30"
-                >
-                    Teste Başla
-                    <ArrowUpRight className="w-5 h-5" />
-                </Link>
+                <button
+                    onClick={() => window.location.href = "/dashboard/market"}
+                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-zinc-950 font-semibold rounded-lg overflow-hidden transition-all hover:scale-105 active:scale-95 ring-1 ring-white/20"
+                >   
+                    <span className="relative z-10 flex items-center gap-2">
+                        Analizi Başlat <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity" />
+                </button>
 
-                <div className="mt-8 flex items-center justify-center gap-6 text-xs text-slate-500 font-medium">
+                <div className="mt-8 flex items-center justify-center gap-6 text-xs text-zinc-500 font-medium">
                     <span className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                         Bilimsel Analiz
@@ -286,12 +287,12 @@ export function DashboardPortfolioWidget() {
                         Kişiselleştirilmiş
                     </span>
                     <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                        <span className="w-2 h-2 rounded-full bg-rose-500"></span>
                         Ücretsiz
                     </span>
                 </div>
-                </div>
             </div>
-        </GlowCard>
+            </div>
+        </div>
     );
 }
