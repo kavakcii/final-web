@@ -53,7 +53,7 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
     <section className="py-20 w-full" id="faq">
       <div className="container mx-auto max-w-7xl px-6">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-black text-[#0a192f] mb-4 tracking-tight">Merak Ettikleriniz</h2>
+          <h2 className="text-4xl md:text-6xl font-[family-name:var(--font-playfair)] italic font-semibold text-[#0a192f] mb-4">Merak Ettikleriniz</h2>
           <p className="text-slate-500 text-lg sm:text-xl font-medium">Bize en sık sorulan sorular ve yanıtları.</p>
         </div>
 
@@ -69,7 +69,7 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
                     className="cursor-pointer -mx-4 px-4 py-6 md:-mx-6 md:px-6 md:py-8 hover:bg-slate-100/50 active:bg-slate-100 active:scale-[0.98] rounded-2xl !no-underline transition-all group"
                   >
                     <h6
-                      className={`text-xl md:text-2xl font-bold transition-colors text-left pointer-events-none ${tab.id === activeTabId ? "text-[#0a192f]" : "text-slate-500 md:group-hover:text-blue-600"}`}
+                      className={`text-2xl md:text-3xl font-[family-name:var(--font-playfair)] italic font-semibold transition-colors text-left pointer-events-none ${tab.id === activeTabId ? "text-[#0a192f]" : "text-slate-500 md:group-hover:text-blue-600"}`}
                     >
                       {tab.title}
                     </h6>

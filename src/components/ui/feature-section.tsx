@@ -52,7 +52,7 @@ export function FeatureSteps({
   return (
     <div className={cn("py-12 md:py-16 bg-white", className)}>
       <div className="max-w-7xl mx-auto w-full px-6">
-        <h2 className="text-3xl md:text-5xl lg:text-5xl font-black mb-16 text-center text-[#0a192f] tracking-tight">
+        <h2 className="text-4xl md:text-6xl font-[family-name:var(--font-playfair)] italic font-semibold mb-16 text-center text-[#0a192f]">
           {title}
         </h2>
 
@@ -91,7 +91,7 @@ export function FeatureSteps({
                 {/* İçerik */}
                 <div className="flex-1 mt-1">
                   <h3 className={cn(
-                      "text-2xl font-bold transition-colors duration-300 pointer-events-none",
+                      "text-2xl md:text-3xl font-[family-name:var(--font-playfair)] italic font-semibold transition-colors duration-300 pointer-events-none",
                       index === currentFeature ? "text-[#0a192f]" : "text-slate-600"
                   )}>
                     {feature.title || feature.step}
@@ -111,41 +111,24 @@ export function FeatureSteps({
               imageHeight
             )}
           >
-            <AnimatePresence mode="wait">
-              {features.map(
-                (feature, index) =>
-                  index === currentFeature && (
-                    <motion.div
-                      key={index}
-                      className="absolute inset-0 rounded-3xl overflow-hidden bg-slate-100"
-                      initial={{ opacity: 0, scale: 1.05, filter: "blur(10px)" }}
-                      animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                      exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
-                      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      <Image
-                        src={feature.image}
-                        alt={feature.title || feature.step}
-                        className="w-full h-full object-cover transition-transform duration-[10s] hover:scale-110"
-                        width={1000}
-                        height={800}
-                        priority
-                      />
-                      {/* Gradient overlay to make borders blend nicely */}
-                      <div className="absolute inset-0 border border-black/5 rounded-3xl rounded-3xl pointer-events-none" />
-                      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0a192f]/40 to-transparent pointer-events-none" />
-                    </motion.div>
-                  ),
-              )}
-            </AnimatePresence>
-            
-            {/* İlerleme Çubuğu */}
-            <div className="absolute bottom-0 left-0 h-1.5 bg-[#0a192f]/10 w-full z-10">
-               <motion.div 
-                 className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-r-full" 
-                 style={{ width: `${progress}%` }} 
-                 transition={{ ease: "linear", duration: 0.1 }} 
-               />
+            {/* Direkt Geçiş (Anlık Kesme) - Sıfır Beyazlama Garantisi! */}
+            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#0a192f]">
+              {features.map((feature, index) => (
+                <Image
+                  key={index}
+                  src={feature.image}
+                  alt={feature.title || feature.step}
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover transition-opacity duration-0",
+                    index === currentFeature ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                  )}
+                  width={1000}
+                  height={800}
+                  priority={index === 0}
+                />
+              ))}
+              {/* Daha Yumuşak Çerçeve Blend */}
+              <div className="absolute inset-0 border border-black/5 rounded-3xl pointer-events-none z-20" />
             </div>
           </div>
 
