@@ -115,119 +115,138 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {(!isDataLoaded ? Array(3).fill(null) : stats).map((stat, index) => (
-                    <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                    >
-                        <div className={cn(
-                            "bg-[#0a192f] rounded-2xl p-6 relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 shadow-lg h-full"
-                        )}>
-                            {!isDataLoaded ? (
-                                <div className="animate-pulse space-y-3 relative z-10">
-                                    <div className="h-10 w-10 bg-white/10 rounded-lg" />
-                                    <div className="h-4 w-20 bg-white/10 rounded" />
-                                    <div className="h-8 w-32 bg-white/10 rounded" />
-                                </div>
-                            ) : (
-                                <div className="relative z-10 flex flex-col h-full justify-between gap-6">
-                                    <div className="flex justify-between items-start">
-                                        <div className="p-2.5 bg-white/10 rounded-xl text-white">
-                                            <stat.icon className="w-5 h-5 flex-shrink-0" />
-                                        </div>
-                                        <div className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 text-white rounded-lg ${stat.isPositive ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
-                                            {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" /> : <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />}
-                                            {stat.change}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-slate-300 text-xs font-bold mb-1 tracking-wider uppercase">{stat.title}</h3>
-                                        <p className="text-3xl font-black text-white tracking-tight">{stat.value}</p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                ))}
-            </div>
+            {/* 12-Column BENTO GRID LAYOUT */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full auto-rows-max">
 
-            {/* Interactive Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <DashboardPortfolioWidget />
-
-                {/* Asset Quick Select (from Portfolio) */}
-                <div className="bg-[#0a192f] shadow-2xl rounded-2xl p-6 flex flex-col relative overflow-hidden group h-full">
-
-                    <h2 className="text-lg font-black text-white mb-6 relative z-10 tracking-tight flex justify-between items-center">
-                        Varlıklarım
-                        <span className="text-xs font-bold text-blue-300 px-2 py-1 rounded bg-blue-900/50">Senkronize</span>
-                    </h2>
-                    <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-700 relative z-10">
-                        {!isDataLoaded ? (
-                            Array(3).fill(null).map((_, i) => (
-                                <div key={i} className="h-16 w-full animate-pulse bg-slate-50 rounded-xl" />
-                            ))
-                        ) : groupedAssets.length === 0 ? (
-                            <div className="text-center py-10">
-                                <p className="text-sm text-slate-500">Henüz varlık eklemediniz.</p>
-                            </div>
-                        ) : (
-                            groupedAssets.map((asset: any, i: number) => {
-                                const currentPrice = prices[asset.symbol.toUpperCase()];
-                                const change = currentPrice ? ((currentPrice - (asset.totalCost / asset.quantity)) / (asset.totalCost / asset.quantity)) * 100 : 0;
-
-                                return (
-                                    <div
-                                        key={i}
-                                        onClick={() => handleAssetSelect(asset.symbol, asset.type)}
-                                        className={cn(
-                                            "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer bg-white/5",
-                                            selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                ? "bg-blue-600 shadow-md ring-1 ring-blue-400"
-                                                : "hover:bg-white/10"
-                                        )}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-bold text-white">
-                                                {asset.symbol.substring(0, 2)}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-white">{asset.symbol}</p>
-                                                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className={cn(
-                                                "text-[13px] font-bold",
-                                                change >= 0 ? "text-emerald-400" : "text-rose-400"
-                                            )}>
-                                                {change >= 0 ? '+' : ''}{change.toFixed(1)}%
-                                            </p>
-                                            <p className="text-[10px] text-slate-500">
-                                                {asset.quantity} Adet
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                        <div
-                            onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
-                            className={cn(
-                                "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer mt-4 bg-white/5",
-                                selectedAsset === "FOREKS:XU100" ? "bg-blue-600 shadow-md ring-1 ring-blue-400" : "hover:bg-white/10"
-                            )}
+                {/* SOL KOLON: YARDIMCI İSTATİSTİKLER (3 Kolon - Dikey Bento Kutuları) */}
+                <div className="lg:col-span-3 flex flex-col gap-4">
+                    {(!isDataLoaded ? Array(4).fill(null) : stats).map((stat, index) => (
+                        <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -30 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                            className="w-full flex-1"
                         >
-                            <span className="text-xs font-black text-white tracking-wide">BIST 100 Endeksi</span>
-                            <Activity className="w-4 h-4 text-slate-300" />
-                        </div>
-                    </div>
+                            <div className={cn(
+                                "bg-[#0a192f] rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-between"
+                            )}>
+                                {!isDataLoaded ? (
+                                    <div className="animate-pulse space-y-3 relative z-10 w-full h-full">
+                                        <div className="h-8 w-8 bg-white/10 rounded-lg" />
+                                        <div className="h-6 w-1/2 bg-white/10 rounded mt-auto" />
+                                    </div>
+                                ) : stat && (
+                                    <div className="relative z-10 flex flex-col h-full justify-between">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="p-2 bg-white/10 rounded-xl text-white group-hover:bg-blue-600 transition-colors duration-300 shadow-sm">
+                                                <stat.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                                            </div>
+                                            <div className={`flex items-center gap-1 text-[11px] font-black px-2 py-1 text-white rounded-md ${stat.isPositive ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
+                                                {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" /> : <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />}
+                                                {stat.change}
+                                            </div>
+                                        </div>
+                                        <div className="mt-auto">
+                                            <h3 className="text-slate-400 text-[10px] font-bold mb-0.5 tracking-wider uppercase opacity-80">{stat.title}</h3>
+                                            <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter truncate leading-none">{stat.value}</p>
+                                        </div>
+                                        {/* Background Decoration */}
+                                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors duration-700 pointer-events-none" />
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    ))}
                 </div>
 
+                {/* ORTA KOLON: PORTFÖY & AI WIDGET (6 Kolon - Merkez Hero Aracı) */}
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2, duration: 0.5, type: 'spring' }}
+                    className="lg:col-span-6 flex flex-col h-full min-h-[600px]"
+                >
+                    <DashboardPortfolioWidget />
+                </motion.div>
+
+                {/* SAĞ KOLON: VARLIK LİSTESİ (3 Kolon - Dikey Sabit Liste) */}
+                <motion.div 
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
+                    className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
+                >
+                    <div className="bg-[#0a192f] shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full blur-2xl pointer-events-none" />
+
+                        <h2 className="text-lg font-black text-white mb-6 relative z-10 tracking-tight flex justify-between items-center">
+                            Varlıklarım
+                            <span className="text-[10px] font-bold text-blue-300 px-2 py-0.5 rounded bg-blue-900/50 shadow-sm animate-pulse">Senkronize</span>
+                        </h2>
+                        
+                        <div className="space-y-2 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 relative z-10">
+                            {!isDataLoaded ? (
+                                Array(5).fill(null).map((_, i) => (
+                                    <div key={i} className="h-14 w-full animate-pulse bg-white/5 rounded-xl mb-2" />
+                                ))
+                            ) : groupedAssets.length === 0 ? (
+                                <div className="text-center py-10">
+                                    <p className="text-sm text-slate-500 font-medium">Henüz varlık eklemediniz.</p>
+                                </div>
+                            ) : (
+                                groupedAssets.map((asset: any, i: number) => {
+                                    const currentPrice = prices[asset.symbol.toUpperCase()];
+                                    const change = currentPrice ? ((currentPrice - (asset.totalCost / asset.quantity)) / (asset.totalCost / asset.quantity)) * 100 : 0;
+
+                                    return (
+                                        <div
+                                            key={i}
+                                            onClick={() => handleAssetSelect(asset.symbol, asset.type)}
+                                            className={cn(
+                                                "flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer bg-white/5 border border-transparent",
+                                                selectedAsset.includes(asset.symbol.replace('.IS', ''))
+                                                    ? "bg-blue-600 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+                                                    : "hover:bg-white/10 hover:border-white/10 hover:-translate-y-0.5"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
+                                                    {asset.symbol.substring(0, 2)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-black text-white leading-tight">{asset.symbol}</p>
+                                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={cn(
+                                                    "text-xs font-black",
+                                                    change >= 0 ? "text-emerald-400" : "text-rose-400"
+                                                )}>
+                                                    {change >= 0 ? '+' : ''}{change.toFixed(1)}%
+                                                </p>
+                                                <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                                    {asset.quantity} Adet
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                            <div
+                                onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
+                                className={cn(
+                                    "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer mt-4 bg-white/5 border border-dashed border-white/20 hover:border-white/40 group",
+                                    selectedAsset === "FOREKS:XU100" ? "bg-blue-600 shadow-md ring-1 ring-blue-400 border-solid" : "hover:bg-white/10"
+                                )}
+                            >
+                                <span className="text-xs font-black text-white tracking-wide group-hover:translate-x-1 transition-transform">BIST 100 Endeksi</span>
+                                <Activity className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
         </div>
     </div>

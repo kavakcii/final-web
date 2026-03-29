@@ -136,18 +136,19 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-[#0a192f] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[300px] shadow-2xl">
-                <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <div className="w-full h-full bg-[#0a192f] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[600px] shadow-2xl">
+                <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (recommendation) {
         return (
-            <div className="lg:col-span-2 relative bg-[#0a192f] rounded-[1.5rem] overflow-hidden group shadow-2xl">
-                <div className="relative flex flex-col md:flex-row items-center gap-8 p-8 z-10 w-full h-full">
+            <div className="w-full h-full relative bg-[#0a192f] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 hover:shadow-[0_20px_60px_rgba(37,99,235,0.2)]">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                <div className="relative flex flex-col items-center justify-center gap-8 p-10 z-10 w-full h-full">
 
-                <div className="w-full md:w-1/2 h-[250px] relative z-10">
+                <div className="w-full h-[300px] relative z-10 mt-6 group-hover:scale-[1.03] transition-transform duration-700 ease-out">
                     <ResponsiveContainer width="100%" height="100%">
                         <RechartsPie width={400} height={250}>
                             <Pie
@@ -190,38 +191,36 @@ export function DashboardPortfolioWidget() {
                     </div>
                 </div>
 
-                <div className="w-full md:w-1/2 relative z-10 text-center md:text-left">
-                    <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
-                        <div className="p-1.5 bg-white/10 rounded-lg text-white">
-                            <PieChart className="w-4 h-4" />
+                <div className="w-full relative z-10 text-center flex flex-col items-center justify-center max-w-2xl mx-auto">
+                    <div className="flex items-center justify-center gap-2 mb-4 animate-bounce-slow">
+                        <div className="p-2 bg-white/10 rounded-xl text-white shadow-lg">
+                            <PieChart className="w-5 h-5" />
                         </div>
-                        <span className="text-white font-black text-xs tracking-wide">AI Analizi</span>
-                        <div className="text-[10px] font-bold text-[#0a192f] bg-white px-2 py-0.5 rounded-full ml-2 uppercase tracking-widest">
+                        <span className="text-white font-black text-sm tracking-wide">Güçlü AI Analizi</span>
+                        <div className="text-xs font-bold text-[#0a192f] bg-white px-3 py-1 rounded-full ml-2 uppercase tracking-widest shadow-md">
                             {recommendation.persona}
                         </div>
                     </div>
 
-                    <h3 className="text-2xl font-black text-white mb-2 tracking-tight">{recommendation.title}</h3>
-                    <p className="text-slate-300 text-sm mb-6 leading-relaxed">
+                    <h3 className="text-3xl font-black text-white mb-3 tracking-tight">{recommendation.title}</h3>
+                    <p className="text-slate-300 text-sm mb-6 leading-relaxed max-w-xl text-center">
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-5 bg-white/5 rounded-xl mb-6 text-sm text-slate-300 leading-relaxed">
-                        <strong className="text-white block mb-2 font-black">Neden Bu?</strong>
+                    <div className="p-6 bg-white/5 rounded-2xl mb-8 text-sm text-slate-300 leading-relaxed text-left border border-white/5 shadow-inner">
+                        <strong className="text-white block mb-3 font-black text-lg">Neden Bu Optimizasyon?</strong>
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-white font-bold bg-white/10 px-1 rounded mx-0.5">{part}</span> : part
                         )}
 
                         {recommendation.advantages && (
-                            <div className="mt-5 pt-4 border-t border-white/10">
-                                <ul className="space-y-2">
-                                    {recommendation.advantages.map((adv: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-2 text-xs">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                                            <span>{adv}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className="mt-6 pt-5 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {recommendation.advantages.map((adv: string, i: number) => (
+                                    <div key={i} className="flex items-start gap-2.5 text-xs bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-colors">
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                                        <span className="font-medium text-slate-200">{adv}</span>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -232,10 +231,10 @@ export function DashboardPortfolioWidget() {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
                             }}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-sm transition-all"
+                            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/5 hover:bg-rose-500 hover:text-white text-slate-300 rounded-xl font-bold text-sm transition-all duration-300 shadow-md border border-white/10 hover:border-transparent group/btn"
                         >
-                            <RotateCcw className="w-4 h-4" />
-                            Testi Tekrarla
+                            <RotateCcw className="w-5 h-5 group-hover/btn:-rotate-180 transition-transform duration-500" />
+                            Yeni Test Yap
                         </button>
                     </div>
                 </div>
@@ -245,33 +244,37 @@ export function DashboardPortfolioWidget() {
     }
 
     return (
-        <div className="lg:col-span-2 relative bg-[#0a192f] rounded-[1.5rem] overflow-hidden group shadow-2xl">
+        <div className="w-full h-full relative bg-[#0a192f] rounded-[1.5rem] overflow-hidden group shadow-[0_10px_40px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_60px_rgba(37,99,235,0.2)] transition-all duration-700 border border-white/5 flex flex-col justify-center min-h-[600px]">
+            
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
             
             <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
 
-            <div className="relative z-10 max-w-lg mx-auto mt-4">
-                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white">
-                    <Wallet className="w-8 h-8" />
+            <div className="relative z-10 max-w-2xl mx-auto mt-4 px-6 py-12 bg-white/5 backdrop-blur-md rounded-[2rem] border border-white/10 shadow-2xl group hover:border-blue-500/30 transition-colors duration-500">
+                <div className="w-20 h-20 bg-[#0a192f] rounded-2xl flex items-center justify-center mx-auto mb-8 text-blue-400 shadow-[0_0_30px_rgba(37,99,235,0.3)] ring-1 ring-blue-500/30 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                    <Zap className="w-10 h-10 animate-pulse" />
                 </div>
 
-                <h2 className="text-3xl font-black text-white mb-4 tracking-tight">
+                <h2 className="text-4xl md:text-5xl font-black text-white mb-6 tracking-tight leading-tight">
                     Optimum Portföyünüzü Bulun
                 </h2>
 
-                <p className="text-slate-300 text-sm mb-8 leading-relaxed">
-                    AI Destekli analizimizle risk profilinizi ölçün, saniyeler içinde BIST & TEFAS piyasasında size en uygun dağılımı keşfedin.
+                <p className="text-slate-300 text-base md:text-lg mb-10 leading-relaxed font-medium">
+                    AI Destekli analizimizle risk profilinizi ölçün, saniyeler içinde <strong className="text-white">BIST & TEFAS</strong> piyasasında size en uygun dağılımı keşfedin.
                 </p>
 
                 <button
                     onClick={() => window.location.href = "/dashboard/market"}
-                    className="group relative inline-flex items-center justify-center gap-2 px-8 py-3 bg-blue-600 text-white font-bold rounded-lg overflow-hidden transition-all hover:bg-blue-500 active:scale-95"
+                    className="group/btn relative inline-flex items-center justify-center gap-3 px-10 py-5 bg-blue-600 text-white font-black text-lg rounded-2xl overflow-hidden transition-all hover:bg-blue-500 hover:shadow-[0_0_40px_rgba(37,99,235,0.6)] hover:-translate-y-1 active:scale-95"
                 >   
                     <span className="relative z-10 flex items-center gap-2">
-                        Analizi Başlat <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        Analizi Şimdi Başlat <ChevronRight className="w-6 h-6 group-hover/btn:translate-x-2 transition-transform duration-300" />
                     </span>
+                    <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000" />
                 </button>
 
-                <div className="mt-8 flex items-center justify-center gap-6 text-xs text-slate-300 font-bold">
+                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-slate-300 font-bold bg-white/5 py-4 px-6 rounded-2xl border border-white/5">
                     <span className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                         Bilimsel Analiz
