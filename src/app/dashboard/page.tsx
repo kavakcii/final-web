@@ -72,7 +72,7 @@ export default function Dashboard() {
                         transition={{ duration: 0.5 }}
                         className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020617]/80 backdrop-blur-xl"
                     >
-                        <div className="w-full max-w-md p-8 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.12)_120%)] ring-1 ring-[#0a192f]/5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.12)] relative overflow-hidden text-center">
+                        <div className="w-full max-w-md p-8 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.25)_100%)] ring-1 ring-[#0a192f]/5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.12)] relative overflow-hidden text-center">
                             {/* Animated Background Gradient */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#0a192f]/5 via-transparent to-transparent animate-pulse" />
 
@@ -138,7 +138,7 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className={cn(
-                            "bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.12)_120%)] ring-1 ring-[#0a192f]/[0.08] hover:ring-[#0a192f]/15 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-[1.5rem] p-6 relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 shadow-sm"
+                            "bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.25)_100%)] ring-1 ring-[#0a192f]/[0.08] hover:ring-[#0a192f]/15 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-[1.5rem] p-6 relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 shadow-sm"
                         )}
                     >
                         {!isDataLoaded ? (
@@ -175,7 +175,7 @@ export default function Dashboard() {
                 <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
-                <div className="bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.12)_120%)] ring-1 ring-[#0a192f]/[0.08] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-7 flex flex-col relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
+                <div className="bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.25)_100%)] ring-1 ring-[#0a192f]/[0.1] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-7 flex flex-col relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
                     <h2 className="text-xl font-black text-[#0a192f] mb-6 relative z-10 tracking-tight">Varlıklarım</h2>
                     <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-200 relative z-10">
                         {!isDataLoaded ? (
