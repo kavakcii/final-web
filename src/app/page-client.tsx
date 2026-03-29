@@ -138,7 +138,7 @@ export default function HomeClient() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[800px] sm:h-[800px] bg-[radial-gradient(circle,_rgba(255,255,255,1)_10%,_rgba(10,25,47,0.15)_50%,_transparent_80%)] -z-10 rounded-full blur-[20px] pointer-events-none" />
                 
                 <span className="relative inline-block z-10 mt-10 sm:mt-0">
-                  <span className="bg-gradient-to-br from-[#0a192f] via-blue-700 to-blue-500 bg-clip-text text-transparent px-2">
+                  <span className="bg-gradient-to-br from-[#020617] via-[#0a192f] to-[#1e3a8a] bg-clip-text text-transparent px-2 font-black">
                     FinAi
                   </span>
                   <svg className="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-blue-500 opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -180,25 +180,17 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.3 }}
                 className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 relative z-50 pointer-events-auto"
               >
-                <Link href="/login?tab=register" className="w-full sm:w-auto relative z-50 pointer-events-auto group">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#0a192f] hover:bg-black text-white font-bold rounded-2xl shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] transition-all text-base tracking-wide"
-                  >
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto relative z-50 group">
+                  <Link href="/login?tab=register" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#0a192f] hover:bg-black text-white font-bold rounded-2xl shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] transition-all text-base tracking-wide border border-transparent">
                     Ücretsiz Dene
-                    <ArrowRight className="w-5 h-5" />
-                  </motion.button>
-                </Link>
-                <Link href="/login" className="w-full sm:w-auto relative z-30 pointer-events-auto">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-2xl border-2 border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-base tracking-wide"
-                  >
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto relative z-30">
+                  <Link href="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-2xl border-2 border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-base tracking-wide">
                     Giriş Yap
-                  </motion.button>
-                </Link>
+                  </Link>
+                </motion.div>
               </motion.div>
             </div>
           </div>
