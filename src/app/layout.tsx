@@ -16,11 +16,10 @@ export const metadata: Metadata = {
   },
 };
 
-import { Inter, Libre_Baskerville } from "next/font/google";
+import { Inter } from "next/font/google";
 import { UserProvider } from "@/components/providers/UserProvider";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800", "900"], variable: '--font-inter' });
-const libre = Libre_Baskerville({ subsets: ["latin"], style: ["normal", "italic"], weight: ["400", "700"], variable: '--font-libre' });
 
 export default function RootLayout({
   children,
@@ -28,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`dark ${inter.variable} ${libre.variable}`}>
+    <html lang="tr" className={`dark ${inter.variable}`}>
       <body className="antialiased font-sans bg-[#020617] text-slate-200 min-h-screen">
         <UserProvider>
           {children}

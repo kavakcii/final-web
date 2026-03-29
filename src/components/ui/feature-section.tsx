@@ -52,7 +52,7 @@ export function FeatureSteps({
   return (
     <div className={cn("py-12 md:py-16 bg-white", className)}>
       <div className="max-w-7xl mx-auto w-full px-6">
-        <h2 className="text-4xl md:text-6xl font-[family-name:var(--font-libre)] italic font-bold mb-16 text-center text-[#0a192f]">
+        <h2 className="text-3xl md:text-5xl lg:text-5xl font-black mb-16 text-center text-[#0a192f] tracking-tight">
           {title}
         </h2>
 
@@ -91,7 +91,7 @@ export function FeatureSteps({
                 {/* İçerik */}
                 <div className="flex-1 mt-1">
                   <h3 className={cn(
-                      "text-2xl md:text-3xl font-[family-name:var(--font-libre)] italic font-bold transition-colors duration-300 pointer-events-none",
+                      "text-2xl font-bold transition-colors duration-300 pointer-events-none",
                       index === currentFeature ? "text-[#0a192f]" : "text-slate-600"
                   )}>
                     {feature.title || feature.step}
