@@ -45,7 +45,7 @@ function AccordionItem({ question, answer }: { question: string; answer: string 
                 onClick={() => setIsOpen(!isOpen)}
                 className="flex items-center justify-between w-full px-6 py-4 text-left"
             >
-                <span className="text-lg font-medium text-[#0a192f]">{question}</span>
+                <span className="text-lg font-medium text-[#0f3eaf]">{question}</span>
                 <div className={cn("p-1 rounded-full bg-blue-50 text-blue-600 transition-transform duration-300", isOpen && "rotate-45 bg-blue-100")}>
                     <Plus className="w-5 h-5" />
                 </div>

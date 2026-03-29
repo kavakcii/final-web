@@ -54,7 +54,7 @@ export function CleanPricing() {
             </div>
 
             {/* Plan 3: Premium */}
-            <div className="flex flex-col h-full bg-[#0a192f] rounded-2xl border border-blue-900 p-6 shadow-2xl relative text-white">
+            <div className="flex flex-col h-full bg-[#0f3eaf] rounded-2xl border border-blue-900 p-6 shadow-2xl relative text-white">
                 <div className="mb-4">
                     <h3 className="text-xl font-bold text-white">Premium</h3>
                     <p className="text-sm text-slate-400 mt-2">Profesyoneller için tam kapsamlı set.</p>
@@ -63,7 +63,7 @@ export function CleanPricing() {
                     <span className="text-4xl font-bold text-white">₺250</span>
                     <span className="text-slate-400">/ay</span>
                 </div>
-                <button className="w-full py-2 px-4 rounded-full bg-white text-[#0a192f] font-bold hover:bg-slate-100 transition-colors mb-8 shadow-lg shadow-white/10">
+                <button className="w-full py-2 px-4 rounded-full bg-white text-[#0f3eaf] font-bold hover:bg-slate-100 transition-colors mb-8 shadow-lg shadow-white/10">
                     Premium'a Geç
                 </button>
 

@@ -71,7 +71,7 @@ export function NavbarDock() {
 
     return (
         <div className='fixed top-2 left-1/2 -translate-x-1/2 z-[100] group p-4'>
-            <Dock className='items-center pb-2 pt-2 rounded-full bg-[#0a192f]/10 group-hover:bg-[#0a192f]/95 border border-blue-900/10 group-hover:border-blue-900/50 shadow-none group-hover:shadow-2xl backdrop-blur-[2px] group-hover:backdrop-blur-md overflow-visible transition-all duration-300 ease-out'>
+            <Dock className='items-center pb-2 pt-2 rounded-full bg-[#0f3eaf]/10 group-hover:bg-[#0f3eaf]/95 border border-blue-900/10 group-hover:border-blue-900/50 shadow-none group-hover:shadow-2xl backdrop-blur-[2px] group-hover:backdrop-blur-md overflow-visible transition-all duration-300 ease-out'>
                 {data.map((item, idx) => (
                     <DockItem
                         key={idx}

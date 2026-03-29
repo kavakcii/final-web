@@ -172,7 +172,7 @@ export const PricingCard = ({
     const cardClasses = `
     backdrop-blur-[14px] rounded-2xl shadow-xl flex-1 max-w-xs px-7 py-8 flex flex-col transition-all duration-300 z-10
     ${isPopular
-            ? 'bg-[#0a192f] border-blue-500 ring-2 ring-blue-500 shadow-2xl scale-105 relative'
+            ? 'bg-[#0f3eaf] border-blue-500 ring-2 ring-blue-500 shadow-2xl scale-105 relative'
             : 'bg-white/70 border border-blue-100 hover:scale-[1.02]'}
   `;
 
@@ -180,21 +180,21 @@ export const PricingCard = ({
     let processedButtonClasses = `mt-auto w-full py-2.5 rounded-xl font-semibold text-[14px] transition font-sans `;
     if (isPopular) {
         // High contrast white button for dark card
-        processedButtonClasses += 'bg-white !text-[#0a192f] hover:bg-slate-100 shadow-lg';
+        processedButtonClasses += 'bg-white !text-[#0f3eaf] hover:bg-slate-100 shadow-lg';
     } else {
         if (buttonVariant === 'primary') {
-            processedButtonClasses += 'bg-[#0a192f] hover:bg-blue-900 text-white';
+            processedButtonClasses += 'bg-[#0f3eaf] hover:bg-blue-900 text-white';
         } else {
             processedButtonClasses += 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200';
         }
     }
 
-    const titleColor = isDarkTheme ? "text-white" : "text-[#0a192f]";
-    const descColor = isDarkTheme ? "text-white/80" : "text-[#0a192f]/70";
-    const priceColor = isDarkTheme ? "text-white" : "text-[#0a192f]";
+    const titleColor = isDarkTheme ? "text-white" : "text-[#0f3eaf]";
+    const descColor = isDarkTheme ? "text-white/80" : "text-[#0f3eaf]/70";
+    const priceColor = isDarkTheme ? "text-white" : "text-[#0f3eaf]";
     const dividerColor = isDarkTheme ? "bg-blue-500/30" : "bg-blue-900/10";
-    const featureColor = isDarkTheme ? "text-white" : "text-[#0a192f]";
-    const checkColor = isDarkTheme ? "text-white" : "text-[#0a192f]";
+    const featureColor = isDarkTheme ? "text-white" : "text-[#0f3eaf]";
+    const checkColor = isDarkTheme ? "text-white" : "text-[#0f3eaf]";
 
     return (
         <div className={cardClasses.trim()}>
@@ -249,7 +249,7 @@ export const ModernPricingPage = ({
             {showAnimatedBackground && <ShaderCanvas />}
             <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-8">
                 <div className="text-center mb-14">
-                    <h1 className="text-3xl md:text-5xl font-bold text-[#0a192f] mb-4">
+                    <h1 className="text-3xl md:text-5xl font-bold text-[#0f3eaf] mb-4">
                         {title}
                     </h1>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">

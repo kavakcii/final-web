@@ -52,7 +52,7 @@ export function FeatureSteps({
   return (
     <div className={cn("py-12 md:py-16 bg-white", className)}>
       <div className="max-w-7xl mx-auto w-full px-6">
-        <h2 className="text-3xl md:text-5xl lg:text-5xl font-black mb-16 text-center text-[#0a192f] tracking-tight">
+        <h2 className="text-3xl md:text-5xl lg:text-5xl font-black mb-16 text-center text-[#0f3eaf] tracking-tight">
           {title}
         </h2>
 
@@ -77,7 +77,7 @@ export function FeatureSteps({
                   className={cn(
                     "w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center border-2 transition-colors duration-300",
                     index === currentFeature
-                      ? "bg-[#0a192f] border-[#0a192f] text-white scale-110 shadow-lg shadow-[#0a192f]/20"
+                      ? "bg-[#0f3eaf] border-[#0f3eaf] text-white scale-110 shadow-lg shadow-[#0f3eaf]/20"
                       : "bg-slate-50 border-slate-200 text-slate-400",
                   )}
                 >
@@ -92,7 +92,7 @@ export function FeatureSteps({
                 <div className="flex-1 mt-1">
                   <h3 className={cn(
                       "text-2xl font-bold transition-colors duration-300 pointer-events-none",
-                      index === currentFeature ? "text-[#0a192f]" : "text-slate-600"
+                      index === currentFeature ? "text-[#0f3eaf]" : "text-slate-600"
                   )}>
                     {feature.title || feature.step}
                   </h3>
@@ -133,14 +133,14 @@ export function FeatureSteps({
                       />
                       {/* Gradient overlay to make borders blend nicely */}
                       <div className="absolute inset-0 border border-black/5 rounded-3xl rounded-3xl pointer-events-none" />
-                      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0a192f]/40 to-transparent pointer-events-none" />
+                      <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0f3eaf]/40 to-transparent pointer-events-none" />
                     </motion.div>
                   ),
               )}
             </AnimatePresence>
             
             {/* İlerleme Çubuğu */}
-            <div className="absolute bottom-0 left-0 h-1.5 bg-[#0a192f]/10 w-full z-10">
+            <div className="absolute bottom-0 left-0 h-1.5 bg-[#0f3eaf]/10 w-full z-10">
                <motion.div 
                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-r-full" 
                  style={{ width: `${progress}%` }} 
