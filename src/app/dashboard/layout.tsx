@@ -86,13 +86,19 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex text-[#0a192f] relative selection:bg-blue-500/30 overflow-hidden font-sans bg-white">
-            {/* MAIN WRAPPER (EDGE-TO-EDGE LIGHT DASHBOARD) */}
+        <div className="min-h-screen flex text-[#0a192f] relative selection:bg-blue-500/30 overflow-hidden font-sans bg-slate-50">
+            {/* Soft Background Blobs to make Glassmorphism visible */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-100/50 blur-[100px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-100/30 blur-[120px]" />
+            </div>
+
+            {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto">
-                <div className="flex-1 flex overflow-hidden bg-white">
+                <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar */}
-                    <aside className="w-20 hover:w-64 border-r border-[#0a192f]/10 bg-white hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
+                    {/* Sidebar (Buzlu Cam - Frosted Glass) */}
+                    <aside className="w-20 hover:w-64 border-r border-[#0a192f]/10 bg-white/40 backdrop-blur-xl hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[4px_0_24px_-10px_rgba(10,25,47,0.05)]">
                         <div className="p-6 flex items-center h-20 shrink-0">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">
@@ -129,9 +135,9 @@ function DashboardShell({
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-white">
+                    <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
                         {/* Header */}
-                        <header className="h-16 border-b border-[#0a192f]/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/80 backdrop-blur-md flex-shrink-0 shadow-sm">
+                        <header className="h-16 border-b border-[#0a192f]/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/50 backdrop-blur-xl flex-shrink-0 shadow-sm">
                             <h1 className="text-lg font-bold text-[#0a192f] tracking-tight">FinAi</h1>
                     <div className="flex items-center space-x-4">
                         <div className="relative hidden sm:block">

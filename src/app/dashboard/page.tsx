@@ -138,14 +138,11 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className={cn(
-                            "bg-white border hover:border-blue-200 hover:shadow-lg rounded-2xl p-6 relative overflow-hidden group transition-all duration-300",
-                            stat?.border ? stat.border.replace("white/5", "[#0a192f]/10") : "border-[#0a192f]/10"
+                            "bg-white border hover:border-blue-300 rounded-2xl p-6 relative overflow-hidden group transition-all duration-300",
+                            "shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_40px_rgba(10,25,47,0.04)]",
+                            stat?.border ? stat.border.replace("white/5", "[#0a192f]/10") : "border-[#0a192f]/15"
                         )}
                     >
-                        {/* Köşeden Gelen Soft Lacivert Geçiş (Tam Kullanıcının İstediği Efekt) */}
-                        <div className="absolute -top-32 -right-32 w-64 h-64 bg-[radial-gradient(circle_at_center,_rgba(10,25,47,0.06)_0%,_transparent_70%)] rounded-full transition-opacity duration-500 opacity-60 group-hover:opacity-100 mix-blend-multiply border-white" />
-                        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-[#0a192f]/[0.02] via-transparent to-transparent pointer-events-none" />
-
                         {!isDataLoaded ? (
                             <div className="animate-pulse space-y-3 relative z-10">
                                 <div className="h-10 w-10 bg-slate-100 rounded-lg" />
@@ -178,11 +175,8 @@ export default function Dashboard() {
                 <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
-                <div className="bg-white border border-[#0a192f]/10 shadow-[0_4px_24px_-10px_rgba(10,25,47,0.05)] rounded-2xl p-6 flex flex-col relative overflow-hidden">
-                    {/* Köşeden Gelen Soft Lacivert Geçiş */}
-                    <div className="absolute -top-40 -right-40 w-80 h-80 bg-[radial-gradient(circle_at_center,_rgba(10,25,47,0.04)_0%,_transparent_70%)] rounded-full mix-blend-multiply pointer-events-none" />
-
-                    <h2 className="text-lg font-bold text-[#0a192f] mb-6 relative z-10">Varlıklarım</h2>
+                <div className="bg-white border border-[#0a192f]/15 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_40px_rgba(10,25,47,0.04)] rounded-2xl p-6 flex flex-col relative overflow-hidden">
+                    <h2 className="text-lg font-black text-[#0a192f] mb-6 relative z-10 tracking-tight">Varlıklarım</h2>
                     <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-200 relative z-10">
                         {!isDataLoaded ? (
                             Array(3).fill(null).map((_, i) => (
@@ -220,7 +214,7 @@ export default function Dashboard() {
                                         <div className="text-right">
                                             <p className={cn(
                                                 "text-xs font-black",
-                                                change >= 0 ? "text-green-600" : "text-red-600"
+                                                change >= 0 ? "text-green-600" : "text-red-500"
                                             )}>
                                                 {change >= 0 ? '+' : ''}{change.toFixed(1)}%
                                             </p>

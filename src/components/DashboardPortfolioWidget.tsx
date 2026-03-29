@@ -137,7 +137,7 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-white border border-[#0a192f]/10 shadow-lg rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
+            <div className="lg:col-span-2 bg-white border border-[#0a192f]/15 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_40px_rgba(10,25,47,0.04)] rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
                 <div className="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
             </div>
         );
@@ -146,10 +146,7 @@ export function DashboardPortfolioWidget() {
     if (recommendation) {
         return (
             <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f]">
-                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-6 bg-white rounded-2xl">
-                    {/* Köşeden Gelen Soft Lacivert Geçiş (Kullanıcı İsteği) */}
-                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle_at_top_right,_rgba(10,25,47,0.06)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
-                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[radial-gradient(circle_at_bottom_left,_rgba(10,25,47,0.04)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
+                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-6 bg-white rounded-2xl border border-[#0a192f]/10 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_60px_rgba(10,25,47,0.03)]">
 
                 {/* Chart Side */}
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
@@ -256,10 +253,7 @@ export function DashboardPortfolioWidget() {
     // Default "Start Test" View
     return (
         <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f]">
-            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-8 bg-white rounded-2xl">
-                {/* Köşeden Gelen Soft Lacivert Geçiş */}
-                <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle_at_top_left,_rgba(10,25,47,0.06)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
-                <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-[radial-gradient(circle_at_bottom_right,_rgba(10,25,47,0.04)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
+            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-8 bg-white rounded-2xl border border-[#0a192f]/10 shadow-[0_4px_20px_-5px_rgba(10,25,47,0.05),_inset_0px_0px_60px_rgba(10,25,47,0.03)]">
 
             <div className="relative z-10 max-w-lg mx-auto mt-4">
                 <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 ring-4 ring-blue-100 shadow-inner">
