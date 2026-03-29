@@ -72,16 +72,16 @@ export default function Dashboard() {
                         transition={{ duration: 0.5 }}
                         className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020617]/80 backdrop-blur-xl"
                     >
-                        <div className="w-full max-w-md p-8 rounded-3xl bg-slate-900/50 border border-white/10 shadow-2xl relative overflow-hidden text-center">
+                        <div className="w-full max-w-md p-8 rounded-3xl bg-white border border-[#0a192f]/10 shadow-2xl relative overflow-hidden text-center">
                             {/* Animated Background Gradient */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent animate-pulse" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#0a192f]/5 via-transparent to-transparent animate-pulse" />
 
                             <div className="relative z-10 flex flex-col items-center gap-6">
                                 {/* Logo / Icon Animation */}
                                 <div className="relative">
-                                    <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full animate-pulse" />
-                                    <div className="w-20 h-20 bg-slate-950 rounded-2xl border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                                        <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
+                                    <div className="absolute inset-0 bg-blue-100 blur-xl rounded-full animate-pulse" />
+                                    <div className="w-20 h-20 bg-white rounded-2xl border border-blue-200 flex items-center justify-center shadow-lg shadow-blue-500/10">
+                                        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
                                     </div>
                                 </div>
 
@@ -91,11 +91,11 @@ export default function Dashboard() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
-                                        className="text-2xl font-bold text-white"
+                                        className="text-2xl font-bold text-[#0a192f]"
                                     >
                                         {loadingMessages[loadingStep]}
                                     </motion.h2>
-                                    <p className="text-slate-400 text-sm">Lütfen bekleyin, verileriniz işleniyor.</p>
+                                    <p className="text-slate-500 text-sm">Lütfen bekleyin, verileriniz işleniyor.</p>
                                 </div>
 
                                 {/* Progress Bar */}
@@ -115,8 +115,8 @@ export default function Dashboard() {
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Hoşgeldin, {userName || userEmail?.split('@')[0]} 👋</h1>
-                    <p className="text-slate-400">Piyasa verileri ve portföyün güncel.</p>
+                    <h1 className="text-3xl font-bold text-[#0a192f] mb-2">Hoşgeldin, {userName || userEmail?.split('@')[0]} 👋</h1>
+                    <p className="text-slate-500">Piyasa verileri ve portföyün güncel.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <a
@@ -138,31 +138,34 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className={cn(
-                            "bg-slate-900/50 backdrop-blur-sm border rounded-2xl p-6 relative overflow-hidden group hover:bg-slate-900/80 transition-all duration-300",
-                            stat?.border || "border-white/5"
+                            "bg-white border hover:border-blue-200 hover:shadow-lg rounded-2xl p-6 relative overflow-hidden group transition-all duration-300",
+                            stat?.border ? stat.border.replace("white/5", "[#0a192f]/10") : "border-[#0a192f]/10"
                         )}
                     >
+                        {/* Köşeden Gelen Soft Lacivert Geçiş (Tam Kullanıcının İstediği Efekt) */}
+                        <div className="absolute -top-32 -right-32 w-64 h-64 bg-[radial-gradient(circle_at_center,_rgba(10,25,47,0.06)_0%,_transparent_70%)] rounded-full transition-opacity duration-500 opacity-60 group-hover:opacity-100 mix-blend-multiply border-white" />
+                        <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-[#0a192f]/[0.02] via-transparent to-transparent pointer-events-none" />
+
                         {!isDataLoaded ? (
-                            <div className="animate-pulse space-y-3">
-                                <div className="h-10 w-10 bg-white/5 rounded-lg" />
-                                <div className="h-4 w-20 bg-white/5 rounded" />
-                                <div className="h-8 w-32 bg-white/5 rounded" />
+                            <div className="animate-pulse space-y-3 relative z-10">
+                                <div className="h-10 w-10 bg-slate-100 rounded-lg" />
+                                <div className="h-4 w-20 bg-slate-100 rounded" />
+                                <div className="h-8 w-32 bg-slate-100 rounded" />
                             </div>
                         ) : (
                             <>
-                                <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-start mb-4">
-                                        <div className="p-2 bg-white/5 rounded-lg text-slate-300 group-hover:text-white transition-colors">
+                                        <div className="p-2 bg-slate-50 rounded-lg text-blue-600 transition-colors border border-slate-100 group-hover:bg-blue-50">
                                             <stat.icon className="w-6 h-6" />
                                         </div>
-                                        <div className={`flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-full ${stat.isPositive ? 'text-green-400 bg-green-500/10' : 'text-red-400 bg-red-500/10'}`}>
-                                            {stat.isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                                        <div className={`flex items-center gap-1 text-sm font-bold px-3 py-1.5 rounded-full ${stat.isPositive ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'}`}>
+                                            {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
                                             {stat.change}
                                         </div>
                                     </div>
-                                    <h3 className="text-slate-400 text-sm font-medium mb-1">{stat.title}</h3>
-                                    <p className="text-2xl font-bold text-white">{stat.value}</p>
+                                    <h3 className="text-slate-500 text-sm font-semibold mb-1 uppercase tracking-wider">{stat.title}</h3>
+                                    <p className="text-3xl font-black text-[#0a192f] tracking-tight">{stat.value}</p>
                                 </div>
                             </>
                         )}
@@ -175,12 +178,15 @@ export default function Dashboard() {
                 <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
-                <div className="bg-slate-900/50 border border-white/10 rounded-2xl p-6 flex flex-col">
-                    <h2 className="text-lg font-semibold text-white mb-6">Varlıklarım</h2>
-                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                <div className="bg-white border border-[#0a192f]/10 shadow-[0_4px_24px_-10px_rgba(10,25,47,0.05)] rounded-2xl p-6 flex flex-col relative overflow-hidden">
+                    {/* Köşeden Gelen Soft Lacivert Geçiş */}
+                    <div className="absolute -top-40 -right-40 w-80 h-80 bg-[radial-gradient(circle_at_center,_rgba(10,25,47,0.04)_0%,_transparent_70%)] rounded-full mix-blend-multiply pointer-events-none" />
+
+                    <h2 className="text-lg font-bold text-[#0a192f] mb-6 relative z-10">Varlıklarım</h2>
+                    <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-200 relative z-10">
                         {!isDataLoaded ? (
                             Array(3).fill(null).map((_, i) => (
-                                <div key={i} className="h-16 w-full animate-pulse bg-white/5 rounded-xl" />
+                                <div key={i} className="h-16 w-full animate-pulse bg-slate-50 rounded-xl" />
                             ))
                         ) : groupedAssets.length === 0 ? (
                             <div className="text-center py-10">
@@ -198,23 +204,23 @@ export default function Dashboard() {
                                         className={cn(
                                             "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border",
                                             selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                ? "bg-blue-600/20 border-blue-500/50"
-                                                : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/10"
+                                                ? "bg-blue-50 border-blue-200 text-blue-900 shadow-sm"
+                                                : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50"
                                         )}
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-blue-400 border border-white/5">
+                                            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-bold text-[#0a192f] border border-slate-200">
                                                 {asset.symbol.substring(0, 2)}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-bold text-white">{asset.symbol}</p>
-                                                <p className="text-[10px] text-slate-500">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
+                                                <p className="text-sm font-bold text-[#0a192f]">{asset.symbol}</p>
+                                                <p className="text-[10px] text-slate-500 font-medium">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <p className={cn(
-                                                "text-xs font-bold",
-                                                change >= 0 ? "text-green-400" : "text-red-400"
+                                                "text-xs font-black",
+                                                change >= 0 ? "text-green-600" : "text-red-600"
                                             )}>
                                                 {change >= 0 ? '+' : ''}{change.toFixed(1)}%
                                             </p>
@@ -229,12 +235,12 @@ export default function Dashboard() {
                         <div
                             onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                             className={cn(
-                                "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border mt-4 opacity-60 hover:opacity-100",
-                                selectedAsset === "FOREKS:XU100" ? "bg-slate-800 border-white/20" : "bg-transparent border-dashed border-white/10"
+                                "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border mt-4",
+                                selectedAsset === "FOREKS:XU100" ? "bg-slate-100 border-[#0a192f]/20 shadow-sm" : "bg-transparent border-dashed border-slate-200 hover:bg-slate-50"
                             )}
                         >
-                            <span className="text-xs font-medium text-slate-400">BIST 100 Endeksi</span>
-                            <Activity className="w-4 h-4 text-slate-500" />
+                            <span className="text-xs font-bold text-[#0a192f]">BIST 100 Endeksi</span>
+                            <Activity className="w-4 h-4 text-[#0a192f]" />
                         </div>
                     </div>
                 </div>

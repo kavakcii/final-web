@@ -137,17 +137,19 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="lg:col-span-2 bg-slate-900/50 border border-white/10 rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
-                <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+            <div className="lg:col-span-2 bg-white border border-[#0a192f]/10 shadow-lg rounded-2xl p-8 flex items-center justify-center min-h-[300px]">
+                <div className="w-8 h-8 border-2 border-blue-600/30 border-t-blue-600 rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (recommendation) {
         return (
-            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto">
-                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-6">
-                    <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+            <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f]">
+                <div className="relative overflow-hidden flex flex-col md:flex-row items-center gap-8 p-6 bg-white rounded-2xl">
+                    {/* Köşeden Gelen Soft Lacivert Geçiş (Kullanıcı İsteği) */}
+                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle_at_top_right,_rgba(10,25,47,0.06)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
+                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[radial-gradient(circle_at_bottom_left,_rgba(10,25,47,0.04)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
 
                 {/* Chart Side */}
                 <div className="w-full md:w-1/2 h-[250px] relative z-10">
@@ -167,25 +169,25 @@ export function DashboardPortfolioWidget() {
                                     <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.1)" strokeWidth={2} />
                                 ))}
                             </Pie>
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                itemStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                <Tooltip
+                                contentStyle={{ backgroundColor: '#ffffff', borderColor: 'rgba(10,25,47,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
+                                itemStyle={{ color: '#0a192f', fontWeight: 'bold' }}
                                 formatter={(value: any) => [`%${value}`, 'Oran']}
                             />
                         </RechartsPie>
                     </ResponsiveContainer>
                     {/* Centered Title */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-slate-400 text-xs font-medium">Önerilen</span>
-                        <span className="text-white font-bold text-sm text-center px-4">{recommendation.title}</span>
+                        <span className="text-slate-500 text-xs font-semibold uppercase tracking-widest">Önerilen</span>
+                        <span className="text-[#0a192f] font-black text-sm text-center px-4 mt-1">{recommendation.title}</span>
                     </div>
                     {/* Legend */}
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-1.5">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                                <span className="text-[10px] text-slate-300 font-medium whitespace-nowrap">
-                                    {item.name} <span className="text-slate-500">%{item.value}</span>
+                            <div key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-[#0a192f]/5 rounded-full">
+                                <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
+                                <span className="text-[10px] text-[#0a192f] font-bold whitespace-nowrap">
+                                    {item.name} <span className="text-blue-700 font-black">%{item.value}</span>
                                     {item.amountStr && (
                                         <span className="text-slate-500 ml-1">({item.amountStr})</span>
                                     )}
@@ -197,35 +199,35 @@ export function DashboardPortfolioWidget() {
 
                 {/* Info Side */}
                 <div className="w-full md:w-1/2 relative z-10 text-center md:text-left">
-                    <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                        <div className="p-2 bg-green-500/20 rounded-lg text-green-400">
+                    <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
+                        <div className="p-2 bg-green-100 rounded-lg text-green-700 border border-green-200">
                             <PieChart className="w-5 h-5" />
                         </div>
-                        <span className="text-green-400 font-bold text-sm">Analiz Tamamlandı</span>
-                        <div className="text-xs font-medium text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                        <span className="text-green-700 font-black text-sm">Analiz Tamamlandı</span>
+                        <div className="text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full border border-blue-200 ml-2">
                             {recommendation.persona}
                         </div>
                     </div>
 
-                    <h3 className="text-2xl font-bold text-white mb-2">{recommendation.title}</h3>
-                    <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                    <h3 className="text-2xl font-black text-[#0a192f] mb-2">{recommendation.title}</h3>
+                    <p className="text-slate-600 text-sm mb-5 leading-relaxed font-medium">
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-3 bg-white/5 rounded-xl border border-white/5 mb-6 text-xs text-slate-300 leading-relaxed">
-                        <strong className="text-white block mb-1">Neden bu dağılım?</strong>
+                    <div className="p-4 bg-slate-50 rounded-xl border border-[#0a192f]/10 mb-6 text-xs text-slate-600 leading-relaxed shadow-inner">
+                        <strong className="text-[#0a192f] block mb-2 font-black">Neden bu dağılım?</strong>
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-white font-bold">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-blue-700 font-bold">{part}</span> : part
                         )}
 
                         {recommendation.advantages && (
-                            <div className="mt-3 pt-3 border-t border-white/5">
-                                <strong className="text-white block mb-2">Avantajlar:</strong>
-                                <ul className="space-y-1">
+                            <div className="mt-4 pt-4 border-t border-[#0a192f]/10">
+                                <strong className="text-[#0a192f] block mb-2 font-black">Avantajlar:</strong>
+                                <ul className="space-y-1.5">
                                     {recommendation.advantages.map((adv: string, i: number) => (
-                                        <li key={i} className="flex items-start gap-1.5">
-                                            <CheckCircle2 className="w-3 h-3 text-green-400 shrink-0 mt-0.5" />
-                                            <span>{adv}</span>
+                                        <li key={i} className="flex items-start gap-2">
+                                            <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+                                            <span className="font-medium">{adv}</span>
                                         </li>
                                     ))}
                                 </ul>
@@ -239,7 +241,7 @@ export function DashboardPortfolioWidget() {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
                             }}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium text-sm transition-all border border-white/10"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-[#0a192f] rounded-xl font-bold text-sm transition-all border-2 border-slate-200 hover:border-blue-300 hover:text-blue-700 shadow-sm"
                         >
                             <RotateCcw className="w-4 h-4" />
                             Testi Tekrarla
@@ -253,20 +255,22 @@ export function DashboardPortfolioWidget() {
 
     // Default "Start Test" View
     return (
-        <GlowCard customSize glowColor="blue" className="lg:col-span-2 h-auto">
-            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-8">
-                <div className="absolute top-0 right-0 w-64 h-full opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay"></div>
+        <GlowCard customSize glowColor="primary" className="lg:col-span-2 h-auto text-[#0a192f]">
+            <div className="relative overflow-hidden flex flex-col justify-center items-center text-center p-8 bg-white rounded-2xl">
+                {/* Köşeden Gelen Soft Lacivert Geçiş */}
+                <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-[radial-gradient(circle_at_top_left,_rgba(10,25,47,0.06)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
+                <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-[radial-gradient(circle_at_bottom_right,_rgba(10,25,47,0.04)_0%,_transparent_60%)] pointer-events-none mix-blend-multiply" />
 
-            <div className="relative z-10 max-w-lg mx-auto">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-400 ring-4 ring-blue-500/10">
+            <div className="relative z-10 max-w-lg mx-auto mt-4">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 text-blue-600 ring-4 ring-blue-100 shadow-inner">
                     <Wallet className="w-8 h-8" />
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-4">
+                <h2 className="text-3xl font-black text-[#0a192f] mb-4 tracking-tight">
                     Size Özel Portföy Dağılımını Bulun
                 </h2>
 
-                <p className="text-slate-400 text-lg mb-8 leading-relaxed">
+                <p className="text-slate-500 text-lg mb-8 leading-relaxed font-medium">
                     Yatırım hedeflerinize ve risk profilinize en uygun dağılımı 1 dakikalık akıllı testimizle belirleyin.
                 </p>
 
