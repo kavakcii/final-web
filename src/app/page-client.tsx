@@ -178,16 +178,21 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 relative z-50 pointer-events-auto"
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8 relative z-[9999] pointer-events-auto"
+                style={{ zIndex: 9999 }}
               >
-                <motion.a href="/login?tab=register" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#0a192f] hover:bg-black text-white font-bold rounded-2xl shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] transition-all text-base tracking-wide border border-transparent group relative z-50">
-                    Ücretsiz Dene
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </motion.a>
+                <div className="w-full sm:w-auto relative z-[9999] pointer-events-auto group">
+                    <a href="/login?tab=register" className="cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-[#0a192f] hover:bg-black text-white font-bold rounded-2xl shadow-[0_10px_40px_-10px_rgba(10,25,47,0.5)] transition-all text-base tracking-wide border border-transparent cursor-pointer relative z-[9999]" style={{ cursor: "pointer", pointerEvents: "auto" }}>
+                        Ücretsiz Dene
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </a>
+                </div>
                 
-                <motion.a href="/login" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-2xl border-2 border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-base tracking-wide relative z-40">
-                    Giriş Yap
-                </motion.a>
+                <div className="w-full sm:w-auto relative z-[9999] pointer-events-auto">
+                    <a href="/login" className="cursor-pointer w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-2xl border-2 border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-base tracking-wide cursor-pointer relative z-[9999]" style={{ cursor: "pointer", pointerEvents: "auto" }}>
+                        Giriş Yap
+                    </a>
+                </div>
               </motion.div>
             </div>
           </div>
