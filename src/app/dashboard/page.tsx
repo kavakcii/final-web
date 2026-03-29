@@ -129,30 +129,31 @@ export default function Dashboard() {
                             className="w-full flex-1"
                         >
                             <div className={cn(
-                                "bg-[#0a192f] rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-between"
+                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] ring-1 ring-[#0a192f]/10"
                             )}>
                                 {!isDataLoaded ? (
-                                    <div className="animate-pulse space-y-3 relative z-10 w-full h-full">
-                                        <div className="h-8 w-8 bg-white/10 rounded-lg" />
-                                        <div className="h-6 w-1/2 bg-white/10 rounded mt-auto" />
+                                    <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
+                                        <div className="h-8 w-8 bg-[#0a192f]/20 rounded-lg" />
+                                        <div className="h-6 w-1/2 bg-[#0a192f]/20 rounded mt-auto" />
                                     </div>
                                 ) : stat && (
-                                    <div className="relative z-10 flex flex-col h-full justify-between">
-                                        <div className="flex justify-between items-start mb-2">
-                                            <div className="p-2 bg-white/10 rounded-xl text-white group-hover:bg-blue-600 transition-colors duration-300 shadow-sm">
+                                    <div className="relative z-10 flex flex-col h-full justify-center items-center w-full">
+                                        <div className="flex flex-col items-center justify-center gap-2 mb-3 w-full">
+                                            <div className="p-2.5 bg-[#0a192f]/5 rounded-xl text-[#0a192f] group-hover:bg-[#0a192f] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#0a192f]/10 group-hover:border-transparent">
                                                 <stat.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
                                             </div>
-                                            <div className={`flex items-center gap-1 text-[11px] font-black px-2 py-1 text-white rounded-md ${stat.isPositive ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}>
-                                                {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" /> : <ArrowDownRight className="w-3.5 h-3.5 text-rose-400" />}
+                                            <div className={`flex items-center justify-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-md ${stat.isPositive ? 'text-emerald-700 bg-emerald-500/20' : 'text-rose-700 bg-rose-500/20'}`}>
+                                                {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" /> : <ArrowDownRight className="w-3.5 h-3.5 text-rose-600" />}
                                                 {stat.change}
                                             </div>
                                         </div>
-                                        <div className="mt-auto">
-                                            <h3 className="text-slate-400 text-[10px] font-bold mb-0.5 tracking-wider uppercase opacity-80">{stat.title}</h3>
-                                            <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter truncate leading-none">{stat.value}</p>
+                                        <div className="mt-auto w-full text-center">
+                                            <h3 className="text-slate-500 text-[10px] font-bold mb-1 tracking-wider uppercase opacity-90">{stat.title}</h3>
+                                            <p className="text-2xl sm:text-3xl font-black text-[#0a192f] tracking-tighter truncate leading-none">{stat.value}</p>
                                         </div>
                                         {/* Background Decoration */}
-                                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-colors duration-700 pointer-events-none" />
+                                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:bg-blue-300/30 transition-colors duration-700 pointer-events-none" />
                                     </div>
                                 )}
                             </div>
@@ -177,15 +178,17 @@ export default function Dashboard() {
                     transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
                     className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
                 >
-                    <div className="bg-[#0a192f] shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full blur-2xl pointer-events-none" />
+                    <div className="bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] ring-1 ring-[#0a192f]/10 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full blur-2xl pointer-events-none" />
 
-                        <h2 className="text-lg font-black text-white mb-6 relative z-10 tracking-tight flex justify-between items-center">
-                            Varlıklarım
-                            <span className="text-[10px] font-bold text-blue-300 px-2 py-0.5 rounded bg-blue-900/50 shadow-sm animate-pulse">Senkronize</span>
-                        </h2>
+                        <div className="w-full flex justify-between items-center mb-6 relative z-10 px-2">
+                            <h2 className="text-lg font-black text-white tracking-tight">
+                                Varlıklarım
+                            </h2>
+                            <span className="text-[10px] font-bold text-[#0a192f] px-2 py-0.5 rounded bg-white/90 shadow-sm animate-pulse">Senkronize</span>
+                        </div>
                         
-                        <div className="space-y-2 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 relative z-10">
+                        <div className="space-y-3 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-400 relative z-10 w-full">
                             {!isDataLoaded ? (
                                 Array(5).fill(null).map((_, i) => (
                                     <div key={i} className="h-14 w-full animate-pulse bg-white/5 rounded-xl mb-2" />
@@ -204,29 +207,37 @@ export default function Dashboard() {
                                             key={i}
                                             onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                             className={cn(
-                                                "flex items-center justify-between p-2.5 rounded-xl transition-all cursor-pointer bg-white/5 border border-transparent",
+                                                "flex flex-col items-center justify-center p-3.5 rounded-xl transition-all cursor-pointer bg-white/40 backdrop-blur-md border border-white/50 shadow-sm text-center gap-2",
                                                 selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                    ? "bg-blue-600 border-blue-400 shadow-[0_0_15px_rgba(37,99,235,0.3)]"
-                                                    : "hover:bg-white/10 hover:border-white/10 hover:-translate-y-0.5"
+                                                    ? "bg-[#0a192f] border-[#0a192f] text-white shadow-lg scale-105"
+                                                    : "hover:bg-white/60 hover:-translate-y-1 text-[#0a192f]"
                                             )}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center text-[10px] font-black text-white shadow-sm">
-                                                    {asset.symbol.substring(0, 2)}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-white leading-tight">{asset.symbol}</p>
-                                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
-                                                </div>
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-lg flex items-center justify-center text-[12px] font-black shadow-inner",
+                                                selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "bg-white/20 text-white" : "bg-[#0a192f]/10 text-[#0a192f]"
+                                            )}>
+                                                {asset.symbol.substring(0, 2)}
                                             </div>
-                                            <div className="text-right">
+                                            <div>
+                                                <p className="text-[15px] font-black leading-tight">{asset.symbol}</p>
                                                 <p className={cn(
-                                                    "text-xs font-black",
-                                                    change >= 0 ? "text-emerald-400" : "text-rose-400"
+                                                    "text-[10px] font-bold uppercase tracking-wider mt-0.5",
+                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "text-slate-300" : "text-slate-500"
+                                                )}>{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
+                                            </div>
+                                            <div className="mt-1 flex gap-3 items-center justify-center">
+                                                <p className={cn(
+                                                    "text-xs font-black px-2 py-0.5 rounded",
+                                                    change >= 0 ? "text-emerald-700 bg-emerald-500/20" : "text-rose-700 bg-rose-500/20",
+                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) && (change >= 0 ? "text-emerald-400" : "text-rose-400")
                                                 )}>
                                                     {change >= 0 ? '+' : ''}{change.toFixed(1)}%
                                                 </p>
-                                                <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                                                <p className={cn(
+                                                    "text-[11px] font-bold",
+                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "text-slate-300" : "text-slate-600"
+                                                )}>
                                                     {asset.quantity} Adet
                                                 </p>
                                             </div>
@@ -237,12 +248,11 @@ export default function Dashboard() {
                             <div
                                 onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                                 className={cn(
-                                    "flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer mt-4 bg-white/5 border border-dashed border-white/20 hover:border-white/40 group",
-                                    selectedAsset === "FOREKS:XU100" ? "bg-blue-600 shadow-md ring-1 ring-blue-400 border-solid" : "hover:bg-white/10"
+                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-[#0a192f] text-white border border-transparent shadow-lg group hover:scale-105",
+                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-white shadow-xl" : "hover:bg-[#0a192f]/90"
                                 )}
                             >
-                                <span className="text-xs font-black text-white tracking-wide group-hover:translate-x-1 transition-transform">BIST 100 Endeksi</span>
-                                <Activity className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                                <span className="text-xs font-black tracking-wide">BIST 100 Endeksi</span>
                             </div>
                         </div>
                     </div>
