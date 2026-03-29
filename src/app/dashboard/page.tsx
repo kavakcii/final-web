@@ -248,11 +248,11 @@ export default function Dashboard() {
                             <div
                                 onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-[#0a192f] text-white border border-transparent shadow-lg group hover:scale-105",
-                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-white shadow-xl" : "hover:bg-[#0a192f]/90"
+                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] text-[#0a192f] border border-transparent shadow-lg group hover:scale-105",
+                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500 shadow-xl" : "hover:shadow-blue-500/20"
                                 )}
                             >
-                                <span className="text-xs font-black tracking-wide">BIST 100 Endeksi</span>
+                                <span className="text-xs font-black tracking-wide bg-white/50 px-3 py-1 rounded-md drop-shadow-sm group-hover:bg-white/80 transition-colors">BIST 100 Endeksi</span>
                             </div>
                         </div>
                     </div>

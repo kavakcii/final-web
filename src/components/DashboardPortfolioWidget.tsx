@@ -253,17 +253,17 @@ export function DashboardPortfolioWidget() {
             
             <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
 
-            <div className="relative z-10 max-w-2xl mx-auto mt-4 px-8 py-14 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/50 shadow-2xl group transition-all duration-500 hover:bg-white/60">
-                <div className="w-24 h-24 bg-[#0a192f] rounded-[2rem] flex items-center justify-center mx-auto mb-8 text-white shadow-2xl ring-4 ring-white/50 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                    <Zap className="w-12 h-12 animate-pulse text-blue-300" />
+            <div className="relative z-10 max-w-2xl mx-auto mt-4 px-8 py-14 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] rounded-[2rem] border border-[#0a192f]/20 shadow-2xl group transition-all duration-500 hover:scale-[1.02] ring-1 ring-[#0a192f]/10">
+                <div className="w-24 h-24 bg-white/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl ring-4 ring-white/50 group-hover:scale-110 transition-all duration-500">
+                    <Zap className="w-12 h-12 animate-pulse text-white" />
                 </div>
 
                 <h2 className="text-4xl md:text-5xl font-black text-[#0a192f] mb-6 tracking-tight leading-tight">
                     Optimum Portföyünüzü Bulun
                 </h2>
 
-                <p className="text-slate-700 text-base md:text-lg mb-10 leading-relaxed font-bold px-4">
-                    AI Destekli analizimizle risk profilinizi ölçün, saniyeler içinde <strong className="text-[#0a192f]">BIST & TEFAS</strong> piyasasında size en uygun dağılımı keşfedin.
+                <p className="text-white text-base md:text-lg mb-10 leading-relaxed font-bold px-4 drop-shadow-sm">
+                    AI Destekli analizimizle risk profilinizi ölçün, saniyeler içinde <strong className="text-white bg-[#0a192f]/20 px-2 py-0.5 rounded ml-1">BIST & TEFAS</strong> piyasasında size en uygun dağılımı keşfedin.
                 </p>
 
                 <button
@@ -276,17 +276,17 @@ export function DashboardPortfolioWidget() {
                     <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 delay-100" />
                 </button>
 
-                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-[#0a192f] font-black bg-white/60 py-4 px-8 rounded-full border border-white/50 shadow-sm">
+                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-white font-black bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#193b82] via-[#0a192f] to-[#0a192f] py-4 px-8 rounded-full border border-white/20 shadow-md">
                     <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
                         Bilimsel Analiz
                     </span>
                     <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)]"></span>
                         Kişiselleştirilmiş
                     </span>
                     <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-sm"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.8)]"></span>
                         Ücretsiz Altyapı
                     </span>
                 </div>
