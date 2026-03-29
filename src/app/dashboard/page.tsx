@@ -72,7 +72,7 @@ export default function Dashboard() {
                         transition={{ duration: 0.5 }}
                         className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#020617]/80 backdrop-blur-xl"
                     >
-                        <div className="w-full max-w-md p-8 rounded-[2rem] bg-white ring-1 ring-[#0a192f]/5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.12)] relative overflow-hidden text-center">
+                        <div className="w-full max-w-md p-8 rounded-[2rem] bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.12)_120%)] ring-1 ring-[#0a192f]/5 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.12)] relative overflow-hidden text-center">
                             {/* Animated Background Gradient */}
                             <div className="absolute inset-0 bg-gradient-to-br from-[#0a192f]/5 via-transparent to-transparent animate-pulse" />
 
@@ -138,7 +138,7 @@ export default function Dashboard() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         className={cn(
-                            "bg-white ring-1 ring-[#0a192f]/[0.08] hover:ring-[#0a192f]/15 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-[1.5rem] p-6 relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 shadow-sm"
+                            "bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.12)_120%)] ring-1 ring-[#0a192f]/[0.08] hover:ring-[#0a192f]/15 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-[1.5rem] p-6 relative overflow-hidden group transition-all duration-500 hover:-translate-y-1 shadow-sm"
                         )}
                     >
                         {!isDataLoaded ? (
@@ -175,7 +175,7 @@ export default function Dashboard() {
                 <DashboardPortfolioWidget />
 
                 {/* Asset Quick Select (from Portfolio) */}
-                <div className="bg-white ring-1 ring-[#0a192f]/[0.08] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-7 flex flex-col relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
+                <div className="bg-[radial-gradient(ellipse_at_center,_#ffffff_0%,_rgba(10,25,47,0.12)_120%)] ring-1 ring-[#0a192f]/[0.08] shadow-[0_15px_30px_-15px_rgba(0,0,0,0.06)] rounded-[1.5rem] p-7 flex flex-col relative overflow-hidden transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)]">
                     <h2 className="text-xl font-black text-[#0a192f] mb-6 relative z-10 tracking-tight">Varlıklarım</h2>
                     <div className="space-y-3 flex-1 overflow-y-auto max-h-[400px] pr-2 scrollbar-thin scrollbar-thumb-slate-200 relative z-10">
                         {!isDataLoaded ? (
@@ -196,9 +196,9 @@ export default function Dashboard() {
                                         key={i}
                                         onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                         className={cn(
-                                            "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer bg-white group hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.1)]",
+                                            "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer bg-white/50 group hover:bg-white hover:shadow-[0_8px_20px_-8px_rgba(0,0,0,0.1)]",
                                             selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                ? "ring-2 ring-blue-500/30 shadow-sm"
+                                                ? "ring-2 ring-blue-500/30 shadow-sm bg-white"
                                                 : "ring-1 ring-slate-900/5 hover:ring-slate-900/10"
                                         )}
                                     >
@@ -229,8 +229,8 @@ export default function Dashboard() {
                         <div
                             onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                             className={cn(
-                                "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer bg-white group hover:shadow-md mt-4",
-                                selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500/30 shadow-sm" : "ring-1 ring-slate-900/5 ring-dashed hover:ring-slate-900/10"
+                                "flex items-center justify-between p-3.5 rounded-2xl transition-all cursor-pointer bg-white/50 group hover:bg-white hover:shadow-md mt-4",
+                                selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500/30 shadow-sm bg-white" : "ring-1 ring-slate-900/5 ring-dashed hover:ring-slate-900/10"
                             )}
                         >
                             <span className="text-xs font-black text-[#0a192f] uppercase tracking-wider">BIST 100 Endeksi</span>
