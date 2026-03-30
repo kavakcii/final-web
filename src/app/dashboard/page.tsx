@@ -129,8 +129,8 @@ export default function Dashboard() {
                             className="w-full flex-1"
                         >
                             <div className={cn(
-                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
-                                "bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] ring-1 ring-[#0a192f]/10"
+                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.18)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.6)_35%,_rgba(30,40,80,0.85)_70%,_#000000_100%)] ring-1 ring-black/10 shadow-md"
                             )}>
                                 {!isDataLoaded ? (
                                     <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
@@ -178,8 +178,8 @@ export default function Dashboard() {
                     transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
                     className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
                 >
-                    <div className="bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] ring-1 ring-[#0a192f]/10 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full blur-2xl pointer-events-none" />
+                    <div className="bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_35%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] ring-1 ring-black/10 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-bl-full blur-2xl pointer-events-none" />
 
                         <div className="w-full flex justify-between items-center mb-6 relative z-10 px-2">
                             <h2 className="text-lg font-black text-white tracking-tight">

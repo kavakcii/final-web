@@ -95,8 +95,8 @@ function DashboardShell({
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar (Radial Gradient White to Navy) */}
-                    <aside className="w-20 hover:w-64 border-r border-[#0a192f]/10 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[5px_0_30px_rgba(10,25,47,0.15)]">
+                    {/* Sidebar (Radial Gradient White to Black) */}
+                    <aside className="w-20 hover:w-64 border-r border-black/10 bg-[radial-gradient(ellipse_at_top_left,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[5px_0_30px_rgba(0,0,0,0.18)]">
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-[#0a192f]/10">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">

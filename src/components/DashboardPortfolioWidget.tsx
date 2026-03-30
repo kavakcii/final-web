@@ -136,16 +136,16 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-full bg-[#0a192f] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[600px] shadow-2xl">
-                <div className="w-10 h-10 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+            <div className="w-full h-full bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.9)_70%,_#000000_100%)] rounded-[1.5rem] p-8 flex items-center justify-center min-h-[600px] shadow-2xl">
+                <div className="w-10 h-10 border-4 border-black/20 border-t-black/60 rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (recommendation) {
         return (
-            <div className="w-full h-full relative bg-[radial-gradient(circle_at_center,_white_0%,_#193b82_50%,_#0a192f_100%)] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 hover:shadow-[0_20px_60px_rgba(37,99,235,0.2)] flex flex-col items-center text-center">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="w-full h-full relative bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] flex flex-col items-center text-center">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
                 <div className="relative flex flex-col items-center justify-center gap-8 p-10 z-10 w-full h-full">
 
                 <div className="w-full h-[300px] relative z-10 mt-6 group-hover:scale-[1.03] transition-transform duration-700 ease-out">
@@ -178,13 +178,13 @@ export function DashboardPortfolioWidget() {
                     </div>
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] rounded-xl shadow-xl ring-1 ring-[#0a192f]/20 min-w-[80px] group/box hover:scale-105 transition-transform duration-300">
+                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_40%,_rgba(10,10,20,0.9)_80%,_#000000_100%)] rounded-xl shadow-xl ring-1 ring-black/20 min-w-[80px] group/box hover:scale-105 transition-transform duration-300">
                                 <div className="w-3 h-3 rounded-full shadow-md" style={{ backgroundColor: item.color }}></div>
                                 <span className="text-[10px] text-white group-hover/box:text-white font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 drop-shadow-md">
                                     {item.name} 
-                                    <span className="font-black text-lg leading-none text-[#0a192f] mt-0.5">{`%${item.value}`}</span>
+                                    <span className="font-black text-lg leading-none text-black mt-0.5">{`%${item.value}`}</span>
                                     {item.amountStr && (
-                                        <span className="text-[#0a192f] font-bold block mt-0.5">({item.amountStr})</span>
+                                        <span className="text-black/80 font-bold block mt-0.5">({item.amountStr})</span>
                                     )}
                                 </span>
                             </div>
@@ -208,11 +208,11 @@ export function DashboardPortfolioWidget() {
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-6 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] rounded-2xl mb-8 text-sm text-slate-700 leading-relaxed text-center shadow-2xl ring-1 ring-[#0a192f]/10 w-full max-w-lg mx-auto">
-                        <strong className="text-[#0a192f] block mb-3 font-black text-lg">Neden Bu Optimizasyon?</strong>
+                    <div className="p-6 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_35%,_rgba(10,10,20,0.9)_72%,_#000000_100%)] rounded-2xl mb-8 text-sm leading-relaxed text-center shadow-2xl ring-1 ring-black/10 w-full max-w-lg mx-auto">
+                        <strong className="text-black block mb-3 font-black text-lg">Neden Bu Optimizasyon?</strong>
                         <p className="text-left font-medium text-white px-2 mt-2 drop-shadow-sm">
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-white font-black bg-[#0a192f]/20 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-white font-black bg-white/20 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
                         )}
                         </p>
 
@@ -247,13 +247,13 @@ export function DashboardPortfolioWidget() {
     }
 
     return (
-        <div className="w-full h-full relative bg-[radial-gradient(circle_at_center,_white_0%,_#193b82_30%,_#0a192f_100%)] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 flex flex-col justify-center min-h-[600px] text-center">
+        <div className="w-full h-full relative bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 flex flex-col justify-center min-h-[600px] text-center">
             
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/20 rounded-full blur-[100px] pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/15 rounded-full blur-[130px] pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
             
             <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
 
-            <div className="relative z-10 max-w-2xl mx-auto mt-4 px-8 py-14 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] rounded-[2rem] border border-[#0a192f]/20 shadow-2xl group transition-all duration-500 hover:scale-[1.02] ring-1 ring-[#0a192f]/10">
+            <div className="relative z-10 max-w-2xl mx-auto mt-4 px-8 py-14 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_35%,_rgba(10,10,20,0.9)_72%,_#000000_100%)] rounded-[2rem] border border-black/20 shadow-2xl group transition-all duration-500 hover:scale-[1.02] ring-1 ring-black/10">
                 <div className="w-24 h-24 bg-white/20 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl ring-4 ring-white/50 group-hover:scale-110 transition-all duration-500">
                     <Zap className="w-12 h-12 animate-pulse text-white" />
                 </div>
@@ -276,7 +276,7 @@ export function DashboardPortfolioWidget() {
                     <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 delay-100" />
                 </button>
 
-                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-white font-black bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#193b82] via-[#0a192f] to-[#0a192f] py-4 px-8 rounded-full border border-white/20 shadow-md">
+                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-white font-black bg-[radial-gradient(ellipse_at_center,_rgba(30,30,40,0.9)_0%,_#000000_100%)] py-4 px-8 rounded-full border border-white/20 shadow-md">
                     <span className="flex items-center gap-2">
                         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
                         Bilimsel Analiz
