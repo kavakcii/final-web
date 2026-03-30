@@ -80,7 +80,6 @@ export default function ShaderShowcase() {
         className="absolute inset-0 w-full h-full"
         colors={["#000000", "#0891b2", "#1e40af", "#020617", "#0ea5e9"]}
         speed={0.2}
-        backgroundColor="#000000"
       />
       
       {/* Finansal Veri Grid Katmanı */}
