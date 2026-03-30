@@ -133,8 +133,8 @@ export default function Dashboard() {
                             className="w-full flex-1"
                         >
                             <div className={cn(
-                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
-                                "bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.4)_0%,_rgba(0,0,0,0.05)_100%)] backdrop-blur-md border border-white/40 shadow-sm"
+                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "bg-black border border-white/10"
                             )}>
                                 {!isDataLoaded ? (
                                     <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
@@ -153,8 +153,8 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                         <div className="mt-auto w-full text-center">
-                                            <h3 className="text-slate-500 text-[10px] font-bold mb-1 tracking-wider uppercase opacity-90">{stat.title}</h3>
-                                            <p className="text-2xl sm:text-3xl font-black text-[#0a192f] tracking-tighter truncate leading-none">{stat.value}</p>
+                                            <h3 className="text-zinc-500 text-[10px] font-bold mb-1 tracking-wider uppercase">{stat.title}</h3>
+                                            <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter truncate leading-none">{stat.value}</p>
                                         </div>
                                         {/* Background Decoration */}
                                         <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:bg-blue-300/30 transition-colors duration-700 pointer-events-none" />
@@ -182,8 +182,8 @@ export default function Dashboard() {
                     transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
                     className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
                 >
-                    <div className="bg-white/40 backdrop-blur-md border border-white/50 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#000000]/5 rounded-bl-full blur-2xl pointer-events-none" />
+                    <div className="bg-black border border-white/10 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full blur-3xl pointer-events-none" />
 
                         <div className="w-full flex justify-between items-center mb-6 relative z-10 px-2">
                             <h2 className="text-lg font-black text-white tracking-tight">
@@ -252,11 +252,11 @@ export default function Dashboard() {
                             <div
                                 onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-[#193b82] to-[#0a192f] text-[#0a192f] border border-transparent shadow-lg group hover:scale-105",
-                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500 shadow-xl" : "hover:shadow-blue-500/20"
+                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-white text-black border border-transparent shadow-lg group hover:scale-105",
+                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500 shadow-xl" : "hover:bg-zinc-200"
                                 )}
                             >
-                                <span className="text-xs font-black tracking-wide bg-white/50 px-3 py-1 rounded-md drop-shadow-sm group-hover:bg-white/80 transition-colors">BIST 100 Endeksi</span>
+                                <span className="text-xs font-black tracking-wide">BIST 100 Endeksi</span>
                             </div>
                         </div>
                     </div>
