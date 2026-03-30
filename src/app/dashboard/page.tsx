@@ -63,7 +63,7 @@ export default function Dashboard() {
 
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#0a192f] w-full mx-auto">
-            <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20 bg-white">
+            <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
             {/* Loading Overlay */}
             <AnimatePresence>
                 {!isDataLoaded && (
@@ -83,12 +83,8 @@ export default function Dashboard() {
                                         <TrendingUp className="w-8 h-8 text-white animate-pulse" />
                                     </div>
                                 </div>
-                                {/* Header (Buzlu Cam - Yukarıdan Aşağı Aydınlanan) */}
-                                <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-gradient-to-b from-white/20 to-transparent backdrop-blur-xl flex-shrink-0 relative">
-                                    <h1 className="text-sm font-medium text-zinc-500 tracking-wider uppercase">FinAi Workspace</h1>
-                                </header>
                                 <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Senkronize Ediliyor</h2>
-                                <p className="text-slate-300 text-sm">Veriler çekiliyor...</p>
+                                <p className="text-slate-300 text-sm">{loadingMessages[loadingStep]}</p>
                             </div>
                         </div>
                     </motion.div>
@@ -122,7 +118,7 @@ export default function Dashboard() {
             {/* 12-Column BENTO GRID LAYOUT */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full auto-rows-max">
 
-                {/* SOL KOLON: YARDIMCI İSTATİSTİKLER (3 Kolon - Dikey Bento Kutuları) */}
+                {/* SOL KOLON */}
                 <div className="lg:col-span-3 flex flex-col gap-4">
                     {(!isDataLoaded ? Array(4).fill(null) : stats).map((stat, index) => (
                         <motion.div
@@ -133,8 +129,8 @@ export default function Dashboard() {
                             className="w-full flex-1"
                         >
                             <div className={cn(
-                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-300 h-full min-h-[140px] flex flex-col justify-center items-center text-center",
-                                "bg-black border border-white/10"
+                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "bg-white/40 backdrop-blur-md border border-white/50 shadow-sm"
                             )}>
                                 {!isDataLoaded ? (
                                     <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
@@ -153,11 +149,9 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                         <div className="mt-auto w-full text-center">
-                                            <h3 className="text-zinc-500 text-[10px] font-bold mb-1 tracking-wider uppercase">{stat.title}</h3>
-                                            <p className="text-2xl sm:text-3xl font-black text-white tracking-tighter truncate leading-none">{stat.value}</p>
+                                            <h3 className="text-slate-500 text-[10px] font-bold mb-1 tracking-wider uppercase opacity-90">{stat.title}</h3>
+                                            <p className="text-2xl sm:text-3xl font-black text-[#0a192f] tracking-tighter truncate leading-none">{stat.value}</p>
                                         </div>
-                                        {/* Background Decoration */}
-                                        <div className="absolute -bottom-8 -right-8 w-32 h-32 bg-white/20 rounded-full blur-2xl group-hover:bg-blue-300/30 transition-colors duration-700 pointer-events-none" />
                                     </div>
                                 )}
                             </div>
@@ -165,7 +159,7 @@ export default function Dashboard() {
                     ))}
                 </div>
 
-                {/* ORTA KOLON: PORTFÖY & AI WIDGET (6 Kolon - Merkez Hero Aracı) */}
+                {/* ORTA KOLON */}
                 <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -175,18 +169,18 @@ export default function Dashboard() {
                     <DashboardPortfolioWidget />
                 </motion.div>
 
-                {/* SAĞ KOLON: VARLIK LİSTESİ (3 Kolon - Dikey Sabit Liste) */}
+                {/* SAĞ KOLON */}
                 <motion.div 
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
                     className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
                 >
-                    <div className="bg-black border border-white/10 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-full blur-3xl pointer-events-none" />
+                    <div className="bg-white/40 backdrop-blur-md border border-white/50 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#000000]/5 rounded-bl-full blur-2xl pointer-events-none" />
 
                         <div className="w-full flex justify-between items-center mb-6 relative z-10 px-2">
-                            <h2 className="text-lg font-black text-white tracking-tight">
+                            <h2 className="text-lg font-black text-[#0a192f] tracking-tight">
                                 Varlıklarım
                             </h2>
                             <span className="text-[10px] font-bold text-[#0a192f] px-2 py-0.5 rounded bg-white/90 shadow-sm animate-pulse">Senkronize</span>
@@ -195,11 +189,11 @@ export default function Dashboard() {
                         <div className="space-y-3 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-400 relative z-10 w-full">
                             {!isDataLoaded ? (
                                 Array(5).fill(null).map((_, i) => (
-                                    <div key={i} className="h-14 w-full animate-pulse bg-white/5 rounded-xl mb-2" />
+                                    <div key={i} className="h-14 w-full animate-pulse bg-white/10 rounded-xl mb-2" />
                                 ))
                             ) : groupedAssets.length === 0 ? (
                                 <div className="text-center py-10">
-                                    <p className="text-sm text-slate-500 font-medium">Henüz varlık eklemediniz.</p>
+                                    <p className="text-sm text-slate-500 font-bold">Henüz varlık eklemediyseniz başlayın!</p>
                                 </div>
                             ) : (
                                 groupedAssets.map((asset: any, i: number) => {
@@ -211,10 +205,10 @@ export default function Dashboard() {
                                             key={i}
                                             onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                             className={cn(
-                                                "flex flex-col items-center justify-center p-3.5 rounded-xl transition-all cursor-pointer bg-white/40 backdrop-blur-md border border-white/50 shadow-sm text-center gap-2",
+                                                "flex flex-col items-center justify-center p-3.5 rounded-xl transition-all cursor-pointer bg-white/60 border border-white/50 shadow-sm text-center gap-2",
                                                 selectedAsset.includes(asset.symbol.replace('.IS', ''))
                                                     ? "bg-[#0a192f] border-[#0a192f] text-white shadow-lg scale-105"
-                                                    : "hover:bg-white/60 hover:-translate-y-1 text-[#0a192f]"
+                                                    : "hover:bg-white/80 hover:-translate-y-1 text-[#0a192f]"
                                             )}
                                         >
                                             <div className={cn(
@@ -238,12 +232,6 @@ export default function Dashboard() {
                                                 )}>
                                                     {change >= 0 ? '+' : ''}{change.toFixed(1)}%
                                                 </p>
-                                                <p className={cn(
-                                                    "text-[11px] font-bold",
-                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "text-slate-300" : "text-slate-600"
-                                                )}>
-                                                    {asset.quantity} Adet
-                                                </p>
                                             </div>
                                         </div>
                                     );
@@ -252,8 +240,8 @@ export default function Dashboard() {
                             <div
                                 onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-white text-black border border-transparent shadow-lg group hover:scale-105",
-                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-blue-500 shadow-xl" : "hover:bg-zinc-200"
+                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-slate-100 text-[#0a192f] border border-transparent shadow-sm",
+                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-[#0a192f] shadow-md" : "hover:bg-slate-200"
                                 )}
                             >
                                 <span className="text-xs font-black tracking-wide">BIST 100 Endeksi</span>
@@ -262,9 +250,7 @@ export default function Dashboard() {
                     </div>
                 </motion.div>
             </div>
+          </div>
         </div>
-    </div>
     );
 }
-
-
