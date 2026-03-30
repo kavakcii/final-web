@@ -23,6 +23,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
 import { UserProvider, useUser } from "@/components/providers/UserProvider";
 import { AuthComponent } from "@/components/ui/sign-up";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 function DashboardShell({
     children,
@@ -86,9 +87,7 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex relative selection:bg-emerald-500/30 overflow-hidden font-sans bg-white">
         <div className="min-h-screen flex relative selection:bg-white/20 overflow-hidden font-sans bg-black">
-            
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-black">
@@ -137,52 +136,52 @@ function DashboardShell({
                         {/* Header (Full Black) */}
                         <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-black flex-shrink-0 relative">
                             <h1 className="text-sm font-medium text-white/50 tracking-wider uppercase">FinAi Workspace</h1>
-                    <div className="flex items-center space-x-4">
-                        <div className="relative hidden sm:block">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                            <input
-                                type="text"
-                                placeholder="Komut veya varlık ara... (⌘K)"
-                                className="bg-zinc-900 ring-1 ring-white/5 rounded-lg py-1.5 pl-9 pr-4 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-white/20 w-64 text-zinc-100 placeholder:text-zinc-500 transition-all hover:bg-zinc-800/80"
-                            />
-                        </div>
-
-                        <div className="relative" ref={profileRef}>
-                            <button
-                                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                className="w-8 h-8 rounded-full bg-zinc-900 ring-1 ring-white/10 flex items-center justify-center text-zinc-400 font-bold hover:text-white hover:ring-white/20 transition-all focus:outline-none overflow-hidden"
-                            >
-                                {avatarUrl ? (
-                                    <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
-                                ) : (
-                                    userName ? userName.charAt(0).toUpperCase() : <User className="w-4 h-4" />
-                                )}
-                            </button>
-
-                            {isProfileOpen && (
-                                <div className="absolute right-0 mt-3 w-56 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                                    <div className="px-4 py-2 border-b border-white/5 mb-1">
-                                        <p className="text-xs font-semibold text-white">{userName || "Kullanıcı"}</p>
-                                    </div>
-                                    <div className="py-1">
-                                        <Link href="/dashboard/settings" className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors">
-                                            <Settings className="w-4 h-4" />
-                                            Kullanıcı Ayarları
-                                        </Link>
-                                    </div>
-                                    <div className="border-t border-white/5 mt-1 py-1">
-                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-medium text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors">
-                                            <LogOut className="w-4 h-4" />
-                                            Çıkış Yap
-                                        </button>
-                                    </div>
+                            <div className="flex items-center space-x-4">
+                                <div className="relative hidden sm:block">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                                    <input
+                                        type="text"
+                                        placeholder="Komut veya varlık ara... (⌘K)"
+                                        className="bg-zinc-900 ring-1 ring-white/5 rounded-lg py-1.5 pl-9 pr-4 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-white/20 w-64 text-zinc-100 placeholder:text-zinc-500 transition-all hover:bg-zinc-800/80"
+                                    />
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                </header>
 
-                <FinancialTicker />
+                                <div className="relative" ref={profileRef}>
+                                    <button
+                                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                        className="w-8 h-8 rounded-full bg-zinc-900 ring-1 ring-white/10 flex items-center justify-center text-zinc-400 font-bold hover:text-white hover:ring-white/20 transition-all focus:outline-none overflow-hidden"
+                                    >
+                                        {avatarUrl ? (
+                                            <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
+                                        ) : (
+                                            userName ? userName.charAt(0).toUpperCase() : <User className="w-4 h-4" />
+                                        )}
+                                    </button>
+
+                                    {isProfileOpen && (
+                                        <div className="absolute right-0 mt-3 w-56 bg-zinc-900 border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                            <div className="px-4 py-2 border-b border-white/5 mb-1">
+                                                <p className="text-xs font-semibold text-white">{userName || "Kullanıcı"}</p>
+                                            </div>
+                                            <div className="py-1">
+                                                <Link href="/dashboard/settings" className="w-full text-left px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors">
+                                                    <Settings className="w-4 h-4" />
+                                                    Kullanıcı Ayarları
+                                                </Link>
+                                            </div>
+                                            <div className="border-t border-white/5 mt-1 py-1">
+                                                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-medium text-rose-500 hover:bg-rose-500/10 flex items-center gap-2 transition-colors">
+                                                    <LogOut className="w-4 h-4" />
+                                                    Çıkış Yap
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </header>
+
+                        <FinancialTicker />
 
                         <div className="flex-1 overflow-auto bg-transparent p-0 relative custom-scrollbar">
                             {children}
@@ -193,8 +192,6 @@ function DashboardShell({
         </div>
     );
 }
-
-import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
