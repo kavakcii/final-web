@@ -82,33 +82,33 @@ export default function HomeClient() {
   ];
 
   return (
-    <div ref={containerRef} className="min-h-screen w-full bg-white text-slate-800 relative font-sans overflow-x-hidden">
+    <div ref={containerRef} className="min-h-screen w-full bg-[#030303] text-zinc-100 relative font-sans overflow-x-hidden selection:bg-blue-500/30">
       
       {/* 
-          DYNAMIC BACKGROUND
+          21st.dev DYNAMIC BACKGROUND (Dark & Deep)
       */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-white">
-        {/* Soft dot grid texture */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        {/* Dark Grid Texture */}
         <div
-          className="absolute inset-0 opacity-[0.3]"
+          className="absolute inset-0 opacity-[0.1]"
           style={{
-            backgroundImage: `radial-gradient(circle, #cbd5e1 1.5px, transparent 1px)`,
-            backgroundSize: '32px 32px',
+            backgroundImage: `radial-gradient(circle, #ffffff 1px, transparent 1px)`,
+            backgroundSize: '40px 40px',
           }}
         />
         
-        {/* Animated Orbs/Blobs */}
+        {/* Huge Animated Glows */}
         <motion.div 
           style={{ y: blobY1 }}
-          animate={{ x: [0, 50, -20, 0], scale: [1, 1.1, 0.9, 1] }} 
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-blue-100/50 mix-blend-multiply filter blur-[80px] opacity-70 will-change-transform"
+          animate={{ rotate: [0, 90, 180, 270, 360] }}
+          transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-20%] left-[-10%] w-[100vw] h-[100vw] rounded-full bg-[radial-gradient(circle,_rgba(37,99,235,0.15)_0%,_transparent_70%)] filter blur-[120px]"
         />
         <motion.div 
           style={{ y: blobY2 }}
-          animate={{ x: [0, -60, 30, 0], scale: [1, 1.2, 0.8, 1] }} 
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-[20%] -right-[10%] w-[40vw] h-[40vw] rounded-full bg-indigo-100/50 mix-blend-multiply filter blur-[80px] opacity-60 will-change-transform"
+          animate={{ opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-[radial-gradient(circle,_rgba(139,92,246,0.15)_0%,_transparent_70%)] filter blur-[100px]"
         />
       </div>
 
@@ -134,32 +134,27 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
                 className="text-[65px] sm:text-[80px] md:text-[120px] leading-[1.0] font-black tracking-tighter text-[#0a192f] py-4 relative flex justify-center items-center w-full mx-auto"
               >
-                {/* Glow behind the text: soft transition from inner white to outer navy */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[800px] sm:h-[800px] bg-[radial-gradient(circle,_rgba(255,255,255,1)_10%,_rgba(10,25,47,0.15)_50%,_transparent_80%)] -z-10 rounded-full blur-[20px] pointer-events-none" />
+                {/* Glow behind the text: soft transition from inner center light to dark edges */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] sm:w-[900px] sm:h-[900px] bg-[radial-gradient(circle,_rgba(255,255,255,0.1)_0%,_rgba(37,99,235,0.05)_40%,_transparent_70%)] -z-10 rounded-full blur-[40px] pointer-events-none" />
                 
-                <span className="relative inline-block z-10 mt-10 sm:mt-0">
-                  <span className="text-[#0a192f] px-2 font-black">
-                    FinAi
-                  </span>
-                  <svg className="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-[#0a192f] opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
-                    <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="6" fill="transparent" />
-                  </svg>
+                <span className="relative inline-block z-10 mt-10 sm:mt-0 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">
+                  FinAi
                 </span>
               </motion.h1>
 
-              {/* Badge moved here - Perfectly centered below FinAi */}
-              <div className="flex justify-center w-full sm:-mt-2">
+              {/* Badge - Electric Styling */}
+              <div className="flex justify-center w-full -mt-2">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5 }}
-                  className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-blue-50/80 border border-blue-200/50 backdrop-blur-md text-blue-700 text-xs sm:text-sm font-bold shadow-sm"
+                  className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-blue-400 text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(37,99,235,0.1)]"
                 >
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                   </span>
-                  Yatırımın Geleceğiyle Tanışın
+                  Finansal Zekanın Yeni Boyutu
                 </motion.div>
               </div>
 
@@ -168,9 +163,9 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="text-base sm:text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
+                className="text-base sm:text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto leading-relaxed font-medium mt-8 px-4 sm:px-0"
               >
-                Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#0a192f]">profesyonel bir güçle</b> yönetin.
+                Geleceğin yatırım dünyasına hoş geldiniz. Verilerle harmanlanmış <span className="text-white font-bold underline decoration-blue-500 decoration-2 underline-offset-4">yapay zeka gücünü</span> tek merkezden yönetmeye başlayın.
               </motion.p>
 
               {/* CTAs (Sadece Mobilde Görünür) */}
@@ -178,21 +173,18 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="flex flex-row gap-3 justify-center items-center pt-8 relative z-[9999] pointer-events-auto sm:hidden"
-                style={{ zIndex: 9999 }}
+                className="flex flex-row gap-4 justify-center items-center pt-12 relative z-[9999]"
               >
-                <div className="relative z-[9999] pointer-events-auto group">
-                    <a href="/login?tab=register" className="cursor-pointer flex items-center justify-center gap-1.5 px-6 py-3 bg-[#0a192f] hover:bg-[#0b2d82] text-white font-bold rounded-full shadow-lg transition-all text-sm tracking-wide border border-transparent" style={{ cursor: "pointer", pointerEvents: "auto" }}>
-                        Ücretsiz Dene
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                </div>
+                  <Link href="/login?tab=register" className="group relative px-8 py-4 bg-white text-black font-black rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                      <span className="relative z-10 flex items-center gap-2 text-lg">
+                          Ücretsiz Başla
+                          <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                      </span>
+                  </Link>
                 
-                <div className="relative z-[9999] pointer-events-auto">
-                    <a href="/login" className="cursor-pointer flex items-center justify-center px-6 py-3 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-full border border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-sm tracking-wide" style={{ cursor: "pointer", pointerEvents: "auto" }}>
-                        Giriş Yap
-                    </a>
-                </div>
+                  <Link href="/login" className="px-8 py-4 bg-white/5 backdrop-blur-xl text-white font-bold rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-lg tracking-wide">
+                      Giriş Yap
+                  </Link>
               </motion.div>
             </div>
           </div>
