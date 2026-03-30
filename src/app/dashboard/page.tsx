@@ -83,6 +83,10 @@ export default function Dashboard() {
                                         <TrendingUp className="w-8 h-8 text-white animate-pulse" />
                                     </div>
                                 </div>
+                                {/* Header (Buzlu Cam - Yukarıdan Aşağı Aydınlanan) */}
+                                <header className="h-16 border-b border-white/10 flex items-center justify-between px-6 sticky top-0 z-40 bg-gradient-to-b from-white/20 to-transparent backdrop-blur-xl flex-shrink-0 relative">
+                                    <h1 className="text-sm font-medium text-zinc-500 tracking-wider uppercase">FinAi Workspace</h1>
+                                </header>
                                 <h2 className="text-xl font-bold text-white mb-2 tracking-tight">Senkronize Ediliyor</h2>
                                 <p className="text-slate-300 text-sm">Veriler çekiliyor...</p>
                             </div>
@@ -129,8 +133,8 @@ export default function Dashboard() {
                             className="w-full flex-1"
                         >
                             <div className={cn(
-                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
-                                "bg-white/40 backdrop-blur-md border border-white/50 shadow-sm"
+                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "bg-[radial-gradient(ellipse_at_center,_rgba(255,255,255,0.4)_0%,_rgba(0,0,0,0.05)_100%)] backdrop-blur-md border border-white/40 shadow-sm"
                             )}>
                                 {!isDataLoaded ? (
                                     <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">

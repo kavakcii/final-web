@@ -144,8 +144,8 @@ export function DashboardPortfolioWidget() {
 
     if (recommendation) {
         return (
-            <div className="w-full h-full relative bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 hover:shadow-[0_20px_60px_rgba(0,0,0,0.4)] flex flex-col items-center text-center">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="w-full h-full relative bg-slate-400/10 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 hover:shadow-[0_20px_60px_rgba(0,0,0,0.1)] flex flex-col items-center text-center border border-white/20">
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-transparent pointer-events-none" />
                 <div className="relative flex flex-col items-center justify-center gap-8 p-10 z-10 w-full h-full">
 
                 <div className="w-full h-[300px] relative z-10 mt-6 group-hover:scale-[1.03] transition-transform duration-700 ease-out">
@@ -247,10 +247,8 @@ export function DashboardPortfolioWidget() {
     }
 
     return (
-        <div className="w-full h-full relative bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 flex flex-col justify-center min-h-[600px] text-center">
-            
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/15 rounded-full blur-[130px] pointer-events-none group-hover:scale-110 transition-transform duration-1000" />
-            
+        <div className="w-full h-full relative bg-slate-400/10 backdrop-blur-3xl rounded-[1.5rem] overflow-hidden group shadow-2xl transition-all duration-700 flex flex-col justify-center min-h-[600px] text-center border border-white/20">
+            <div className="absolute inset-0 bg-gradient-to-tr from-gray-500/5 to-transparent pointer-events-none" />
             <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
 
             <div className="relative z-10 max-w-2xl mx-auto mt-4 px-8 py-14 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_35%,_rgba(10,10,20,0.9)_72%,_#000000_100%)] rounded-[2rem] border border-black/20 shadow-2xl group transition-all duration-500 hover:scale-[1.02] ring-1 ring-black/10">
