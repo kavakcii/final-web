@@ -86,17 +86,16 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex text-zinc-100 relative selection:bg-emerald-500/30 overflow-hidden font-sans bg-[#09090b]">
-            {/* 21st.dev Aesthetic Backgrounds: Dot matrix or subtle Noise */}
-            <div className="absolute inset-0 z-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-            <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-emerald-500 opacity-[0.05] blur-[100px]" />
+        <div className="min-h-screen flex relative selection:bg-emerald-500/30 overflow-hidden font-sans bg-white">
+            {/* Background pattern removed as requested */}
+            <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-[#000000] opacity-[0.03] blur-[120px]" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar (Radial Gradient White to Black) */}
-                    <aside className="w-20 hover:w-64 border-r border-black/10 bg-[radial-gradient(ellipse_at_top_left,_white_0%,_rgba(200,210,255,0.5)_30%,_rgba(20,20,30,0.88)_65%,_#000000_100%)] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[5px_0_30px_rgba(0,0,0,0.18)]">
+                    {/* Sidebar (Radial Gradient Black to White - REVERSED) */}
+                    <aside className="w-20 hover:w-64 border-r border-black/5 bg-[radial-gradient(ellipse_at_left,_white_0%,_rgba(230,230,240,0.8)_30%,_rgba(20,20,30,0.95)_75%,_#000000_100%)] hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative shadow-[5px_0_30px_rgba(0,0,0,0.05)]">
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-[#0a192f]/10">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">

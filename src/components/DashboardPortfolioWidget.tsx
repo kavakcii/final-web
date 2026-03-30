@@ -176,15 +176,15 @@ export function DashboardPortfolioWidget() {
                         <span className="text-[#0a192f] text-[10px] font-bold uppercase tracking-widest mt-1 opacity-70">Önerilen</span>
                         <span className="text-[#0a192f] font-black text-sm text-center px-4 leading-tight">{recommendation.title}</span>
                     </div>
-                    <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
+                    <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4 text-black">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_40%,_rgba(10,10,20,0.9)_80%,_#000000_100%)] rounded-xl shadow-xl ring-1 ring-black/20 min-w-[80px] group/box hover:scale-105 transition-transform duration-300">
+                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-white/40 backdrop-blur-md border border-white/50 rounded-xl shadow-xl min-w-[80px] group/box hover:scale-105 transition-transform duration-300">
                                 <div className="w-3 h-3 rounded-full shadow-md" style={{ backgroundColor: item.color }}></div>
-                                <span className="text-[10px] text-white group-hover/box:text-white font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 drop-shadow-md">
+                                <span className="text-[10px] text-black font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 border-none shadow-none">
                                     {item.name} 
                                     <span className="font-black text-lg leading-none text-black mt-0.5">{`%${item.value}`}</span>
                                     {item.amountStr && (
-                                        <span className="text-black/80 font-bold block mt-0.5">({item.amountStr})</span>
+                                        <span className="text-black/60 font-bold block mt-0.5">({item.amountStr})</span>
                                     )}
                                 </span>
                             </div>
@@ -208,11 +208,11 @@ export function DashboardPortfolioWidget() {
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-6 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,_white_0%,_rgba(200,210,255,0.5)_35%,_rgba(10,10,20,0.9)_72%,_#000000_100%)] rounded-2xl mb-8 text-sm leading-relaxed text-center shadow-2xl ring-1 ring-black/10 w-full max-w-lg mx-auto">
+                    <div className="p-6 bg-white/40 backdrop-blur-md border border-white/50 rounded-2xl mb-8 text-sm leading-relaxed text-center shadow-2xl w-full max-w-lg mx-auto">
                         <strong className="text-black block mb-3 font-black text-lg">Neden Bu Optimizasyon?</strong>
-                        <p className="text-left font-medium text-white px-2 mt-2 drop-shadow-sm">
+                        <p className="text-left font-medium text-black px-2 mt-2">
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-white font-black bg-white/20 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
+                            i % 2 === 1 ? <span key={i} className="text-black font-black bg-white/30 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
                         )}
                         </p>
 
@@ -276,17 +276,17 @@ export function DashboardPortfolioWidget() {
                     <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,transparent_0%,rgba(255,255,255,0.2)_50%,transparent_100%)] translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 delay-100" />
                 </button>
 
-                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-white font-black bg-[radial-gradient(ellipse_at_center,_rgba(30,30,40,0.9)_0%,_#000000_100%)] py-4 px-8 rounded-full border border-white/20 shadow-md">
+                <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-black font-black bg-white/40 backdrop-blur-md py-4 px-8 rounded-full border border-white/50 shadow-md">
                     <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm"></span>
                         Bilimsel Analiz
                     </span>
                     <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.8)]"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-sm"></span>
                         Kişiselleştirilmiş
                     </span>
                     <span className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-400 shadow-[0_0_10px_rgba(251,113,133,0.8)]"></span>
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-sm"></span>
                         Ücretsiz Altyapı
                     </span>
                 </div>
