@@ -62,7 +62,11 @@ export default function Dashboard() {
     }, [isDataLoaded]);
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#0a192f] w-full mx-auto">
+        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-[#050a18] text-white w-full mx-auto relative overflow-hidden">
+            {/* Background Glows */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-blue-500/5 blur-[100px] pointer-events-none" />
+
             <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
             {/* Loading Overlay */}
             <AnimatePresence>
@@ -93,7 +97,7 @@ export default function Dashboard() {
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
                 <div>
-                    <h1 className="text-3xl font-black text-[#0a192f] flex items-center gap-3 tracking-tight">
+                    <h1 className="text-4xl font-black text-white flex items-center gap-3 tracking-tighter">
                         Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
                         <motion.span
                             animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }}
@@ -102,12 +106,12 @@ export default function Dashboard() {
                             👋
                         </motion.span>
                     </h1>
-                    <p className="text-slate-500 mt-2 text-sm font-medium">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                    <p className="text-slate-400 mt-2 text-sm font-bold tracking-wide uppercase opacity-70">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <a
                         href="/dashboard/portfolio/correlation"
-                        className="flex items-center gap-2 px-4 py-2 bg-[#0a192f] rounded-xl hover:bg-blue-900 transition-colors text-white text-sm font-bold shadow-md"
+                        className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 rounded-xl hover:bg-blue-500 transition-all text-white text-xs font-black uppercase tracking-widest shadow-[0_0_20px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95"
                     >
                         <Activity className="w-4 h-4" />
                         Korelasyon Analizi
@@ -128,9 +132,9 @@ export default function Dashboard() {
                             transition={{ delay: index * 0.1, type: "spring", stiffness: 200, damping: 20 }}
                             className="w-full flex-1"
                         >
-                            <div className={cn(
-                                "rounded-2xl p-5 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
-                                "bg-white/40 backdrop-blur-md border border-white/50 shadow-sm"
+                             <div className={cn(
+                                "rounded-[2rem] p-6 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "glass-widget"
                             )}>
                                 {!isDataLoaded ? (
                                     <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
@@ -149,8 +153,8 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                         <div className="mt-auto w-full text-center">
-                                            <h3 className="text-slate-500 text-[10px] font-bold mb-1 tracking-wider uppercase opacity-90">{stat.title}</h3>
-                                            <p className="text-2xl sm:text-3xl font-black text-[#0a192f] tracking-tighter truncate leading-none">{stat.value}</p>
+                                            <h3 className="text-slate-500 text-[10px] font-black mb-1 tracking-[0.2em] uppercase opacity-70">{stat.title}</h3>
+                                            <p className="text-3xl sm:text-4xl font-black text-white tracking-tighter truncate leading-none">{stat.value}</p>
                                         </div>
                                     </div>
                                 )}
@@ -176,14 +180,14 @@ export default function Dashboard() {
                     transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
                     className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
                 >
-                    <div className="bg-white/40 backdrop-blur-md border border-white/50 shadow-2xl rounded-2xl p-5 flex flex-col relative overflow-hidden group h-full items-center text-center">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#000000]/5 rounded-bl-full blur-2xl pointer-events-none" />
+                    <div className="glass-widget shadow-2xl rounded-[2rem] p-6 flex flex-col relative overflow-hidden group h-full items-center text-center backdrop-blur-3xl">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full blur-3xl pointer-events-none" />
 
-                        <div className="w-full flex justify-between items-center mb-6 relative z-10 px-2">
-                            <h2 className="text-lg font-black text-[#0a192f] tracking-tight">
+                        <div className="w-full flex justify-between items-center mb-6 relative z-10 px-2 uppercase">
+                            <h2 className="text-sm font-black text-white tracking-[0.2em]">
                                 Varlıklarım
                             </h2>
-                            <span className="text-[10px] font-bold text-[#0a192f] px-2 py-0.5 rounded bg-white/90 shadow-sm animate-pulse">Senkronize</span>
+                            <span className="text-[9px] font-black text-blue-400 px-2.5 py-1 rounded bg-blue-500/10 border border-blue-500/20 animate-pulse">Senkronize</span>
                         </div>
                         
                         <div className="space-y-3 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-400 relative z-10 w-full">
@@ -205,10 +209,10 @@ export default function Dashboard() {
                                             key={i}
                                             onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                             className={cn(
-                                                "flex flex-col items-center justify-center p-3.5 rounded-xl transition-all cursor-pointer bg-white/60 border border-white/50 shadow-sm text-center gap-2",
+                                                "flex flex-col items-center justify-center p-4 rounded-2xl transition-all cursor-pointer bg-white/5 border border-white/10 shadow-sm text-center gap-2",
                                                 selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                    ? "bg-[#0a192f] border-[#0a192f] text-white shadow-lg scale-105"
-                                                    : "hover:bg-white/80 hover:-translate-y-1 text-[#0a192f]"
+                                                    ? "bg-blue-600 border-blue-400 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] scale-105"
+                                                    : "hover:bg-white/10 hover:-translate-y-1 text-slate-300"
                                             )}
                                         >
                                             <div className={cn(

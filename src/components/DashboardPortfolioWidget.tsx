@@ -130,16 +130,16 @@ export function DashboardPortfolioWidget() {
 
     if (isLoading) {
         return (
-            <div className="w-full h-full bg-white/40 backdrop-blur-md rounded-[1.5rem] p-8 flex items-center justify-center min-h-[600px] border border-white/50">
-                <div className="w-10 h-10 border-4 border-[#0a192f]/10 border-t-[#0a192f] rounded-full animate-spin"></div>
+            <div className="w-full h-full bg-[#050a18]/40 backdrop-blur-3xl rounded-[2rem] p-8 flex items-center justify-center min-h-[600px] border border-white/10">
+                <div className="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
             </div>
         );
     }
 
     if (recommendation) {
         return (
-            <div className="w-full h-full relative bg-white/40 backdrop-blur-md rounded-[1.5rem] overflow-hidden group border border-white/50 shadow-sm flex flex-col items-center text-center">
-                <div className="absolute top-0 left-0 w-32 h-32 bg-[#000000]/5 rounded-br-full blur-2xl pointer-events-none" />
+            <div className="w-full h-full relative glass-widget rounded-[2rem] overflow-hidden group flex flex-col items-center text-center">
+                <div className="absolute top-0 left-0 w-32 h-32 bg-blue-600/10 rounded-br-full blur-3xl pointer-events-none" />
                 
                 <div className="relative flex flex-col items-center justify-center gap-8 p-10 z-10 w-full h-full">
 
@@ -161,25 +161,25 @@ export function DashboardPortfolioWidget() {
                                 ))}
                             </Pie>
                                 <Tooltip
-                                contentStyle={{ backgroundColor: '#ffffff', borderColor: 'transparent', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)' }}
-                                itemStyle={{ color: '#0a192f', fontWeight: 'bold' }}
+                                contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
+                                itemStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                                 formatter={(value: any) => [`%${value}`, 'Oran']}
                             />
                         </RechartsPie>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Önerilen</span>
-                        <span className="text-[#0a192f] font-black text-sm text-center px-4 leading-tight">{recommendation.title}</span>
+                        <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mt-1 opacity-70">Önerilen</span>
+                        <span className="text-white font-black text-sm text-center px-4 leading-tight tracking-tighter uppercase">{recommendation.title}</span>
                     </div>
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-sm min-w-[80px] group/box hover:scale-105 transition-transform duration-300">
-                                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1">
+                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl shadow-lg min-w-[80px] group/box hover:scale-105 transition-all duration-300">
+                                <div className="w-3 h-3 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)]" style={{ backgroundColor: item.color }}></div>
+                                <span className="text-[10px] text-slate-400 font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 transition-colors group-hover/box:text-white">
                                     {item.name} 
-                                    <span className="font-black text-lg leading-none text-[#0a192f] mt-0.5">{`%${item.value}`}</span>
+                                    <span className="font-black text-lg leading-none text-white mt-0.5">{`%${item.value}`}</span>
                                     {item.amountStr && (
-                                        <span className="text-slate-400 font-bold block mt-0.5">({item.amountStr})</span>
+                                        <span className="text-slate-500 font-bold block mt-0.5">({item.amountStr})</span>
                                     )}
                                 </span>
                             </div>
@@ -189,23 +189,24 @@ export function DashboardPortfolioWidget() {
 
                 <div className="w-full relative z-10 text-center flex flex-col items-center justify-center max-w-2xl mx-auto">
                     <div className="flex items-center justify-center gap-2 mb-4">
-                        <div className="p-2 bg-[#0a192f]/5 rounded-xl text-[#0a192f]">
+                        <div className="p-2 bg-blue-500/10 rounded-xl text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
                             <PieChart className="w-5 h-5" />
                         </div>
-                        <span className="text-[#0a192f] font-black text-sm tracking-wide">Güçlü AI Analizi</span>
-                        <div className="text-[11px] font-black text-white bg-[#0a192f] px-3 py-1 rounded-full ml-2 uppercase tracking-widest">
+                        <span className="text-slate-400 font-black text-[10px] tracking-[0.2em] uppercase">Güçlü AI Analizi</span>
+                        <div className="text-[10px] font-black text-white bg-blue-600 px-3 py-1 rounded-full ml-2 uppercase tracking-widest shadow-[0_0_20px_rgba(37,99,235,0.3)]">
                             {recommendation.persona}
                         </div>
                     </div>
 
-                    <h3 className="text-4xl font-black text-[#0a192f] mb-4 tracking-tighter">{recommendation.title}</h3>
-                    <p className="text-slate-500 text-sm mb-6 leading-relaxed max-w-xl text-center font-medium">
+                    <h3 className="text-4xl font-black text-white mb-4 tracking-tighter uppercase">{recommendation.title}</h3>
+                    <p className="text-slate-400 text-sm mb-6 leading-relaxed max-w-xl text-center font-bold opacity-80">
                         {recommendation.desc}
                     </p>
 
-                    <div className="p-6 bg-white border border-[#0a192f]/10 rounded-2xl mb-8 text-sm leading-relaxed text-center shadow-sm w-full max-w-lg mx-auto">
-                        <strong className="text-[#0a192f] block mb-3 font-black text-lg underline decoration-[#0a192f]/20 underline-offset-8">Neden Bu Optimizasyon?</strong>
-                        <p className="text-left font-medium text-slate-600 px-2 mt-2">
+                    <div className="p-8 bg-white/5 border border-white/10 rounded-[2rem] mb-8 text-sm leading-relaxed text-center shadow-2xl w-full max-w-lg mx-auto relative overflow-hidden group/card">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-blue-600 to-transparent opacity-50" />
+                        <strong className="text-white block mb-4 font-black text-xl tracking-tight uppercase">Neden Bu Optimizasyon?</strong>
+                        <p className="text-left font-bold text-slate-400 px-2 mt-2 leading-relaxed">
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
                             i % 2 === 1 ? <span key={i} className="text-[#0a192f] font-black bg-[#0a192f]/5 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
                         )}
@@ -229,7 +230,7 @@ export function DashboardPortfolioWidget() {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
                             }}
-                            className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#0a192f] hover:bg-[#0b2d82] text-white rounded-xl font-black text-sm transition-all duration-300 shadow-md group/btn"
+                            className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_30px_rgba(37,99,235,0.4)] group/btn hover:scale-105"
                         >
                             <RotateCcw className="w-5 h-5 group-hover/btn:-rotate-180 transition-transform duration-500" />
                             Yeni Test Yap
@@ -242,23 +243,22 @@ export function DashboardPortfolioWidget() {
     }
 
     return (
-        <div className="w-full h-full relative bg-white/40 backdrop-blur-md rounded-[1.5rem] overflow-hidden group border border-white/50 shadow-sm flex flex-col justify-center min-h-[600px] text-center">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#0a192f]/5 rounded-bl-full blur-3xl pointer-events-none" />
+        <div className="w-full h-full relative glass-widget rounded-[2rem] overflow-hidden group flex flex-col justify-center min-h-[600px] text-center backdrop-blur-3xl">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-bl-full blur-[120px] pointer-events-none" />
             <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
-                <div className="w-20 h-20 bg-[#0a192f] rounded-[2rem] flex items-center justify-center mb-8 shadow-[0_20px_50px_rgba(10,25,47,0.3)] animate-bounce">
-                    <Wallet className="w-10 h-10 text-white" />
+                <div className="w-24 h-24 bg-blue-600 rounded-[2.5rem] flex items-center justify-center mb-10 shadow-[0_20px_60px_rgba(37,99,235,0.5)] animate-bounce border border-blue-400/30">
+                    <Wallet className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-5xl font-black text-[#0a192f] mb-6 tracking-tighter leading-none">AI Portföyünüzü<br/>Hazırlayalım mı?</h3>
-                <p className="text-slate-500 text-lg mb-10 max-w-md font-medium">
+                <h3 className="text-6xl font-black text-white mb-8 tracking-tighter leading-[0.9] uppercase">AI Portföyünüzü<br/>Hazırlayalım mı?</h3>
+                <p className="text-slate-400 text-lg mb-12 max-w-md font-bold opacity-80 leading-relaxed uppercase tracking-wide">
                     Risk profilinize uygun, yapay zeka tarafından optimize edilmiş stratejinizi saniyeler içinde oluşturun.
                 </p>
                 <Link
                     href="/dashboard/analysis"
-                    className="group relative inline-flex items-center gap-3 px-10 py-5 bg-[#0a192f] hover:bg-[#0b2d82] text-white rounded-[1.2rem] font-black text-lg transition-all duration-300 shadow-2xl hover:scale-105 active:scale-95"
+                    className="group relative inline-flex items-center gap-4 px-12 py-6 bg-white text-black rounded-[1.5rem] font-black text-sm uppercase tracking-[0.2em] transition-all duration-300 shadow-[0_20px_50px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95"
                 >
                     Hemen Analize Başla
                     <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                    <div className="absolute inset-0 rounded-[1.2rem] bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
                 </Link>
             </div>
         </div>
