@@ -87,15 +87,15 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex relative selection:bg-emerald-500/30 overflow-hidden font-sans bg-white">
-            <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-[#000000] opacity-[0.03] blur-[120px]" />
+        <div className="min-h-screen flex relative selection:bg-blue-500/30 overflow-hidden font-sans bg-[#050a18]">
+            <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[600px] w-[600px] rounded-full bg-blue-600/5 blur-[120px] pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex overflow-hidden bg-transparent">
                     
-                    {/* Sidebar (Premium Navy Glass) */}
-                    <aside className="w-20 hover:w-64 border-r border-white/10 bg-[#050a18]/80 backdrop-blur-3xl hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
+                    {/* Sidebar (Premium Navy Frost) */}
+                    <aside className="w-20 hover:w-64 border-r border-white/5 menu-frost hidden md:flex flex-col transition-all duration-300 ease-in-out group z-50 shrink-0 h-full relative">
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10">
                             <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
                                 <div className="flex-shrink-0">
