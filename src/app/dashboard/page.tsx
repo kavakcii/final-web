@@ -97,7 +97,7 @@ export default function Dashboard() {
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
                 <div>
-                    <h1 className="text-4xl font-semibold text-white flex items-center gap-3 tracking-tight">
+                    <h1 className="text-4xl font-semibold text-[#0a1e3d] flex items-center gap-3 tracking-tight">
                         Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
                         <motion.span
                             animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }}
@@ -106,12 +106,12 @@ export default function Dashboard() {
                             👋
                         </motion.span>
                     </h1>
-                    <p className="text-slate-400 mt-2 text-sm font-medium tracking-wide opacity-80">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                    <p className="text-slate-600 mt-2 text-sm font-medium tracking-widest uppercase opacity-80">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <a
                         href="/dashboard/portfolio/correlation"
-                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 rounded-2xl hover:bg-blue-500 transition-all text-white text-xs font-semibold tracking-wider shadow-lg hover:shadow-blue-600/20 active:scale-95"
+                        className="flex items-center gap-2 px-6 py-3 bg-[#1e50ff] rounded-2xl hover:bg-blue-600 transition-all text-white text-[11px] font-semibold tracking-widest uppercase shadow-xl hover:shadow-blue-600/20 active:scale-95"
                     >
                         <Activity className="w-4 h-4" />
                         Korelasyon Analizi
@@ -133,7 +133,7 @@ export default function Dashboard() {
                             className="w-full flex-1"
                         >
                              <div className={cn(
-                                "rounded-[2rem] p-6 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] h-full min-h-[140px] flex flex-col justify-center items-center text-center",
+                                "rounded-[2.5rem] p-8 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] h-full min-h-[160px] flex flex-col justify-center items-center text-center",
                                 "glass-widget"
                             )}>
                                 {!isDataLoaded ? (
@@ -153,8 +153,8 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                         <div className="mt-auto w-full text-center">
-                                            <h3 className="text-slate-500 text-[10px] font-semibold mb-2 tracking-[0.2em] uppercase opacity-60">{stat.title}</h3>
-                                            <p className="text-3xl sm:text-4xl font-semibold text-white tracking-tight truncate leading-none">{stat.value}</p>
+                                            <h3 className="text-slate-500 text-[10px] font-semibold mb-2 tracking-[0.2em] uppercase opacity-70">{stat.title}</h3>
+                                            <p className="text-3xl sm:text-4xl font-semibold text-[#0a1e3d] tracking-tight truncate leading-none">{stat.value}</p>
                                         </div>
                                     </div>
                                 )}
@@ -181,13 +181,13 @@ export default function Dashboard() {
                     className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
                 >
                     <div className="glass-widget shadow-2xl rounded-[2.5rem] p-8 flex flex-col relative overflow-hidden group h-full items-center text-center">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-bl-full blur-[80px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
+                        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-bl-full blur-[80px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
 
                         <div className="w-full flex justify-between items-center mb-8 relative z-10">
-                            <h2 className="text-xs font-semibold text-white tracking-[0.2em] uppercase opacity-80">
+                            <h2 className="text-xs font-semibold text-[#0a1e3d] tracking-[0.3em] uppercase opacity-60">
                                 Varlıklarım
                             </h2>
-                            <span className="text-[9px] font-semibold text-blue-400 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 animate-pulse">Senkronize</span>
+                            <span className="text-[9px] font-semibold text-blue-600 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 animate-pulse">Senkronize</span>
                         </div>
                         
                         <div className="space-y-3 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-400 relative z-10 w-full">
@@ -209,10 +209,10 @@ export default function Dashboard() {
                                             key={i}
                                             onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                             className={cn(
-                                                "flex flex-col items-center justify-center p-5 rounded-[2rem] transition-all cursor-pointer bg-white/5 border border-white/10 text-center gap-3",
+                                                "flex flex-col items-center justify-center p-6 rounded-[2.2rem] transition-all cursor-pointer bg-white/40 border border-white/60 text-center gap-3",
                                                 selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                    ? "bg-blue-600/90 border-blue-400/50 text-white shadow-[0_15px_40px_-10px_rgba(37,99,235,0.4)] scale-[1.03]"
-                                                    : "hover:bg-white/10 hover:-translate-y-1 text-slate-300"
+                                                    ? "bg-[#1e50ff] border-blue-400 text-white shadow-[0_15px_40px_-10px_rgba(37,99,235,0.4)] scale-[1.03]"
+                                                    : "hover:bg-white/60 hover:-translate-y-1 text-[#0a1e3d]"
                                             )}
                                         >
                                             <div className={cn(
