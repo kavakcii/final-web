@@ -36,7 +36,7 @@ export default function HomeClient() {
       quote: "Portföyümdeki riskleri daha iyi yönetiyorum. Uygulama çok yönlendirici ve anlaşılır.",
       tags: [{ text: 'Premium', type: 'featured' as const }, { text: 'BIST', type: 'default' as const }],
       stats: [{ icon: TrendingUp, text: 'Karlı' }],
-      avatarGradient: 'linear-gradient(135deg, #0a192f, #1e3a8a)',
+      avatarGradient: 'linear-gradient(135deg, #00008B, #1e3a8a)',
     },
     {
       id: 2,
@@ -132,16 +132,16 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-                className="text-[65px] sm:text-[80px] md:text-[120px] leading-[1.0] font-black tracking-tighter text-[#0a192f] py-4 relative flex justify-center items-center w-full mx-auto"
+                className="text-[65px] sm:text-[80px] md:text-[120px] leading-[1.0] font-black tracking-tighter text-[#00008B] py-4 relative flex justify-center items-center w-full mx-auto"
               >
                 {/* Glow behind the text */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[800px] sm:h-[800px] bg-[radial-gradient(circle,_rgba(255,255,255,1)_10%,_rgba(10,25,47,0.15)_50%,_transparent_80%)] -z-10 rounded-full blur-[20px] pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[800px] sm:h-[800px] bg-[radial-gradient(circle,_rgba(255,255,255,1)_10%,_rgba(0,0,139,0.15)_50%,_transparent_80%)] -z-10 rounded-full blur-[20px] pointer-events-none" />
                 
                 <span className="relative inline-block z-10 mt-10 sm:mt-0">
-                  <span className="text-[#0a192f] px-2 font-black">
+                  <span className="text-[#00008B] px-2 font-black">
                     FinAi
                   </span>
-                  <svg className="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-[#0a192f] opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
+                  <svg className="absolute w-full h-2 sm:h-3 -bottom-1 left-0 text-[#00008B] opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
                     <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="6" fill="transparent" />
                   </svg>
                 </span>
@@ -170,7 +170,7 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="text-base sm:text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
               >
-                Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#0a192f]">profesyonel bir güçle</b> yönetin.
+                Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#00008B]">profesyonel bir güçle</b> yönetin.
               </motion.p>
 
               {/* CTAs */}
@@ -180,11 +180,11 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.3 }}
                 className="flex flex-row gap-3 justify-center items-center pt-8"
               >
-                  <Link href="/login?tab=register" className="flex items-center justify-center gap-1.5 px-6 py-3 bg-[#0a192f] hover:bg-[#0b2d82] text-white font-bold rounded-full shadow-lg transition-all text-sm tracking-wide">
+                  <Link href="/login?tab=register" className="flex items-center justify-center gap-1.5 px-6 py-3 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-full shadow-lg transition-all text-sm tracking-wide">
                       Ücretsiz Dene
                       <ArrowRight className="w-4 h-4" />
                   </Link>
-                  <Link href="/login" className="flex items-center justify-center px-6 py-3 bg-white hover:bg-slate-50 text-[#0a192f] font-bold rounded-full border border-slate-200 hover:border-[#0a192f] shadow-sm transition-all text-sm tracking-wide">
+                  <Link href="/login" className="flex items-center justify-center px-6 py-3 bg-white hover:bg-slate-50 text-[#00008B] font-bold rounded-full border border-slate-200 hover:border-[#00008B] shadow-sm transition-all text-sm tracking-wide">
                       Giriş Yap
                   </Link>
               </motion.div>
