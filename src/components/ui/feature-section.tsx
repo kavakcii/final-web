@@ -52,7 +52,7 @@ export function FeatureSteps({
   return (
     <div className={cn("py-12 md:py-16 bg-white", className)}>
       <div className="max-w-7xl mx-auto w-full px-6">
-        <h2 className="text-3xl md:text-5xl lg:text-5xl font-black mb-16 text-center text-[#0a192f] tracking-tight">
+        <h2 className="text-3xl md:text-5xl lg:text-5xl font-black mb-16 text-center text-[#00008B] tracking-tight">
           {title}
         </h2>
 
@@ -77,7 +77,7 @@ export function FeatureSteps({
                   className={cn(
                     "w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center border-2 transition-colors duration-300",
                     index === currentFeature
-                      ? "bg-[#0a192f] border-[#0a192f] text-white scale-110 shadow-lg shadow-[#0a192f]/20"
+                      ? "bg-[#00008B] border-[#00008B] text-white scale-110 shadow-lg shadow-[#00008B]/20"
                       : "bg-slate-50 border-slate-200 text-slate-400",
                   )}
                 >
@@ -92,7 +92,7 @@ export function FeatureSteps({
                 <div className="flex-1 mt-1">
                   <h3 className={cn(
                       "text-2xl font-bold transition-colors duration-300 pointer-events-none",
-                      index === currentFeature ? "text-[#0a192f]" : "text-slate-600"
+                      index === currentFeature ? "text-[#00008B]" : "text-slate-600"
                   )}>
                     {feature.title || feature.step}
                   </h3>
@@ -112,7 +112,7 @@ export function FeatureSteps({
             )}
           >
             {/* Direkt Geçiş (Anlık Kesme) - Sıfır Beyazlama Garantisi! */}
-            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#0a192f]">
+            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#00008B]">
               {features.map((feature, index) => (
                 <Image
                   key={index}
