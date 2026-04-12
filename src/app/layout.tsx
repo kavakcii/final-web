@@ -28,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`dark ${inter.variable}`}>
-      <body className="antialiased font-sans bg-[#020617] text-slate-200 min-h-screen">
+      <body className={`antialiased ${inter.className} bg-[#020617] text-slate-200 min-h-screen`}>
         <UserProvider>
           {children}
         </UserProvider>
