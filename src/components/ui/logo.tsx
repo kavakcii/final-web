@@ -16,7 +16,7 @@ export const FinAiLogo = ({ className, showText = true }: { className?: string, 
 
     {/* Yalnızca İsim: FinAi */}
     {showText && (
-      <span className="text-[#0a192f] dark:text-white font-[800] text-3xl tracking-tight leading-none" style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
+      <span className="text-[#00008B] font-[800] text-3xl tracking-tight leading-none" style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
         FinAi
       </span>
     )}
