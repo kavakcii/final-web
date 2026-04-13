@@ -178,7 +178,7 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3 }}
-                className="flex flex-row gap-3 justify-center items-center pt-8"
+                className="flex md:hidden flex-row gap-3 justify-center items-center pt-8"
               >
                   <Link href="/login?tab=register" className="flex items-center justify-center gap-1.5 px-6 py-3 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-full shadow-lg transition-all text-sm tracking-wide">
                       Ücretsiz Dene
