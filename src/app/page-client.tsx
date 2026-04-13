@@ -33,9 +33,9 @@ export default function HomeClient() {
       initials: 'AY',
       name: 'Ahmet Yılmaz',
       role: '',
-      quote: "Portföyümdeki riskleri daha iyi yönetiyorum. Uygulama çok yönlendirici ve anlaşılır.",
-      tags: [{ text: 'Premium', type: 'featured' as const }, { text: 'BIST', type: 'default' as const }],
-      stats: [{ icon: TrendingUp, text: 'Karlı' }],
+      quote: "Hisse ve fonlarımı tek ekrandan takip ediyorum. Portföy yönetimi artık çok daha kolay.",
+      tags: [{ text: 'BIST', type: 'featured' as const }, { text: 'Portföy', type: 'default' as const }],
+      stats: [{ icon: TrendingUp, text: 'Aktif' }],
       avatarGradient: 'linear-gradient(135deg, #00008B, #1e3a8a)',
     },
     {
@@ -43,9 +43,9 @@ export default function HomeClient() {
       initials: 'ZK',
       name: 'Zeynep Kara',
       role: '',
-      quote: "Borsa verilerini sade bir dille anlatması harika. Karmaşık analizlerle uğraşmıyorum artık.",
-      tags: [{ text: 'Bireysel', type: 'featured' as const }, { text: 'Fon', type: 'default' as const }],
-      stats: [{ icon: Brain, text: 'AI Destekli' }],
+      quote: "TEFAS fonlarını kolayca analiz edip portföyüme ekliyorum. Arayüzü çok sade ve kullanışlı.",
+      tags: [{ text: 'Bireysel', type: 'featured' as const }, { text: 'TEFAS', type: 'default' as const }],
+      stats: [{ icon: Brain, text: 'AI Asistan' }],
       avatarGradient: 'linear-gradient(135deg, #0284c7, #0369a1)',
     },
     {
@@ -53,9 +53,9 @@ export default function HomeClient() {
       initials: 'MT',
       name: 'Mehmet Tekin',
       role: '',
-      quote: "Yapay zeka asistanı sayesinde piyasa düşerken bile sakin kalıp doğru kararlar verdim.",
+      quote: "AI asistan sayesinde korelasyon analizlerimi hızlıca yapıp portföyümü dengeliyorum.",
       tags: [{ text: 'Yatırımcı', type: 'featured' as const }],
-      stats: [{ icon: Target, text: 'İsabetli' }],
+      stats: [{ icon: Target, text: 'Verimli' }],
       avatarGradient: 'linear-gradient(135deg, #4338ca, #3730a3)',
     },
   ];
@@ -63,20 +63,20 @@ export default function HomeClient() {
   const features = [
     { 
       step: 'Adım 1', 
-      title: 'Bütünleşik Portföy Kontrolü',
-      content: 'Hisse, Altın ve Fonlarınızı tek bir akıllı ekranda birleştirin. Karmaşıklığı değil, hızı ve sadeliği deneyimleyin.', 
+      title: 'Tek Ekranda Portföy Takibi',
+      content: 'BIST hisselerinizi ve TEFAS fonlarınızı tek bir panoda toplayın. Anlık fiyatlarla portföyünüzü canlı izleyin.', 
       image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80' 
     },
     { 
       step: 'Adım 2',
-      title: '7/24 Derin Piyasa Analizi',
-      content: 'BIST 100 ve küresel endeksleri saniyeler içinde tarayın. Fırsatları kaçırmayın, yapay zekanın öngörüleriyle bir adım öne geçin.',
+      title: 'AI Destekli Analiz',
+      content: 'Yapay zeka asistanınıza portföyünüzle ilgili sorular sorun, korelasyon analizleri yapın ve piyasa haberlerini takip edin.',
       image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80'
     },
     { 
       step: 'Adım 3',
-      title: 'Stratejik Risk Yönetimi',
-      content: 'Yatırımlarınızdaki gizli tehlikeleri yapay zekayla saptayın. Size özel hazırlanan finansal raporlarla rotanızı güvenle çizin.',
+      title: 'Detaylı Raporlama',
+      content: 'Portföy performansınızı grafikler ve raporlarla analiz edin. Varlık dağılımınızı ve getiri oranlarınızı net bir şekilde görün.',
       image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80'
     },
   ];
@@ -159,7 +159,7 @@ export default function HomeClient() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
                   </span>
-                  Yatırımın Geleceğiyle Tanışın
+                  Akıllı Portföy Yönetimi
                 </motion.div>
               </div>
 
@@ -170,7 +170,7 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.2 }}
                 className="text-base sm:text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
               >
-                Geleceğin yatırım dünyasına hoş geldiniz. Yapay zeka ile verileri harmanlayın, portföyünüzü tek merkezden <b className="text-[#00008B]">profesyonel bir güçle</b> yönetin.
+                BIST hisseleri ve TEFAS fonlarını tek bir panoda takip edin. <b className="text-[#00008B]">AI destekli analizlerle</b> portföyünüzü yönetin.
               </motion.p>
 
               {/* CTAs */}

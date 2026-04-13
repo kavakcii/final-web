@@ -28,21 +28,21 @@ const defaultFeatures: FeatureItem[] = [
     title: "FinAi ne işe yarar?",
     image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop",
     description:
-      "Karmaşık finansal verileri yapay zeka ile sizin için analiz eder. Portföyünüzün röntgenini çeker, fırsatları ve riskleri önceden göstererek kararlarınızı daha emin vermenizi sağlar.",
+      "BIST hisseleri ve TEFAS fonlarınızı tek bir panoda takip etmenizi sağlar. AI asistan ile portföyünüzü analiz edebilir, korelasyon analizleri yapabilir ve piyasa haberlerini izleyebilirsiniz.",
   },
   {
     id: 2,
-    title: "Hangi piyasaları destekliyor?",
+    title: "Hangi varlıkları takip edebilirim?",
     image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2426&auto=format&fit=crop",
     description:
-      "BIST 100 hisseleri, TEFAS yatırım fonları ve altın gibi temel yatırım araçlarını tek platformda konsolide ederek takip etmenizi sağlar.",
+      "BIST 100 hisselerini ve TEFAS yatırım fonlarını portföyünüze ekleyerek canlı fiyatlarla takip edebilirsiniz.",
   },
   {
     id: 3,
     title: "Verilerim güvende mi?",
     image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=2426&auto=format&fit=crop",
     description:
-      "Banka seviyesinde şifreleme ve modern standartlar kullanarak verilerinizin izole kalmasını sağlıyoruz. Bilgileriniz sadece size aittir.",
+      "Verileriniz Supabase altyapısında güvenle saklanır. Hesabınıza sadece siz erişebilirsiniz.",
   },
 ];
 

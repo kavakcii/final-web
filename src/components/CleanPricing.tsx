@@ -11,7 +11,7 @@ export function CleanPricing() {
             <div className="flex flex-col h-full bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="mb-4">
                     <h3 className="text-xl font-bold text-slate-900">Başlangıç</h3>
-                    <p className="text-sm text-slate-500 mt-2">Finans dünyasına ilk adımınızı atın.</p>
+                    <p className="text-sm text-slate-500 mt-2">Platformu keşfetmek için başlayın.</p>
                 </div>
                 <div className="mb-6">
                     <span className="text-4xl font-bold text-slate-900">Ücretsiz</span>
@@ -21,10 +21,10 @@ export function CleanPricing() {
                 </button>
 
                 <div className="space-y-4 flex-1">
-                    <FeatureItem icon={<Activity className="w-5 h-5 text-slate-400" />} text="5 Adet Varlık Takibi" />
-                    <FeatureItem icon={<Zap className="w-5 h-5 text-slate-400" />} text="15 Dk Gecikmeli Veri" />
-                    <FeatureItem icon={<Brain className="w-5 h-5 text-slate-300" />} text="Temel Piyasa Özeti" disabled />
-                    <FeatureItem icon={<ShieldCheck className="w-5 h-5 text-slate-300" />} text="Risk Raporu Yok" disabled />
+                    <FeatureItem icon={<Activity className="w-5 h-5 text-slate-400" />} text="5 Varlık Takibi" />
+                    <FeatureItem icon={<Zap className="w-5 h-5 text-slate-400" />} text="Canlı Fiyat Verileri" />
+                    <FeatureItem icon={<Brain className="w-5 h-5 text-slate-300" />} text="AI Asistan" disabled />
+                    <FeatureItem icon={<ShieldCheck className="w-5 h-5 text-slate-300" />} text="Korelasyon Analizi" disabled />
                 </div>
             </div>
 
@@ -35,7 +35,7 @@ export function CleanPricing() {
                 </div>
                 <div className="mb-4">
                     <h3 className="text-xl font-bold text-slate-900">Standart</h3>
-                    <p className="text-sm text-slate-500 mt-2">Aktif yatırımcılar için ideal araçlar.</p>
+                    <p className="text-sm text-slate-500 mt-2">Portföyünüzü tam kapasiteyle yönetin.</p>
                 </div>
                 <div className="mb-6">
                     <span className="text-4xl font-bold text-slate-900">₺100</span>
@@ -47,9 +47,9 @@ export function CleanPricing() {
 
                 <div className="space-y-4 flex-1">
                     <FeatureItem icon={<Activity className="w-5 h-5 text-blue-500" />} text="Sınırsız Varlık Takibi" />
-                    <FeatureItem icon={<Zap className="w-5 h-5 text-blue-500" />} text="Canlı Borsa Verisi" />
-                    <FeatureItem icon={<Brain className="w-5 h-5 text-blue-500" />} text="Günlük AI Analizi" />
-                    <FeatureItem icon={<ShieldCheck className="w-5 h-5 text-slate-300" />} text="Risk Raporu Yok" disabled />
+                    <FeatureItem icon={<Zap className="w-5 h-5 text-blue-500" />} text="Canlı Fiyat Verileri" />
+                    <FeatureItem icon={<Brain className="w-5 h-5 text-blue-500" />} text="AI Asistan" />
+                    <FeatureItem icon={<ShieldCheck className="w-5 h-5 text-slate-300" />} text="Korelasyon Analizi" disabled />
                 </div>
             </div>
 
@@ -57,7 +57,7 @@ export function CleanPricing() {
             <div className="flex flex-col h-full bg-[#0a192f] rounded-2xl border border-blue-900 p-6 shadow-2xl relative text-white">
                 <div className="mb-4">
                     <h3 className="text-xl font-bold text-white">Premium</h3>
-                    <p className="text-sm text-slate-400 mt-2">Profesyoneller için tam kapsamlı set.</p>
+                    <p className="text-sm text-slate-400 mt-2">Tüm özellikler sınırsız erişim.</p>
                 </div>
                 <div className="mb-6">
                     <span className="text-4xl font-bold text-white">₺250</span>
@@ -69,9 +69,9 @@ export function CleanPricing() {
 
                 <div className="space-y-4 flex-1">
                     <FeatureItem icon={<Activity className="w-5 h-5 text-blue-400" />} text="Sınırsız Varlık Takibi" darkMode />
-                    <FeatureItem icon={<Zap className="w-5 h-5 text-blue-400" />} text="Anlık Canlı Veri" darkMode />
-                    <FeatureItem icon={<Brain className="w-5 h-5 text-purple-400" />} text="Gelişmiş AI Asistanı" darkMode />
-                    <FeatureItem icon={<ShieldCheck className="w-5 h-5 text-green-400" />} text="Detaylı Risk & Sentiment Raporu" darkMode />
+                    <FeatureItem icon={<Zap className="w-5 h-5 text-blue-400" />} text="Canlı Fiyat Verileri" darkMode />
+                    <FeatureItem icon={<Brain className="w-5 h-5 text-purple-400" />} text="AI Asistan" darkMode />
+                    <FeatureItem icon={<ShieldCheck className="w-5 h-5 text-green-400" />} text="Korelasyon Analizi" darkMode />
                 </div>
             </div>
         </div>

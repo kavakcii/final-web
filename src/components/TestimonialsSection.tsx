@@ -10,9 +10,9 @@ const testimonialsData: Testimonial[] = [
         initials: "AY",
         name: "Ayşe Yılmaz",
         role: "",
-        quote: "FinAi sayesinde birikimlerimi nasıl değerlendireceğimi öğrendim. Özellikle fon analizleri ve yapay zeka önerileri çok başarılı.",
-        tags: [{ text: "Öne Çıkan", type: "featured" }, { text: "Yatırım Fonu", type: "default" }],
-        stats: [{ icon: TrendingUp, text: "%45 Kar Artışı" }, { icon: Clock, text: "6 Aydır Üye" }],
+        quote: "Portföyümü tek bir yerden yönetmek büyük kolaylık. Hisse ve fon performansımı anlık takip ediyorum.",
+        tags: [{ text: "Öne Çıkan", type: "featured" }, { text: "Portföy", type: "default" }],
+        stats: [{ icon: TrendingUp, text: "Aktif Kullanıcı" }, { icon: Clock, text: "6 Aydır Üye" }],
         avatarGradient: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
     },
     {
@@ -20,9 +20,9 @@ const testimonialsData: Testimonial[] = [
         initials: "MD",
         name: "Mehmet Demir",
         role: "",
-        quote: "Portföyümü tek bir yerden takip etmek büyük kolaylık. Altın ve döviz yatırımlarımın performansını grafiklerle görmek çok net.",
-        tags: [{ text: "Altın", type: "default" }, { text: "Döviz", type: "default" }],
-        stats: [{ icon: Zap, text: "Anlık Veri" }, { icon: ShieldCheck, text: "Doğrulanmış" }],
+        quote: "BIST hisselerimi ve TEFAS fonlarımı tek panoda görmek çok pratik. Grafiklerdeki performans takibi çok net.",
+        tags: [{ text: "BIST", type: "default" }, { text: "TEFAS", type: "default" }],
+        stats: [{ icon: Zap, text: "Canlı Veri" }, { icon: ShieldCheck, text: "Doğrulanmış" }],
         avatarGradient: "linear-gradient(135deg, #10b981, #059669)",
     },
     {
@@ -30,9 +30,9 @@ const testimonialsData: Testimonial[] = [
         initials: "ZK",
         name: "Zeynep Kaya",
         role: "",
-        quote: "Yapay zeka asistanı finansal özgürlüğüm için harika ipuçları veriyor. Karmaşık terimler yerine anlaşılır özetler sunması çok iyi.",
-        tags: [{ text: "Bireysel", type: "default" }, { text: "Yapay Zeka", type: "featured" }],
-        stats: [{ icon: Star, text: "5 Yıldız" }, { icon: Activity, text: "Aktif Kullanıcı" }],
+        quote: "AI asistanı portföyümle ilgili sorularıma hızlıca yanıt veriyor. Korelasyon analizi özelliği çok faydalı.",
+        tags: [{ text: "Bireysel", type: "default" }, { text: "AI Asistan", type: "featured" }],
+        stats: [{ icon: Star, text: "Beğendim" }, { icon: Activity, text: "Aktif" }],
         avatarGradient: "linear-gradient(135deg, #f59e0b, #d97706)",
     },
     {
@@ -81,7 +81,7 @@ export const TestimonialsSection = () => {
                         Kullanıcılarımız Ne Diyor?
                     </h2>
                     <p className="text-center text-slate-400 text-lg leading-relaxed">
-                        Binlerce bireysel ve kurumsal yatırımcı, FinAi ile finansal özgürlük yolculuğunda bir adım öne geçiyor.
+                        Kullanıcılarımız FinAi deneyimlerini paylaşıyor.
                     </p>
                 </motion.div>
 

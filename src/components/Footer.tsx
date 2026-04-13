@@ -12,8 +12,8 @@ export default function Footer() {
                             <FinAiLogo className="h-12 w-auto text-white" />
                         </div>
                         <p className="text-sm text-slate-400">
-                            Yapay zeka destekli yatırım asistanınız ile finansal geleceğinizi
-                            güvence altına alın.
+                            BIST ve TEFAS portföyünüzü AI destekli analizlerle
+                            tek bir panoda yönetin.
                         </p>
                     </div>
 

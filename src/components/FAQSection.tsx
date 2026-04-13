@@ -7,20 +7,20 @@ import { cn } from "@/lib/utils";
 
 const faqs = [
     {
-        question: "FinAi nedir ve nasıl çalışır?",
-        answer: "FinAi, yapay zeka destekli bir finansal asistandır. Portföyünüzü analiz eder, piyasa verilerini tarar ve size kişiselleştirilmiş stratejiler sunar.",
+        question: "FinAi nedir?",
+        answer: "FinAi, BIST hisseleri ve TEFAS fonlarınızı tek bir panoda takip etmenizi sağlayan, AI destekli bir portföy yönetim platformudur.",
     },
     {
-        question: "Veriler ne kadar güncel?",
-        answer: "Premium planda veriler anlık (canlı) olarak sunulur. Ücretsiz planda ise 15 dakika gecikmeli veri sağlanır.",
+        question: "Hangi varlıkları takip edebilirim?",
+        answer: "BIST 100 hisselerini ve TEFAS yatırım fonlarını portföyünüze ekleyerek canlı fiyatlarla takip edebilirsiniz.",
     },
     {
-        question: "Mobilden kullanabilir miyim?",
-        answer: "Evet! FinAi tamamen responsive (mobil uyumlu) bir tasarıma sahiptir. Telefonunuzdan veya tabletinizden tüm özelliklere erişebilirsiniz.",
+        question: "Mobil uyumlu mu?",
+        answer: "Evet. FinAi tüm cihazlarda sorunsuz çalışan responsive bir tasarıma sahiptir.",
     },
     {
-        question: "İstediğim zaman iptal edebilir miyim?",
-        answer: "Kesinlikle. Aboneliğinizi dilediğiniz zaman panonuzdan iptal edebilirsiniz. Herhangi bir taahhüt yoktur.",
+        question: "Aboneliğimi iptal edebilir miyim?",
+        answer: "Evet, aboneliğinizi dilediğiniz zaman hesap ayarlarınızdan iptal edebilirsiniz.",
     },
 ];
 
