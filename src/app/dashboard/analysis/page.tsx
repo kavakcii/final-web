@@ -250,15 +250,14 @@ export default function AnalysisPage() {
                         </button>
 
                         <div className="relative z-10 flex flex-col items-center gap-8 p-10 bg-slate-950/80 rounded-[22px]">
-                            {/* Logo & Spinner */}
                             <div className="relative">
                                 <div className="absolute inset-0 bg-blue-500/30 blur-2xl rounded-full" />
-                                <div className="relative z-10 p-4 bg-slate-900 rounded-2xl border border-blue-500/30 shadow-lg shadow-blue-500/20">
-                                    <FinAiLogo size="lg" />
+                                <div className="relative z-10 w-24 h-24 flex items-center justify-center drop-shadow-2xl">
+                                    <FinAiLogo className="!w-28 !h-28" />
                                 </div>
                                 {/* Spinning Ring */}
-                                <div className="absolute -inset-4 border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_8s_linear_infinite]" />
-                                <div className="absolute -inset-4 border-2 border-blue-500/10 rounded-full animate-[ping_3s_ease-in-out_infinite]" />
+                                <div className="absolute -inset-8 border-2 border-dashed border-blue-500/30 rounded-full animate-[spin_8s_linear_infinite]" />
+                                <div className="absolute -inset-8 border-2 border-blue-500/10 rounded-full animate-[ping_3s_ease-in-out_infinite]" />
                             </div>
 
                             {/* Status Text & Pro Tip */}
