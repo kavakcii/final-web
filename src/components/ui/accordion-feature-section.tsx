@@ -49,6 +49,15 @@ const defaultFeatures: FeatureItem[] = [
 const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) => {
   const [activeTabId, setActiveTabId] = useState<number | null>(1);
 
+  const handleValueChange = (value: string) => {
+    if (value) {
+      const id = parseInt(value.replace("item-", ""), 10);
+      setActiveTabId(id);
+    } else {
+      setActiveTabId(null);
+    }
+  };
+
   return (
     <section className="py-20 w-full" id="faq">
       <div className="container mx-auto max-w-7xl px-6">
@@ -59,17 +68,20 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
 
         <div className="flex w-full items-start justify-between gap-12 bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
           <div className="w-full md:w-1/2">
-            <Accordion type="single" collapsible className="w-full" defaultValue="item-1">
+            <Accordion
+              type="single"
+              collapsible
+              className="w-full"
+              defaultValue="item-1"
+              onValueChange={handleValueChange}
+            >
               {features.map((tab) => (
                 <AccordionItem key={tab.id} value={`item-${tab.id}`} className="border-b-none border-slate-200">
                   <AccordionTrigger
-                    onClick={() => {
-                      setActiveTabId(prev => prev === tab.id ? null : tab.id);
-                    }}
                     className="cursor-pointer -mx-4 px-4 py-6 md:-mx-6 md:px-6 md:py-8 hover:bg-slate-100/50 active:bg-slate-100 active:scale-[0.98] rounded-2xl !no-underline transition-all group"
                   >
                     <h6
-                      className={`text-xl md:text-2xl font-bold transition-colors text-left pointer-events-none ${tab.id === activeTabId ? "text-[#00008B]" : "text-slate-500 md:group-hover:text-blue-600"}`}
+                      className={`text-xl md:text-2xl font-bold transition-colors text-left ${tab.id === activeTabId ? "text-[#00008B]" : "text-slate-500 md:group-hover:text-blue-600"}`}
                     >
                       {tab.title}
                     </h6>
