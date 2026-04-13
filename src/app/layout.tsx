@@ -5,13 +5,13 @@ export const metadata: Metadata = {
   title: "FinAi - Yapay Zeka Yatırım Asistanı",
   description: "Yapay zeka asistanınızla yatırımlarınızı kolayca takip edin.",
   icons: {
-    icon: "/favicon.png",
-    apple: "/logo.png",
+    icon: "/logo.svg",
+    apple: "/logo.svg",
   },
   openGraph: {
     title: "FinAi - Yapay Zeka Yatırım Asistanı",
     description: "Yapay zeka asistanınızla yatırımlarınızı kolayca takip edin.",
-    images: ["/logo.png"],
+    images: ["/logo.svg"],
     siteName: "FinAi",
   },
 };
