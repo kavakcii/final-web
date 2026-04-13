@@ -16,6 +16,7 @@ export const FinAiLogo = ({ className, size = "md" }: FinAiLogoProps) => {
         lg: "w-16 h-16"
     };
 
+    return (
         <div className={cn("relative flex items-center justify-center shrink-0 group", sizeClasses[size], className)} title="FinAi - Zeki Yatırım Asistanı">
             
             <svg width="100%" height="100%" viewBox="25 15 65 85" fill="none" xmlns="http://www.w3.org/2000/svg" className="transform group-hover:scale-105 transition-transform duration-500 drop-shadow-md">
@@ -53,4 +54,5 @@ export const FinAiLogo = ({ className, size = "md" }: FinAiLogoProps) => {
             </svg>
 
         </div>
+    );
 };
