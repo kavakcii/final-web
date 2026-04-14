@@ -66,8 +66,8 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
           <p className="text-slate-500 text-lg sm:text-xl font-medium">Bize en sık sorulan sorular ve yanıtları.</p>
         </div>
 
-        <div className="flex w-full items-start justify-between gap-12 bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
-          <div className="w-full md:w-1/2">
+        <div className="w-full bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
+          <div className="w-full">
             <Accordion
               type="single"
               collapsible
@@ -95,19 +95,6 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
                 </AccordionItem>
               ))}
             </Accordion>
-          </div>
-          
-          <div className="relative hidden w-1/2 overflow-hidden rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] md:block min-h-[400px]">
-             {/* Statik Logo Alanı */}
-             <div className="absolute inset-0 bg-gradient-to-br from-[#00008B] to-blue-900 flex flex-col items-center justify-center">
-                {/* Radial glow background for logo */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.15)_0%,_transparent_70%)]" />
-                
-                <div className="w-32 h-32 bg-white/10 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/10 transition-transform duration-700 hover:scale-105 z-10">
-                    <FinAiLogo showText={false} className="w-20 h-auto text-white drop-shadow-md" />
-                </div>
-                <h3 className="mt-6 text-4xl font-black text-white tracking-tight z-10 drop-shadow-md">FinAi<span className="text-blue-400">.</span></h3>
-             </div>
           </div>
         </div>
       </div>
