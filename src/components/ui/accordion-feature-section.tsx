@@ -78,7 +78,7 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
               {features.map((tab) => (
                 <AccordionItem key={tab.id} value={`item-${tab.id}`} className="border-b-none border-slate-200">
                   <AccordionTrigger
-                    className="cursor-pointer -mx-4 px-4 py-6 md:-mx-6 md:px-6 md:py-8 hover:bg-slate-100/50 active:bg-slate-100 active:scale-[0.98] rounded-2xl !no-underline transition-all group"
+                    className="cursor-pointer -mx-4 px-4 py-6 md:-mx-6 md:px-6 md:py-8 hover:bg-slate-100/50 active:bg-slate-100 active:scale-[0.98] rounded-2xl !no-underline transition-all group md:[&>span:last-child]:hidden"
                   >
                     <h6
                       className={`text-xl md:text-2xl font-bold transition-colors text-left ${tab.id === activeTabId ? "text-[#00008B]" : "text-slate-500 md:group-hover:text-blue-600"}`}
