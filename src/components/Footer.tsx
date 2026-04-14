@@ -21,7 +21,6 @@ export default function Footer() {
                         <h3 className="font-semibold mb-4 text-white">Ürün</h3>
                         <ul className="space-y-2 text-sm text-slate-400">
                             <li><Link href="#features" className="hover:text-blue-400 transition-colors">Özellikler</Link></li>
-                            <li><Link href="#pricing" className="hover:text-blue-400 transition-colors">Fiyatlandırma</Link></li>
                             <li><Link href="/login" className="hover:text-blue-400 transition-colors">Giriş Yap</Link></li>
                         </ul>
                     </div>
@@ -29,9 +28,7 @@ export default function Footer() {
                     <div>
                         <h3 className="font-semibold mb-4 text-white">Şirket</h3>
                         <ul className="space-y-2 text-sm text-slate-400">
-                            <li><Link href="#" className="hover:text-blue-400 transition-colors">Hakkımızda</Link></li>
-                            <li><Link href="#" className="hover:text-blue-400 transition-colors">İletişim</Link></li>
-                            <li><Link href="#" className="hover:text-blue-400 transition-colors">Gizlilik Politikası</Link></li>
+                            <li><Link href="#hero" className="hover:text-blue-400 transition-colors">Hakkımızda</Link></li>
                         </ul>
                     </div>
 
