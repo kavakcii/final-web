@@ -4,24 +4,15 @@ import { cn } from "@/lib/utils";
 
 export const FinAiLogo = ({ className, showText = true }: { className?: string, showText?: boolean }) => (
   <div className={cn("flex items-center gap-3", className)}>
-    {/* Vektörel Şeffaf "F" Logosu */}
-    <div className="flex-shrink-0" style={{ width: 40, height: 40 }}>
-      <svg width="100%" height="100%" viewBox="25 10 70 90" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M48 40C48 40 42 50 38 60C34 70 38 80 45 87C52 94 65 87 65 75C65 63 55 53 48 40Z" fill="url(#uiLogoGradMain)" />
-          <path d="M32 25L82 23C85 23 88 27 86 31L78 43C76 47 72 48 68 48H36C32 48 29 45 30 41L32 25Z" fill="url(#uiLogoGradTop)" />
-          <path d="M45 87L50 95L55 87H45Z" fill="#1e40af" />
-          <defs>
-            <linearGradient id="uiLogoGradTop" x1="30" y1="25" x2="80" y2="45" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#2563eb" />
-              <stop offset="1" stopColor="#3b82f6" />
-            </linearGradient>
-            <linearGradient id="uiLogoGradMain" x1="40" y1="45" x2="65" y2="85" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#1e40af" />
-              <stop offset="1" stopColor="#3b82f6" />
-            </linearGradient>
-          </defs>
-      </svg>
-    </div>
+    {/* Resim Olarak Logo */}
+    <Image
+      src="/logo.png"
+      alt="FinAi Logo"
+      width={40}
+      height={40}
+      className="object-contain"
+      priority
+    />
     {/* Yalnızca İsim: FinAi */}
     {showText && (
       <span className="text-[#00008B] font-[800] text-3xl tracking-tight leading-none" style={{ fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
