@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Twitter, Linkedin, Instagram } from "lucide-react";
+import { Instagram } from "lucide-react";
 import { FinAiLogo } from "@/components/ui/logo";
 export default function Footer() {
     return (
@@ -38,13 +38,7 @@ export default function Footer() {
                     <div>
                         <h3 className="font-semibold mb-4 text-white">Takip Et</h3>
                         <div className="flex space-x-4">
-                            <Link href="#" className="text-slate-400 hover:text-blue-400 transition-colors">
-                                <Twitter className="w-5 h-5" />
-                            </Link>
-                            <Link href="#" className="text-slate-400 hover:text-blue-400 transition-colors">
-                                <Linkedin className="w-5 h-5" />
-                            </Link>
-                            <Link href="#" className="text-slate-400 hover:text-blue-400 transition-colors">
+                            <Link href="https://www.instagram.com/finai.net.tr/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-blue-400 transition-colors">
                                 <Instagram className="w-5 h-5" />
                             </Link>
                         </div>

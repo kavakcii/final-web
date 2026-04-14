@@ -65,19 +65,19 @@ export default function HomeClient() {
       step: 'Adım 1', 
       title: 'Tek Ekranda Portföy Takibi',
       content: 'BIST hisselerinizi ve TEFAS fonlarınızı tek bir panoda toplayın. Anlık fiyatlarla portföyünüzü canlı izleyin.', 
-      image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80' 
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80' 
     },
     { 
       step: 'Adım 2',
       title: 'AI Destekli Analiz',
       content: 'Yapay zeka asistanınıza portföyünüzle ilgili sorular sorun, korelasyon analizleri yapın ve piyasa haberlerini takip edin.',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80'
+      image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80'
     },
     { 
       step: 'Adım 3',
       title: 'Detaylı Raporlama',
       content: 'Portföy performansınızı grafikler ve raporlarla analiz edin. Varlık dağılımınızı ve getiri oranlarınızı net bir şekilde görün.',
-      image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80'
+      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80'
     },
   ];
 
