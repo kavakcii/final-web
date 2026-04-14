@@ -66,8 +66,8 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
           <p className="text-slate-500 text-lg sm:text-xl font-medium">Bize en sık sorulan sorular ve yanıtları.</p>
         </div>
 
-        <div className="w-full bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
-          <div className="w-full">
+        <div className="flex w-full flex-col md:flex-row items-center md:items-start justify-between gap-12 bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
+          <div className="w-full md:w-1/2">
             <Accordion
               type="single"
               collapsible
@@ -95,6 +95,17 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
                 </AccordionItem>
               ))}
             </Accordion>
+          </div>
+          
+          <div className="hidden md:flex w-1/2 items-center justify-center min-h-[300px]">
+             {/* Sadece Fotoğraf / Logo Alanı */}
+             <Image 
+                src="/logo.png" 
+                alt="FinAi Logo" 
+                width={250} 
+                height={250} 
+                className="object-contain" 
+             />
           </div>
         </div>
       </div>
