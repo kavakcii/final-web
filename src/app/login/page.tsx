@@ -57,13 +57,42 @@ export default function LoginPage() {
       return;
     }
 
+    if (!isLoginMode) {
+      const firstName = formData.get("firstName") as string;
+      const lastName = formData.get("lastName") as string;
+      const confirmPassword = formData.get("confirmPassword") as string;
+      
+      if (!firstName || !lastName || !confirmPassword) {
+        addToast("Lütfen isim, soyisim ve şifre onayı alanlarını doldurun.", "error");
+        return;
+      }
+      
+      if (password !== confirmPassword) {
+        addToast("Şifreleriniz eşleşmiyor, lütfen kontrol edin.", "error");
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
       if (isLoginMode) {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
       } else {
-          const { error } = await supabase.auth.signUp({ email, password });
+          const firstName = formData.get("firstName") as string;
+          const lastName = formData.get("lastName") as string;
+          
+          const { error } = await supabase.auth.signUp({ 
+            email, 
+            password,
+            options: {
+              data: {
+                first_name: firstName,
+                last_name: lastName,
+                full_name: `${firstName} ${lastName}`
+              }
+            }
+          });
           if (error) {
             if (error.message.includes("already registered")) {
                 throw new Error("Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.");
