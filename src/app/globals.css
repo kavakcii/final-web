@@ -159,32 +159,32 @@ body {
   opacity: 0;
   filter: blur(4px);
   transform: translateY(20px);
-  animation: fadeSlideIn 0.8s ease-out forwards;
+  animation: fadeSlideIn 0.3s ease-out forwards;
 }
 
 @utility animate-slide-right {
   opacity: 0;
   filter: blur(8px);
   transform: translateX(-40px);
-  animation: slideRightIn 1s ease-out forwards;
+  animation: slideRightIn 0.5s ease-out forwards;
 }
 
 @utility animate-testimonial {
   opacity: 0;
   filter: blur(8px);
   transform: translateY(40px) scale(0.9);
-  animation: testimonialIn 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: testimonialIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@utility animate-delay-100 { animation-delay: 100ms; }
-@utility animate-delay-200 { animation-delay: 200ms; }
-@utility animate-delay-300 { animation-delay: 300ms; }
-@utility animate-delay-400 { animation-delay: 400ms; }
-@utility animate-delay-500 { animation-delay: 500ms; }
-@utility animate-delay-600 { animation-delay: 600ms; }
-@utility animate-delay-700 { animation-delay: 700ms; }
-@utility animate-delay-800 { animation-delay: 800ms; }
-@utility animate-delay-900 { animation-delay: 900ms; }
-@utility animate-delay-1000 { animation-delay: 1000ms; }
-@utility animate-delay-1200 { animation-delay: 1200ms; }
-@utility animate-delay-1400 { animation-delay: 1400ms; }
+@utility animate-delay-100 { animation-delay: 50ms; }
+@utility animate-delay-200 { animation-delay: 100ms; }
+@utility animate-delay-300 { animation-delay: 150ms; }
+@utility animate-delay-400 { animation-delay: 200ms; }
+@utility animate-delay-500 { animation-delay: 250ms; }
+@utility animate-delay-600 { animation-delay: 300ms; }
+@utility animate-delay-700 { animation-delay: 350ms; }
+@utility animate-delay-800 { animation-delay: 400ms; }
+@utility animate-delay-900 { animation-delay: 450ms; }
+@utility animate-delay-1000 { animation-delay: 500ms; }
+@utility animate-delay-1200 { animation-delay: 600ms; }
+@utility animate-delay-1400 { animation-delay: 700ms; }
