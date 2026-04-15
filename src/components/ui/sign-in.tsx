@@ -30,6 +30,8 @@ interface SignInPageProps {
   onResetPassword?: () => void;
   onToggleMode?: () => void;
   isLoginMode?: boolean;
+  isVerifyingOtp?: boolean;
+  onVerifyOtp?: (event: React.FormEvent<HTMLFormElement>) => void;
   isLoading?: boolean;
 }
 
@@ -64,6 +66,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onResetPassword,
   onToggleMode,
   isLoginMode = true,
+  isVerifyingOtp = false,
+  onVerifyOtp,
   isLoading = false
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -81,12 +85,25 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-6">
             <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
-              {isLoginMode ? title : <span className="font-light text-foreground tracking-tighter">Ayrıcalığa Katılın</span>}
+              {isVerifyingOtp ? <span className="font-light text-foreground tracking-tighter">E-postanızı Doğrulayın</span> : isLoginMode ? title : <span className="font-light text-foreground tracking-tighter">Ayrıcalığa Katılın</span>}
             </h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">
-              {isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
+              {isVerifyingOtp ? "E-posta adresinize gönderilen 6 haneli güvenlik kodunu girin." : isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
             </p>
 
+            {isVerifyingOtp ? (
+              <form key="otp" className="space-y-5" onSubmit={onVerifyOtp}>
+                <div className="animate-element animate-delay-200">
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Doğrulama Kodu</label>
+                  <GlassInputWrapper>
+                    <input name="otpCode" type="text" maxLength={6} required placeholder="000000" className="w-full bg-transparent text-center text-3xl font-bold tracking-[0.3em] p-4 rounded-2xl focus:outline-none" />
+                  </GlassInputWrapper>
+                </div>
+                <button type="submit" disabled={isLoading} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
+                  {isLoading ? "Doğrulanıyor..." : "Hesabı Onayla"}
+                </button>
+              </form>
+            ) : (
             <form key={isLoginMode ? "login" : "register"} className="space-y-5" onSubmit={onSignIn}>
               {!isLoginMode && (
                 <div className="grid grid-cols-2 gap-4 animate-element animate-delay-200">
@@ -147,13 +164,16 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 {isLoading ? "İşlem Yapılıyor..." : (isLoginMode ? "Giriş Yap" : "Hesap Oluştur")}
               </button>
             </form>
+            )}
 
-            <p className="animate-element animate-delay-900 text-center font-medium text-sm text-muted-foreground pt-4">
-              {isLoginMode ? "Yeni nesil yatırıma katılmak ister misin? " : "Zaten bir hesabın var mı? "}
-              <a href="#" onClick={(e) => { e.preventDefault(); onToggleMode?.(); }} className="text-blue-600 font-semibold hover:underline transition-colors">
-                 {isLoginMode ? "Hesap Oluştur" : "Giriş Yap"}
-              </a>
-            </p>
+            {!isVerifyingOtp && (
+              <p className="animate-element animate-delay-900 text-center font-medium text-sm text-muted-foreground pt-4">
+                {isLoginMode ? "Yeni nesil yatırıma katılmak ister misin? " : "Zaten bir hesabın var mı? "}
+                <a href="#" onClick={(e) => { e.preventDefault(); onToggleMode?.(); }} className="text-blue-600 font-semibold hover:underline transition-colors">
+                   {isLoginMode ? "Hesap Oluştur" : "Giriş Yap"}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </section>

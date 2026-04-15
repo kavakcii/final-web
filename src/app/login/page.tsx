@@ -40,6 +40,9 @@ function LoginContent() {
   const isRegisterTab = searchParams.get('tab') === 'register';
   const [isLoginMode, setIsLoginMode] = useState(!isRegisterTab);
 
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -49,6 +52,41 @@ function LoginContent() {
     };
     checkSession();
   }, [router]);
+
+  const handleVerifyOtp = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const otpCode = formData.get("otpCode") as string;
+
+    if (!otpCode || otpCode.length !== 6) {
+      addToast("Lütfen 6 haneli doğrulama kodunu eksiksiz girin.", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: verificationEmail,
+        token: otpCode,
+        type: 'signup'
+      });
+
+      if (error) throw error;
+      if (data.session) {
+         router.push("/dashboard");
+         addToast("Hesabınız doğrulandı, hoş geldiniz!", "success");
+      } else {
+         addToast("Doğrulama başarılı ancak oturum açılamadı. Lütfen giriş yapın.", "success");
+         setIsVerifyingOtp(false);
+         setIsLoginMode(true);
+      }
+    } catch (error: any) {
+      console.error("OTP Error:", error);
+      addToast("Doğrulama kodu hatalı veya süresi geçmiş olabilir.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAuth = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,11 +120,12 @@ function LoginContent() {
       if (isLoginMode) {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) throw error;
+          router.push("/dashboard");
       } else {
           const firstName = formData.get("firstName") as string;
           const lastName = formData.get("lastName") as string;
           
-          const { error } = await supabase.auth.signUp({ 
+          const { data, error } = await supabase.auth.signUp({ 
             email, 
             password,
             options: {
@@ -103,9 +142,18 @@ function LoginContent() {
             }
             throw error;
           }
+
+          if (data.user && !data.session) {
+             // Opsiyonel e-posta onayı (OTP) aktif demektir
+             setVerificationEmail(email);
+             setIsVerifyingOtp(true);
+             addToast("E-postanıza 6 haneli bir doğrulama kodu gönderildi.", "success");
+             return; // Dashboard'a yönlendirmeyi atla
+          } else {
+             // OTP kapalıysa direkt dashboard'a at
+             router.push("/dashboard");
+          }
       }
-      
-      router.push("/dashboard");
     } catch (error: any) {
       console.error(error);
       let msg = error.message || "Bilinmeyen bir hata oluştu.";
@@ -130,6 +178,8 @@ function LoginContent() {
       onResetPassword={handleResetPassword}
       onToggleMode={() => setIsLoginMode(!isLoginMode)}
       isLoginMode={isLoginMode}
+      isVerifyingOtp={isVerifyingOtp}
+      onVerifyOtp={handleVerifyOtp}
       isLoading={isLoading}
     />
   );
