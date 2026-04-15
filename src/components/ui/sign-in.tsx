@@ -44,7 +44,7 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
 const FeatureCard = ({ feature, delay }: { feature: FeatureItem, delay: string }) => (
   <div className={`animate-testimonial ${delay} flex items-start gap-3 rounded-[20px] bg-[#0b1120] shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-slate-800/80 p-4 w-full h-full`}>
     <div className="flex-shrink-0 w-10 h-10 rounded-[14px] bg-[#151f38] border border-white/5 flex items-center justify-center text-blue-400">
-      {React.cloneElement(feature.icon as React.ReactElement, { size: 18 })}
+      {feature.icon}
     </div>
     <div className="text-left flex-1 min-w-0 pr-1">
       <p className="font-bold text-white text-[13px] leading-tight mb-1 truncate">{feature.title}</p>

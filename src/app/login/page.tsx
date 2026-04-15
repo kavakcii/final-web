@@ -9,22 +9,22 @@ import { Users, BarChart3, ShieldCheck, Zap } from "lucide-react";
 
 const platformFeatures: FeatureItem[] = [
   {
-    icon: <Users size={20} />,
+    icon: <Users size={18} />,
     title: "5,000+ Yatırımcı",
     description: "FinAi topluluğuna katılarak akıllı yatırımlara adım atın.",
   },
   {
-    icon: <BarChart3 size={20} />,
+    icon: <BarChart3 size={18} />,
     title: "Akıllı Analiz",
     description: "Portföyünüzü yapay zeka destekli içgörülerle büyütün.",
   },
   {
-    icon: <ShieldCheck size={20} />,
+    icon: <ShieldCheck size={18} />,
     title: "Güvenli Altyapı",
     description: "Verileriniz üst düzey banka veritabanı standartlarında korunur.",
   },
   {
-    icon: <Zap size={20} />,
+    icon: <Zap size={18} />,
     title: "Anında Bildirim",
     description: "Piyasa fırsatlarını yakalamak için gerçek zamanlı uyarılar alın.",
   },
