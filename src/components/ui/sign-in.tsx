@@ -129,20 +129,20 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <button type="submit" disabled={isLoading || isOtpSuccess} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
                   {isOtpSuccess ? "FinAi'ye Hoşgeldiniz" : (isLoading ? "Doğrulanıyor..." : "Hesabı Onayla")}
                 </button>
-                <div className="animate-element animate-delay-400 text-center text-sm">
-                  <span className="text-muted-foreground">Kodu almadınız mı? </span>
-                  {resendTimer > 0 ? (
-                    <span className="text-blue-600 font-semibold">{resendTimer} sn bekleyin</span>
-                  ) : (
-                    <button 
-                      type="button" 
-                      onClick={onResendOtp}
-                      disabled={isLoading}
-                      className="text-blue-600 font-semibold hover:underline"
-                    >
-                      Tekrar Gönder
-                    </button>
-                  )}
+                <div className="animate-element animate-delay-400 text-center text-base pt-2">
+                  <button 
+                    type="button" 
+                    onClick={onResendOtp}
+                    disabled={isLoading || resendTimer > 0}
+                    className="text-blue-600 font-semibold hover:underline disabled:text-muted-foreground disabled:no-underline transition-all duration-300 flex items-center justify-center gap-2 mx-auto"
+                  >
+                    <span>Kodu Tekrar Gönder</span>
+                    {resendTimer > 0 && (
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-md text-xs border border-blue-100 animate-pulse">
+                        {resendTimer} sn
+                      </span>
+                    )}
+                  </button>
                 </div>
               </form>
             ) : (
