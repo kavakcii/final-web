@@ -27,9 +27,9 @@ interface SignInPageProps {
   heroImageSrc?: string;
   features?: FeatureItem[];
   onSignIn?: (event: React.FormEvent<HTMLFormElement>) => void;
-  onGoogleSignIn?: () => void;
   onResetPassword?: () => void;
-  onCreateAccount?: () => void;
+  onToggleMode?: () => void;
+  isLoginMode?: boolean;
   isLoading?: boolean;
 }
 
@@ -61,9 +61,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   heroImageSrc,
   features = [],
   onSignIn,
-  onGoogleSignIn,
   onResetPassword,
-  onCreateAccount,
+  onToggleMode,
+  isLoginMode = true,
   isLoading = false
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -80,8 +80,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <section className="flex-1 flex items-center justify-center p-8 z-10 relative bg-background/80 backdrop-blur-xl md:bg-transparent md:backdrop-blur-none">
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-6">
-            <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
-            <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
+            <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
+              {isLoginMode ? title : <span className="font-light text-foreground tracking-tighter">Ayrıcalığa Katılın</span>}
+            </h1>
+            <p className="animate-element animate-delay-200 text-muted-foreground">
+              {isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
+            </p>
 
             <form className="space-y-5" onSubmit={onSignIn}>
               <div className="animate-element animate-delay-300">
@@ -112,22 +116,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </div>
 
               <button type="submit" disabled={isLoading} className="animate-element animate-delay-600 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
-                {isLoading ? "Giriş Yapılıyor..." : "Giriş Yap"}
+                {isLoading ? "İşlem Yapılıyor..." : (isLoginMode ? "Giriş Yap" : "Hesap Oluştur")}
               </button>
             </form>
 
-            <div className="animate-element animate-delay-700 relative flex items-center justify-center">
-              <span className="w-full border-t border-border"></span>
-              <span className="px-4 text-sm font-medium text-muted-foreground bg-background absolute">Veya şununla devam et</span>
-            </div>
-
-            <button onClick={onGoogleSignIn} type="button" className="animate-element animate-delay-800 w-full font-medium flex items-center justify-center gap-3 border border-border rounded-2xl py-4 hover:bg-secondary transition-colors bg-white shadow-sm dark:bg-transparent">
-                <GoogleIcon />
-                Google ile Devam Et
-            </button>
-
-            <p className="animate-element animate-delay-900 text-center font-medium text-sm text-muted-foreground">
-              Yeni nesil yatırıma katılmak ister misin? <a href="#" onClick={(e) => { e.preventDefault(); onCreateAccount?.(); }} className="text-blue-600 font-semibold hover:underline transition-colors">Hesap Oluştur</a>
+            <p className="animate-element animate-delay-900 text-center font-medium text-sm text-muted-foreground pt-4">
+              {isLoginMode ? "Yeni nesil yatırıma katılmak ister misin? " : "Zaten bir hesabın var mı? "}
+              <a href="#" onClick={(e) => { e.preventDefault(); onToggleMode?.(); }} className="text-blue-600 font-semibold hover:underline transition-colors">
+                 {isLoginMode ? "Hesap Oluştur" : "Giriş Yap"}
+              </a>
             </p>
           </div>
         </div>

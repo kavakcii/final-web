@@ -29,6 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoginMode, setIsLoginMode] = useState(true);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -40,21 +41,31 @@ export default function LoginPage() {
     checkSession();
   }, [router]);
 
-  const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleAuth = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
     if (!email || !password) {
-      addToast("Lütfen tüm alanları doldurun.", "error");
+      addToast("Lütfen e-posta ve şifrenizi girin.", "error");
       return;
     }
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (isLoginMode) {
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+      } else {
+          const { error } = await supabase.auth.signUp({ email, password });
+          if (error) {
+            if (error.message.includes("already registered")) {
+                throw new Error("Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.");
+            }
+            throw error;
+          }
+      }
       
       router.push("/dashboard");
     } catch (error: any) {
@@ -69,36 +80,18 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${window.location.origin}/dashboard` }
-      });
-      if (error) throw error;
-    } catch (error) {
-      console.error("Google login error:", error);
-    }
-  };
-
   const handleResetPassword = () => {
-    // Implement forgot password navigation or modal
     addToast("Şifre sıfırlama henüz eklenmedi", "success");
-  };
-
-  const handleCreateAccount = () => {
-    addToast("Kayıt olma sayfasına yönlendiriliyorsunuz (UI henüz entegre edilmedi).", "success");
-    // Implement Register toggle if needed
   };
 
   return (
     <SignInPage
       heroImageSrc="/logo.png"
       features={platformFeatures}
-      onSignIn={handleSignIn}
-      onGoogleSignIn={handleGoogleSignIn}
+      onSignIn={handleAuth}
       onResetPassword={handleResetPassword}
-      onCreateAccount={handleCreateAccount}
+      onToggleMode={() => setIsLoginMode(!isLoginMode)}
+      isLoginMode={isLoginMode}
       isLoading={isLoading}
     />
   );
