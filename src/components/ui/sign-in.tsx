@@ -238,8 +238,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              {isLoginMode && (
-                 {!isLoginMode && (
+              {!isLoginMode && (
                 <div className="animate-element animate-delay-600 px-1 pt-2">
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <div className="relative flex items-center">
@@ -259,7 +258,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-700"} flex items-center justify-between text-sm`}>
+              {isLoginMode && (
+                <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-700"} flex items-center justify-between text-sm`}>
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" name="rememberMe" className="custom-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
                     <span className="text-foreground/90 font-medium">Beni hatırla</span>
