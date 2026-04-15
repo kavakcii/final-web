@@ -144,11 +144,25 @@ function LoginContent() {
       const lastName = formData.get("lastName") as string;
       const confirmPassword = formData.get("confirmPassword") as string;
       
+      // Anlamlı İsim ve Soyisim Kontrolü (Harf kontrolü ve mantıklı uzunluk)
+      const nameRegex = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]{2,}$/;
+      const isRandom = (str: string) => /^(.)\1+$/.test(str.toLowerCase().replace(/\s/g, '')); // aaaaa, bbbbb gibi girişleri engeller
+
       if (!firstName || !lastName || !confirmPassword) {
         addToast("Lütfen isim, soyisim ve şifre onayı alanlarını doldurun.", "error");
         return;
       }
       
+      if (!nameRegex.test(firstName) || isRandom(firstName)) {
+        addToast("Lütfen geçerli ve anlamlı bir isim giriniz.", "error");
+        return;
+      }
+
+      if (!nameRegex.test(lastName) || isRandom(lastName)) {
+        addToast("Lütfen geçerli ve anlamlı bir soyisim giriniz.", "error");
+        return;
+      }
+
       if (password !== confirmPassword) {
         addToast("Şifreleriniz eşleşmiyor, lütfen kontrol edin.", "error");
         return;
@@ -159,7 +173,13 @@ function LoginContent() {
     try {
       if (isLoginMode) {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
-          if (error) throw error;
+          if (error) {
+            // Şifre Yanlış Kontrolü
+            if (error.message.includes("Invalid login credentials")) {
+               throw new Error("Hatalı e-posta veya şifre girdiniz.");
+            }
+            throw error;
+          }
           router.push("/dashboard");
       } else {
           const firstName = formData.get("firstName") as string;
@@ -176,9 +196,11 @@ function LoginContent() {
               }
             }
           });
+          
           if (error) {
-            if (error.message.includes("already registered")) {
-                throw new Error("Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.");
+            // Kayıtlı Mail Kontrolü
+            if (error.message.includes("already registered") || error.message.includes("User already registered")) {
+                throw new Error("Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın.");
             }
             throw error;
           }
@@ -188,7 +210,7 @@ function LoginContent() {
              setVerificationEmail(email);
              setIsVerifyingOtp(true);
              setResendTimer(45);
-             addToast("E-postanıza 8 haneli bir doğrulama kodu gönderildi.", "success");
+             addToast("E-postanıza 6 haneli bir doğrulama kodu gönderildi.", "success");
              return; // Dashboard'a yönlendirmeyi atla
           } else {
              // OTP kapalıysa direkt dashboard'a at

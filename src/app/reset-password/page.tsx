@@ -35,7 +35,13 @@ function ResetPasswordContent() {
         password: password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Eski şifre ile aynı olma kontrolü
+        if (error.message.includes("New password should be different from the old password")) {
+          throw new Error("Yeni şifreniz mevcut şifrenizden farklı olmalıdır.");
+        }
+        throw error;
+      }
 
       setIsSuccess(true);
       addToast("Şifreniz başarıyla güncellendi!", "success");
