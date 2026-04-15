@@ -95,7 +95,7 @@ export default function LoginPage() {
 
   return (
     <SignInPage
-      heroImageSrc="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=2160&q=80"
+      heroImageSrc="/logo.png"
       testimonials={sampleTestimonials}
       onSignIn={handleSignIn}
       onGoogleSignIn={handleGoogleSignIn}
