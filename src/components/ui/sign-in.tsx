@@ -42,13 +42,13 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const FeatureCard = ({ feature, delay }: { feature: FeatureItem, delay: string }) => (
-  <div className={`animate-testimonial ${delay} flex items-start gap-3 rounded-[20px] bg-[#0b1120] shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-slate-800/80 p-4 w-full h-full`}>
-    <div className="flex-shrink-0 w-10 h-10 rounded-[14px] bg-[#151f38] border border-white/5 flex items-center justify-center text-blue-400">
+  <div className={`animate-testimonial ${delay} flex items-start gap-3 rounded-[20px] bg-[#0b1120]/60 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.25)] border border-white/10 p-4 w-full h-full`}>
+    <div className="flex-shrink-0 w-10 h-10 rounded-[14px] bg-white/5 backdrop-blur-md border border-white/10 flex items-center justify-center text-blue-400">
       {feature.icon}
     </div>
     <div className="text-left flex-1 min-w-0 pr-1">
       <p className="font-bold text-white text-[13px] leading-tight mb-1 truncate">{feature.title}</p>
-      <p className="text-slate-400 font-medium text-[11px] leading-snug line-clamp-3">{feature.description}</p>
+      <p className="text-slate-300 font-medium text-[11px] leading-snug line-clamp-3">{feature.description}</p>
     </div>
   </div>
 );
