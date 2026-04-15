@@ -146,7 +146,6 @@ function LoginContent() {
       const kvkk = formData.get("kvkk") as string;
 
       // İsimleri Otomatik Düzeltme
-      // İsim: ilk harf büyük (Salih), Soyisim: Tamamı büyük (KAVAKCI)
       const formatName = (n: string) => n.trim().charAt(0).toUpperCase() + n.trim().slice(1).toLowerCase();
       const formatSurname = (n: string) => n.trim().toUpperCase();
 
@@ -158,31 +157,47 @@ function LoginContent() {
         return;
       }
       
-      // Anlamlı İsim ve Soyisim Kontrolü (Harf kontrolü ve mantıklı uzunluk)
+      // Katı İsim ve Soyisim Kontrolü
       const nameRegex = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]{2,}$/;
-      const isRandom = (str: string) => /^(.)\1+$/.test(str.toLowerCase().replace(/\s/g, '')); // aaaaa, bbbbb gibi girişleri engeller
+      
+      // Rastgele Karakter Dizisi Kontrolü (Gelişmiş)
+      const isRandomPattern = (str: string) => {
+        const lower = str.toLowerCase().replace(/\s/g, '');
+        // 1. Aynı harfin 3 kez üst üste tekrarlanması (aaaa, bbbb)
+        if (/(.)\1\1/.test(lower)) return true;
+        // 2. Sesli harf içermemesi (asdf, ghjk gibi anlamsız girişleri engeller)
+        if (!/[aeıioöuü]/.test(lower)) return true;
+        // 3. Çok yaygın klavye dizileri
+        const commonPatterns = ['asdf', 'qwerty', 'zxcv', 'jklm'];
+        if (commonPatterns.some(p => lower.includes(p))) return true;
+        return false;
+      };
 
       if (!firstName || !lastName || !confirmPassword) {
-        addToast("Lütfen isim, soyisim ve şifre onayı alanlarını doldurun.", "error");
+        addToast("Lütfen tüm alanları doldurun.", "error");
         return;
       }
       
-      if (!nameRegex.test(firstName) || isRandom(firstName)) {
-        addToast("Lütfen geçerli ve anlamlı bir isim giriniz.", "error");
+      if (!nameRegex.test(firstName) || isRandomPattern(firstName)) {
+        addToast("Lütfen anlamlı bir isim giriniz (Örn: Salih).", "error");
         return;
       }
 
-      if (!nameRegex.test(lastName) || isRandom(lastName)) {
-        addToast("Lütfen geçerli ve anlamlı bir soyisim giriniz.", "error");
+      if (!nameRegex.test(lastName) || isRandomPattern(lastName)) {
+        addToast("Lütfen anlamlı bir soyisim giriniz (Örn: KAVAKCI).", "error");
+        return;
+      }
+
+      if (password.length < 8) {
+        addToast("Şifreniz en az 8 karakter ve güçlü olmalıdır.", "error");
         return;
       }
 
       if (password !== confirmPassword) {
-        addToast("Şifreleriniz eşleşmiyor, lütfen kontrol edin.", "error");
+        addToast("Şifreleriniz eşleşmiyor.", "error");
         return;
       }
       
-      // Kayıt sırasında formatlanmış isimleri kullanmak için değişkenleri güncelle
       formData.set("firstName", firstName);
       formData.set("lastName", lastName);
     }
@@ -216,11 +231,15 @@ function LoginContent() {
           });
           
           if (error) {
-            // Kayıtlı Mail Kontrolü
             if (error.message.includes("already registered") || error.message.includes("User already registered")) {
                 throw new Error("Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın.");
             }
             throw error;
+          }
+
+          // Supabase bazen sessizce başarılı döner ama identities boşsa kullanıcı zaten vardır
+          if (data.user && data.user.identities && data.user.identities.length === 0) {
+            throw new Error("Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın.");
           }
 
           if (data.user && !data.session) {
