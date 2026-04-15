@@ -96,7 +96,6 @@ export default function LoginPage() {
   return (
     <SignInPage
       heroImageSrc="/logo.png"
-      testimonials={sampleTestimonials}
       onSignIn={handleSignIn}
       onGoogleSignIn={handleGoogleSignIn}
       onResetPassword={handleResetPassword}
