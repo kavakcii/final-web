@@ -58,8 +58,8 @@ function LoginContent() {
     const formData = new FormData(event.currentTarget);
     const otpCode = formData.get("otpCode") as string;
 
-    if (!otpCode || otpCode.length !== 6) {
-      addToast("Lütfen 6 haneli doğrulama kodunu eksiksiz girin.", "error");
+    if (!otpCode || otpCode.length < 6) {
+      addToast("Lütfen doğrulama kodunu eksiksiz girin.", "error");
       return;
     }
 

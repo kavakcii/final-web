@@ -32,6 +32,9 @@ interface SignInPageProps {
   isLoginMode?: boolean;
   isVerifyingOtp?: boolean;
   onVerifyOtp?: (event: React.FormEvent<HTMLFormElement>) => void;
+  isForgotPasswordMode?: boolean;
+  onForgotPassword?: (event: React.FormEvent<HTMLFormElement>) => void;
+  onCancelForgotPassword?: () => void;
   isLoading?: boolean;
 }
 
@@ -68,6 +71,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   isLoginMode = true,
   isVerifyingOtp = false,
   onVerifyOtp,
+  isForgotPasswordMode = false,
+  onForgotPassword,
+  onCancelForgotPassword,
   isLoading = false
 }) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -85,18 +91,33 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         <div className="w-full max-w-md">
           <div className="flex flex-col gap-6">
             <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">
-              {isVerifyingOtp ? <span className="font-light text-foreground tracking-tighter">E-postanızı Doğrulayın</span> : isLoginMode ? title : <span className="font-light text-foreground tracking-tighter">Ayrıcalığa Katılın</span>}
+              {isForgotPasswordMode ? <span className="font-light text-foreground tracking-tighter">Şifremi Unuttum</span> : isVerifyingOtp ? <span className="font-light text-foreground tracking-tighter">E-postanızı Doğrulayın</span> : isLoginMode ? title : <span className="font-light text-foreground tracking-tighter">Ayrıcalığa Katılın</span>}
             </h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">
-              {isVerifyingOtp ? "E-posta adresinize gönderilen 6 haneli güvenlik kodunu girin." : isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
+              {isForgotPasswordMode ? "Yeni şifre oluşturmak için kayıtlı e-posta adresinizi girin." : isVerifyingOtp ? "E-posta adresinize gönderilen 6 haneli güvenlik kodunu girin." : isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
             </p>
 
-            {isVerifyingOtp ? (
+            {isForgotPasswordMode ? (
+              <form key="forgot-password" className="space-y-5" onSubmit={onForgotPassword}>
+                <div className="animate-element animate-delay-200">
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Kayıtlı E-Posta Adresi</label>
+                  <GlassInputWrapper>
+                    <input name="email" type="email" required placeholder="ornek@mail.com" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+                  </GlassInputWrapper>
+                </div>
+                <button type="submit" disabled={isLoading} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
+                  {isLoading ? "Gönderiliyor..." : "Sıfırlama Bağlantısı Gönder"}
+                </button>
+                <div className="animate-element animate-delay-400 text-center pt-2">
+                  <a href="#" onClick={(e) => { e.preventDefault(); onCancelForgotPassword?.(); }} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Geri Dön</a>
+                </div>
+              </form>
+            ) : isVerifyingOtp ? (
               <form key="otp" className="space-y-5" onSubmit={onVerifyOtp}>
                 <div className="animate-element animate-delay-200">
                   <label className="text-sm font-medium text-muted-foreground mb-1 block">Doğrulama Kodu</label>
                   <GlassInputWrapper>
-                    <input name="otpCode" type="text" maxLength={6} required placeholder="000000" className="w-full bg-transparent text-center text-3xl font-bold tracking-[0.3em] p-4 rounded-2xl focus:outline-none" />
+                    <input name="otpCode" type="text" maxLength={8} required placeholder="00000000" className="w-full bg-transparent text-center text-3xl font-bold tracking-[0.3em] p-4 rounded-2xl focus:outline-none" />
                   </GlassInputWrapper>
                 </div>
                 <button type="submit" disabled={isLoading} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
@@ -166,7 +187,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             </form>
             )}
 
-            {!isVerifyingOtp && (
+            {!isVerifyingOtp && !isForgotPasswordMode && (
               <p className="animate-element animate-delay-900 text-center font-medium text-sm text-muted-foreground pt-4">
                 {isLoginMode ? "Yeni nesil yatırıma katılmak ister misin? " : "Zaten bir hesabın var mı? "}
                 <a href="#" onClick={(e) => { e.preventDefault(); onToggleMode?.(); }} className="text-blue-600 font-semibold hover:underline transition-colors">
