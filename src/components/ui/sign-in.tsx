@@ -87,7 +87,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               {isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
             </p>
 
-            <form className="space-y-5" onSubmit={onSignIn}>
+            <form key={isLoginMode ? "login" : "register"} className="space-y-5" onSubmit={onSignIn}>
               {!isLoginMode && (
                 <div className="grid grid-cols-2 gap-4 animate-element animate-delay-200">
                   <div>
@@ -105,14 +105,14 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              <div className="animate-element animate-delay-300">
+              <div className={`animate-element ${isLoginMode ? "animate-delay-200" : "animate-delay-300"}`}>
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">E-Posta Adresi</label>
                 <GlassInputWrapper>
                   <input name="email" type="email" required placeholder="ornek@mail.com" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
                 </GlassInputWrapper>
               </div>
 
-              <div className="animate-element animate-delay-400">
+              <div className={`animate-element ${isLoginMode ? "animate-delay-300" : "animate-delay-400"}`}>
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">Şifre</label>
                 <GlassInputWrapper>
                   <div className="relative">
@@ -135,7 +135,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              <div className="animate-element animate-delay-500 flex items-center justify-between text-sm">
+              <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-600"} flex items-center justify-between text-sm`}>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input type="checkbox" name="rememberMe" className="custom-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
                   <span className="text-foreground/90 font-medium">Beni hatırla</span>
@@ -143,7 +143,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline font-medium text-blue-600 transition-colors">Şifremi unuttum</a>
               </div>
 
-              <button type="submit" disabled={isLoading} className="animate-element animate-delay-600 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
+              <button type="submit" disabled={isLoading} className={`animate-element ${isLoginMode ? "animate-delay-500" : "animate-delay-700"} w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50`}>
                 {isLoading ? "İşlem Yapılıyor..." : (isLoginMode ? "Giriş Yap" : "Hesap Oluştur")}
               </button>
             </form>
