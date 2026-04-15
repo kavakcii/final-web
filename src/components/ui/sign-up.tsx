@@ -240,23 +240,7 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                     </AnimatePresence>
                 </div>
 
-                {/* OAuth Area */}
-                <div className="flex flex-col gap-4 w-full mb-6">
-                    <button
-                        type="button"
-                        onClick={handleGoogleLogin}
-                        className="relative flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white shadow-sm px-4 py-3.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all hover:border-slate-300 active:scale-[0.98]"
-                    >
-                        <GoogleIcon className="w-5 h-5 flex-shrink-0" />
-                        Google ile Devam Et
-                    </button>
-
-                    <div className="relative flex items-center py-2">
-                        <span className="w-full border-t border-slate-200"></span>
-                        <span className="px-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest shrink-0">Veya E-posta İle</span>
-                        <span className="w-full border-t border-slate-200"></span>
-                    </div>
-                </div>
+                {/* Removed OAuth Area (Google Login and Divider) */}
 
                 {/* Main Auth Form Animation */}
                 <AnimatePresence mode="wait">
