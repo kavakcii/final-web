@@ -194,13 +194,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-600"} flex items-center justify-between text-sm`}>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" name="rememberMe" className="custom-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
-                  <span className="text-foreground/90 font-medium">Beni hatırla</span>
-                </label>
-                <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline font-medium text-blue-600 transition-colors">Şifremi unuttum</a>
-              </div>
+              {isLoginMode && (
+                <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-600"} flex items-center justify-between text-sm`}>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input type="checkbox" name="rememberMe" className="custom-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
+                    <span className="text-foreground/90 font-medium">Beni hatırla</span>
+                  </label>
+                  <a href="#" onClick={(e) => { e.preventDefault(); onResetPassword?.(); }} className="hover:underline font-medium text-blue-600 transition-colors">Şifremi unuttum</a>
+                </div>
+              )}
 
               <button type="submit" disabled={isLoading} className={`animate-element ${isLoginMode ? "animate-delay-500" : "animate-delay-700"} w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50`}>
                 {isLoading ? "İşlem Yapılıyor..." : (isLoginMode ? "Giriş Yap" : "Hesap Oluştur")}
