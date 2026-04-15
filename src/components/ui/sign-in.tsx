@@ -229,7 +229,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               </div>
 
               {!isLoginMode && (
-                <div className="animate-element animate-delay-500">
+                <div className="animate-element animate-delay-300">
                   <label className="text-sm font-medium text-muted-foreground mb-1 block">Şifre Tekrar</label>
                   <GlassInputWrapper>
                     <div className="relative">
@@ -240,7 +240,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               )}
 
               {!isLoginMode && (
-                <div className="animate-element animate-delay-600 px-1 pt-2">
+                <div className="animate-element animate-delay-400 px-1 pt-2">
                   <label className="flex items-start gap-3 cursor-pointer group">
                     <div className="relative flex items-center">
                       <input 
@@ -260,7 +260,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               )}
 
               {isLoginMode && (
-                <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-700"} flex items-center justify-between text-sm`}>
+                <div className="animate-element animate-delay-500 flex items-center justify-between text-sm">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" name="rememberMe" className="custom-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
                     <span className="text-foreground/90 font-medium">Beni hatırla</span>
@@ -269,7 +269,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               )}
 
-              <button type="submit" disabled={isLoading} className={`animate-element ${isLoginMode ? "animate-delay-500" : "animate-delay-700"} w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50`}>
+              <button type="submit" disabled={isLoading} className={`animate-element ${isLoginMode ? "animate-delay-600" : "animate-delay-700"} w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50`}>
                 {isLoading ? "İşlem Yapılıyor..." : (isLoginMode ? "Giriş Yap" : "Hesap Oluştur")}
               </button>
             </form>
