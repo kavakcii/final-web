@@ -123,18 +123,8 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                 return;
             }
         } else {
-            if (!email || !password || !firstName || !lastName || !phone) {
-                setErrorMessage("Lütfen tüm alanları doldurunuz.");
-                setStatus('error');
-                return;
-            }
-            if (password !== confirmPassword) {
-                setErrorMessage("Şifreler eşleşmiyor!");
-                setStatus('error');
-                return;
-            }
-            if (!termsAccepted) {
-                setErrorMessage("Hesap oluşturmak için kullanıcı sözleşmesini onaylamalısınız.");
+            if (!email || !password) {
+                setErrorMessage("Lütfen e-posta ve şifrenizi giriniz.");
                 setStatus('error');
                 return;
             }
@@ -149,16 +139,7 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
             } else {
                 const { error } = await supabase.auth.signUp({
                     email,
-                    password,
-                    options: {
-                        data: {
-                            first_name: firstName,
-                            last_name: lastName,
-                            full_name: `${firstName} ${lastName}`,
-                            phone: phone,
-                            marketing_consent: marketingAccepted
-                        }
-                    }
+                    password
                 });
 
                 if (error) {
@@ -255,51 +236,20 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                     >
                         {!isLoginMode ? (
                             /* REGISTER FORM */
-                            <div className="grid grid-cols-2 gap-4 w-full">
-                                <PremiumInput label="Ad" type="text" placeholder="Ahmet" value={firstName} onChange={(e: any) => setFirstName(e.target.value)} />
-                                <PremiumInput label="Soyad" type="text" placeholder="Yılmaz" value={lastName} onChange={(e: any) => setLastName(e.target.value)} />
-                                <PremiumInput label="Telefon" type="tel" placeholder="05XX XXX XX XX" value={phone} onChange={(e: any) => setPhone(e.target.value)} colSpan={2} />
-                                <PremiumInput label="E-Posta" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} colSpan={2} />
-                                <PremiumInput 
-                                    label="Şifre" 
-                                    type={showPassword ? "text" : "password"} 
-                                    placeholder="••••••••" 
-                                    value={password} 
-                                    onChange={(e: any) => setPassword(e.target.value)} 
-                                    showToggle={true} 
-                                    toggleState={showPassword} 
-                                    onToggle={() => setShowPassword(!showPassword)}
-                                    colSpan={2} 
-                                />
-                                <PremiumInput 
-                                    label="Şifre (Tekrar)" 
-                                    type={showConfirmPassword ? "text" : "password"} 
-                                    placeholder="••••••••" 
-                                    value={confirmPassword} 
-                                    onChange={(e: any) => setConfirmPassword(e.target.value)} 
-                                    showToggle={true} 
-                                    toggleState={showConfirmPassword} 
-                                    onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    colSpan={2} 
-                                />
-
-                                <div className="col-span-2 space-y-3 mt-2 bg-slate-50/50 p-4 rounded-xl border border-slate-200/50">
-                                    <label className="flex items-start gap-3 cursor-pointer group">
-                                        <div className={cn("mt-0.5 w-[18px] h-[18px] rounded-[5px] border shrink-0 flex items-center justify-center transition-all duration-200", termsAccepted ? "bg-slate-900 border-slate-900" : "border-slate-300 bg-white group-hover:border-slate-400")}>
-                                            {termsAccepted && <Check className="w-3 h-3 text-white stroke-[3]" />}
-                                        </div>
-                                        <span className="text-[12px] text-slate-500 font-medium leading-[1.4]">
-                                            <button type="button" className="text-slate-800 font-bold hover:underline">Kullanım Şartları</button> ve <button type="button" className="text-slate-800 font-bold hover:underline">Aydınlatma Metnini</button> onaylıyorum.
-                                        </span>
-                                    </label>
-                                    <label className="flex items-start gap-3 cursor-pointer group">
-                                        <div className={cn("mt-0.5 w-[18px] h-[18px] rounded-[5px] border shrink-0 flex items-center justify-center transition-all duration-200", marketingAccepted ? "bg-slate-900 border-slate-900" : "border-slate-300 bg-white group-hover:border-slate-400")}>
-                                            {marketingAccepted && <Check className="w-3 h-3 text-white stroke-[3]" />}
-                                        </div>
-                                        <span className="text-[12px] text-slate-500 font-medium leading-[1.4]">
-                                            Yenilikler için e-posta gönderilmesine izin veriyorum.
-                                        </span>
-                                    </label>
+                            <div className="space-y-4 w-full">
+                                <PremiumInput label="E-Posta Adresi" type="email" placeholder="ornek@mail.com" value={email} onChange={(e: any) => setEmail(e.target.value)} />
+                                
+                                <div className="relative">
+                                    <PremiumInput 
+                                        label="Şifre" 
+                                        type={showPassword ? "text" : "password"} 
+                                        placeholder="••••••••" 
+                                        value={password} 
+                                        onChange={(e: any) => setPassword(e.target.value)} 
+                                        showToggle={true} 
+                                        toggleState={showPassword} 
+                                        onToggle={() => setShowPassword(!showPassword)} 
+                                    />
                                 </div>
                             </div>
                         ) : (

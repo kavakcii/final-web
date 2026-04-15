@@ -15,18 +15,17 @@ const GoogleIcon = () => (
 
 // --- TYPE DEFINITIONS ---
 
-export interface Testimonial {
-  avatarSrc: string;
-  name: string;
-  handle: string;
-  text: string;
+export interface FeatureItem {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
 }
 
 interface SignInPageProps {
   title?: React.ReactNode;
   description?: React.ReactNode;
   heroImageSrc?: string;
-  testimonials?: Testimonial[];
+  features?: FeatureItem[];
   onSignIn?: (event: React.FormEvent<HTMLFormElement>) => void;
   onGoogleSignIn?: () => void;
   onResetPassword?: () => void;
@@ -42,13 +41,14 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const TestimonialCard = ({ testimonial, delay }: { testimonial: Testimonial, delay: string }) => (
-  <div className={`animate-testimonial ${delay} flex items-start gap-3 rounded-3xl bg-card/60 dark:bg-zinc-800/60 backdrop-blur-xl border border-white/20 p-5 w-64 shadow-xl`}>
-    <img src={testimonial.avatarSrc} className="h-10 w-10 object-cover rounded-2xl" alt="avatar" />
+const FeatureCard = ({ feature, delay }: { feature: FeatureItem, delay: string }) => (
+  <div className={`animate-testimonial ${delay} flex items-start gap-4 rounded-3xl bg-white dark:bg-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-slate-800 p-5 w-[260px]`}>
+    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
+      {feature.icon}
+    </div>
     <div className="text-sm leading-snug">
-      <p className="flex items-center gap-1 font-medium">{testimonial.name}</p>
-      <p className="text-muted-foreground">{testimonial.handle}</p>
-      <p className="mt-1 text-foreground/80">{testimonial.text}</p>
+      <p className="font-semibold text-slate-800 dark:text-slate-100">{feature.title}</p>
+      <p className="mt-1.5 text-slate-500 dark:text-slate-400 font-medium text-[13px]">{feature.description}</p>
     </div>
   </div>
 );
@@ -59,7 +59,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   title = <span className="font-light text-foreground tracking-tighter">FinAi'ye Hoş Geldiniz</span>,
   description = "Hesabınıza giriş yapın ve yapay zeka destekli yatırım yolculuğunuza devam edin.",
   heroImageSrc,
-  testimonials = [],
+  features = [],
   onSignIn,
   onGoogleSignIn,
   onResetPassword,
@@ -142,11 +142,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           >
              {!heroImageSrc.includes('logo') && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>}
           </div>
-          {testimonials.length > 0 && (
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center lg:px-12">
-              {testimonials.map((test, index) => (
+          {features.length > 0 && (
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-5 px-8 w-full justify-center lg:px-12">
+              {features.map((feature, index) => (
                   <div key={index} className={index === 0 ? "flex" : index === 1 ? "hidden xl:flex" : "hidden 2xl:flex"}>
-                     <TestimonialCard testimonial={test} delay={`animate-delay-${1000 + (index * 200)}`} />
+                     <FeatureCard feature={feature} delay={`animate-delay-${1000 + (index * 200)}`} />
                   </div>
               ))}
             </div>
