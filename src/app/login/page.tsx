@@ -85,11 +85,11 @@ export default function LoginPage() {
 
   const handleResetPassword = () => {
     // Implement forgot password navigation or modal
-    addToast("Şifre sıfırlama henüz eklenmedi", "info");
+    addToast("Şifre sıfırlama henüz eklenmedi", "success");
   };
 
   const handleCreateAccount = () => {
-    addToast("Kayıt olma sayfasına yönlendiriliyorsunuz (UI henüz entegre edilmedi).", "info");
+    addToast("Kayıt olma sayfasına yönlendiriliyorsunuz (UI henüz entegre edilmedi).", "success");
     // Implement Register toggle if needed
   };
 
