@@ -42,6 +42,7 @@ function LoginContent() {
 
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -166,8 +167,36 @@ function LoginContent() {
     }
   };
 
+  const handleForgotPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
+
+    if (!email) {
+      addToast("Lütfen e-posta adresinizi girin.", "error");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/dashboard`, // Or a specific settings password page
+      });
+
+      if (error) throw error;
+      
+      addToast("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.", "success");
+      setIsForgotPasswordMode(false);
+    } catch (error: any) {
+      console.error("Reset Password Error:", error);
+      addToast(error.message || "Bir hata oluştu, lütfen tekrar deneyin.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleResetPassword = () => {
-    addToast("Şifre sıfırlama henüz eklenmedi", "success");
+    setIsForgotPasswordMode(true);
   };
 
   return (
@@ -180,6 +209,9 @@ function LoginContent() {
       isLoginMode={isLoginMode}
       isVerifyingOtp={isVerifyingOtp}
       onVerifyOtp={handleVerifyOtp}
+      isForgotPasswordMode={isForgotPasswordMode}
+      onForgotPassword={handleForgotPassword}
+      onCancelForgotPassword={() => setIsForgotPasswordMode(false)}
       isLoading={isLoading}
     />
   );
