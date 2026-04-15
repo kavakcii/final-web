@@ -140,9 +140,23 @@ function LoginContent() {
     }
 
     if (!isLoginMode) {
-      const firstName = formData.get("firstName") as string;
-      const lastName = formData.get("lastName") as string;
+      const rawFirstName = formData.get("firstName") as string;
+      const rawLastName = formData.get("lastName") as string;
       const confirmPassword = formData.get("confirmPassword") as string;
+      const kvkk = formData.get("kvkk") as string;
+
+      // İsimleri Otomatik Düzeltme
+      // İsim: ilk harf büyük (Salih), Soyisim: Tamamı büyük (KAVAKCI)
+      const formatName = (n: string) => n.trim().charAt(0).toUpperCase() + n.trim().slice(1).toLowerCase();
+      const formatSurname = (n: string) => n.trim().toUpperCase();
+
+      const firstName = rawFirstName ? formatName(rawFirstName) : "";
+      const lastName = rawLastName ? formatSurname(rawLastName) : "";
+
+      if (!kvkk) {
+        addToast("Lütfen Kullanım Koşulları ve KVKK metnini onaylayın.", "error");
+        return;
+      }
       
       // Anlamlı İsim ve Soyisim Kontrolü (Harf kontrolü ve mantıklı uzunluk)
       const nameRegex = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]{2,}$/;
@@ -167,6 +181,10 @@ function LoginContent() {
         addToast("Şifreleriniz eşleşmiyor, lütfen kontrol edin.", "error");
         return;
       }
+      
+      // Kayıt sırasında formatlanmış isimleri kullanmak için değişkenleri güncelle
+      formData.set("firstName", firstName);
+      formData.set("lastName", lastName);
     }
 
     setIsLoading(true);

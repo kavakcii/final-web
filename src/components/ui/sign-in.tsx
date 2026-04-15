@@ -83,6 +83,22 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   isLoading = false
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Şifre gücü hesaplama
+  const calculateStrength = (pass: string) => {
+    let score = 0;
+    if (pass.length >= 8) score += 25;
+    if (/[A-Z]/.test(pass)) score += 25;
+    if (/[0-9]/.test(pass)) score += 25;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 25;
+    return score;
+  };
+
+  const strength = calculateStrength(passwordValue);
+  const strengthColor = strength <= 25 ? "bg-red-500" : strength <= 50 ? "bg-orange-500" : strength <= 75 ? "bg-yellow-500" : "bg-green-500";
+  const strengthText = strength <= 25 ? "Zayıf" : strength <= 50 ? "Orta" : strength <= 75 ? "İyi" : "Güçlü";
 
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row font-sans w-full bg-background overflow-hidden relative">
@@ -175,12 +191,40 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">Şifre</label>
                 <GlassInputWrapper>
                   <div className="relative">
-                    <input name="password" type={showPassword ? 'text' : 'password'} required placeholder="••••••••" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
+                    <input 
+                      name="password" 
+                      type={showPassword ? 'text' : 'password'} 
+                      required 
+                      value={passwordValue}
+                      onChange={(e) => setPasswordValue(e.target.value)}
+                      placeholder="••••••••" 
+                      className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" 
+                    />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-3 flex items-center">
                       {showPassword ? <EyeOff className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" /> : <Eye className="w-5 h-5 text-muted-foreground hover:text-foreground transition-colors" />}
                     </button>
                   </div>
                 </GlassInputWrapper>
+
+                {/* Şifre Güç Barı (Sadece Kayıt Modunda) */}
+                {!isLoginMode && passwordValue && (
+                   <div className="mt-2 space-y-1.5 px-1 animate-element">
+                      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                        <span className="text-muted-foreground">Şifre Gücü</span>
+                        <span style={{ color: strength > 75 ? '#22c55e' : strength > 25 ? '#f59e0b' : '#ef4444' }}>{strengthText}</span>
+                      </div>
+                      <div className="h-1 w-full bg-slate-200 rounded-full overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${strength}%` }}
+                          className={`h-full ${strengthColor} transition-all duration-300`}
+                        />
+                      </div>
+                      <p className="text-[9px] text-muted-foreground leading-tight">
+                        En az 8 karakter, büyük harf, rakam ve sembol kullanın.
+                      </p>
+                   </div>
+                )}
               </div>
 
               {!isLoginMode && (
@@ -195,7 +239,27 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               )}
 
               {isLoginMode && (
-                <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-600"} flex items-center justify-between text-sm`}>
+                 {!isLoginMode && (
+                <div className="animate-element animate-delay-600 px-1 pt-2">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <div className="relative flex items-center">
+                      <input 
+                        type="checkbox" 
+                        name="kvkk" 
+                        required
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="custom-checkbox w-4 h-4 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B] transition-all" 
+                      />
+                    </div>
+                    <span className="text-[11px] leading-tight text-muted-foreground select-none">
+                      <a href="#" className="font-bold text-[#00008B] hover:underline">Kullanım Koşulları</a> ve <a href="#" className="font-bold text-[#00008B] hover:underline">KVKK Aydınlatma Metnini</a> okudum, kabul ediyorum.
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              <div className={`animate-element ${isLoginMode ? "animate-delay-400" : "animate-delay-700"} flex items-center justify-between text-sm`}>
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input type="checkbox" name="rememberMe" className="custom-checkbox w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-600" />
                     <span className="text-foreground/90 font-medium">Beni hatırla</span>
