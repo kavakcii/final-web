@@ -2,8 +2,8 @@
 
 import { SignInPage, FeatureItem } from "@/components/ui/sign-in";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import { useToast } from "@/components/providers/ToastProvider";
 import { Users, BarChart3, ShieldCheck, Zap } from "lucide-react";
 
@@ -30,11 +30,15 @@ const platformFeatures: FeatureItem[] = [
   },
 ];
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [isLoginMode, setIsLoginMode] = useState(true);
+  
+  // URL'de '?tab=register' varsa isLoginMode false olacak şekilde bailat.
+  const isRegisterTab = searchParams.get('tab') === 'register';
+  const [isLoginMode, setIsLoginMode] = useState(!isRegisterTab);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -128,5 +132,13 @@ export default function LoginPage() {
       isLoginMode={isLoginMode}
       isLoading={isLoading}
     />
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-background"><div className="animate-pulse flex space-x-4"><div className="rounded-full bg-slate-200 h-10 w-10"></div><div className="flex-1 space-y-6 py-1"><div className="h-2 bg-slate-200 rounded"></div><div className="space-y-3"><div className="grid grid-cols-3 gap-4"><div className="h-2 bg-slate-200 rounded col-span-2"></div><div className="h-2 bg-slate-200 rounded col-span-1"></div></div></div></div></div></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
