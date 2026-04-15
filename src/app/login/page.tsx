@@ -1,29 +1,27 @@
 "use client";
 
-import { SignInPage, Testimonial } from "@/components/ui/sign-in";
+import { SignInPage, FeatureItem } from "@/components/ui/sign-in";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/providers/ToastProvider";
+import { Users, BarChart3, ShieldCheck } from "lucide-react";
 
-const sampleTestimonials: Testimonial[] = [
+const platformFeatures: FeatureItem[] = [
   {
-    avatarSrc: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&q=80",
-    name: "Ayşe Yılmaz",
-    handle: "@ayseyilmaz",
-    text: "FinAi sayesinde yatırımlarımı çok daha bilinçli ve stressiz yönetiyorum. Kesinlikle tavsiye ederim!"
+    icon: <Users size={20} />,
+    title: "5,000+ Aktif Yatırımcı",
+    description: "FinAi topluluğuna katılarak akıllı yatırımlara adım atın.",
   },
   {
-    avatarSrc: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&q=80",
-    name: "Mehmet Demir",
-    handle: "@mdemir_fin",
-    text: "Araştırma ve analiz süreçleri inanılmaz hızlandı. Temiz tasarımı ve güçlü özellikleriyle harika bir platform."
+    icon: <BarChart3 size={20} />,
+    title: "Akıllı Analizler",
+    description: "Portföyünüzü yapay zeka destekli detaylı içgörülerle büyütün.",
   },
   {
-    avatarSrc: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=150&q=80",
-    name: "Zeynep Kaya",
-    handle: "@zeynepinvest",
-    text: "Kullanıcı deneyimi çok akıcı. Yeni başlayanlardan profesyonellere kadar herkese hitap eden yatırım asistanı."
+    icon: <ShieldCheck size={20} />,
+    title: "Güvenli Altyapı",
+    description: "Verileriniz uçtan uca şifreleme ve banka standartlarında korunur.",
   },
 ];
 
@@ -96,6 +94,7 @@ export default function LoginPage() {
   return (
     <SignInPage
       heroImageSrc="/logo.png"
+      features={platformFeatures}
       onSignIn={handleSignIn}
       onGoogleSignIn={handleGoogleSignIn}
       onResetPassword={handleResetPassword}
