@@ -43,6 +43,7 @@ function LoginContent() {
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
+  const [isOtpSuccess, setIsOtpSuccess] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -59,8 +60,8 @@ function LoginContent() {
     const formData = new FormData(event.currentTarget);
     const otpCode = formData.get("otpCode") as string;
 
-    if (!otpCode || otpCode.length < 6) {
-      addToast("Lütfen doğrulama kodunu eksiksiz girin.", "error");
+    if (!otpCode || otpCode.length < 8) {
+      addToast("Lütfen 8 haneli doğrulama kodunu eksiksiz girin.", "error");
       return;
     }
 
@@ -73,9 +74,14 @@ function LoginContent() {
       });
 
       if (error) throw error;
+      
       if (data.session) {
-         router.push("/dashboard");
-         addToast("Hesabınız doğrulandı, hoş geldiniz!", "success");
+         setIsOtpSuccess(true);
+         // 1.5 saniye bekletme (FinAi'ye hoşgeldiniz mesajını görmesi için)
+         setTimeout(() => {
+           router.push("/dashboard");
+           addToast("Hesabınız doğrulandı, hoş geldiniz!", "success");
+         }, 1500);
       } else {
          addToast("Doğrulama başarılı ancak oturum açılamadı. Lütfen giriş yapın.", "success");
          setIsVerifyingOtp(false);
@@ -208,6 +214,7 @@ function LoginContent() {
       onToggleMode={() => setIsLoginMode(!isLoginMode)}
       isLoginMode={isLoginMode}
       isVerifyingOtp={isVerifyingOtp}
+      isOtpSuccess={isOtpSuccess}
       onVerifyOtp={handleVerifyOtp}
       isForgotPasswordMode={isForgotPasswordMode}
       onForgotPassword={handleForgotPassword}

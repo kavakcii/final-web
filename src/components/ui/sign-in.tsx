@@ -31,6 +31,7 @@ interface SignInPageProps {
   onToggleMode?: () => void;
   isLoginMode?: boolean;
   isVerifyingOtp?: boolean;
+  isOtpSuccess?: boolean;
   onVerifyOtp?: (event: React.FormEvent<HTMLFormElement>) => void;
   isForgotPasswordMode?: boolean;
   onForgotPassword?: (event: React.FormEvent<HTMLFormElement>) => void;
@@ -70,6 +71,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onToggleMode,
   isLoginMode = true,
   isVerifyingOtp = false,
+  isOtpSuccess = false,
   onVerifyOtp,
   isForgotPasswordMode = false,
   onForgotPassword,
@@ -94,7 +96,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               {isForgotPasswordMode ? <span className="font-light text-foreground tracking-tighter">Şifremi Unuttum</span> : isVerifyingOtp ? <span className="font-light text-foreground tracking-tighter">E-postanızı Doğrulayın</span> : isLoginMode ? title : <span className="font-light text-foreground tracking-tighter">Ayrıcalığa Katılın</span>}
             </h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">
-              {isForgotPasswordMode ? "Yeni şifre oluşturmak için kayıtlı e-posta adresinizi girin." : isVerifyingOtp ? "E-posta adresinize gönderilen 6 haneli güvenlik kodunu girin." : isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
+              {isForgotPasswordMode ? "Yeni şifre oluşturmak için kayıtlı e-posta adresinizi girin." : isVerifyingOtp ? "E-posta adresinize gönderilen 8 haneli güvenlik kodunu girin." : isLoginMode ? description : "Yeni nesil yapay zeka asistanınla hemen tanış."}
             </p>
 
             {isForgotPasswordMode ? (
@@ -117,11 +119,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <div className="animate-element animate-delay-200">
                   <label className="text-sm font-medium text-muted-foreground mb-1 block">Doğrulama Kodu</label>
                   <GlassInputWrapper>
-                    <input name="otpCode" type="text" maxLength={8} required placeholder="00000000" className="w-full bg-transparent text-center text-3xl font-bold tracking-[0.3em] p-4 rounded-2xl focus:outline-none" />
+                    <input name="otpCode" type="text" maxLength={8} required placeholder="" className="w-full bg-transparent text-center text-3xl font-bold tracking-[0.3em] p-4 rounded-2xl focus:outline-none" />
                   </GlassInputWrapper>
                 </div>
-                <button type="submit" disabled={isLoading} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
-                  {isLoading ? "Doğrulanıyor..." : "Hesabı Onayla"}
+                <button type="submit" disabled={isLoading || isOtpSuccess} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
+                  {isOtpSuccess ? "FinAi'ye Hoşgeldiniz" : (isLoading ? "Doğrulanıyor..." : "Hesabı Onayla")}
                 </button>
               </form>
             ) : (
