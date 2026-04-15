@@ -44,6 +44,7 @@ function LoginContent() {
   const [verificationEmail, setVerificationEmail] = useState("");
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [isOtpSuccess, setIsOtpSuccess] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -54,6 +55,16 @@ function LoginContent() {
     };
     checkSession();
   }, [router]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const handleVerifyOtp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -90,6 +101,28 @@ function LoginContent() {
     } catch (error: any) {
       console.error("OTP Error:", error);
       addToast("Doğrulama kodu hatalı veya süresi geçmiş olabilir.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendTimer > 0) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: verificationEmail,
+      });
+
+      if (error) throw error;
+      
+      setResendTimer(45);
+      addToast("Doğrulama kodu tekrar gönderildi.", "success");
+    } catch (error: any) {
+      console.error("Resend Error:", error);
+      addToast(error.message || "Kod gönderilemedi.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -154,7 +187,8 @@ function LoginContent() {
              // Opsiyonel e-posta onayı (OTP) aktif demektir
              setVerificationEmail(email);
              setIsVerifyingOtp(true);
-             addToast("E-postanıza 6 haneli bir doğrulama kodu gönderildi.", "success");
+             setResendTimer(45);
+             addToast("E-postanıza 8 haneli bir doğrulama kodu gönderildi.", "success");
              return; // Dashboard'a yönlendirmeyi atla
           } else {
              // OTP kapalıysa direkt dashboard'a at
@@ -186,7 +220,7 @@ function LoginContent() {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/dashboard`, // Or a specific settings password page
+        redirectTo: `${window.location.origin}/reset-password`, 
       });
 
       if (error) throw error;
@@ -216,6 +250,8 @@ function LoginContent() {
       isVerifyingOtp={isVerifyingOtp}
       isOtpSuccess={isOtpSuccess}
       onVerifyOtp={handleVerifyOtp}
+      onResendOtp={handleResendOtp}
+      resendTimer={resendTimer}
       isForgotPasswordMode={isForgotPasswordMode}
       onForgotPassword={handleForgotPassword}
       onCancelForgotPassword={() => setIsForgotPasswordMode(false)}

@@ -33,6 +33,8 @@ interface SignInPageProps {
   isVerifyingOtp?: boolean;
   isOtpSuccess?: boolean;
   onVerifyOtp?: (event: React.FormEvent<HTMLFormElement>) => void;
+  onResendOtp?: () => void;
+  resendTimer?: number;
   isForgotPasswordMode?: boolean;
   onForgotPassword?: (event: React.FormEvent<HTMLFormElement>) => void;
   onCancelForgotPassword?: () => void;
@@ -73,6 +75,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   isVerifyingOtp = false,
   isOtpSuccess = false,
   onVerifyOtp,
+  onResendOtp,
+  resendTimer = 0,
   isForgotPasswordMode = false,
   onForgotPassword,
   onCancelForgotPassword,
@@ -125,6 +129,21 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 <button type="submit" disabled={isLoading || isOtpSuccess} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
                   {isOtpSuccess ? "FinAi'ye Hoşgeldiniz" : (isLoading ? "Doğrulanıyor..." : "Hesabı Onayla")}
                 </button>
+                <div className="animate-element animate-delay-400 text-center text-sm">
+                  <span className="text-muted-foreground">Kodu almadınız mı? </span>
+                  {resendTimer > 0 ? (
+                    <span className="text-blue-600 font-semibold">{resendTimer} sn bekleyin</span>
+                  ) : (
+                    <button 
+                      type="button" 
+                      onClick={onResendOtp}
+                      disabled={isLoading}
+                      className="text-blue-600 font-semibold hover:underline"
+                    >
+                      Tekrar Gönder
+                    </button>
+                  )}
+                </div>
               </form>
             ) : (
             <form key={isLoginMode ? "login" : "register"} className="space-y-5" onSubmit={onSignIn}>
