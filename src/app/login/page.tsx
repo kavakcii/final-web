@@ -5,23 +5,28 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useToast } from "@/components/providers/ToastProvider";
-import { Users, BarChart3, ShieldCheck } from "lucide-react";
+import { Users, BarChart3, ShieldCheck, Zap } from "lucide-react";
 
 const platformFeatures: FeatureItem[] = [
   {
     icon: <Users size={20} />,
-    title: "5,000+ Aktif Yatırımcı",
+    title: "5,000+ Yatırımcı",
     description: "FinAi topluluğuna katılarak akıllı yatırımlara adım atın.",
   },
   {
     icon: <BarChart3 size={20} />,
-    title: "Akıllı Analizler",
-    description: "Portföyünüzü yapay zeka destekli detaylı içgörülerle büyütün.",
+    title: "Akıllı Analiz",
+    description: "Portföyünüzü yapay zeka destekli içgörülerle büyütün.",
   },
   {
     icon: <ShieldCheck size={20} />,
     title: "Güvenli Altyapı",
-    description: "Verileriniz uçtan uca şifreleme ve banka standartlarında korunur.",
+    description: "Verileriniz üst düzey banka veritabanı standartlarında korunur.",
+  },
+  {
+    icon: <Zap size={20} />,
+    title: "Anında Bildirim",
+    description: "Piyasa fırsatlarını yakalamak için gerçek zamanlı uyarılar alın.",
   },
 ];
 

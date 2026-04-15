@@ -42,13 +42,13 @@ const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 const FeatureCard = ({ feature, delay }: { feature: FeatureItem, delay: string }) => (
-  <div className={`animate-testimonial ${delay} flex items-start gap-4 rounded-3xl bg-white dark:bg-slate-900 shadow-[0_10px_30px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-slate-800 p-5 w-[260px]`}>
-    <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400">
-      {feature.icon}
+  <div className={`animate-testimonial ${delay} flex items-start gap-3 rounded-[20px] bg-[#0b1120] shadow-[0_10px_30px_rgba(0,0,0,0.15)] border border-slate-800/80 p-4 w-full h-full`}>
+    <div className="flex-shrink-0 w-10 h-10 rounded-[14px] bg-[#151f38] border border-white/5 flex items-center justify-center text-blue-400">
+      {React.cloneElement(feature.icon as React.ReactElement, { size: 18 })}
     </div>
-    <div className="text-sm leading-snug">
-      <p className="font-semibold text-slate-800 dark:text-slate-100">{feature.title}</p>
-      <p className="mt-1.5 text-slate-500 dark:text-slate-400 font-medium text-[13px]">{feature.description}</p>
+    <div className="text-left flex-1 min-w-0 pr-1">
+      <p className="font-bold text-white text-[13px] leading-tight mb-1 truncate">{feature.title}</p>
+      <p className="text-slate-400 font-medium text-[11px] leading-snug line-clamp-3">{feature.description}</p>
     </div>
   </div>
 );
@@ -88,6 +88,23 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             </p>
 
             <form className="space-y-5" onSubmit={onSignIn}>
+              {!isLoginMode && (
+                <div className="grid grid-cols-2 gap-4 animate-element animate-delay-200">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground mb-1 block">Ad</label>
+                    <GlassInputWrapper>
+                      <input name="firstName" type="text" required placeholder="Adınız" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+                    </GlassInputWrapper>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground mb-1 block">Soyad</label>
+                    <GlassInputWrapper>
+                      <input name="lastName" type="text" required placeholder="Soyadınız" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+                    </GlassInputWrapper>
+                  </div>
+                </div>
+              )}
+
               <div className="animate-element animate-delay-300">
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">E-Posta Adresi</label>
                 <GlassInputWrapper>
@@ -106,6 +123,17 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   </div>
                 </GlassInputWrapper>
               </div>
+
+              {!isLoginMode && (
+                <div className="animate-element animate-delay-500">
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Şifre Tekrar</label>
+                  <GlassInputWrapper>
+                    <div className="relative">
+                      <input name="confirmPassword" type={showPassword ? 'text' : 'password'} required placeholder="••••••••" className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none" />
+                    </div>
+                  </GlassInputWrapper>
+                </div>
+              )}
 
               <div className="animate-element animate-delay-500 flex items-center justify-between text-sm">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -140,9 +168,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
              {!heroImageSrc.includes('logo') && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>}
           </div>
           {features.length > 0 && (
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-5 px-8 w-full justify-center lg:px-12">
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 grid grid-cols-2 gap-3 px-8 w-full max-w-[650px] justify-center items-center">
               {features.map((feature, index) => (
-                  <div key={index} className={index === 0 ? "flex" : index === 1 ? "hidden xl:flex" : "hidden 2xl:flex"}>
+                  <div key={index} className="flex justify-center w-full h-full">
                      <FeatureCard feature={feature} delay={`animate-delay-${1000 + (index * 200)}`} />
                   </div>
               ))}
