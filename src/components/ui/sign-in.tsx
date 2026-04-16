@@ -101,11 +101,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalTab, setLegalTab] = useState<'terms' | 'kvkk'>('terms');
 
-  const openLegal = (tab: 'terms' | 'kvkk' = 'terms') => {
-      setLegalTab(tab);
-      setIsLegalModalOpen(true);
-  };
-
   // Şifre gücü hesaplama
   const calculateStrength = (pass: string) => {
     let score = 0;
