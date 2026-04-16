@@ -6,32 +6,39 @@ import { cn } from "@/lib/utils";
 interface LegalModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onApprove?: (tab: 'terms' | 'kvkk') => void;
+  onReject?: () => void;
   initialTab?: 'terms' | 'kvkk';
 }
 
-export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModalProps) => {
+export const LegalModal = ({ isOpen, onClose, onApprove, onReject, initialTab = 'terms' }: LegalModalProps) => {
   const [activeTab, setActiveTab] = React.useState<'terms' | 'kvkk'>(initialTab);
 
+  // Sync internal state when initialTab changes from external flow
+  React.useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, isOpen]);
+
   const termsContent = (
-    <div className="space-y-6 text-slate-600 text-sm leading-relaxed">
+    <div className="space-y-6 text-slate-600 text-[13px] leading-relaxed">
       <h3 className="text-lg font-black text-slate-900 border-b-2 border-slate-100 pb-2">1. Hizmet Kapsamı</h3>
       <p>FinAi, yatırım kararlarınıza destek amaçlı bilgi sunan bir yapay zeka platformudur.</p>
       
-      <div className="bg-red-50 p-4 rounded-xl border border-red-100 font-bold text-red-800 text-xs">
+      <div className="bg-red-50 p-4 rounded-xl border border-red-100 font-bold text-red-800 text-[11px]">
         ⚠️ YASAL UYARI: Platformdaki hiçbir içerik yatırım danışmanlığı kapsamında değildir.
       </div>
 
       <h3 className="text-lg font-black text-slate-900 border-b-2 border-slate-100 pb-2">2. Sorumluluk Reddi</h3>
-      <p>Piyasa verilerindeki (BIST/TEFAS) gecikmeler veya yanlışlıklardan FinAi sorumlu tutulamaz.</p>
+      <p>Piyasa verilerindeki (BIST/TEFAS) gecikmeler veya yanlışlıklardan FinAi sorumlu tutulamaz. Yatırım kararlarınız tamamen kendi sorumluluğunuzdadır.</p>
       
       <h3 className="text-lg font-black text-slate-900 border-b-2 border-slate-100 pb-2">3. Fikri Mülkiyet</h3>
-      <p>Sunulan analiz algoritmaları ve tasarım FinAi'nin fikri mülkiyetidir.</p>
+      <p>Sunulan analiz algoritmaları, yazılım kodları ve tasarım FinAi'nin fikri mülkiyetidir.</p>
     </div>
   );
 
   const kvkkContent = (
-    <div className="space-y-6 text-slate-600 text-sm leading-relaxed">
-      <h3 className="text-lg font-black text-slate-900 border-b-2 border-slate-100 pb-2">Aydınlatma Metni</h3>
+    <div className="space-y-6 text-slate-600 text-[13px] leading-relaxed">
+      <h3 className="text-lg font-black text-slate-900 border-b-2 border-slate-100 pb-2">KVKK Aydınlatma Metni</h3>
       <p>FinAi olarak kişisel verilerinizi 6698 sayılı KVKK uyarınca işliyoruz.</p>
       
       <h4 className="font-bold text-slate-900">İşlenen Veriler:</h4>
@@ -42,7 +49,7 @@ export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModal
       </ul>
 
       <h4 className="font-bold text-slate-900">Veri İşleme Amacı:</h4>
-      <p>Portföy analizi yapmak, performans raporları sunmak ve yasal yükümlülüklerimizi yerine getirmek.</p>
+      <p>Portföy analizi yapmak, performans raporları sunmak ve yasal yükümlülüklerimizi yerine getirmek. Verileriniz güvenle saklanmaktadır.</p>
     </div>
   );
 
@@ -69,7 +76,7 @@ export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModal
             {/* Header */}
             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-[#00008B] flex items-center justify-center shadow-lg">
                   <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -91,7 +98,7 @@ export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModal
                 onClick={() => setActiveTab('terms')}
                 className={cn(
                   "flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
-                  activeTab === 'terms' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  activeTab === 'terms' ? "bg-white text-[#00008B] shadow-sm border border-slate-100" : "text-slate-500 hover:text-slate-700"
                 )}
               >
                 <FileText className="w-4 h-4" />
@@ -101,7 +108,7 @@ export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModal
                 onClick={() => setActiveTab('kvkk')}
                 className={cn(
                   "flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2",
-                  activeTab === 'kvkk' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  activeTab === 'kvkk' ? "bg-white text-[#00008B] shadow-sm border border-slate-100" : "text-slate-500 hover:text-slate-700"
                 )}
               >
                 <Scale className="w-4 h-4" />
@@ -115,12 +122,18 @@ export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModal
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-slate-100 text-center">
+            <div className="p-6 border-t border-slate-100 flex gap-4 items-center justify-end">
               <button 
-                onClick={onClose}
-                className="px-10 py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                onClick={onReject || onClose}
+                className="px-6 py-3 rounded-xl text-slate-500 font-bold text-sm hover:text-slate-900 transition-all active:scale-95"
               >
-                Anladım
+                Reddet
+              </button>
+              <button 
+                onClick={() => onApprove?.(activeTab)}
+                className="px-10 py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+              >
+                Okudum, Onaylıyorum
               </button>
             </div>
           </motion.div>
@@ -129,3 +142,4 @@ export const LegalModal = ({ isOpen, onClose, initialTab = 'terms' }: LegalModal
     </AnimatePresence>
   );
 };
+

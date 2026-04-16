@@ -113,9 +113,51 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     return score;
   };
 
-  const strength = calculateStrength(passwordValue);
-  const strengthColor = strength <= 25 ? "bg-red-500" : strength <= 50 ? "bg-orange-500" : strength <= 75 ? "bg-yellow-500" : "bg-green-500";
   const strengthText = strength <= 25 ? "Zayıf" : strength <= 50 ? "Orta" : strength <= 75 ? "İyi" : "Güçlü";
+
+  // AUTOMATED LEGAL FLOW LOGIC
+  const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent<HTMLFormElement> | null>(null);
+
+  const handleActionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    // Sadece kayıt modunda ve checkbox işaretli değilse modal akışını başlat
+    if (!isLoginMode && !termsAccepted) {
+      setPendingSubmitEvent(e);
+      openLegal('terms');
+      return;
+    }
+
+    // Giriş moduysa veya zaten onaylıysa direkt devam et
+    onSignIn?.(e);
+  };
+
+  const handleLegalApprove = (tab: 'terms' | 'kvkk') => {
+    if (tab === 'terms') {
+      // Kullanım koşulları onaylandı, KVKK'ya geç
+      setLegalTab('kvkk');
+    } else {
+      // Her ikisi de onaylandı!
+      setTermsAccepted(true);
+      setIsLegalModalOpen(false);
+      
+      // Eğer bir submit işlemi bekleniyorsa onu tetikle
+      if (pendingSubmitEvent) {
+          // Checkbox işaretlendiği için onSignIn'i manuel çağırabiliriz
+          // Ancak form event'i asenkron olduğu için en temizi butona tekrar bastırmak 
+          // veya onSignIn'e event'i yollamak.
+          setTimeout(() => {
+              onSignIn?.(pendingSubmitEvent);
+              setPendingSubmitEvent(null);
+          }, 100);
+      }
+    }
+  };
+
+  const handleLegalReject = () => {
+    setIsLegalModalOpen(false);
+    setPendingSubmitEvent(null);
+  };
 
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row font-sans w-full bg-background overflow-hidden relative">
@@ -179,7 +221,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 </div>
               </form>
             ) : (
-            <form key={isLoginMode ? "login" : "register"} className="space-y-5" onSubmit={onSignIn}>
+            <form key={isLoginMode ? "login" : "register"} className="space-y-5" onSubmit={handleActionSubmit}>
               {!isLoginMode && (
                 <div className="grid grid-cols-2 gap-4 animate-element animate-delay-200">
                   <div>
@@ -356,6 +398,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         isOpen={isLegalModalOpen} 
         onClose={() => setIsLegalModalOpen(false)} 
         initialTab={legalTab} 
+        onApprove={handleLegalApprove}
+        onReject={handleLegalReject}
       />
     </div>
   );
