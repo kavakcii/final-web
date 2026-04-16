@@ -70,6 +70,7 @@ function LoginContent() {
 
   // Canlı E-posta Kontrolü (Debounced)
   useEffect(() => {
+    // Sadece kayıt modunda ve geçerli bir mail formatındayken kontrol et
     if (isLoginMode || !emailValue || !emailValue.includes("@")) {
       setEmailError("");
       return;
@@ -81,21 +82,27 @@ function LoginContent() {
         // Not: auth.users doğrudan sorgulanamadığı için her zaman bir profiles tablosu önerilir.
         const { data, error } = await supabase
           .from('profiles')
-          .select('id')
+          .select('email')
           .eq('email', emailValue.trim().toLowerCase())
           .maybeSingle();
 
+        if (error) {
+          console.warn("Email check skipped: 'profiles' table may not exist or email column is private. Error:", error.message);
+          return;
+        }
+
         if (data) {
-          setEmailError("Bu e-posta adresi zaten kayıtlı.");
+          setEmailError("Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın.");
         } else {
           setEmailError("");
         }
       } catch (err) {
-        console.error("Email check error:", err);
+        // Hata durumunda formu engellememek için hatayı sessizce geç
+        console.error("Email check logic error:", err);
       }
     };
 
-    const timer = setTimeout(checkEmail, 500); // 500ms bekleme
+    const timer = setTimeout(checkEmail, 400); // 400ms ideal dengedir
     return () => clearTimeout(timer);
   }, [emailValue, isLoginMode]);
 
