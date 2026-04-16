@@ -139,7 +139,7 @@ function LoginContent() {
          setTimeout(() => {
            router.push("/dashboard");
            addToast("Hesabınız doğrulandı, hoş geldiniz!", "success");
-         }, 1500);
+         }, 3000);
       } else {
          addToast("Doğrulama başarılı ancak oturum açılamadı. Lütfen giriş yapın.", "success");
          setIsVerifyingOtp(false);

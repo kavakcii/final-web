@@ -15,6 +15,50 @@ const GoogleIcon = () => (
     </svg>
 );
 
+const TypingText = ({ text }: { text: string }) => {
+    const characters = Array.from(text);
+    const container = {
+      hidden: { opacity: 0 },
+      visible: (i = 1) => ({
+        opacity: 1,
+        transition: { staggerChildren: 0.08, delayChildren: 0.1 * i },
+      }),
+    };
+  
+    const child = {
+      visible: {
+        opacity: 1,
+        y: 0,
+        transition: { type: "spring", damping: 12, stiffness: 200 },
+      },
+      hidden: {
+        opacity: 0,
+        y: 20,
+        transition: { type: "spring", damping: 12, stiffness: 200 },
+      },
+    };
+  
+    return (
+      <motion.div
+        className="flex overflow-hidden text-3xl md:text-5xl font-bold tracking-tighter text-slate-900"
+        variants={container}
+        initial="hidden"
+        animate="visible"
+      >
+        {characters.map((char, index) => (
+          <motion.span variants={child} key={index}>
+            {char === " " ? "\u00A0" : char}
+          </motion.span>
+        ))}
+        <motion.div
+          animate={{ opacity: [0, 1, 0] }}
+          transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+          className="ml-1 w-1 h-8 md:h-12 bg-blue-600 rounded-full"
+        />
+      </motion.div>
+    );
+  };
+
 
 // --- TYPE DEFINITIONS ---
 
@@ -248,7 +292,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   </GlassInputWrapper>
                 </div>
                 <button type="submit" disabled={isLoading || isOtpSuccess} className="animate-element animate-delay-300 w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/30 disabled:opacity-50">
-                  {isOtpSuccess ? "FinAi'ye Hoşgeldiniz" : (isLoading ? "Doğrulanıyor..." : "Hesabı Onayla")}
+                  {isLoading ? "Doğrulanıyor..." : "Hesabı Onayla"}
                 </button>
                 <div className="animate-element animate-delay-400 text-center text-base pt-2">
                   <button 
@@ -446,6 +490,47 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         onApprove={handleLegalApprove}
         onReject={handleLegalReject}
       />
+
+      {/* SUCCESS OVERLAY WITH TYPING ANIMATION */}
+      <AnimatePresence>
+        {isOtpSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-white/95 backdrop-blur-xl"
+          >
+            <div className="text-center space-y-4">
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", damping: 15 }}
+                className="w-20 h-20 bg-blue-600 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-blue-500/20 mb-8"
+              >
+                <motion.div
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                >
+                    <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </motion.div>
+              </motion.div>
+              
+              <TypingText text="FinAi'ye Hoş Geldiniz" />
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5 }}
+                className="text-slate-500 font-medium"
+              >
+                Yatırım asistanınız hazırlanıyor...
+              </motion.p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
