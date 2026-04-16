@@ -124,33 +124,36 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent<HTMLFormElement> | null>(null);
   const [hasApprovedTerms, setHasApprovedTerms] = useState(false);
   const [hasApprovedKVKK, setHasApprovedKVKK] = useState(false);
+  const [isAutoFlow, setIsAutoFlow] = useState(false);
+
+  const openLegal = (tab: 'terms' | 'kvkk' = 'terms', auto: boolean = false) => {
+      setLegalTab(tab);
+      setIsAutoFlow(auto);
+      setIsLegalModalOpen(true);
+  };
 
   const handleActionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     // ÖNCELİK 1: Eğer e-posta kontrol ediliyorsa bekle
-    if (isCheckingEmail) {
-        return;
-    }
+    if (isCheckingEmail) return;
 
     // ÖNCELİK 2: Eğer e-posta hatası varsa (Zaten kayıtlı) MODALI ASLA AÇMA
-    if (emailError) {
-      return;
-    }
+    if (emailError) return;
     
     // Sadece kayıt modunda ve checkbox işaretli değilse süreci başlat
     if (!isLoginMode && !termsAccepted) {
       setPendingSubmitEvent(e);
       
-      // İlk olarak kullanım koşullarını aç
+      // İlk olarak kullanım koşullarını aç (Otomatik akışı başlat)
       if (!hasApprovedTerms) {
-        openLegal('terms');
+        openLegal('terms', true);
         return;
       }
       
-      // Eğer koşullar onaylı ama KVKK değilse oradan başla
+      // Eğer koşullar onaylı ama KVKK değilse oradan başla (Otomatik akışı başlat)
       if (!hasApprovedKVKK) {
-        openLegal('kvkk');
+        openLegal('kvkk', true);
         return;
       }
     }
@@ -163,38 +166,44 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     if (legalTab === 'terms') {
       setHasApprovedTerms(true);
       
-      // Kullanım Koşulları onaylandıysa otomatik olarak KVKK sekmesine geç (modal kapanmaz)
-      if (!hasApprovedKVKK) {
+      // OTOMATİK AKIŞ: Koşullar bittiyse ve KVKK eksikse otomatik geç
+      if (isAutoFlow && !hasApprovedKVKK) {
           setLegalTab('kvkk');
           return;
       }
     } else {
       setHasApprovedKVKK(true);
       
-      // KVKK onaylandıysa (eğer koşullar zaten onaylıysa) modalı kapat ve kayıt işlemini bitir
-      if (!hasApprovedTerms) {
+      // OTOMATİK AKIŞ: KVKK bittiyse ve Koşullar eksikse (nadir) geri dön
+      if (isAutoFlow && !hasApprovedTerms) {
           setLegalTab('terms');
           return;
       }
     }
 
-    // Her iki metin de onaylandığında
+    // Modal'ı kapat
     setIsLegalModalOpen(false);
-    setTermsAccepted(true);
-    
-    // İşlemi otomatik olarak devam ettir
-    if (pendingSubmitEvent) {
-        const event = pendingSubmitEvent;
-        setTimeout(() => {
-            onSignIn?.(event);
-            setPendingSubmitEvent(null);
-        }, 150);
+
+    // Her iki metin de onaylandığında çeki koy
+    if ((legalTab === 'terms' ? true : hasApprovedTerms) && 
+        (legalTab === 'kvkk' ? true : hasApprovedKVKK)) {
+      setTermsAccepted(true);
+      
+      // EĞER OTOMATİK AKIŞTAYSAK: İşlemi devam ettir
+      if (isAutoFlow && pendingSubmitEvent) {
+          const event = pendingSubmitEvent;
+          setTimeout(() => {
+              onSignIn?.(event);
+              setPendingSubmitEvent(null);
+          }, 150);
+      }
     }
   };
 
   const handleLegalReject = () => {
     setIsLegalModalOpen(false);
     setPendingSubmitEvent(null);
+    setIsAutoFlow(false);
   };
 
   return (
