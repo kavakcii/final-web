@@ -97,10 +97,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   
   // LEGAL MODAL STATE
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
-  const [legalTab, setLegalTab] = useState<'terms' | 'kvkk'>('terms');
 
-  const openLegal = (tab: 'terms' | 'kvkk') => {
-      setLegalTab(tab);
+  const openLegal = () => {
       setIsLegalModalOpen(true);
   };
 
@@ -120,59 +118,35 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
   // AUTOMATED LEGAL FLOW LOGIC
   const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent<HTMLFormElement> | null>(null);
-  const [hasApprovedTerms, setHasApprovedTerms] = useState(false);
-  const [hasApprovedKVKK, setHasApprovedKVKK] = useState(false);
 
   const handleActionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Sadece kayıt modunda ve checkbox işaretli değilse modal akışını başlat
+    // Sadece kayıt modunda ve checkbox işaretli değilse modalı direkt aç
     if (!isLoginMode && !termsAccepted) {
       setPendingSubmitEvent(e);
-      
-      if (!hasApprovedTerms) {
-        openLegal('terms');
-        return;
-      }
-      
-      if (!hasApprovedKVKK) {
-        openLegal('kvkk');
-        return;
-      }
+      openLegal();
+      return;
     }
 
     // Giriş moduysa veya zaten onaylıysa direkt devam et
     onSignIn?.(e);
   };
 
-  const handleLegalApprove = (tab: 'terms' | 'kvkk') => {
-    // Hangisi onaylandıysa onun durumunu güncelle
-    if (tab === 'terms') {
-      setHasApprovedTerms(true);
-    } else {
-      setHasApprovedKVKK(true);
-    }
-
-    // Modal'ı KAPT - Kullanıcı "otomatik geçiş olmasın" dediği için diğerine zıplamıyoruz
+  const handleLegalApprove = () => {
+    // Modal'ı Kapat
     setIsLegalModalOpen(false);
     
-    // Her ikisi de şu an itibariyle onaylandı mı kontrol et
-    // (State asenkron olduğu için lokal değişkenlerle kontrol ediyoruz)
-    const termsNow = tab === 'terms' ? true : hasApprovedTerms;
-    const kvkkNow = tab === 'kvkk' ? true : hasApprovedKVKK;
-
-    if (termsNow && kvkkNow) {
-      // Her ikisi de tamam! Çeki koy ve eğer bekleyen bir işlem varsa devam et
-      setTermsAccepted(true);
+    // Checkbox'ı otomatik işaretle
+    setTermsAccepted(true);
       
-      if (pendingSubmitEvent) {
-          const event = pendingSubmitEvent;
-          // Hafif bir bekleme (UI'ın kendini toplaması için) sonrasında formu gönder
-          setTimeout(() => {
-              onSignIn?.(event);
-              setPendingSubmitEvent(null);
-          }, 100);
-      }
+    if (pendingSubmitEvent) {
+        const event = pendingSubmitEvent;
+        // UI'ın kendini toplaması için çok kısa bir bekleme sonrası formu gönder
+        setTimeout(() => {
+            onSignIn?.(event);
+            setPendingSubmitEvent(null);
+        }, 150);
     }
   };
 
@@ -423,7 +397,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <LegalModal 
         isOpen={isLegalModalOpen} 
         onClose={() => setIsLegalModalOpen(false)} 
-        initialTab={legalTab} 
         onApprove={handleLegalApprove}
         onReject={handleLegalReject}
       />
