@@ -47,6 +47,7 @@ function LoginContent() {
   const [resendTimer, setResendTimer] = useState(0);
   const [emailValue, setEmailValue] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
