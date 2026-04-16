@@ -40,15 +40,18 @@ export const LegalModal = ({ isOpen, onClose, onApprove, onReject, initialTab = 
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             className="relative w-full max-w-2xl max-h-[85vh] bg-white rounded-[2rem] shadow-2xl flex flex-col overflow-hidden border border-white/40"
           >
-            {/* Header with Tabs */}
+            {/* Header */}
             <div className="border-b border-slate-100 bg-slate-50/50">
-              <div className="p-6 pb-2 flex items-center justify-between">
+              <div className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-[#00008B] flex items-center justify-center shadow-lg">
                     <ShieldCheck className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <h2 className="font-black text-slate-900 tracking-tight text-lg">Yasal Bilgilendirme</h2>
+                    <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mt-0.5">
+                      {activeTab === 'terms' ? 'Kullanım Koşulları' : 'KVKK Aydınlatma Metni'}
+                    </p>
                   </div>
                 </div>
                 <button 
@@ -56,22 +59,6 @@ export const LegalModal = ({ isOpen, onClose, onApprove, onReject, initialTab = 
                   className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-all"
                 >
                   <X className="w-5 h-5 text-slate-500" />
-                </button>
-              </div>
-
-              {/* Tab Navigation */}
-              <div className="flex px-6 gap-6">
-                <button 
-                  onClick={() => setActiveTab('terms')}
-                  className={`py-4 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'terms' ? 'border-[#00008B] text-[#00008B]' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                >
-                  Kullanım Koşulları
-                </button>
-                <button 
-                  onClick={() => setActiveTab('kvkk')}
-                  className={`py-4 text-[11px] font-bold uppercase tracking-widest transition-all border-b-2 ${activeTab === 'kvkk' ? 'border-[#00008B] text-[#00008B]' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                >
-                  KVKK Metni
                 </button>
               </div>
             </div>
