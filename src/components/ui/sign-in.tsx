@@ -182,6 +182,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row font-sans w-full bg-background overflow-hidden relative">
+      <Link href="/" className="absolute top-6 left-6 z-50 group flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-all duration-300 bg-foreground/5 hover:bg-foreground/10 backdrop-blur-md border border-border/50 px-4 py-2 rounded-2xl shadow-sm">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        Ana Sayfa
+      </Link>
       {/* Light Gradient effect for FinAi branding */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none md:hidden">
           <div className="absolute top-[-10%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-blue-400/20 blur-[120px] mix-blend-multiply" />
