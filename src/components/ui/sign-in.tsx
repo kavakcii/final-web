@@ -146,39 +146,33 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   };
 
   const handleLegalApprove = (tab: 'terms' | 'kvkk') => {
+    // Hangisi onaylandıysa onun durumunu güncelle
     if (tab === 'terms') {
       setHasApprovedTerms(true);
-      
-      // Kullanım Koşulları onaylandıysa ve KVKK henüz onaylanmadıysa otomatik olarak KVKK'yı aç
-      if (!hasApprovedKVKK) {
-        setTimeout(() => {
-          openLegal('kvkk');
-        }, 300); // Hafif bir geçiş beklemesi
-        return;
-      }
     } else {
       setHasApprovedKVKK(true);
-      
-      // KVKK onaylandıysa ve Koşullar henüz onaylanmadıysa (tersi durum için) Koşulları aç
-      if (!hasApprovedTerms) {
-        setTimeout(() => {
-          openLegal('terms');
-        }, 300);
-        return;
-      }
     }
 
-    // Her ikisi de onaylandıysa modalı kapat ve kayıt işlemini bitir
+    // Modal'ı KAPT - Kullanıcı "otomatik geçiş olmasın" dediği için diğerine zıplamıyoruz
     setIsLegalModalOpen(false);
-    setTermsAccepted(true);
     
-    // Eğer bir submit işlemi bekleniyorsa onu tetikle
-    if (pendingSubmitEvent) {
-        const event = pendingSubmitEvent;
-        setTimeout(() => {
-            onSignIn?.(event);
-            setPendingSubmitEvent(null);
-        }, 150);
+    // Her ikisi de şu an itibariyle onaylandı mı kontrol et
+    // (State asenkron olduğu için lokal değişkenlerle kontrol ediyoruz)
+    const termsNow = tab === 'terms' ? true : hasApprovedTerms;
+    const kvkkNow = tab === 'kvkk' ? true : hasApprovedKVKK;
+
+    if (termsNow && kvkkNow) {
+      // Her ikisi de tamam! Çeki koy ve eğer bekleyen bir işlem varsa devam et
+      setTermsAccepted(true);
+      
+      if (pendingSubmitEvent) {
+          const event = pendingSubmitEvent;
+          // Hafif bir bekleme (UI'ın kendini toplaması için) sonrasında formu gönder
+          setTimeout(() => {
+              onSignIn?.(event);
+              setPendingSubmitEvent(null);
+          }, 100);
+      }
     }
   };
 
