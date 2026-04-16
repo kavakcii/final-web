@@ -45,6 +45,8 @@ function LoginContent() {
   const [isForgotPasswordMode, setIsForgotPasswordMode] = useState(false);
   const [isOtpSuccess, setIsOtpSuccess] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [emailValue, setEmailValue] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     const checkSession = async () => {
@@ -65,6 +67,37 @@ function LoginContent() {
     }
     return () => clearInterval(interval);
   }, [resendTimer]);
+
+  // Canlı E-posta Kontrolü (Debounced)
+  useEffect(() => {
+    if (isLoginMode || !emailValue || !emailValue.includes("@")) {
+      setEmailError("");
+      return;
+    }
+
+    const checkEmail = async () => {
+      try {
+        // Supabase tarafında 'profiles' tablosunda e-posta kontrolü
+        // Not: auth.users doğrudan sorgulanamadığı için her zaman bir profiles tablosu önerilir.
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', emailValue.trim().toLowerCase())
+          .maybeSingle();
+
+        if (data) {
+          setEmailError("Bu e-posta adresi zaten kayıtlı.");
+        } else {
+          setEmailError("");
+        }
+      } catch (err) {
+        console.error("Email check error:", err);
+      }
+    };
+
+    const timer = setTimeout(checkEmail, 500); // 500ms bekleme
+    return () => clearTimeout(timer);
+  }, [emailValue, isLoginMode]);
 
   const handleVerifyOtp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -306,6 +339,9 @@ function LoginContent() {
       onResetPassword={handleResetPassword}
       onToggleMode={() => setIsLoginMode(!isLoginMode)}
       isLoginMode={isLoginMode}
+      emailValue={emailValue}
+      onEmailChange={setEmailValue}
+      emailError={emailError}
       isVerifyingOtp={isVerifyingOtp}
       isOtpSuccess={isOtpSuccess}
       onVerifyOtp={handleVerifyOtp}

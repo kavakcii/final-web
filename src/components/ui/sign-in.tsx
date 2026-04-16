@@ -36,6 +36,9 @@ interface SignInPageProps {
   onVerifyOtp?: (event: React.FormEvent<HTMLFormElement>) => void;
   onResendOtp?: () => void;
   resendTimer?: number;
+  emailError?: string;
+  emailValue?: string;
+  onEmailChange?: (val: string) => void;
   isForgotPasswordMode?: boolean;
   onForgotPassword?: (event: React.FormEvent<HTMLFormElement>) => void;
   onCancelForgotPassword?: () => void;
@@ -78,6 +81,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onVerifyOtp,
   onResendOtp,
   resendTimer = 0,
+  emailError = "",
+  emailValue = "",
+  onEmailChange,
   isForgotPasswordMode = false,
   onForgotPassword,
   onCancelForgotPassword,
@@ -184,8 +190,21 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <div className={`animate-element ${isLoginMode ? "animate-delay-200" : "animate-delay-300"}`}>
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">E-Posta Adresi</label>
                 <GlassInputWrapper>
-                  <input name="email" type="email" required placeholder="ornek@mail.com" className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" />
+                  <input 
+                    name="email" 
+                    type="email" 
+                    required 
+                    placeholder="ornek@mail.com" 
+                    value={emailValue}
+                    onChange={(e) => onEmailChange?.(e.target.value)}
+                    className="w-full bg-transparent text-sm p-4 rounded-2xl focus:outline-none" 
+                  />
                 </GlassInputWrapper>
+                {emailError && !isLoginMode && (
+                  <p className="text-[11px] text-red-500 font-bold mt-1.5 px-1 animate-element">
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               <div className={`animate-element ${isLoginMode ? "animate-delay-300" : "animate-delay-400"}`}>
@@ -287,24 +306,40 @@ export const SignInPage: React.FC<SignInPageProps> = ({
         </div>
       </section>
 
-      {/* Right column: hero image + testimonials */}
+      {/* Right column: hero image + features */}
       {heroImageSrc && (
-        <section className="hidden md:flex flex-1 relative p-4 bg-background items-center justify-center">
-          <div 
-             className={`animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl shadow-[0_20px_50px_rgba(8,_112,_184,_0.3)] overflow-hidden ${heroImageSrc.includes('logo') ? 'bg-white bg-[length:40%] bg-center bg-no-repeat' : 'bg-cover bg-center'}`} 
-             style={{ backgroundImage: `url(${heroImageSrc})` }}
-          >
-             {!heroImageSrc.includes('logo') && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>}
-          </div>
-          {features.length > 0 && (
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 grid grid-cols-2 gap-3 px-8 w-full max-w-[650px] justify-center items-center">
-              {features.map((feature, index) => (
-                  <div key={index} className="flex justify-center w-full h-full">
-                     <FeatureCard feature={feature} delay={`animate-delay-${1000 + (index * 200)}`} />
-                  </div>
-              ))}
+        <section className="hidden md:flex flex-1 relative p-6 bg-background items-stretch overflow-hidden">
+          <div className="w-full h-full flex flex-col gap-6 animate-slide-right animate-delay-300">
+            {/* Logo Area - 75% height (flex-[3]) */}
+            <div 
+               className={`flex-[3] rounded-[40px] shadow-[0_20px_60px_rgba(0,0,139,0.06)] border border-slate-100 overflow-hidden flex items-center justify-center ${heroImageSrc.includes('logo') ? 'bg-white' : 'bg-cover bg-center'}`} 
+               style={!heroImageSrc.includes('logo') ? { backgroundImage: `url(${heroImageSrc})` } : {}}
+            >
+               {heroImageSrc.includes('logo') ? (
+                 <motion.img 
+                   initial={{ scale: 0.8, opacity: 0 }}
+                   animate={{ scale: 1, opacity: 1 }}
+                   transition={{ duration: 1, ease: "easeOut" }}
+                   src={heroImageSrc} 
+                   alt="FinAi Logo" 
+                   className="w-[45%] h-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,139,0.15)]" 
+                 />
+               ) : (
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+               )}
             </div>
-          )}
+
+            {/* Features Area - 25% height (flex-1) */}
+            {features.length > 0 && (
+              <div className="flex-1 grid grid-cols-2 gap-4 px-2 w-full max-w-[750px] mx-auto content-center">
+                {features.map((feature, index) => (
+                    <div key={index} className="flex justify-center w-full">
+                       <FeatureCard feature={feature} delay={`animate-delay-${1000 + (index * 200)}`} />
+                    </div>
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       )}
     </div>
