@@ -126,6 +126,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const handleActionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    // Eğer e-posta hatası varsa (örneğin: "Zaten kayıtlı") modalı açma
+    if (emailError) {
+      return;
+    }
+    
     // Sadece kayıt modunda ve checkbox işaretli değilse süreci başlat
     if (!isLoginMode && !termsAccepted) {
       setPendingSubmitEvent(e);
