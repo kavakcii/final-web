@@ -73,8 +73,11 @@ function LoginContent() {
     // Sadece kayıt modunda ve geçerli bir mail formatındayken kontrol et
     if (isLoginMode || !emailValue || !emailValue.includes("@")) {
       setEmailError("");
+      setIsCheckingEmail(false);
       return;
     }
+
+    setIsCheckingEmail(true);
 
     const checkEmail = async () => {
       try {
@@ -87,7 +90,8 @@ function LoginContent() {
           .maybeSingle();
 
         if (error) {
-          console.warn("Email check skipped: 'profiles' table may not exist or email column is private. Error:", error.message);
+          console.warn("Email check skipped:", error.message);
+          setIsCheckingEmail(false);
           return;
         }
 
@@ -99,6 +103,8 @@ function LoginContent() {
       } catch (err) {
         // Hata durumunda formu engellememek için hatayı sessizce geç
         console.error("Email check logic error:", err);
+      } finally {
+        setIsCheckingEmail(false);
       }
     };
 
@@ -354,6 +360,7 @@ function LoginContent() {
       onVerifyOtp={handleVerifyOtp}
       onResendOtp={handleResendOtp}
       resendTimer={resendTimer}
+      isCheckingEmail={isCheckingEmail}
       isForgotPasswordMode={isForgotPasswordMode}
       onForgotPassword={handleForgotPassword}
       onCancelForgotPassword={() => setIsForgotPasswordMode(false)}

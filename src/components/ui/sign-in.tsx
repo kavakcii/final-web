@@ -45,6 +45,7 @@ interface SignInPageProps {
   onForgotPassword?: (event: React.FormEvent<HTMLFormElement>) => void;
   onCancelForgotPassword?: () => void;
   isLoading?: boolean;
+  isCheckingEmail?: boolean;
 }
 
 // --- SUB-COMPONENTS ---
@@ -86,6 +87,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   emailError = "",
   emailValue = "",
   onEmailChange,
+  isCheckingEmail = false,
   isForgotPasswordMode = false,
   onForgotPassword,
   onCancelForgotPassword,
@@ -126,7 +128,12 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const handleActionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
-    // Eğer e-posta hatası varsa (örneğin: "Zaten kayıtlı") modalı açma
+    // ÖNCELİK 1: Eğer e-posta kontrol ediliyorsa bekle
+    if (isCheckingEmail) {
+        return;
+    }
+
+    // ÖNCELİK 2: Eğer e-posta hatası varsa (Zaten kayıtlı) MODALI ASLA AÇMA
     if (emailError) {
       return;
     }
