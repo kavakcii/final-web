@@ -324,7 +324,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       />
                     </div>
                     <span className="text-[11px] leading-tight text-muted-foreground select-none">
-                      <button type="button" onClick={() => openLegal('terms')} className="font-bold text-[#00008B] hover:underline">Kullanım Koşulları</button> ve <button type="button" onClick={() => openLegal('kvkk')} className="font-bold text-[#00008B] hover:underline">KVKK Aydınlatma Metnini</button> okudum, kabul ediyorum.
+                      <button type="button" onClick={() => openLegal()} className="font-bold text-[#00008B] hover:underline">Kullanım Koşulları</button> ve <button type="button" onClick={() => openLegal()} className="font-bold text-[#00008B] hover:underline">KVKK Aydınlatma Metnini</button> okudum, kabul ediyorum.
                     </span>
                   </label>
                 </div>
