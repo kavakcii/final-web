@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { LegalModal } from '@/components/ui/legal-modal';
 
 // --- HELPER COMPONENTS (ICONS) ---
@@ -117,6 +118,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
   // AUTOMATED LEGAL FLOW LOGIC
   const [pendingSubmitEvent, setPendingSubmitEvent] = useState<React.FormEvent<HTMLFormElement> | null>(null);
+  const [hasApprovedTerms, setHasApprovedTerms] = useState(false);
+  const [hasApprovedKVKK, setHasApprovedKVKK] = useState(false);
 
   const handleActionSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -124,8 +127,16 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     // Sadece kayıt modunda ve checkbox işaretli değilse modal akışını başlat
     if (!isLoginMode && !termsAccepted) {
       setPendingSubmitEvent(e);
-      openLegal('terms');
-      return;
+      
+      if (!hasApprovedTerms) {
+        openLegal('terms');
+        return;
+      }
+      
+      if (!hasApprovedKVKK) {
+        openLegal('kvkk');
+        return;
+      }
     }
 
     // Giriş moduysa veya zaten onaylıysa direkt devam et
@@ -134,20 +145,28 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
   const handleLegalApprove = (tab: 'terms' | 'kvkk') => {
     if (tab === 'terms') {
-      // Kullanım koşulları onaylandı, KVKK'ya geç
-      setLegalTab('kvkk');
+      setHasApprovedTerms(true);
     } else {
+      setHasApprovedKVKK(true);
+    }
+
+    // Modal'ı kapat (diğerine otomatik geçme isteği üzerine kaldırıldı)
+    setIsLegalModalOpen(false);
+    
+    // Her ikisi de şu an itibariyle onaylandı mı kontrol et
+    // Not: State güncellenmesi asenkron olduğu için lokal kontrol yapıyoruz
+    const willBeTermsApproved = tab === 'terms' || hasApprovedTerms;
+    const willBeKVKKApproved = tab === 'kvkk' || hasApprovedKVKK;
+
+    if (willBeTermsApproved && willBeKVKKApproved) {
       // Her ikisi de onaylandı!
       setTermsAccepted(true);
-      setIsLegalModalOpen(false);
       
       // Eğer bir submit işlemi bekleniyorsa onu tetikle
       if (pendingSubmitEvent) {
-          // Checkbox işaretlendiği için onSignIn'i manuel çağırabiliriz
-          // Ancak form event'i asenkron olduğu için en temizi butona tekrar bastırmak 
-          // veya onSignIn'e event'i yollamak.
+          const event = pendingSubmitEvent;
           setTimeout(() => {
-              onSignIn?.(pendingSubmitEvent);
+              onSignIn?.(event);
               setPendingSubmitEvent(null);
           }, 100);
       }
