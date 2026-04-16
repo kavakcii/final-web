@@ -148,11 +148,10 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   };
 
   const handleLegalApprove = () => {
-    // Hangisi aktifse onu onaylanmış say
     if (legalTab === 'terms') {
       setHasApprovedTerms(true);
       
-      // Hemen KVKK'ya geçiş yap (modal kapanmadan)
+      // Kullanım Koşulları onaylandıysa otomatik olarak KVKK sekmesine geç (modal kapanmaz)
       if (!hasApprovedKVKK) {
           setLegalTab('kvkk');
           return;
@@ -160,17 +159,18 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     } else {
       setHasApprovedKVKK(true);
       
-      // Eğer KVKK onaylandıysa ama Koşullar onaylanmadıysa geri dön (düşük ihtimal)
+      // KVKK onaylandıysa (eğer koşullar zaten onaylıysa) modalı kapat ve kayıt işlemini bitir
       if (!hasApprovedTerms) {
           setLegalTab('terms');
           return;
       }
     }
 
-    // Modal'ı kapat (Her ikisi de tamam)
+    // Her iki metin de onaylandığında
     setIsLegalModalOpen(false);
     setTermsAccepted(true);
     
+    // İşlemi otomatik olarak devam ettir
     if (pendingSubmitEvent) {
         const event = pendingSubmitEvent;
         setTimeout(() => {
@@ -347,7 +347,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       <input 
                         type="checkbox" 
                         name="kvkk" 
-                        required
                         checked={termsAccepted}
                         onChange={(e) => setTermsAccepted(e.target.checked)}
                         className="custom-checkbox w-4 h-4 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B] transition-all" 
