@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FinAiLogo } from "@/components/ui/logo";
 import Link from "next/link";
+import { LegalModal } from "@/components/ui/legal-modal";
 
 // ----------------------------------------------------------------------
 // HELPER COMPONENTS
@@ -81,6 +82,15 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
 
     const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
+
+    // LEGAL MODAL STATE
+    const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+    const [legalTab, setLegalTab] = useState<'terms' | 'kvkk'>('terms');
+
+    const openLegal = (tab: 'terms' | 'kvkk') => {
+        setLegalTab(tab);
+        setIsLegalModalOpen(true);
+    };
 
     const toggleAuthMode = () => {
         setIsLoginMode(!isLoginMode);
@@ -308,6 +318,7 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                     </motion.form>
                 </AnimatePresence>
             </div>
+            <LegalModal isOpen={isLegalModalOpen} onClose={() => setIsLegalModalOpen(false)} initialTab={legalTab} />
         </div>
     );
 };
