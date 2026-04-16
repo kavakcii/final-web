@@ -310,26 +310,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {heroImageSrc && (
         <section className="hidden md:flex flex-1 relative p-6 bg-background items-stretch overflow-hidden">
           <div className="w-full h-full flex flex-col gap-6 animate-slide-right animate-delay-300">
-            {/* Logo Area - 75% height (flex-[3]) */}
-            <div 
-               className={`flex-[3] rounded-[40px] shadow-[0_20px_60px_rgba(0,0,139,0.06)] border border-slate-100 overflow-hidden flex items-center justify-center ${heroImageSrc.includes('logo') ? 'bg-white' : 'bg-cover bg-center'}`} 
-               style={!heroImageSrc.includes('logo') ? { backgroundImage: `url(${heroImageSrc})` } : {}}
-            >
-               {heroImageSrc.includes('logo') ? (
-                 <motion.img 
-                   initial={{ scale: 0.8, opacity: 0 }}
-                   animate={{ scale: 1, opacity: 1 }}
-                   transition={{ duration: 1, ease: "easeOut" }}
-                   src={heroImageSrc} 
-                   alt="FinAi Logo" 
-                   className="w-[45%] h-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,139,0.15)]" 
-                 />
-               ) : (
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-               )}
-            </div>
-
-            {/* Features Area - 25% height (flex-1) */}
+            {/* Features Area - Top 30% height (flex-1) */}
             {features.length > 0 && (
               <div className="flex-1 grid grid-cols-2 gap-4 px-2 w-full max-w-[750px] mx-auto content-center">
                 {features.map((feature, index) => (
@@ -339,6 +320,25 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 ))}
               </div>
             )}
+
+            {/* Logo Area - Bottom 70% height (flex-[2.33]) */}
+            <div 
+               className={`flex-[2.33] rounded-[40px] shadow-[0_20px_60px_rgba(0,0,139,0.06)] border border-slate-100 overflow-hidden flex items-center justify-center ${heroImageSrc.includes('logo') ? 'bg-white' : 'bg-cover bg-center'}`} 
+               style={!heroImageSrc.includes('logo') ? { backgroundImage: `url(${heroImageSrc})` } : {}}
+            >
+               {heroImageSrc.includes('logo') ? (
+                 <motion.img 
+                   initial={{ scale: 0.8, opacity: 0, y: 30 }}
+                   animate={{ scale: 1, opacity: 1, y: 0 }}
+                   transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
+                   src={heroImageSrc} 
+                   alt="FinAi Logo" 
+                   className="w-[45%] h-auto object-contain drop-shadow-[0_10px_35px_rgba(0,0,139,0.15)]" 
+                 />
+               ) : (
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+               )}
+            </div>
           </div>
         </section>
       )}
