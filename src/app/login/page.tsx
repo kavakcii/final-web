@@ -102,7 +102,7 @@ function LoginContent() {
       }
     };
 
-    const timer = setTimeout(checkEmail, 400); // 400ms ideal dengedir
+    const timer = setTimeout(checkEmail, 200); // 200ms - Neredeyse anlık hissettirir
     return () => clearTimeout(timer);
   }, [emailValue, isLoginMode]);
 

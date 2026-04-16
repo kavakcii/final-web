@@ -47,8 +47,8 @@ interface SignInPageProps {
 
 // --- SUB-COMPONENTS ---
 
-const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-colors focus-within:border-blue-500/70 focus-within:bg-blue-500/10">
+const GlassInputWrapper = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <div className={`rounded-2xl border border-border bg-foreground/5 backdrop-blur-sm transition-all duration-300 focus-within:border-blue-500/70 focus-within:bg-blue-500/10 ${className}`}>
     {children}
   </div>
 );
@@ -189,7 +189,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
               <div className={`animate-element ${isLoginMode ? "animate-delay-200" : "animate-delay-300"}`}>
                 <label className="text-sm font-medium text-muted-foreground mb-1 block">E-Posta Adresi</label>
-                <GlassInputWrapper>
+                <GlassInputWrapper className={emailError && !isLoginMode ? "border-red-500/50 bg-red-500/5 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : ""}>
                   <input 
                     name="email" 
                     type="email" 
@@ -201,8 +201,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   />
                 </GlassInputWrapper>
                 {emailError && !isLoginMode && (
-                  <p className="text-[11px] text-red-500 font-bold mt-1.5 px-1 animate-element">
-                    {emailError}
+                  <p className="text-[11px] text-red-500 font-bold mt-2 px-1 animate-pulse">
+                     ⚠️ {emailError}
                   </p>
                 )}
               </div>
