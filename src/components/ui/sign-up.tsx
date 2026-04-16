@@ -360,7 +360,7 @@ export const AuthComponent = ({ brandName = "FinAi", className, onAuthSuccess }:
                     </motion.form>
                 </AnimatePresence>
             </div>
-            <LegalModal isOpen={isLegalModalOpen} onClose={() => setIsLegalModalOpen(false)} initialTab={legalTab} />
+            <LegalModal isOpen={isLegalModalOpen} onClose={() => setIsLegalModalOpen(false)} />
         </div>
     );
 };
