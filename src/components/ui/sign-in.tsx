@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { LegalModal } from '@/components/ui/legal-modal';
 
 // --- HELPER COMPONENTS (ICONS) ---
 
@@ -92,6 +93,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  
+  // LEGAL MODAL STATE
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalTab, setLegalTab] = useState<'terms' | 'kvkk'>('terms');
+
+  const openLegal = (tab: 'terms' | 'kvkk') => {
+      setLegalTab(tab);
+      setIsLegalModalOpen(true);
+  };
 
   // Şifre gücü hesaplama
   const calculateStrength = (pass: string) => {
@@ -272,7 +282,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       />
                     </div>
                     <span className="text-[11px] leading-tight text-muted-foreground select-none">
-                      <a href="#" className="font-bold text-[#00008B] hover:underline">Kullanım Koşulları</a> ve <a href="#" className="font-bold text-[#00008B] hover:underline">KVKK Aydınlatma Metnini</a> okudum, kabul ediyorum.
+                      <button type="button" onClick={() => openLegal('terms')} className="font-bold text-[#00008B] hover:underline">Kullanım Koşulları</button> ve <button type="button" onClick={() => openLegal('kvkk')} className="font-bold text-[#00008B] hover:underline">KVKK Aydınlatma Metnini</button> okudum, kabul ediyorum.
                     </span>
                   </label>
                 </div>
@@ -342,6 +352,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           </div>
         </section>
       )}
+      <LegalModal 
+        isOpen={isLegalModalOpen} 
+        onClose={() => setIsLegalModalOpen(false)} 
+        initialTab={legalTab} 
+      />
     </div>
   );
 };
