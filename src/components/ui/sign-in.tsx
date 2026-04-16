@@ -427,7 +427,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       <LegalModal 
         isOpen={isLegalModalOpen} 
         onClose={() => setIsLegalModalOpen(false)} 
-        initialTab={legalTab}
+        initialTab={legalTab} 
         onApprove={handleLegalApprove}
         onReject={handleLegalReject}
       />
