@@ -114,6 +114,8 @@ export const SignInPage: React.FC<SignInPageProps> = ({
     return score;
   };
 
+  const strength = calculateStrength(passwordValue);
+  const strengthColor = strength <= 25 ? "bg-red-500" : strength <= 50 ? "bg-orange-500" : strength <= 75 ? "bg-yellow-500" : "bg-green-500";
   const strengthText = strength <= 25 ? "Zayıf" : strength <= 50 ? "Orta" : strength <= 75 ? "İyi" : "Güçlü";
 
   // AUTOMATED LEGAL FLOW LOGIC
