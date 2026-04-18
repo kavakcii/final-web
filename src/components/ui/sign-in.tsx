@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import Link from 'next/link';
 import { LegalModal } from '@/components/ui/legal-modal';
 
@@ -17,7 +17,7 @@ const GoogleIcon = () => (
 
 const TypingText = ({ text }: { text: string }) => {
     const characters = Array.from(text);
-    const container = {
+    const container: Variants = {
       hidden: { opacity: 0 },
       visible: (i = 1) => ({
         opacity: 1,
@@ -25,7 +25,7 @@ const TypingText = ({ text }: { text: string }) => {
       }),
     };
   
-    const child = {
+    const child: Variants = {
       visible: {
         opacity: 1,
         y: 0,
@@ -40,7 +40,7 @@ const TypingText = ({ text }: { text: string }) => {
   
     return (
       <motion.div
-        className="flex overflow-hidden text-3xl md:text-5xl font-bold tracking-tighter text-slate-900"
+        className="flex overflow-hidden text-3xl md:text-5xl font-bold tracking-tighter text-[#00008B]"
         variants={container}
         initial="hidden"
         animate="visible"
