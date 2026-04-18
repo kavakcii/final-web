@@ -135,7 +135,7 @@ export default function Dashboard() {
                         </Link>
                         
                         {/* Chart panel - slides out from behind the card on hover */}
-                        <div className="absolute left-0 top-0 w-[280px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[16px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
+                        <div className="absolute left-0 top-0 w-[380px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[20px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
                             <BalanceChart 
                                 totalBalance={stats[0]?.value || "₺0,00"} 
                                 changePercent={stats[0]?.change || "%0"}
