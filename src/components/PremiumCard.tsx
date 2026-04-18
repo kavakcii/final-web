@@ -33,23 +33,23 @@ export function PremiumCard({ userName }: PremiumCardProps) {
             </div>
 
             {/* Inner Content */}
-            <div className="relative h-full w-full p-6 flex flex-col justify-between text-white select-none">
+            <div className="relative h-full w-full p-5 flex flex-col justify-between text-white select-none">
                 {/* Top Row: Logo and Contactless */}
                 <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                        <FinAiLogo className="w-8 h-8 drop-shadow-lg" />
-                        <span className="text-xl font-black tracking-tighter">
+                    <div className="flex items-center gap-1.5">
+                        <FinAiLogo className="w-6 h-6 drop-shadow-lg" />
+                        <span className="text-base font-black tracking-tighter">
                             FinAi<span className="text-blue-400">.</span>
                         </span>
                     </div>
                     <div className="rotate-90">
-                        <Wifi className="w-6 h-6 opacity-60" />
+                        <Wifi className="w-5 h-5 opacity-60" />
                     </div>
                 </div>
 
                 {/* Middle: Chip and Card Number in Same Row */}
-                <div className="flex items-center gap-4 mt-2">
-                    <div className="w-10 h-8 bg-gradient-to-br from-[#ffd700] via-[#fdf5e6] to-[#daa520] rounded-md shadow-inner relative overflow-hidden shrink-0">
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-7 bg-gradient-to-br from-[#ffd700] via-[#fdf5e6] to-[#daa520] rounded-md shadow-inner relative overflow-hidden shrink-0">
                         <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 gap-px opacity-30">
                             {[...Array(9)].map((_, i) => (
                                 <div key={i} className="border-[0.5px] border-black/20" />
@@ -57,14 +57,14 @@ export function PremiumCard({ userName }: PremiumCardProps) {
                         </div>
                     </div>
                     
-                    {/* Card Number next to chip */}
-                    <div className="text-lg font-mono tracking-[0.15em] drop-shadow-md whitespace-nowrap opacity-90">
-                        **** {formattedJoinDate}
+                    {/* Card Number - standard format */}
+                    <div className="text-[13px] font-mono tracking-[0.18em] drop-shadow-md whitespace-nowrap opacity-90">
+                        **** **** **** {formattedJoinDate.replace('.', '')}
                     </div>
                 </div>
 
-                {/* Bottom: Empty space (Text removed as requested) */}
-                <div className="h-4" />
+                {/* Bottom spacer for aspect ratio */}
+                <div />
             </div>
 
             {/* Reflection Effect */}
