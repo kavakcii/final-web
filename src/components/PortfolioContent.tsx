@@ -185,7 +185,7 @@ export default function PortfolioPage() {
 
     useEffect(() => {
         fetchPortfolioData();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []);
 
     // Search Autocomplete (BIST_CATALOG Optimization)
     useEffect(() => {
