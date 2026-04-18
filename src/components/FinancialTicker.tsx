@@ -97,11 +97,11 @@ export function FinancialTicker() {
     }
 
     return (
-        <div className="w-full bg-black/50 border-b border-white/10 backdrop-blur-md relative group h-12 flex items-center">
+        <div className="w-full bg-slate-50 border-b border-slate-100 backdrop-blur-md relative group h-12 flex items-center">
 
             {/* Edit Mode Overlay */}
             {isEditing && (
-                <div className="absolute inset-0 z-20 bg-zinc-900/95 flex items-center justify-between px-4 gap-4 overflow-hidden backdrop-blur-lg">
+                <div className="absolute inset-0 z-20 bg-white flex items-center justify-between px-4 gap-4 overflow-hidden backdrop-blur-lg border-b border-slate-100 shadow-sm">
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <input
                             type="text"
@@ -109,22 +109,22 @@ export function FinancialTicker() {
                             onChange={(e) => setNewSymbol(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAddSymbol()}
                             placeholder="Sembol (THYAO.IS)"
-                            className="bg-white/10 border border-white/20 rounded-md px-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 w-36 transition-colors"
+                            className="bg-slate-50 border border-slate-100 rounded-md px-3 py-1.5 text-xs text-[#00008B] font-bold placeholder:text-[#00008B]/30 focus:outline-none focus:border-[#00008B]/20 w-36 transition-colors"
                         />
                         <button onClick={handleAddSymbol} className="p-1.5 hover:bg-emerald-500/20 rounded-md text-emerald-400 transition-colors"><Plus className="w-4 h-4" /></button>
                     </div>
 
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-gradient-x flex-1">
                         {symbols.map(sym => (
-                            <div key={sym} className="flex items-center gap-1.5 bg-white/5 pl-2.5 pr-1.5 py-1 rounded-full border border-white/10 flex-shrink-0 animate-in fade-in zoom-in duration-200">
-                                <span className="text-[10px] font-medium text-slate-300">{SYMBOL_NAMES[sym] || sym}</span>
-                                <button onClick={() => handleRemoveSymbol(sym)} className="text-slate-500 hover:text-red-400 transition-colors p-0.5"><X className="w-3 h-3" /></button>
+                            <div key={sym} className="flex items-center gap-1.5 bg-[#00008B]/5 pl-2.5 pr-1.5 py-1 rounded-full border border-[#00008B]/10 flex-shrink-0 animate-in fade-in zoom-in duration-200">
+                                <span className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest">{SYMBOL_NAMES[sym] || sym}</span>
+                                <button onClick={() => handleRemoveSymbol(sym)} className="text-[#00008B]/40 hover:text-red-500 transition-colors p-0.5"><X className="w-3 h-3" /></button>
                             </div>
                         ))}
                     </div>
 
-                    <button onClick={() => setIsEditing(false)} className="p-1.5 hover:bg-blue-500/20 rounded-md text-blue-400 ml-auto flex-shrink-0 transition-colors flex items-center gap-1.5 px-3">
-                        <Check className="w-4 h-4" /> <span className="text-xs font-medium">Bitti</span>
+                    <button onClick={() => setIsEditing(false)} className="p-1.5 hover:bg-blue-50/50 rounded-md text-[#00008B] ml-auto flex-shrink-0 transition-colors flex items-center gap-1.5 px-3">
+                        <Check className="w-4 h-4" /> <span className="text-xs font-bold uppercase tracking-widest text-[10px]">Bitti</span>
                     </button>
                 </div>
             )}
@@ -144,9 +144,9 @@ export function FinancialTicker() {
 
                     return (
                         <div key={quote.symbol} className="flex items-center gap-2">
-                            {index > 0 && <div className="w-px h-4 bg-white/10 -ml-1 hidden md:block" />}
-                            <span className="text-[11px] font-medium text-slate-400 whitespace-nowrap">{name}</span>
-                            <span className="text-sm font-bold text-white whitespace-nowrap">
+                            {index > 0 && <div className="w-px h-4 bg-slate-200 -ml-1 hidden md:block" />}
+                            <span className="text-[10px] font-bold text-[#00008B]/40 whitespace-nowrap uppercase tracking-widest">{name}</span>
+                            <span className="text-sm font-black text-[#00008B] whitespace-nowrap">
                                 {price?.toFixed(2)}
                             </span>
                             <div className={`flex items-center text-xs font-semibold whitespace-nowrap ${isPositive ? "text-green-400" : "text-red-400"}`}>
@@ -160,12 +160,12 @@ export function FinancialTicker() {
 
             {/* Edit Toggle Button */}
             {!isEditing && (
-                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-slate-50 to-transparent z-10 pointer-events-none" />
             )}
             {!isEditing && (
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="absolute right-4 z-20 p-2 text-slate-400 hover:text-white transition-colors bg-black/20 hover:bg-black/40 rounded-full backdrop-blur-sm opacity-0 group-hover:opacity-100 duration-200"
+                    className="absolute right-4 z-20 p-2 text-[#00008B]/40 hover:text-[#00008B] transition-colors bg-white/50 hover:bg-white rounded-full border border-slate-100 backdrop-blur-sm opacity-0 group-hover:opacity-100 duration-200 shadow-sm"
                     title="Şeridi Düzenle"
                 >
                     <Settings className="w-4 h-4" />

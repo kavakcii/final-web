@@ -62,10 +62,10 @@ export default function Dashboard() {
     }, [isDataLoaded]);
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-[#050a18] text-white w-full mx-auto relative overflow-hidden">
+        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-hidden">
             {/* Background Glows */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-blue-500/5 blur-[100px] pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-slate-50 blur-[100px] pointer-events-none" />
 
             <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
             {/* Loading Overlay */}
@@ -76,19 +76,18 @@ export default function Dashboard() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-[#050a18]/80 backdrop-blur-md"
-                    >
-                        <div className="w-full max-w-md p-10 rounded-[2.5rem] glass-widget text-white shadow-2xl relative overflow-hidden text-center">
+                        <header className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md">
+                        <div className="w-full max-w-md p-10 rounded-[2.5rem] bg-white border border-slate-100 text-[#00008B] shadow-2xl relative overflow-hidden text-center">
                             <div className="relative z-10">
                                 <div className="w-24 h-24 mx-auto mb-8 relative">
-                                    <div className="absolute inset-0 border-4 border-white/5 rounded-full" />
-                                    <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin" />
+                                    <div className="absolute inset-0 border-4 border-slate-50 rounded-full" />
+                                    <div className="absolute inset-0 border-4 border-[#00008B] rounded-full border-t-transparent animate-spin" />
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <TrendingUp className="w-10 h-10 text-white animate-pulse" />
+                                        <TrendingUp className="w-10 h-10 text-[#00008B] animate-pulse" />
                                     </div>
                                 </div>
-                                <h2 className="text-2xl font-semibold text-white mb-3 tracking-tight">Senkronize Ediliyor</h2>
-                                <p className="text-slate-400 text-sm font-medium">{loadingMessages[loadingStep]}</p>
+                                <h2 className="text-2xl font-bold text-[#00008B] mb-3 tracking-tight">Senkronize Ediliyor</h2>
+                                <p className="text-[#00008B]/40 text-sm font-bold uppercase tracking-widest">{loadingMessages[loadingStep]}</p>
                             </div>
                         </div>
                     </motion.div>
@@ -97,7 +96,7 @@ export default function Dashboard() {
             {/* Welcome Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
                 <div>
-                    <h1 className="text-4xl font-semibold text-[#0a1e3d] flex items-center gap-3 tracking-tight">
+                    <h1 className="text-4xl font-bold text-[#00008B] flex items-center gap-3 tracking-tight">
                         Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
                         <motion.span
                             animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }}
@@ -106,12 +105,12 @@ export default function Dashboard() {
                             👋
                         </motion.span>
                     </h1>
-                    <p className="text-slate-600 mt-2 text-sm font-medium tracking-widest uppercase opacity-80">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                    <p className="text-[#00008B] mt-2 text-xs font-bold tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <a
                         href="/dashboard/portfolio/correlation"
-                        className="flex items-center gap-2 px-6 py-3 bg-[#1e50ff] rounded-2xl hover:bg-blue-600 transition-all text-white text-[11px] font-semibold tracking-widest uppercase shadow-xl hover:shadow-blue-600/20 active:scale-95"
+                        className="flex items-center gap-2 px-6 py-3 bg-[#00008B] rounded-2xl hover:bg-blue-900 transition-all text-white text-[11px] font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 active:scale-95"
                     >
                         <Activity className="w-4 h-4" />
                         Korelasyon Analizi
@@ -138,13 +137,13 @@ export default function Dashboard() {
                             )}>
                                 {!isDataLoaded ? (
                                     <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
-                                        <div className="h-8 w-8 bg-[#0a192f]/20 rounded-lg" />
-                                        <div className="h-6 w-1/2 bg-[#0a192f]/20 rounded mt-auto" />
+                                        <div className="h-8 w-8 bg-[#00008B]/5 rounded-lg" />
+                                        <div className="h-6 w-1/2 bg-[#00008B]/5 rounded mt-auto" />
                                     </div>
                                 ) : stat && (
                                     <div className="relative z-10 flex flex-col h-full justify-center items-center w-full">
                                         <div className="flex flex-col items-center justify-center gap-2 mb-3 w-full">
-                                            <div className="p-2.5 bg-[#0a192f]/5 rounded-xl text-[#0a192f] group-hover:bg-[#0a192f] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#0a192f]/10 group-hover:border-transparent">
+                                            <div className="p-2.5 bg-[#00008B]/5 rounded-xl text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#00008B]/10 group-hover:border-transparent">
                                                 <stat.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
                                             </div>
                                             <div className={`flex items-center justify-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-md ${stat.isPositive ? 'text-emerald-700 bg-emerald-500/20' : 'text-rose-700 bg-rose-500/20'}`}>
@@ -153,8 +152,8 @@ export default function Dashboard() {
                                             </div>
                                         </div>
                                         <div className="mt-auto w-full text-center">
-                                            <h3 className="text-slate-500 text-[10px] font-semibold mb-2 tracking-[0.2em] uppercase opacity-70">{stat.title}</h3>
-                                            <p className="text-3xl sm:text-4xl font-semibold text-[#0a1e3d] tracking-tight truncate leading-none">{stat.value}</p>
+                                            <h3 className="text-[#00008B] text-[9px] font-bold mb-2 tracking-[0.25em] uppercase opacity-30">{stat.title}</h3>
+                                            <p className="text-3xl sm:text-4xl font-black text-[#00008B] tracking-tighter truncate leading-none">{stat.value}</p>
                                         </div>
                                     </div>
                                 )}
@@ -184,10 +183,10 @@ export default function Dashboard() {
                         <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-bl-full blur-[80px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
 
                         <div className="w-full flex justify-between items-center mb-8 relative z-10">
-                            <h2 className="text-xs font-semibold text-[#0a1e3d] tracking-[0.3em] uppercase opacity-60">
+                            <h2 className="text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-30">
                                 Varlıklarım
                             </h2>
-                            <span className="text-[9px] font-semibold text-blue-600 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 animate-pulse">Senkronize</span>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#00008B] px-3 py-1 rounded-full bg-blue-50 border border-blue-100 animate-pulse">Senkronize</span>
                         </div>
                         
                         <div className="space-y-3 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-400 relative z-10 w-full">
@@ -209,23 +208,23 @@ export default function Dashboard() {
                                             key={i}
                                             onClick={() => handleAssetSelect(asset.symbol, asset.type)}
                                             className={cn(
-                                                "flex flex-col items-center justify-center p-6 rounded-[2.2rem] transition-all cursor-pointer bg-white/40 border border-white/60 text-center gap-3",
+                                                "flex flex-col items-center justify-center p-6 rounded-[2.2rem] transition-all cursor-pointer bg-slate-50 border border-slate-100 text-center gap-3",
                                                 selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                    ? "bg-[#1e50ff] border-blue-400 text-white shadow-[0_15px_40px_-10px_rgba(37,99,235,0.4)] scale-[1.03]"
-                                                    : "hover:bg-white/60 hover:-translate-y-1 text-[#0a1e3d]"
+                                                    ? "bg-[#00008B] border-[#00008B] text-white shadow-[0_15px_40px_-10px_rgba(0,0,139,0.3)] scale-[1.03]"
+                                                    : "hover:bg-slate-100/80 hover:-translate-y-1 text-[#00008B]"
                                             )}
                                         >
                                             <div className={cn(
                                                 "w-10 h-10 rounded-lg flex items-center justify-center text-[12px] font-black shadow-inner",
-                                                selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "bg-white/20 text-white" : "bg-[#0a192f]/10 text-[#0a192f]"
+                                                selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "bg-white/20 text-white" : "bg-[#00008B]/5 text-[#00008B]"
                                             )}>
                                                 {asset.symbol.substring(0, 2)}
                                             </div>
-                                            <div>
-                                                <p className="text-[15px] font-black leading-tight">{asset.symbol}</p>
+                                            <div className="hover:scale-105 transition-transform duration-300">
+                                                <p className="text-[16px] font-black tracking-tighter leading-tight">{asset.symbol}</p>
                                                 <p className={cn(
-                                                    "text-[10px] font-bold uppercase tracking-wider mt-0.5",
-                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "text-slate-300" : "text-slate-500"
+                                                    "text-[10px] font-bold uppercase tracking-[0.2em] mt-0.5 opacity-50",
+                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "text-white" : "text-[#00008B]"
                                                 )}>{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
                                             </div>
                                             <div className="mt-1 flex gap-3 items-center justify-center">
@@ -244,11 +243,11 @@ export default function Dashboard() {
                             <div
                                 onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-slate-100 text-[#0a192f] border border-transparent shadow-sm",
-                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-[#0a192f] shadow-md" : "hover:bg-slate-200"
+                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-slate-50 text-[#00008B] border border-slate-100 shadow-sm",
+                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-[#00008B] shadow-md" : "hover:bg-slate-100"
                                 )}
                             >
-                                <span className="text-xs font-black tracking-wide">BIST 100 Endeksi</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">BIST 100 Endeksi</span>
                             </div>
                         </div>
                     </div>

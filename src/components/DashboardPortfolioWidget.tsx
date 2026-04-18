@@ -161,23 +161,23 @@ export function DashboardPortfolioWidget() {
                                 ))}
                             </Pie>
                                 <Tooltip
-                                contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)' }}
-                                itemStyle={{ color: '#ffffff', fontWeight: 'bold' }}
+                                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,139,0.1)' }}
+                                itemStyle={{ color: '#00008B', fontWeight: 'bold' }}
                                 formatter={(value: any) => [`%${value}`, 'Oran']}
                             />
                         </RechartsPie>
                     </ResponsiveContainer>
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mt-1 opacity-70">Önerilen</span>
-                        <span className="text-white font-black text-sm text-center px-4 leading-tight tracking-tighter uppercase">{recommendation.title}</span>
+                        <span className="text-[#00008B] text-[8px] font-bold uppercase tracking-[0.3em] mt-1 opacity-30">Önerilen</span>
+                        <span className="text-[#00008B] font-black text-sm text-center px-4 leading-tight tracking-tighter uppercase">{recommendation.title}</span>
                     </div>
                     <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
                         {recommendation.allocation.map((item: any, idx: number) => (
                             <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-white border border-white rounded-2xl shadow-xl min-w-[85px] group/box hover:scale-105 transition-all duration-300">
                                 <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                <span className="text-[10px] text-slate-500 font-semibold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 transition-colors group-hover/box:text-[#0a1e3d]">
+                                <span className="text-[10px] text-[#00008B]/60 font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 transition-colors group-hover/box:text-[#00008B]">
                                     {item.name} 
-                                    <span className="font-bold text-lg leading-none text-[#0a1e3d] mt-1">{`%${item.value}`}</span>
+                                    <span className="font-black text-lg leading-none text-[#00008B] mt-1">{`%${item.value}`}</span>
                                     {item.amountStr && (
                                         <span className="text-slate-400 font-medium block mt-0.5">({item.amountStr})</span>
                                     )}
@@ -192,20 +192,20 @@ export function DashboardPortfolioWidget() {
                         <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                             <PieChart className="w-5 h-5" />
                         </div>
-                        <span className="text-slate-500 font-semibold text-[10px] tracking-[0.3em] uppercase opacity-60">AI Analizi</span>
-                        <div className="text-[10px] font-semibold text-white bg-[#1e50ff] px-4 py-1.5 rounded-full ml-2 uppercase tracking-widest shadow-lg">
+                        <span className="text-[#00008B] font-bold text-[9px] tracking-[0.35em] uppercase opacity-30">AI Analizi</span>
+                        <div className="text-[10px] font-bold text-white bg-[#00008B] px-4 py-1.5 rounded-full ml-2 uppercase tracking-widest shadow-lg shadow-[#00008B]/20">
                             {recommendation.persona}
                         </div>
                     </div>
 
-                    <h3 className="text-4xl font-semibold text-[#0a1e3d] mb-4 tracking-tight uppercase">{recommendation.title}</h3>
-                    <p className="text-slate-600 text-sm mb-8 leading-relaxed max-w-xl text-center font-medium opacity-80">
+                    <h3 className="text-4xl font-black text-[#00008B] mb-4 tracking-tighter uppercase">{recommendation.title}</h3>
+                    <p className="text-[#00008B]/70 text-sm mb-8 leading-relaxed max-w-xl text-center font-medium">
                         {recommendation.desc}
                     </p>
 
                     <div className="p-10 bg-white/40 border border-white rounded-[2.5rem] mb-8 text-sm leading-relaxed text-center shadow-2xl shadow-blue-900/5 w-full max-w-lg mx-auto relative overflow-hidden group/card shadow-sm">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-blue-600 to-transparent opacity-20" />
-                        <strong className="text-[#0a1e3d] block mb-5 font-semibold text-xl tracking-tight uppercase">Neden Bu Optimizasyon?</strong>
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-[#00008B] to-transparent opacity-20" />
+                        <strong className="text-[#00008B] block mb-5 font-bold text-xl tracking-tighter uppercase">Neden Bu Optimizasyon?</strong>
                         <p className="text-left font-medium text-slate-700 px-2 mt-2 leading-relaxed">
                         {recommendation.reasoning.split("**").map((part: string, i: number) =>
                             i % 2 === 1 ? <span key={i} className="text-[#0a192f] font-black bg-[#0a192f]/5 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
@@ -216,8 +216,8 @@ export function DashboardPortfolioWidget() {
                             <div className="mt-6 pt-5 border-t border-[#0a192f]/5 grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center text-center">
                                 {recommendation.advantages.map((adv: string, i: number) => (
                                     <div key={i} className="flex flex-col items-center justify-center gap-1.5 text-xs bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-colors w-full border border-slate-100">
-                                        <CheckCircle2 className="w-5 h-5 text-[#0a192f] flex-shrink-0" />
-                                        <span className="font-bold text-[#0a192f]">{adv}</span>
+                                        <CheckCircle2 className="w-5 h-5 text-[#00008B] flex-shrink-0" />
+                                        <span className="font-bold text-[#00008B]">{adv}</span>
                                     </div>
                                 ))}
                             </div>
@@ -230,7 +230,7 @@ export function DashboardPortfolioWidget() {
                                 localStorage.removeItem("portfolio_answers");
                                 setRecommendation(null);
                             }}
-                            className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_30px_rgba(37,99,235,0.4)] group/btn hover:scale-105"
+                            className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-[#00008B] hover:bg-blue-900 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_30px_rgba(0,0,139,0.3)] group/btn hover:scale-105"
                         >
                             <RotateCcw className="w-5 h-5 group-hover/btn:-rotate-180 transition-transform duration-500" />
                             Yeni Test Yap
@@ -246,16 +246,16 @@ export function DashboardPortfolioWidget() {
         <div className="w-full h-full relative glass-widget rounded-[2.5rem] overflow-hidden group flex flex-col justify-center min-h-[600px] text-center">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-bl-full blur-[120px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
             <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
-                <div className="w-24 h-24 bg-[#1e50ff] rounded-[2.5rem] flex items-center justify-center mb-10 shadow-xl animate-bounce border border-white/20">
+                <div className="w-24 h-24 bg-[#00008B] rounded-[2.5rem] flex items-center justify-center mb-10 shadow-xl animate-bounce border border-white/20">
                     <Wallet className="w-12 h-12 text-white" />
                 </div>
-                <h3 className="text-6xl font-semibold text-[#0a1e3d] mb-8 tracking-tighter leading-[0.9] uppercase">AI Portföyünüzü<br/>Hazırlayalım mı?</h3>
-                <p className="text-slate-600 text-lg mb-12 max-w-md font-medium opacity-80 leading-relaxed tracking-wide">
+                <h3 className="text-6xl font-black text-[#00008B] mb-8 tracking-tighter leading-[0.9] uppercase">AI Portföyünüzü<br/>Hazırlayalım mı?</h3>
+                <p className="text-[#00008B]/60 text-lg mb-12 max-w-md font-bold leading-relaxed tracking-wider">
                     Risk profilinize uygun, yapay zeka tarafından optimize edilmiş stratejinizi saniyeler içinde oluşturun.
                 </p>
                 <Link
                     href="/dashboard/analysis"
-                    className="group relative inline-flex items-center gap-4 px-12 py-6 bg-[#1e50ff] text-white rounded-[1.8rem] font-semibold text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-xl hover:scale-105 active:scale-95"
+                    className="group relative inline-flex items-center gap-4 px-12 py-6 bg-[#00008B] text-white rounded-[1.8rem] font-bold text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-xl shadow-[#00008B]/20 hover:scale-105 active:scale-95"
                 >
                     Hemen Analize Başla
                     <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />

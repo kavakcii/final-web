@@ -53,7 +53,7 @@ function TradingViewWidget({ symbol = "FOREKS:XU100", height = 400 }: TradingVie
             symbol: resolvedSymbol,
             interval: "D",
             timezone: "Europe/Istanbul",
-            theme: "dark",
+            theme: "light",
             style: "1",
             locale: "tr",
             enable_publishing: false,
@@ -68,7 +68,7 @@ function TradingViewWidget({ symbol = "FOREKS:XU100", height = 400 }: TradingVie
 
     return (
         <div
-            className="tradingview-widget-container w-full bg-black/50 rounded-xl overflow-hidden border border-white/10"
+            className="tradingview-widget-container w-full bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm"
             ref={container}
             style={{ height: typeof height === 'number' ? `${height}px` : height }}
         >

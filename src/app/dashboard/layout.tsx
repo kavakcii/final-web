@@ -59,7 +59,7 @@ function DashboardShell({
 
     if (isAuthenticated === false) {
         return (
-            <div className="min-h-screen bg-[#050a18] relative flex items-center justify-center">
+            <div className="min-h-screen bg-white relative flex items-center justify-center">
                 <AuthComponent
                     brandName="FinAi"
                     className="w-full"
@@ -70,7 +70,7 @@ function DashboardShell({
 
     if (isAuthenticated === null || (isAuthenticated === true && !isDataLoaded)) {
         return (
-            <div className="min-h-screen bg-[#050a18] flex items-center justify-center">
+            <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
         );
@@ -90,8 +90,8 @@ function DashboardShell({
     return (
         <div className="min-h-screen flex relative selection:bg-blue-500/30 overflow-hidden font-sans bg-transparent">
             {/* Luminous Light Leaks */}
-            <div className="absolute left-[10%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-400/20 blur-[140px] pointer-events-none" />
-            <div className="absolute right-[-5%] bottom-[-5%] -z-10 h-[500px] w-[500px] rounded-full bg-white/40 blur-[120px] pointer-events-none" />
+            <div className="absolute left-[10%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-50 blur-[140px] pointer-events-none" />
+            <div className="absolute right-[-5%] bottom-[-5%] -z-10 h-[500px] w-[500px] rounded-full bg-slate-50 blur-[120px] pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
@@ -102,9 +102,9 @@ function DashboardShell({
                         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10 relative z-10">
                             <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
-                                <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-                                <span className="text-2xl font-black tracking-tighter text-white opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap">
-                                    FinAi<span className="text-blue-500">.</span>
+                                <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.1)]" />
+                                <span className="text-2xl font-black tracking-tighter text-[#00008B] opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap">
+                                    FinAi<span className="text-blue-600">.</span>
                                 </span>
                             </Link>
                         </div>
@@ -113,8 +113,8 @@ function DashboardShell({
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-blue-600 shadow-[0_10px_25px_-5px_rgba(37,99,235,0.4)]' : 'text-slate-600 hover:text-blue-700 hover:bg-blue-500/5'}`}>
-                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover/nav:text-blue-600 transition-colors'}`} />
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/5'}`}>
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/60 group-hover/nav:text-[#00008B] transition-colors'}`} />
                                         <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 uppercase tracking-widest text-[10px]">
                                             {item.label}
                                         </span>
@@ -136,15 +136,15 @@ function DashboardShell({
                     {/* Main Content */}
                     <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
                         {/* Header (Glassified) */}
-                        <header className="h-16 border-b border-black/5 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/20 backdrop-blur-xl flex-shrink-0 relative">
-                            <h1 className="text-[10px] font-semibold text-slate-500 tracking-[0.3em] uppercase opacity-70">FinAi Workspace</h1>
+                        <header className="h-16 border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/40 backdrop-blur-xl flex-shrink-0 relative">
+                            <h1 className="text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
                             <div className="flex items-center space-x-4">
                                 <div className="relative hidden sm:block">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B]/40" />
                                     <input
                                         type="text"
                                         placeholder="Komut veya varlık ara..."
-                                        className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-blue-500/50 w-72 text-white placeholder:text-slate-500 transition-all hover:bg-white/10"
+                                        className="bg-slate-50 border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#00008B]/20 w-72 text-[#00008B] placeholder:text-[#00008B]/30 transition-all hover:bg-slate-100/50"
                                     />
                                 </div>
 
