@@ -126,9 +126,9 @@ export default function Dashboard() {
                 <div className="flex flex-col lg:flex-row items-start gap-6 relative">
                     {/* LEFT: PREMIUM CARD */}
                     <div className="relative z-20 group">
-                        <div className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[20px]">
+                        <Link href="/dashboard/portfolio" className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[20px] block transition-transform hover:scale-[1.01] active:scale-[0.99]">
                             <PremiumCard userName={userName || ""} />
-                        </div>
+                        </Link>
                         
                         {/* THE CHART AREA (Reveals on hover) */}
                         <div className="absolute left-0 top-0 w-full max-w-[380px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[20px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[100%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
