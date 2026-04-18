@@ -13,16 +13,22 @@ const data = [
     { name: "Paz", balance: 55000 },
 ];
 
-export function BalanceChart() {
+interface BalanceChartProps {
+    totalBalance: string;
+    changePercent: string;
+    isPositive: boolean;
+}
+
+export function BalanceChart({ totalBalance, changePercent, isPositive }: BalanceChartProps) {
     return (
         <div className="w-full h-full p-6 flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div>
                     <h3 className="text-[#00008B] text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Toplam Performans</h3>
-                    <p className="text-xl font-black text-[#00008B]">₺55,240.00</p>
+                    <p className="text-xl font-black text-[#00008B]">{totalBalance}</p>
                 </div>
-                <div className="px-2 py-1 bg-emerald-500/10 text-emerald-600 rounded-md text-[10px] font-bold">
-                    +12.4%
+                <div className={`px-2 py-1 ${isPositive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'} rounded-md text-[10px] font-bold`}>
+                    {changePercent}
                 </div>
             </div>
 

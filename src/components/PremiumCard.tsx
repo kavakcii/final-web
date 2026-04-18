@@ -4,12 +4,20 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Wifi } from "lucide-react";
 import { FinAiLogo } from "./FinAiLogo";
+import { useUser } from "@/components/providers/UserProvider";
 
 interface PremiumCardProps {
     userName: string;
 }
 
-export function PremiumCard({ userName }: PremiumCardProps) {
+    const { user } = useUser();
+
+    // Format join date as DD.MM
+    const joinDate = user?.created_at ? new Date(user.created_at) : null;
+    const formattedJoinDate = joinDate 
+        ? `${joinDate.getDate().toString().padStart(2, '0')}.${(joinDate.getMonth() + 1).toString().padStart(2, '0')}`
+        : "01.01";
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -53,7 +61,7 @@ export function PremiumCard({ userName }: PremiumCardProps) {
                 <div className="mt-auto space-y-6">
                     {/* Card Number */}
                     <div className="text-2xl font-mono tracking-[0.2em] drop-shadow-md">
-                        **** **** **** 2024
+                        **** **** **** {formattedJoinDate}
                     </div>
 
                     {/* Footer: Name and Expiry */}
