@@ -125,17 +125,24 @@ export default function Dashboard() {
             {/* INTERACTIVE HEADER SECTION */}
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col lg:flex-row items-start gap-6 relative">
-                    {/* LEFT: PREMIUM CARD */}
-                    <div className="relative z-20">
+                    {/* LEFT: PREMIUM CARD + HOVER CHART */}
+                    <div className="relative z-20 group">
                         <Link href="/dashboard/portfolio" className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[16px] block transition-transform hover:scale-[1.01] active:scale-[0.99]">
                             <PremiumCard 
                                 userName={userName || ""} 
                                 totalBalance={stats[0]?.value || "₺0,00"}
+                            />
+                        </Link>
+                        
+                        {/* Chart panel - slides out from behind the card on hover */}
+                        <div className="absolute left-0 top-0 w-[280px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[16px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
+                            <BalanceChart 
+                                totalBalance={stats[0]?.value || "₺0,00"} 
                                 changePercent={stats[0]?.change || "%0"}
                                 isPositive={stats[0]?.isPositive ?? true}
                                 history={portfolioHistory}
                             />
-                        </Link>
+                        </div>
                     </div>
                 </div>
             </div>
