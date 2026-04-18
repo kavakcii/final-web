@@ -126,10 +126,12 @@ export default function Dashboard() {
                 <div className="flex flex-col lg:flex-row items-start gap-6 relative">
                     {/* LEFT: PREMIUM CARD */}
                     <div className="relative z-20 group">
-                        <PremiumCard userName={userName || ""} />
+                        <div className="relative z-30">
+                            <PremiumCard userName={userName || ""} />
+                        </div>
                         
                         {/* THE CHART AREA (Reveals on hover) */}
-                        <div className="absolute left-full top-0 ml-6 w-full max-w-[450px] aspect-[1.586/1] bg-slate-50 border border-slate-100 rounded-[24px] shadow-2xl opacity-0 translate-x-[-20px] pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 ease-out hidden lg:block overflow-hidden">
+                        <div className="absolute left-0 top-0 w-full max-w-[450px] aspect-[1.586/1] bg-slate-50 border border-slate-100 rounded-[24px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[calc(100%+24px)] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
                             <BalanceChart />
                         </div>
                     </div>
@@ -138,13 +140,6 @@ export default function Dashboard() {
                     <div className="lg:hidden w-full max-w-[450px] aspect-[1.586/1] bg-slate-50 border border-slate-100 rounded-[24px] mt-4">
                         <BalanceChart />
                     </div>
-                </div>
-
-                <div className="mt-6 text-left max-w-lg">
-                    <p className="text-[#00008B]/40 text-xs font-bold uppercase tracking-[0.3em] leading-relaxed">
-                        FinAi Premium Portal <br/>
-                        Haftalık bakiye performansınız ve varlık analizleriniz.
-                    </p>
                 </div>
             </div>
           </div>
