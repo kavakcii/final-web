@@ -28,7 +28,7 @@ export function PremiumCard({ userName }: PremiumCardProps) {
                 {/* Top Row: Logo and Contactless */}
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
-                        <FinAiLogo className="w-10 h-10 drop-shadow-lg" showText={false} />
+                        <FinAiLogo className="w-10 h-10 drop-shadow-lg" />
                         <span className="text-2xl font-black tracking-tighter">
                             FinAi<span className="text-blue-400">.</span>
                         </span>
