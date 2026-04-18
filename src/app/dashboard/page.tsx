@@ -119,140 +119,14 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* 12-Column BENTO GRID LAYOUT */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full auto-rows-max">
-
-                {/* SOL KOLON */}
-                <div className="lg:col-span-3 flex flex-col gap-4">
-                    {(!isDataLoaded ? Array(4).fill(null) : stats).map((stat, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -30 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1, type: "spring", stiffness: 200, damping: 20 }}
-                            className="w-full flex-1"
-                        >
-                             <div className={cn(
-                                "rounded-[2.5rem] p-8 relative overflow-hidden group transition-all duration-500 hover:scale-[1.02] h-full min-h-[160px] flex flex-col justify-center items-center text-center",
-                                "glass-widget"
-                            )}>
-                                {!isDataLoaded ? (
-                                    <div className="animate-pulse flex flex-col items-center justify-center space-y-3 relative z-10 w-full h-full">
-                                        <div className="h-8 w-8 bg-[#00008B]/5 rounded-lg" />
-                                        <div className="h-6 w-1/2 bg-[#00008B]/5 rounded mt-auto" />
-                                    </div>
-                                ) : stat && (
-                                    <div className="relative z-10 flex flex-col h-full justify-center items-center w-full">
-                                        <div className="flex flex-col items-center justify-center gap-2 mb-3 w-full">
-                                            <div className="p-2.5 bg-[#00008B]/5 rounded-xl text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors duration-300 shadow-sm border border-[#00008B]/10 group-hover:border-transparent">
-                                                <stat.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                                            </div>
-                                            <div className={`flex items-center justify-center gap-1 text-[11px] font-black px-2.5 py-1 rounded-md ${stat.isPositive ? 'text-emerald-700 bg-emerald-500/20' : 'text-rose-700 bg-rose-500/20'}`}>
-                                                {stat.isPositive ? <ArrowUpRight className="w-3.5 h-3.5 text-emerald-600" /> : <ArrowDownRight className="w-3.5 h-3.5 text-rose-600" />}
-                                                {stat.change}
-                                            </div>
-                                        </div>
-                                        <div className="mt-auto w-full text-center">
-                                            <h3 className="text-[#00008B] text-[9px] font-bold mb-2 tracking-[0.25em] uppercase opacity-30">{stat.title}</h3>
-                                            <p className="text-3xl sm:text-4xl font-black text-[#00008B] tracking-tighter truncate leading-none">{stat.value}</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-                    ))}
-                </div>
-
-                {/* ORTA KOLON */}
-                <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2, duration: 0.5, type: 'spring' }}
-                    className="lg:col-span-6 flex flex-col h-full min-h-[600px]"
-                >
-                    <DashboardPortfolioWidget />
-                </motion.div>
-
-                {/* SAĞ KOLON */}
-                <motion.div 
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 20 }}
-                    className="lg:col-span-3 h-full max-h-[610px] flex flex-col"
-                >
-                    <div className="glass-widget shadow-2xl rounded-[2.5rem] p-8 flex flex-col relative overflow-hidden group h-full items-center text-center">
-                        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/5 rounded-bl-full blur-[80px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
-
-                        <div className="w-full flex justify-between items-center mb-8 relative z-10">
-                            <h2 className="text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-30">
-                                Varlıklarım
-                            </h2>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-[#00008B] px-3 py-1 rounded-full bg-blue-50 border border-blue-100 animate-pulse">Senkronize</span>
-                        </div>
-                        
-                        <div className="space-y-3 flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-400 relative z-10 w-full">
-                            {!isDataLoaded ? (
-                                Array(5).fill(null).map((_, i) => (
-                                    <div key={i} className="h-14 w-full animate-pulse bg-white/10 rounded-xl mb-2" />
-                                ))
-                            ) : groupedAssets.length === 0 ? (
-                                <div className="text-center py-10">
-                                    <p className="text-sm text-slate-500 font-bold">Henüz varlık eklemediyseniz başlayın!</p>
-                                </div>
-                            ) : (
-                                groupedAssets.map((asset: any, i: number) => {
-                                    const currentPrice = prices[asset.symbol.toUpperCase()];
-                                    const change = currentPrice ? ((currentPrice - (asset.totalCost / asset.quantity)) / (asset.totalCost / asset.quantity)) * 100 : 0;
-
-                                    return (
-                                        <div
-                                            key={i}
-                                            onClick={() => handleAssetSelect(asset.symbol, asset.type)}
-                                            className={cn(
-                                                "flex flex-col items-center justify-center p-6 rounded-[2.2rem] transition-all cursor-pointer bg-slate-50 border border-slate-100 text-center gap-3",
-                                                selectedAsset.includes(asset.symbol.replace('.IS', ''))
-                                                    ? "bg-[#00008B] border-[#00008B] text-white shadow-[0_15px_40px_-10px_rgba(0,0,139,0.3)] scale-[1.03]"
-                                                    : "hover:bg-slate-100/80 hover:-translate-y-1 text-[#00008B]"
-                                            )}
-                                        >
-                                            <div className={cn(
-                                                "w-10 h-10 rounded-lg flex items-center justify-center text-[12px] font-black shadow-inner",
-                                                selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "bg-white/20 text-white" : "bg-[#00008B]/5 text-[#00008B]"
-                                            )}>
-                                                {asset.symbol.substring(0, 2)}
-                                            </div>
-                                            <div className="hover:scale-105 transition-transform duration-300">
-                                                <p className="text-[16px] font-black tracking-tighter leading-tight">{asset.symbol}</p>
-                                                <p className={cn(
-                                                    "text-[10px] font-bold uppercase tracking-[0.2em] mt-0.5 opacity-50",
-                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) ? "text-white" : "text-[#00008B]"
-                                                )}>{asset.type === 'STOCK' ? 'Hisse' : 'Fon'}</p>
-                                            </div>
-                                            <div className="mt-1 flex gap-3 items-center justify-center">
-                                                <p className={cn(
-                                                    "text-xs font-black px-2 py-0.5 rounded",
-                                                    change >= 0 ? "text-emerald-700 bg-emerald-500/20" : "text-rose-700 bg-rose-500/20",
-                                                    selectedAsset.includes(asset.symbol.replace('.IS', '')) && (change >= 0 ? "text-emerald-400" : "text-rose-400")
-                                                )}>
-                                                    {change >= 0 ? '+' : ''}{change.toFixed(1)}%
-                                                </p>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                            <div
-                                onClick={() => { setSelectedAsset("FOREKS:XU100"); setIsTefas(false); }}
-                                className={cn(
-                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all cursor-pointer mt-4 bg-slate-50 text-[#00008B] border border-slate-100 shadow-sm",
-                                    selectedAsset === "FOREKS:XU100" ? "ring-2 ring-[#00008B] shadow-md" : "hover:bg-slate-100"
-                                )}
-                            >
-                                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">BIST 100 Endeksi</span>
-                            </div>
-                        </div>
+            {/* 12-Column BENTO GRID LAYOUT REMOVED AS REQUESTED */}
+            <div className="flex-1 flex items-center justify-center min-h-[400px]">
+                <div className="text-center space-y-4">
+                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
+                        <Activity className="w-10 h-10 text-[#00008B] opacity-20" />
                     </div>
-                </motion.div>
+                    <p className="text-[#00008B]/40 text-sm font-bold uppercase tracking-[0.2em]">Dashboard hazır. Varlıklarınızı yönetmeye başlayabilirsiniz.</p>
+                </div>
             </div>
           </div>
         </div>
