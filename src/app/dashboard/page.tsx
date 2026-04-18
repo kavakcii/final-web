@@ -15,6 +15,7 @@ import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
 import { PremiumCard } from "@/components/PremiumCard";
 import { BalanceChart } from "@/components/BalanceChart";
+import { GradientCard } from "@/components/ui/gradient-card";
 import Link from "next/link";
 
 export default function Dashboard() {
@@ -123,8 +124,8 @@ export default function Dashboard() {
             </div>
 
             {/* INTERACTIVE HEADER SECTION */}
-            <div className="flex flex-col gap-6">
-                <div className="flex flex-col lg:flex-row items-start gap-6 relative">
+            <div className="flex flex-col gap-10">
+                <div className="flex flex-col lg:flex-row items-start gap-10 relative">
                     {/* LEFT: PREMIUM CARD + HOVER CHART */}
                     <div className="relative z-20 group">
                         <Link href="/dashboard/portfolio" className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[16px] block transition-transform hover:scale-[1.01] active:scale-[0.99]">
@@ -142,6 +143,14 @@ export default function Dashboard() {
                                 isPositive={stats[0]?.isPositive ?? true}
                                 history={portfolioHistory}
                             />
+                        </div>
+                    </div>
+
+                    {/* RIGHT: FEATURED AI CARD */}
+                    <div className="flex flex-col gap-4">
+                        <h3 className="text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-40 px-2">Öne Çıkan Özellik</h3>
+                        <div className="scale-90 origin-top-left">
+                            <GradientCard />
                         </div>
                     </div>
                 </div>
