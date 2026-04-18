@@ -14,6 +14,7 @@ import { TefasChart } from "@/components/TefasChart";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
 import { PremiumCard } from "@/components/PremiumCard";
+import { BalanceChart } from "@/components/BalanceChart";
 
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, isDataLoaded } = useUser();
@@ -120,13 +121,29 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* PREMIUM CARD SECTION */}
-            <div className="flex flex-col items-center justify-center py-10">
-                <PremiumCard userName={userName || ""} />
-                <div className="mt-12 text-center max-w-lg">
-                    <p className="text-[#00008B]/40 text-sm font-bold uppercase tracking-[0.3em] leading-relaxed">
-                        FinAi Premium Portalınıza Hoş Geldiniz. <br/>
-                        Varlıklarınız ve analizleriniz için yeni modülleri buradan yönetebilirsiniz.
+            {/* INTERACTIVE HEADER SECTION */}
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col lg:flex-row items-start gap-6 relative">
+                    {/* LEFT: PREMIUM CARD */}
+                    <div className="relative z-20 group">
+                        <PremiumCard userName={userName || ""} />
+                        
+                        {/* THE CHART AREA (Reveals on hover) */}
+                        <div className="absolute left-full top-0 ml-6 w-full max-w-[450px] aspect-[1.586/1] bg-slate-50 border border-slate-100 rounded-[24px] shadow-2xl opacity-0 translate-x-[-20px] pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 ease-out hidden lg:block overflow-hidden">
+                            <BalanceChart />
+                        </div>
+                    </div>
+
+                    {/* MOBILE VERSION CHART (Always below on small screens if needed, or hidden) */}
+                    <div className="lg:hidden w-full max-w-[450px] aspect-[1.586/1] bg-slate-50 border border-slate-100 rounded-[24px] mt-4">
+                        <BalanceChart />
+                    </div>
+                </div>
+
+                <div className="mt-6 text-left max-w-lg">
+                    <p className="text-[#00008B]/40 text-xs font-bold uppercase tracking-[0.3em] leading-relaxed">
+                        FinAi Premium Portal <br/>
+                        Haftalık bakiye performansınız ve varlık analizleriniz.
                     </p>
                 </div>
             </div>
