@@ -16,7 +16,7 @@ export function PremiumCard({ userName }: PremiumCardProps) {
             animate={{ opacity: 1, y: 0 }}
             whileHover={{ scale: 1.02, rotateY: 5, rotateX: -5 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="relative w-full max-w-[450px] aspect-[1.586/1] rounded-[24px] overflow-hidden shadow-2xl cursor-pointer group preserve-3d"
+            className="relative w-full max-w-[380px] aspect-[1.586/1] rounded-[20px] overflow-hidden shadow-2xl cursor-pointer group preserve-3d"
         >
             {/* Base Background with Texture */}
             <div className="absolute inset-0 bg-[#001a4d] bg-gradient-to-br from-[#001a4d] via-[#00008B] to-[#001a4d]">
