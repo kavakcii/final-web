@@ -151,6 +151,7 @@ export default function Dashboard() {
                             history={portfolioHistory}
                         />
                     </div>
+                </div>
             </div>
           </div>
         </div>
