@@ -63,10 +63,10 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
       <div className="container mx-auto max-w-7xl px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-black text-[#00008B] mb-4 tracking-tight">Merak Ettikleriniz</h2>
-          <p className="text-slate-500 text-lg sm:text-xl font-medium">Bize en sık sorulan sorular ve yanıtları.</p>
+          <p className="text-[#00008B]/60 text-lg sm:text-xl font-medium uppercase tracking-widest text-[13px]">Bize en sık sorulan sorular ve yanıtları.</p>
         </div>
 
-        <div className="flex w-full flex-col md:flex-row items-center md:items-start justify-between gap-12 bg-slate-50 p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40">
+        <div className="flex w-full flex-col md:flex-row items-center md:items-start justify-between gap-12 bg-white p-8 md:p-12 rounded-3xl border border-slate-100 shadow-xl shadow-[#00008B]/5">
           <div className="w-full md:w-1/2">
             <Accordion
               type="single"
@@ -81,13 +81,13 @@ const FAQAccordionSection = ({ features = defaultFeatures }: Feature197Props) =>
                     className="cursor-pointer -mx-4 px-4 py-6 md:-mx-6 md:px-6 md:py-8 hover:bg-slate-100/50 active:bg-slate-100 active:scale-[0.98] rounded-2xl !no-underline transition-all group"
                   >
                     <h6
-                      className={`text-xl md:text-2xl font-bold transition-colors text-left ${tab.id === activeTabId ? "text-[#00008B]" : "text-slate-500 md:group-hover:text-blue-600"}`}
+                      className={`text-xl md:text-2xl font-bold transition-colors text-left ${tab.id === activeTabId ? "text-[#00008B]" : "text-[#00008B]/40 md:group-hover:text-[#00008B]"}`}
                     >
                       {tab.title}
                     </h6>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <p className="mt-1 text-slate-500 font-medium leading-relaxed pr-6">
+                    <p className="mt-1 text-[#00008B]/70 font-medium leading-relaxed pr-6">
                       {tab.description}
                     </p>
 

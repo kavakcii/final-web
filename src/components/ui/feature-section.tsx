@@ -63,7 +63,7 @@ export function FeatureSteps({
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="flex items-start gap-6 -mx-4 p-4 md:-mx-6 md:p-6 rounded-3xl hover:bg-slate-50/80 active:bg-slate-100 transition-colors cursor-pointer"
+                className="flex items-start gap-6 -mx-4 p-4 md:-mx-6 md:p-6 rounded-3xl hover:bg-blue-50/50 active:bg-blue-50 transition-colors cursor-pointer"
                 initial={{ opacity: 0.3 }}
                 animate={{ opacity: index === currentFeature ? 1 : 0.4 }}
                 transition={{ duration: 0.5 }}
@@ -78,7 +78,7 @@ export function FeatureSteps({
                     "w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center border-2 transition-colors duration-300",
                     index === currentFeature
                       ? "bg-[#00008B] border-[#00008B] text-white scale-110 shadow-lg shadow-[#00008B]/20"
-                      : "bg-slate-50 border-slate-200 text-slate-400",
+                      : "bg-white border-blue-100 text-[#00008B]/30",
                   )}
                 >
                   {index <= currentFeature ? (
@@ -92,11 +92,11 @@ export function FeatureSteps({
                 <div className="flex-1 mt-1">
                   <h3 className={cn(
                       "text-2xl font-bold transition-colors duration-300 pointer-events-none",
-                      index === currentFeature ? "text-[#00008B]" : "text-slate-600"
+                      index === currentFeature ? "text-[#00008B]" : "text-[#00008B]/40"
                   )}>
                     {feature.title || feature.step}
                   </h3>
-                  <p className="mt-2 text-base md:text-lg text-slate-500 font-medium leading-relaxed pointer-events-none">
+                  <p className="mt-2 text-base md:text-lg text-[#00008B]/70 font-medium leading-relaxed pointer-events-none">
                     {feature.content}
                   </p>
                 </div>

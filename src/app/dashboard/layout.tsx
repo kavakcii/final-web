@@ -24,6 +24,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { UserProvider, useUser } from "@/components/providers/UserProvider";
 import { AuthComponent } from "@/components/ui/sign-up";
 import { ToastProvider } from "@/components/providers/ToastProvider";
+import { FinAiLogo } from "@/components/ui/logo";
 
 function DashboardShell({
     children,
@@ -99,14 +100,10 @@ function DashboardShell({
                     {/* Sidebar (Premium Frosted Glass) */}
                     <aside className="w-20 hover:w-64 border-r border-white/40 premium-frost hidden md:flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 h-full relative">
                         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
-                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10">
-                            <Link href="/" className="flex items-center space-x-2 w-full overflow-hidden">
-                                <div className="flex-shrink-0">
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white shadow-[0_0_15px_rgba(30,80,255,0.4)]">
-                                        <TrendingUp className="w-5 h-5 text-black" />
-                                    </div>
-                                </div>
-                                <span className="text-xl font-black tracking-tighter text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10 relative z-10">
+                            <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
+                                <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
+                                <span className="text-2xl font-black tracking-tighter text-white opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap">
                                     FinAi<span className="text-blue-500">.</span>
                                 </span>
                             </Link>

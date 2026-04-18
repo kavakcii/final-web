@@ -85,32 +85,9 @@ export default function HomeClient() {
     <div ref={containerRef} className="min-h-screen w-full bg-white text-slate-800 relative font-sans overflow-x-hidden">
       
       {/* 
-          DYNAMIC BACKGROUND
+          FULL WHITE BACKGROUND (Clean)
       */}
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-white">
-        {/* Soft dot grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.3]"
-          style={{
-            backgroundImage: `radial-gradient(circle, #cbd5e1 1.5px, transparent 1px)`,
-            backgroundSize: '32px 32px',
-          }}
-        />
-        
-        {/* Animated Orbs/Blobs */}
-        <motion.div 
-          style={{ y: blobY1 }}
-          animate={{ x: [0, 50, -20, 0], scale: [1, 1.1, 0.9, 1] }} 
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] rounded-full bg-blue-100/50 mix-blend-multiply filter blur-[80px] opacity-70 will-change-transform"
-        />
-        <motion.div 
-          style={{ y: blobY2 }}
-          animate={{ x: [0, -60, 30, 0], scale: [1, 1.2, 0.8, 1] }} 
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute top-[20%] -right-[10%] w-[40vw] h-[40vw] rounded-full bg-indigo-100/50 mix-blend-multiply filter blur-[80px] opacity-60 will-change-transform"
-        />
-      </div>
+      <div className="fixed inset-0 pointer-events-none -z-10 bg-white" />
 
       <Navbar />
 
@@ -134,9 +111,6 @@ export default function HomeClient() {
                 transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
                 className="text-[65px] sm:text-[80px] md:text-[120px] leading-[1.0] font-black tracking-tighter text-[#00008B] py-4 relative flex justify-center items-center w-full mx-auto"
               >
-                {/* Glow behind the text */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] sm:w-[800px] sm:h-[800px] bg-[radial-gradient(circle,_rgba(255,255,255,1)_10%,_rgba(0,0,139,0.15)_50%,_transparent_80%)] -z-10 rounded-full blur-[20px] pointer-events-none" />
-                
                 <span className="relative inline-block z-10 mt-10 sm:mt-0">
                   <span className="text-[#00008B] px-2 font-black">
                     FinAi
@@ -168,7 +142,7 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="text-base sm:text-xl md:text-2xl text-slate-500 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
+                className="text-base sm:text-xl md:text-2xl text-[#00008B]/70 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
               >
                 BIST hisseleri ve TEFAS fonlarını tek bir panoda takip edin. <b className="text-[#00008B]">AI destekli analizlerle</b> portföyünüzü yönetin.
               </motion.p>

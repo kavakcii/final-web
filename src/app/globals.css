@@ -134,14 +134,12 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  /* 2/3 Navy to 1/3 White transition */
-  background: linear-gradient(to right, #0a1e3d 0%, #1a3c6d 40%, #2a5298 66%, #ffffff 100%);
-  background-attachment: fixed;
-  color: #0a1e3d;
+  background: #FFFFFF;
+  color: #00008B;
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;

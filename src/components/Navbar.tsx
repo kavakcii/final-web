@@ -38,7 +38,7 @@ export default function Navbar() {
     if (isAuthPage) return null;
 
     return (
-        <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-4' : 'py-6'}`}>
+        <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-4 bg-white/80 backdrop-blur-md border-b border-slate-100' : 'py-6'}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 relative flex items-center justify-between">
                 
                 {/* Sol Taraf - Logo */}
@@ -108,7 +108,7 @@ export default function Navbar() {
                     >
                         <div className="px-5 py-6 space-y-3">
                             {navItems.map((item) => (
-                                <Link key={item.name} href={item.url} onClick={() => setIsOpen(false)} className="flex items-center gap-4 px-4 py-3.5 text-base font-bold text-[#0a192f] hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-2xl transition-all">
+                                <Link key={item.name} href={item.url} onClick={() => setIsOpen(false)} className="flex items-center gap-4 px-4 py-3.5 text-base font-bold text-[#00008B] hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-2xl transition-all">
                                     <item.icon className="w-5 h-5 text-blue-600" />
                                     {item.name}
                                 </Link>
@@ -118,7 +118,7 @@ export default function Navbar() {
                                     <Link
                                         href="/login?tab=register"
                                         onClick={() => setIsOpen(false)}
-                                        className="block w-full text-center px-4 py-3.5 text-base font-bold text-white bg-[#0a192f] hover:bg-black rounded-2xl shadow-lg shadow-[#0a192f]/20 transition-all"
+                                        className="block w-full text-center px-4 py-3.5 text-base font-bold text-white bg-[#00008B] hover:bg-black rounded-2xl shadow-lg shadow-[#00008B]/20 transition-all"
                                     >
                                         Kaydol
                                     </Link>
@@ -126,7 +126,7 @@ export default function Navbar() {
                                 <Link
                                     href={isAuthenticated ? "/dashboard" : "/login"}
                                     onClick={() => setIsOpen(false)}
-                                    className="block w-full text-center px-4 py-3.5 text-base font-bold text-[#0a192f] bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-2xl transition-all"
+                                    className="block w-full text-center px-4 py-3.5 text-base font-bold text-[#00008B] bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-2xl transition-all"
                                 >
                                     {isAuthenticated ? "Giriş Yap" : "Giriş Yap"}
                                 </Link>
