@@ -108,8 +108,70 @@ export const PortfolioService = {
 
     calculateTotalValue: (assets: Asset[], currentPrices: Record<string, number>) => {
         return assets.reduce((total, asset) => {
-            const price = currentPrices[asset.symbol] || asset.avgCost;
+            const price = currentPrices[asset.symbol.toUpperCase()] || asset.avgCost;
             return total + (price * asset.quantity);
         }, 0);
+    },
+
+    saveSnapshot: async (totalValue: number, totalProfit: number) => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // Today's date in YYYY-MM-DD
+            const today = new Date().toISOString().split('T')[0];
+
+            // Check if snapshot already exists for today
+            const { data: existing } = await supabase
+                .from('portfolio_history')
+                .select('id')
+                .eq('user_id', user.id)
+                .eq('snapshot_date', today)
+                .maybeSingle();
+
+            if (existing) {
+                // Update today's snapshot
+                await supabase
+                    .from('portfolio_history')
+                    .update({ 
+                        total_value: totalValue, 
+                        total_profit: totalProfit,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existing.id);
+            } else {
+                // Insert new snapshot
+                await supabase
+                    .from('portfolio_history')
+                    .insert([{
+                        user_id: user.id,
+                        snapshot_date: today,
+                        total_value: totalValue,
+                        total_profit: totalProfit
+                    }]);
+            }
+        } catch (error) {
+            console.error('Error saving portfolio snapshot:', error);
+        }
+    },
+
+    getHistory: async (): Promise<any[]> => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return [];
+
+            const { data, error } = await supabase
+                .from('portfolio_history')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('snapshot_date', { ascending: true })
+                .limit(30);
+
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error fetching portfolio history:', error);
+            return [];
+        }
     }
 };

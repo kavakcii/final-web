@@ -17,7 +17,7 @@ import { PremiumCard } from "@/components/PremiumCard";
 import { BalanceChart } from "@/components/BalanceChart";
 
 export default function Dashboard() {
-    const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, isDataLoaded } = useUser();
+    const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded } = useUser();
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
 
@@ -136,6 +136,7 @@ export default function Dashboard() {
                                 totalBalance={stats[0]?.value || "₺0,00"} 
                                 changePercent={stats[0]?.change || "%0"}
                                 isPositive={stats[0]?.isPositive ?? true}
+                                history={portfolioHistory}
                             />
                         </div>
                     </div>
@@ -146,6 +147,7 @@ export default function Dashboard() {
                             totalBalance={stats[0]?.value || "₺0,00"} 
                             changePercent={stats[0]?.change || "%0"}
                             isPositive={stats[0]?.isPositive ?? true}
+                            history={portfolioHistory}
                         />
                     </div>
                 </div>

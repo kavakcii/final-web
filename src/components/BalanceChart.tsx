@@ -17,9 +17,30 @@ interface BalanceChartProps {
     totalBalance: string;
     changePercent: string;
     isPositive: boolean;
+    history?: any[];
 }
 
-export function BalanceChart({ totalBalance, changePercent, isPositive }: BalanceChartProps) {
+export function BalanceChart({ totalBalance, changePercent, isPositive, history = [] }: BalanceChartProps) {
+    const chartData = React.useMemo(() => {
+        if (history && history.length > 0) {
+            return history.map(item => ({
+                name: new Date(item.snapshot_date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }),
+                balance: Number(item.total_value)
+            }));
+        }
+        
+        // Fallback to dummy data with current balance scale
+        return [
+            { name: "Pzt", balance: 42000 },
+            { name: "Sal", balance: 45000 },
+            { name: "Çar", balance: 43500 },
+            { name: "Per", balance: 48000 },
+            { name: "Cum", balance: 52000 },
+            { name: "Cmt", balance: 51000 },
+            { name: "Paz", balance: 55000 },
+        ];
+    }, [history]);
+
     return (
         <div className="w-full h-full p-6 flex flex-col justify-between">
             <div className="flex justify-between items-start">
@@ -34,7 +55,7 @@ export function BalanceChart({ totalBalance, changePercent, isPositive }: Balanc
 
             <div className="flex-1 mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={data}>
+                    <AreaChart data={chartData}>
                         <defs>
                             <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#00008B" stopOpacity={0.1}/>

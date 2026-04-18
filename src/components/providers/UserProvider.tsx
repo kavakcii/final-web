@@ -21,6 +21,7 @@ interface UserContextType {
     myAssets: Asset[];
     prices: Record<string, number>;
     stats: any[];
+    portfolioHistory: any[];
     isDataLoaded: boolean;
     refreshDashboardData: () => Promise<void>;
 }
@@ -37,6 +38,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const [myAssets, setMyAssets] = useState<Asset[]>([]);
     const [prices, setPrices] = useState<Record<string, number>>({});
     const [stats, setStats] = useState<any[]>([]);
+    const [portfolioHistory, setPortfolioHistory] = useState<any[]>([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
 
     // Use a ref to track if auth check has completed to avoid closure staleness in timeout
@@ -109,6 +111,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                         border: "border-orange-500/20"
                     }
                 ]);
+
+                // Save snapshot for today and fetch history
+                await PortfolioService.saveSnapshot(totalVal, profit);
+                const history = await PortfolioService.getHistory();
+                setPortfolioHistory(history);
             } else {
                 setStats([
                     { title: "Toplam Portföy", value: "₺0,00", change: "%0", isPositive: true, icon: Wallet, gradient: "from-blue-500/20 to-purple-500/20", border: "border-blue-500/20" },
@@ -271,6 +278,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             myAssets,
             prices,
             stats,
+            portfolioHistory,
             isDataLoaded,
             refreshDashboardData
         }}>
