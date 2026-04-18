@@ -15,6 +15,7 @@ import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
 import { PremiumCard } from "@/components/PremiumCard";
 import { BalanceChart } from "@/components/BalanceChart";
+import Link from "next/link";
 
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded } = useUser();
