@@ -13,6 +13,7 @@ import TradingViewWidget from "@/components/TradingViewWidget";
 import { TefasChart } from "@/components/TefasChart";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
+import { PremiumCard } from "@/components/PremiumCard";
 
 export default function Dashboard() {
     const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, isDataLoaded } = useUser();
@@ -119,13 +120,14 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* 12-Column BENTO GRID LAYOUT REMOVED AS REQUESTED */}
-            <div className="flex-1 flex items-center justify-center min-h-[400px]">
-                <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
-                        <Activity className="w-10 h-10 text-[#00008B] opacity-20" />
-                    </div>
-                    <p className="text-[#00008B]/40 text-sm font-bold uppercase tracking-[0.2em]">Dashboard hazır. Varlıklarınızı yönetmeye başlayabilirsiniz.</p>
+            {/* PREMIUM CARD SECTION */}
+            <div className="flex flex-col items-center justify-center py-10">
+                <PremiumCard userName={userName || ""} />
+                <div className="mt-12 text-center max-w-lg">
+                    <p className="text-[#00008B]/40 text-sm font-bold uppercase tracking-[0.3em] leading-relaxed">
+                        FinAi Premium Portalınıza Hoş Geldiniz. <br/>
+                        Varlıklarınız ve analizleriniz için yeni modülleri buradan yönetebilirsiniz.
+                    </p>
                 </div>
             </div>
           </div>
