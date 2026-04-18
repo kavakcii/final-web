@@ -10,6 +10,7 @@ interface PremiumCardProps {
     userName: string;
 }
 
+export function PremiumCard({ userName }: PremiumCardProps) {
     const { user } = useUser();
 
     // Format join date as DD.MM
