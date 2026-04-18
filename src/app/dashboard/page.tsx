@@ -76,7 +76,8 @@ export default function Dashboard() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5 }}
-                        <header className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md">
+                        className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md"
+                    >
                         <div className="w-full max-w-md p-10 rounded-[2.5rem] bg-white border border-slate-100 text-[#00008B] shadow-2xl relative overflow-hidden text-center">
                             <div className="relative z-10">
                                 <div className="w-24 h-24 mx-auto mb-8 relative">
