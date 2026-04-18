@@ -151,6 +151,13 @@ export default function Dashboard() {
                         />
                     </div>
                 </div>
+
+                <div className="mt-6 text-left max-w-lg">
+                    <p className="text-[#00008B]/40 text-xs font-bold uppercase tracking-[0.3em] leading-relaxed">
+                        FinAi Premium Portal <br/>
+                        Portföyünüzdeki tüm varlıkların anlık piyasa değerlerini ve tarihsel değişimlerini buradan takip edebilirsiniz.
+                    </p>
+                </div>
             </div>
           </div>
         </div>

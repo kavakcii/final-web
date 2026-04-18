@@ -306,6 +306,7 @@ export function useUser() {
             myAssets: [],
             prices: {},
             stats: [],
+            portfolioHistory: [],
             isDataLoaded: false,
             refreshDashboardData: async () => { }
         } as UserContextType;
@@ -327,6 +328,7 @@ export function useUser() {
             myAssets: [],
             prices: {},
             stats: [],
+            portfolioHistory: [],
             isDataLoaded: false,
             refreshDashboardData: async () => { }
         } as UserContextType;

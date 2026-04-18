@@ -62,7 +62,7 @@ export function PremiumCard({ userName }: PremiumCardProps) {
                 <div className="mt-auto space-y-6">
                     {/* Card Number */}
                     <div className="text-2xl font-mono tracking-[0.2em] drop-shadow-md">
-                        **** **** **** {formattedJoinDate}
+                        **** **** **** {formattedJoinDate.replace('.', '')}
                     </div>
 
                     {/* Footer: Name and Expiry */}
