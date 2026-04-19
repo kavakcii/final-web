@@ -5,7 +5,6 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { InfiniteMovingCards } from "@/components/ui/InfiniteMovingCards";
-import { FinAiChatWidget } from "@/components/FinAiChatWidget";
 import { FeatureSteps } from "@/components/ui/feature-section";
 import { FAQAccordionSection } from "@/components/ui/accordion-feature-section";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -191,7 +190,6 @@ export default function HomeClient() {
           <Footer />
         </div>
       </main>
-      <FinAiChatWidget />
     </div>
   );
 }

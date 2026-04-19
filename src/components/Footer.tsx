@@ -11,7 +11,7 @@ export default function Footer() {
                         <div className="flex items-center">
                             <FinAiLogo className="h-12 w-auto" />
                         </div>
-                        <p className="text-sm text-[#00008B]/70">
+                        <p className="text-sm text-[#00008B] font-medium leading-relaxed">
                             BIST ve TEFAS portföyünüzü AI destekli analizlerle
                             tek bir panoda yönetin.
                         </p>
@@ -19,32 +19,39 @@ export default function Footer() {
 
                     <div>
                         <h3 className="font-bold mb-4 text-[#00008B]">Ürün</h3>
-                        <ul className="space-y-2 text-sm text-[#00008B]/80 font-medium">
-                            <li><Link href="#features" className="hover:underline transition-colors">Özellikler</Link></li>
-                            <li><Link href="/login" className="hover:underline transition-colors">Giriş Yap</Link></li>
+                        <ul className="space-y-2 text-sm text-[#00008B] font-medium">
+                            <li><Link href="#features" className="hover:underline transition-colors opacity-90 hover:opacity-100">Özellikler</Link></li>
+                            <li><Link href="/login" className="hover:underline transition-colors opacity-90 hover:opacity-100">Giriş Yap</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h3 className="font-bold mb-4 text-[#00008B]">Şirket</h3>
-                        <ul className="space-y-2 text-sm text-[#00008B]/80 font-medium">
-                            <li><Link href="#hero" className="hover:underline transition-colors">Hakkımızda</Link></li>
-                            <li><Link href="#" className="hover:underline transition-colors">Kullanım Şartları</Link></li>
-                            <li><Link href="#" className="hover:underline transition-colors">KVKK Aydınlatma Metni</Link></li>
+                        <ul className="space-y-2 text-sm text-[#00008B] font-medium">
+                            <li><Link href="#hero" className="hover:underline transition-colors opacity-90 hover:opacity-100">Hakkımızda</Link></li>
+                            <li><Link href="#" className="hover:underline transition-colors opacity-90 hover:opacity-100">Kullanım Şartları</Link></li>
+                            <li><Link href="#" className="hover:underline transition-colors opacity-90 hover:opacity-100">KVKK Aydınlatma Metni</Link></li>
                         </ul>
                     </div>
 
                     <div>
                         <h3 className="font-bold mb-4 text-[#00008B]">Takip Et</h3>
                         <div className="flex space-x-4">
-                            <Link href="https://www.instagram.com/finai.net.tr/" target="_blank" rel="noopener noreferrer" className="text-[#00008B]/60 hover:text-[#00008B] transition-colors">
-                                <Instagram className="w-5 h-5" />
+                            <Link 
+                                href="https://www.instagram.com/finai.net.tr/" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="transition-all hover:scale-110"
+                            >
+                                <div className="p-2 rounded-xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-md shadow-[#ee2a7b]/20">
+                                    <Instagram className="w-5 h-5" />
+                                </div>
                             </Link>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-slate-100 text-center text-xs text-[#00008B]/40 font-bold uppercase tracking-widest">
+                <div className="mt-8 pt-8 border-t border-slate-100 text-center text-xs text-[#00008B] font-bold uppercase tracking-widest opacity-40">
                     © {new Date().getFullYear()} FinAi. Tüm hakları saklıdır.
                 </div>
             </div>
