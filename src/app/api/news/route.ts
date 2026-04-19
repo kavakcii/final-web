@@ -47,19 +47,36 @@ const SOURCES = [
   }
 ];
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
+
     const parser = new XMLParser({
       ignoreAttributes: false,
       attributeNamePrefix: "@_"
     });
+
+    const searchSources = query ? [
+      {
+        name: 'Google News Search',
+        url: `https://news.google.com/rss/search?q=${encodeURIComponent(query)}+OR+${encodeURIComponent(query)}+borsa+OR+${encodeURIComponent(query)}+hisse&hl=tr&gl=TR&ceid=TR:tr`,
+        parser: (item: any) => ({
+          title: item.title,
+          link: item.link,
+          pubDate: item.pubDate,
+          source: item.source ? (typeof item.source === 'string' ? item.source : item.source['#text']) : 'Google News',
+          description: item.description || ''
+        })
+      }
+    ] : SOURCES;
 
     const allNews: NewsItem[] = [];
     const seenLinks = new Set<string>();
 
     // Fetch all sources in parallel
     const results = await Promise.allSettled(
-      SOURCES.map(async (source) => {
+      searchSources.map(async (source) => {
         try {
           const response = await fetch(source.url, { next: { revalidate: 300 } }); // 5 min cache
           if (!response.ok) throw new Error(`Failed to fetch ${source.name}`);

@@ -8,13 +8,15 @@ interface GradientCardProps {
   description?: string;
   link?: string;
   source?: string;
+  relatedAsset?: string;
 }
 
 export const GradientCard = ({ 
-  title = "AI-Powered Inbox Sorting", 
-  description = "OpenMail revolutionizes email management with AI-driven sorting, boosting productivity and accessibility",
+  title = "Finansal Gelişmeler", 
+  description = "",
   link = "#",
-  source = "Haber"
+  source = "Haber",
+  relatedAsset
 }: GradientCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);

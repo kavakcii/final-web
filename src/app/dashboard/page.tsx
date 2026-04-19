@@ -26,18 +26,34 @@ export default function Dashboard() {
 
     useEffect(() => {
         const fetchNews = async () => {
+            if (!isDataLoaded) return;
+            
             try {
-                const res = await fetch('/api/news');
+                // Try to find news related to portfolio assets
+                let query = "";
+                let relatedAsset = "";
+                
+                if (myAssets && myAssets.length > 0) {
+                    const firstAsset = myAssets[0];
+                    query = firstAsset.symbol.replace('.IS', '').replace('.is', '');
+                    relatedAsset = firstAsset.symbol;
+                }
+
+                const res = await fetch(`/api/news${query ? `?q=${query}` : ''}`);
                 const data = await res.json();
+                
                 if (data.success && data.news && data.news.length > 0) {
-                    setTopNews(data.news[0]);
+                    setTopNews({
+                        ...data.news[0],
+                        relatedAsset: relatedAsset
+                    });
                 }
             } catch (error) {
                 console.error("Dashboard news fetch error:", error);
             }
         };
         fetchNews();
-    }, []);
+    }, [isDataLoaded, myAssets]);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
@@ -171,6 +187,7 @@ export default function Dashboard() {
                                     description={topNews.description} 
                                     link={topNews.link} 
                                     source={topNews.source}
+                                    relatedAsset={topNews.relatedAsset}
                                 />
                             )}
                         </div>

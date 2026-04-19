@@ -63,8 +63,10 @@ export function BalanceChart({ totalBalance, changePercent, isPositive, history 
                                 boxShadow: '0 10px 25px -5px rgba(0,0,139,0.15)',
                                 padding: '12px'
                             }}
-                            formatter={(value: number) => [
-                                `₺${value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
+                            formatter={(value: any) => [
+                                typeof value === 'number' 
+                                    ? `₺${value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`
+                                    : `₺${value}`,
                                 "Bakiye"
                             ]}
                         />
