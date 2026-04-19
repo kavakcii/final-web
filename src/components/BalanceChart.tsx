@@ -24,37 +24,49 @@ export function BalanceChart({ totalBalance, changePercent, isPositive, history 
     const chartData = React.useMemo(() => {
         if (history && history.length > 0) {
             return history.map(item => ({
-                name: new Date(item.snapshot_date).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' }),
-                balance: Number(item.total_value)
+                name: new Date(item.snapshot_date).toLocaleDateString('tr-TR', { 
+                    day: '2-digit', 
+                    month: '2-digit',
+                    year: 'numeric'
+                }),
+                balance: Number(item.total_value),
+                rawDate: item.snapshot_date
             }));
         }
         
-        // Fallback to dummy data with current balance scale
+        // Fallback: If no history, show current balance as a starting point
+        const today = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const currentBalance = Number(totalBalance.replace('₺', '').replace(/\./g, '').replace(',', '.'));
+        
         return [
-            { name: "Pzt", balance: 42000 },
-            { name: "Sal", balance: 45000 },
-            { name: "Çar", balance: 43500 },
-            { name: "Per", balance: 48000 },
-            { name: "Cum", balance: 52000 },
-            { name: "Cmt", balance: 51000 },
-            { name: "Paz", balance: 55000 },
+            { name: today, balance: currentBalance }
         ];
-    }, [history]);
+    }, [history, totalBalance]);
 
     return (
         <div className="w-full h-full flex flex-col">
             <div className="flex-1">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                         <defs>
                             <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#00008B" stopOpacity={0.1}/>
+                                <stop offset="5%" stopColor="#00008B" stopOpacity={0.15}/>
                                 <stop offset="95%" stopColor="#00008B" stopOpacity={0}/>
                             </linearGradient>
                         </defs>
                         <Tooltip 
-                            contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,139,0.1)' }}
-                            itemStyle={{ color: '#00008B', fontWeight: 'bold' }}
+                            labelStyle={{ color: '#00008B', fontWeight: 'bold', fontSize: '12px', marginBottom: '4px' }}
+                            contentStyle={{ 
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                border: 'none', 
+                                borderRadius: '12px', 
+                                boxShadow: '0 10px 25px -5px rgba(0,0,139,0.15)',
+                                padding: '12px'
+                            }}
+                            formatter={(value: number) => [
+                                `₺${value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
+                                "Bakiye"
+                            ]}
                         />
                         <Area 
                             type="monotone" 
@@ -62,7 +74,8 @@ export function BalanceChart({ totalBalance, changePercent, isPositive, history 
                             stroke="#00008B" 
                             strokeWidth={3}
                             fillOpacity={1} 
-                            fill="url(#colorBalance)" 
+                            fill="url(#colorBalance)"
+                            animationDuration={1500}
                         />
                     </AreaChart>
                 </ResponsiveContainer>
