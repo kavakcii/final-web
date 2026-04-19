@@ -88,18 +88,6 @@ export default function Dashboard() {
             <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-slate-50 blur-[100px] pointer-events-none" />
 
             <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
-            {/* Top Right Widget Area */}
-            <div className="absolute top-8 right-10 z-50 hidden lg:block">
-                {topNews && (
-                    <GradientCard 
-                        title={topNews.title} 
-                        description={topNews.description} 
-                        link={topNews.link} 
-                        source={topNews.source}
-                    />
-                )}
-            </div>
-
             {/* Loading Overlay */}
             <AnimatePresence>
                 {!isDataLoaded && (
@@ -153,24 +141,38 @@ export default function Dashboard() {
 
             {/* INTERACTIVE HEADER SECTION */}
             <div className="flex flex-col gap-6">
-                <div className="flex flex-col lg:flex-row items-start gap-6 relative">
-                    {/* LEFT: PREMIUM CARD + HOVER CHART */}
-                    <div className="relative z-20 group">
-                        <Link href="/dashboard/portfolio" className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[16px] block transition-transform hover:scale-[1.01] active:scale-[0.99]">
-                            <PremiumCard 
-                                userName={userName || ""} 
-                                totalBalance={stats[0]?.value || "₺0,00"}
-                            />
-                        </Link>
-                        
-                        {/* Chart panel - slides out from behind the card on hover */}
-                        <div className="absolute left-0 top-0 w-[420px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[24px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
-                            <BalanceChart 
-                                totalBalance={stats[0]?.value || "₺0,00"} 
-                                changePercent={stats[0]?.change || "%0"}
-                                isPositive={stats[0]?.isPositive ?? true}
-                                history={portfolioHistory}
-                            />
+                <div className="flex flex-col lg:flex-row items-start gap-12 relative">
+                    {/* LEFT: CARD COLUMN */}
+                    <div className="flex flex-col gap-6">
+                        <div className="relative z-20 group">
+                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[24px] block transition-transform hover:scale-[1.01] active:scale-[0.99] w-[450px]">
+                                <PremiumCard 
+                                    userName={userName || ""} 
+                                    totalBalance={stats[0]?.value || "₺0,00"}
+                                />
+                            </Link>
+                            
+                            {/* Chart panel - slides out from behind the card on hover */}
+                            <div className="absolute left-0 top-0 w-[450px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[24px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[100%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
+                                <BalanceChart 
+                                    totalBalance={stats[0]?.value || "₺0,00"} 
+                                    changePercent={stats[0]?.change || "%0"}
+                                    isPositive={stats[0]?.isPositive ?? true}
+                                    history={portfolioHistory}
+                                />
+                            </div>
+                        </div>
+
+                        {/* News Widget Under the Card */}
+                        <div className="scale-95 origin-top-left">
+                            {topNews && (
+                                <GradientCard 
+                                    title={topNews.title} 
+                                    description={topNews.description} 
+                                    link={topNews.link} 
+                                    source={topNews.source}
+                                />
+                            )}
                         </div>
                     </div>
                 </div>
