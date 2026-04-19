@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface FinAiLogoProps {
     className?: string;
-    size?: "sm" | "md" | "lg";
+    size?: "xs" | "sm" | "md" | "lg";
 }
 
 export const FinAiLogo = ({ className, size = "md" }: FinAiLogoProps) => {
