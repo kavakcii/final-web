@@ -8,6 +8,7 @@ interface FinAiLogoProps {
 
 export const FinAiLogo = ({ className, size = "md" }: FinAiLogoProps) => {
     const sizeClasses = {
+        xs: 24,
         sm: 32,
         md: 48,
         lg: 64

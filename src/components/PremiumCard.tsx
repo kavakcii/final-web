@@ -37,8 +37,8 @@ export function PremiumCard({ userName, totalBalance = "₺0,00" }: PremiumCardP
                 {/* Top Row: Logo and Contactless */}
                 <div className="flex justify-between items-start">
                     <div className="flex items-center gap-1">
-                        <FinAiLogo className="w-3.5 h-3.5 drop-shadow-lg" />
-                        <span className="text-[10px] font-black tracking-tighter">
+                        <FinAiLogo className="drop-shadow-lg" size="xs" />
+                        <span className="text-[8px] font-black tracking-tighter">
                             FinAi<span className="text-blue-400">.</span>
                         </span>
                     </div>

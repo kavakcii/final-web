@@ -42,20 +42,10 @@ export function BalanceChart({ totalBalance, changePercent, isPositive, history 
     }, [history]);
 
     return (
-        <div className="w-full h-full p-6 flex flex-col justify-between">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h3 className="text-[#00008B] text-[10px] font-bold uppercase tracking-[0.2em] opacity-40">Toplam Performans</h3>
-                    <p className="text-xl font-black text-[#00008B]">{totalBalance}</p>
-                </div>
-                <div className={`px-2 py-1 ${isPositive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'} rounded-md text-[10px] font-bold`}>
-                    {changePercent}
-                </div>
-            </div>
-
-            <div className="flex-1 mt-4">
+        <div className="w-full h-full flex flex-col">
+            <div className="flex-1">
                 <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
+                    <AreaChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                         <defs>
                             <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#00008B" stopOpacity={0.1}/>
@@ -76,11 +66,6 @@ export function BalanceChart({ totalBalance, changePercent, isPositive, history 
                         />
                     </AreaChart>
                 </ResponsiveContainer>
-            </div>
-
-            <div className="flex justify-between items-center mt-2">
-                <span className="text-[9px] font-bold text-[#00008B]/30 uppercase tracking-widest">Tüm Zamanlar Bakiye Geçişi</span>
-                <span className="text-[9px] font-bold text-[#00008B] uppercase tracking-widest">Canlı</span>
             </div>
         </div>
     );
