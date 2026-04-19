@@ -25,7 +25,7 @@ export function PremiumCard({ userName, totalBalance = "₺0,00" }: PremiumCardP
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="relative w-full max-w-[450px] aspect-[1.586/1] rounded-[24px] overflow-hidden shadow-2xl cursor-pointer preserve-3d"
+            className="relative w-full max-w-[225px] aspect-[1.586/1] rounded-[16px] overflow-hidden shadow-2xl cursor-pointer preserve-3d"
         >
             {/* Base Background */}
             <div className="absolute inset-0 bg-[#001a4d] bg-gradient-to-br from-[#001a4d] via-[#00008B] to-[#001a4d]">
@@ -33,27 +33,27 @@ export function PremiumCard({ userName, totalBalance = "₺0,00" }: PremiumCardP
             </div>
 
             {/* Inner Content */}
-            <div className="relative h-full w-full p-5 flex flex-col justify-between text-white select-none">
+            <div className="relative h-full w-full p-3.5 flex flex-col justify-between text-white select-none">
                 {/* Top Row: Logo and Contactless */}
                 <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-1.5">
-                        <FinAiLogo className="w-5 h-5 drop-shadow-lg" />
-                        <span className="text-sm font-black tracking-tighter">
+                    <div className="flex items-center gap-1">
+                        <FinAiLogo className="w-3.5 h-3.5 drop-shadow-lg" />
+                        <span className="text-[10px] font-black tracking-tighter">
                             FinAi<span className="text-blue-400">.</span>
                         </span>
                     </div>
                     <div className="rotate-90">
-                        <Wifi className="w-5 h-5 opacity-50" />
+                        <Wifi className="w-3.5 h-3.5 opacity-50" />
                     </div>
                 </div>
 
                 {/* Card Number */}
-                <div className="text-[14px] font-mono tracking-[0.2em] drop-shadow-md whitespace-nowrap opacity-80">
-                    **** **** **** {formattedJoinDate}
+                <div className="text-[10px] font-mono tracking-[0.1em] drop-shadow-md whitespace-nowrap opacity-80">
+                    **** **** **** {formattedJoinDate.replace('.', '')}
                 </div>
 
                 {/* Bottom: Just the balance amount */}
-                <p className="text-2xl font-black tracking-tight leading-none">{totalBalance}</p>
+                <p className="text-lg font-black tracking-tight leading-none">{totalBalance}</p>
             </div>
 
             {/* Reflection Effect */}
