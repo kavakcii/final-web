@@ -40,13 +40,13 @@ export const GradientCard = ({
     <div className="w-fit h-fit flex items-center justify-center bg-transparent">
       <motion.div
         ref={cardRef}
-        className="relative rounded-[20px] overflow-hidden"
+        className="relative rounded-[20px] overflow-hidden border border-slate-100"
         style={{
-          width: "200px",
+          width: "225px",
           height: "260px",
           transformStyle: "preserve-3d",
-          backgroundColor: "#000000",
-          boxShadow: isHovered ? "0 20px 40px -10px rgba(78, 99, 255, 0.3)" : "0 10px 20px -5px rgba(0, 0, 0, 0.5)",
+          backgroundColor: "#ffffff",
+          boxShadow: isHovered ? "0 20px 40px -10px rgba(0, 0, 139, 0.2)" : "0 10px 20px -5px rgba(0, 0, 139, 0.1)",
         }}
         animate={{
           y: isHovered ? -5 : 0,
@@ -59,51 +59,51 @@ export const GradientCard = ({
         onMouseLeave={handleMouseLeave}
         onMouseMove={handleMouseMove}
       >
-        {/* Reflection */}
+        {/* Subtle Glass Reflection */}
         <motion.div
           className="absolute inset-0 z-35 pointer-events-none"
           style={{
-            background: "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%)",
+            background: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%)",
           }}
-          animate={{ opacity: isHovered ? 0.8 : 0.4 }}
+          animate={{ opacity: isHovered ? 0.9 : 0.6 }}
         />
 
-        {/* Purple Glow */}
+        {/* Dark Blue Glow matching site colors */}
         <motion.div
           className="absolute bottom-0 left-0 right-0 h-2/3 z-20"
           style={{
-            background: `radial-gradient(circle at bottom center, rgba(161, 58, 229, 0.6) -20%, rgba(79, 70, 229, 0) 70%)`,
+            background: `radial-gradient(circle at bottom center, rgba(0, 0, 139, 0.15) -20%, rgba(0, 0, 139, 0) 70%)`,
             filter: "blur(30px)",
           }}
-          animate={{ opacity: isHovered ? 1 : 0.7 }}
+          animate={{ opacity: isHovered ? 1 : 0.5 }}
         />
 
-        {/* Border Glow */}
+        {/* Navy Bottom Border Glow */}
         <motion.div
           className="absolute bottom-0 left-0 right-0 h-[1.5px] z-25"
           style={{
-            background: "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%)",
+            background: "linear-gradient(90deg, transparent 0%, rgba(0, 0, 139, 0.3) 50%, transparent 100%)",
           }}
           animate={{
-            boxShadow: isHovered ? "0 0 15px 2px rgba(172, 92, 255, 0.8)" : "0 0 5px 0px rgba(172, 92, 255, 0.4)"
+            boxShadow: isHovered ? "0 0 15px 2px rgba(0, 0, 139, 0.2)" : "0 0 5px 0px rgba(0, 0, 139, 0.1)"
           }}
         />
 
         {/* Content */}
-        <div className="relative flex flex-col h-full p-4 z-40 justify-between">
-          <div className="space-y-2">
+        <div className="relative flex flex-col h-full p-5 z-40 justify-between">
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center border border-white/10">
-                    <Newspaper className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-full bg-[#00008B]/5 flex items-center justify-center border border-[#00008B]/10">
+                    <Newspaper className="w-4 h-4 text-[#00008B]" />
                 </div>
-                <span className="text-[9px] font-bold text-blue-400 uppercase tracking-widest">{source}</span>
+                <span className="text-[9px] font-bold text-[#00008B]/60 uppercase tracking-[0.2em]">{source}</span>
             </div>
 
-            <div>
-                <h3 className="text-[13px] font-bold text-white line-clamp-3 leading-tight tracking-tight">
+            <div className="space-y-1.5">
+                <h3 className="text-[13px] font-black text-[#00008B] line-clamp-3 leading-[1.3] tracking-tight">
                 {title}
                 </h3>
-                <p className="text-[10px] text-gray-400 line-clamp-3 mt-1 leading-normal">
+                <p className="text-[10px] text-[#00008B]/50 line-clamp-3 leading-relaxed font-medium">
                 {description}
                 </p>
             </div>
@@ -113,11 +113,11 @@ export const GradientCard = ({
             href={link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-white text-[10px] font-bold group mt-2"
+            className="flex items-center text-[#00008B] text-[10px] font-bold group mt-2 hover:translate-x-1 transition-transform"
           >
             Haberin Devamı
             <motion.svg className="ml-1 w-3 h-3" viewBox="0 0 16 16" fill="none" animate={{ x: isHovered ? 3 : 0 }}>
-              <path d="M1 8H15M15 8L8 1M15 8L8 15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M1 8H15M15 8L8 1M15 8L8 15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             </motion.svg>
           </a>
         </div>
