@@ -95,21 +95,38 @@ export const GradientCard = ({
         <div className="relative flex flex-col h-full p-5 z-40 justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <div className="w-8 h-8 rounded-full bg-[#00008B]/5 flex items-center justify-center border border-[#00008B]/10">
-                    <Newspaper className="w-4 h-4 text-[#00008B]" />
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#00008B]/5 flex items-center justify-center border border-[#00008B]/10">
+                        <Newspaper className="w-4 h-4 text-[#00008B]" />
+                    </div>
+                    {relatedAsset && (
+                        <div className="px-2 py-0.5 bg-[#00008B] text-white text-[8px] font-black rounded-md tracking-tighter">
+                            {relatedAsset}
+                        </div>
+                    )}
                 </div>
                 <span className="text-[9px] font-bold text-[#00008B]/60 uppercase tracking-[0.2em]">{source}</span>
             </div>
 
             <div className="space-y-1.5">
-                <h3 className="text-[13px] font-black text-[#00008B] line-clamp-3 leading-[1.3] tracking-tight">
+                <h3 className="text-[12px] font-black text-[#00008B] line-clamp-3 leading-[1.3] tracking-tight">
                 {title}
                 </h3>
                 <p className="text-[10px] text-[#00008B]/50 line-clamp-4 leading-relaxed font-medium">
-                {description.replace(/<[^>]*>/g, '')}
+                {description.replace(/<[^>]*>/g, '').trim()}
                 </p>
             </div>
           </div>
+
+          <a
+            href="/dashboard/news"
+            className="flex items-center text-[#00008B] text-[10px] font-bold group mt-2 hover:translate-x-1 transition-transform"
+          >
+            Haberin Devamı
+            <motion.svg className="ml-1 w-3 h-3" viewBox="0 0 16 16" fill="none" animate={{ x: isHovered ? 3 : 0 }}>
+              <path d="M1 8H15M15 8L8 1M15 8L8 15" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            </motion.svg>
+          </a>
         </div>
       </motion.div>
     </div>
