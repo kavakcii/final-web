@@ -13,8 +13,8 @@ interface NewsItem {
     pubDate: string;
     source: string;
     description: string;
-    isRelevant?: boolean; // Portföyle ilgili mi?
-    relatedAsset?: string;
+    category?: string;
+    aiSummary?: string;
 }
 
 interface AnalysisResult {
@@ -26,7 +26,7 @@ interface AnalysisResult {
 }
 
 function NewsContent() {
-    const { user, globalNews } = useUser();
+    const { user } = useUser();
     const searchParams = useSearchParams();
     const router = useRouter();
     const [news, setNews] = useState<NewsItem[]>([]);
@@ -72,7 +72,6 @@ function NewsContent() {
         setAnalyzingUrl(null);
         setAnalysisData(null);
         setAnalysisError(null);
-        // Clear URL param without refreshing
         const params = new URLSearchParams(searchParams);
         params.delete('url');
         router.replace(`/dashboard/news`);
@@ -83,7 +82,6 @@ function NewsContent() {
             if (!user) return;
 
             try {
-                // Fetch personalized news (Daily 10)
                 const res = await fetch(`/api/news?userId=${user.id}`);
                 const data = await res.json();
 
@@ -133,7 +131,7 @@ function NewsContent() {
                             initial={{ scale: 0.95, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 20 }}
-                            className="bg-[#00008B]/5 border border-[#00008B]/20 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col bg-white shadow-2xl shadow-[#00008B]/20"
+                            className="bg-white border border-slate-100 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl shadow-[#00008B]/20"
                         >
                             {/* Modal Header */}
                             <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
@@ -175,7 +173,6 @@ function NewsContent() {
                                     </div>
                                 ) : analysisData ? (
                                     <div className="space-y-8">
-                                        {/* Score & Sentiment */}
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
@@ -199,7 +196,6 @@ function NewsContent() {
                                             </div>
                                         </div>
 
-                                        {/* Summary */}
                                         <div className="space-y-3">
                                             <h3 className="flex items-center gap-2 text-[#00008B] font-black uppercase text-xs tracking-widest">
                                                 <Info className="w-4 h-4" /> FinAi Özeti
@@ -209,7 +205,6 @@ function NewsContent() {
                                             </p>
                                         </div>
 
-                                        {/* Key Points */}
                                         <div className="space-y-4">
                                             <h3 className="flex items-center gap-2 text-[#00008B] font-black uppercase text-xs tracking-widest">
                                                 <Target className="w-4 h-4" /> Kritik Notlar
@@ -224,7 +219,6 @@ function NewsContent() {
                                             </div>
                                         </div>
 
-                                        {/* Market Impact */}
                                         <div className="p-6 bg-[#00008B] rounded-[2rem] text-white shadow-xl shadow-[#00008B]/20 relative overflow-hidden">
                                             <div className="absolute right-[-20px] top-[-20px] opacity-10">
                                                 <BarChart3 className="w-48 h-48" />
@@ -238,13 +232,6 @@ function NewsContent() {
                                         </div>
                                     </div>
                                 ) : null}
-                            </div>
-                            
-                            {/* Modal Footer */}
-                            <div className="p-4 border-t border-slate-100 bg-white flex justify-center">
-                                <a href={analyzingUrl} target="_blank" className="text-[10px] font-bold text-[#00008B]/40 hover:text-[#00008B] transition-colors uppercase tracking-widest flex items-center gap-1">
-                                    Orijinal Kaynağı Görüntüle <ExternalLink className="w-3 h-3" />
-                                </a>
                             </div>
                         </motion.div>
                     </motion.div>
@@ -290,8 +277,10 @@ function NewsContent() {
                     <div>
                         <p className="font-bold">Haberler yüklenemedi</p>
                         <p className="text-sm opacity-70">{error}</p>
-                                   <div className="space-y-16">
-
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-16">
                     {/* 🚀 STRATEGIC FOCUS (Gold & Energy) */}
                     <section className="space-y-6">
                         <div className="flex items-center gap-3">
@@ -409,7 +398,6 @@ function NewsContent() {
         </div>
     );
 }
-
 
 export default function NewsPage() {
     return (
