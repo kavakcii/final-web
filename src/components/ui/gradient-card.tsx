@@ -95,17 +95,7 @@ export const GradientCard = ({
         <div className="relative flex flex-col h-full p-5 z-40 justify-between">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#00008B]/5 flex items-center justify-center border border-[#00008B]/10">
-                        <Newspaper className="w-4 h-4 text-[#00008B]" />
-                    </div>
-                    <span className="text-[10px] font-black text-[#00008B] uppercase tracking-[0.1em]">FinAi Haberler</span>
-                    {relatedAsset && (
-                        <div className="px-2 py-0.5 bg-[#00008B] text-white text-[8px] font-black rounded-md tracking-tighter">
-                            {relatedAsset}
-                        </div>
-                    )}
-                </div>
+                <span className="text-[10px] font-black text-[#00008B] uppercase tracking-[0.2em] opacity-40">FinAi Haberler</span>
             </div>
 
             <div className="space-y-1.5">
