@@ -38,11 +38,9 @@ export async function GET(request: Request) {
     // Remove scripts, styles, and common non-content elements
     $('script, style, nav, footer, header, ads, .ads, #ads').remove();
 
-    // Get main text content (often in <article>, <main>, or large <div>s)
+    // Get main text content
     let content = $('article').text() || $('main').text() || $('body').text();
-    
-    // Clean up text (remove excessive whitespace)
-    content = content.replace(/\s+/g, ' ').trim().slice(0, 5000); // Limit to 5k chars for AI
+    content = content.replace(/\s+/g, ' ').trim().slice(0, 5000);
 
     // 2. Analyze with Gemini
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
@@ -57,7 +55,7 @@ export async function GET(request: Request) {
       "summary": "Haberin detaylı özeti (2-3 paragraf).",
       "keyPoints": ["Kritik 1", "Kritik 2", "Kritik 3"],
       "marketImpact": "Piyasalara ve yatırım araçlarına olası etkisi nedir?",
-      "score": 8, // 1-10 arası önem puanı
+      "score": 8,
       "sentiment": "positive | negative | neutral"
     }
     
@@ -68,7 +66,6 @@ export async function GET(request: Request) {
       const result = await model.generateContent(prompt);
       const responseText = result.response.text();
       const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-      
       const analysis = JSON.parse(cleanJson);
 
       return NextResponse.json({
@@ -77,10 +74,7 @@ export async function GET(request: Request) {
       });
     } catch (aiError) {
       console.warn("AI Analysis failed, using basic fallback:", aiError);
-      
-      // Basic fallback analysis when AI is down/quota exceeded
       const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 30);
-      
       return NextResponse.json({
         success: true,
         analysis: {
@@ -92,4 +86,11 @@ export async function GET(request: Request) {
         }
       });
     }
+  } catch (error: any) {
+    console.error("General News Analysis Error:", error);
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'An unexpected error occurred'
+    }, { status: 500 });
+  }
 }
