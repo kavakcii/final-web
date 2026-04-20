@@ -93,14 +93,18 @@ function heuristicSummarizer(title: string, description: string): string {
     const cleanDesc = description.replace(/<[^>]*>/g, '').trim();
     const sentences = cleanDesc.split(/[.!?]/).filter(s => s.length > 25);
     
-    // Haberin başlığını mutlaka özete dahil et ki her haber benzersiz olsun
-    let finalSummary = `${title}: `;
+    // Haberin başlığını ve etkilenen varlıkları tahmin etmeye çalış
+    let assets = "";
+    if (title.toLowerCase().includes("altın")) assets = " [Altın]";
+    else if (title.toLowerCase().includes("dolar") || title.toLowerCase().includes("kur")) assets = " [Döviz]";
+    else if (title.toLowerCase().includes("hisse") || title.toLowerCase().includes("borsa")) assets = " [Borsa]";
+
+    let finalSummary = `${title}${assets}: `;
     
     if (sentences.length > 0) {
-        // En anlamlı ilk 2 cümleyi ekle
         finalSummary += sentences.slice(0, 2).join('. ') + '.';
     } else {
-        finalSummary += "Ekonomi gündemindeki bu gelişmenin detayları ve piyasa analizleri için haberin devamını inceleyebilirsiniz.";
+        finalSummary += "Ekonomi gündemindeki bu kritik gelişme piyasa dinamiklerini ve yatırım araçlarını doğrudan etkileyebilir.";
     }
     
     return finalSummary.length > 300 ? finalSummary.slice(0, 297) + "..." : finalSummary;
@@ -115,15 +119,19 @@ export async function summarizeNewsWithAI(title: string, description: string): P
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
         const prompt = `
-        Aşağıdaki finansal haberin başlığını ve içeriğini oku. 
-        Kullanıcıya bu haberin ne anlama geldiğini ve detaylarını anlatan, 
-        SADECE 2-4 CÜMLELİK, profesyonel ve vurucu bir özet yaz.
-        Haber linki veya kaynak belirtme. Reklam yapma. Sadece haberi yorumla/özetle.
+        Sen profesyonel bir Finansal Analistsin. 
+        Aşağıdaki haber başlığını ve içeriğini oku. 
+        Kullanıcı için SADECE 2 CÜMLELİK, çok çarpıcı ve profesyonel bir özet yaz.
+        
+        KURALLAR:
+        1. Özet tam olarak 2 cümle olmalı.
+        2. Cümlelerden biri mutlaka bu haberin hangi varlıkları (Örn: Altın, Banka Hisseleri, Döviz, Teknoloji Fonları) etkileyebileceğini içermeli.
+        3. Dilin keskin, net ve güven verici olsun.
         
         BAŞLIK: ${title}
         İÇERİK: ${description.replace(/<[^>]*>/g, '')}
         
-        ÖZET (2-4 CÜMLE):
+        2 CÜMLELİK ÖZET:
         `;
 
         const result = await model.generateContent(prompt);
