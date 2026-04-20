@@ -19,7 +19,7 @@ import { GradientCard } from "@/components/ui/gradient-card";
 import Link from "next/link";
 
 export default function Dashboard() {
-    const { user, email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded } = useUser();
+    const { user, email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded, globalNews } = useUser();
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
     const [topNews, setTopNews] = useState<any>(null);
@@ -33,31 +33,40 @@ export default function Dashboard() {
                 const rotationInterval = 15 * 60 * 1000;
                 const timeSegment = Math.floor(Date.now() / rotationInterval);
                 
-                // Get unique assets
+                // Try to use globalNews first for instant loading
+                const newsPool = globalNews.length > 0 ? globalNews : null;
+                
+                let dataToUse = newsPool;
+                let relatedAsset = "";
+
+                // If we don't have global news yet, or need a specific asset search
                 const uniqueSymbols = Array.from(new Set(myAssets.map(a => a.symbol.replace('.IS', '').replace('.is', ''))));
                 
-                let query = "";
-                let relatedAsset = "";
-                
                 if (uniqueSymbols.length > 0) {
-                    // Pick a symbol based on the 15-min segment
                     const symbolIndex = timeSegment % uniqueSymbols.length;
-                    query = uniqueSymbols[symbolIndex];
+                    const query = uniqueSymbols[symbolIndex];
                     relatedAsset = uniqueSymbols[symbolIndex];
+                    
+                    // Only fetch if global news is empty or we want fresh asset-specific news
+                    if (!newsPool) {
+                        const res = await fetch(`/api/news?q=${query}`);
+                        const data = await res.json();
+                        if (data.success) dataToUse = data.news;
+                    }
+                } else if (!newsPool) {
+                    const res = await fetch('/api/news');
+                    const data = await res.json();
+                    if (data.success) dataToUse = data.news;
                 }
-
-                const res = await fetch(`/api/news${query ? `?q=${query}` : ''}`);
-                const data = await res.json();
                 
-                if (data.success && data.news && data.news.length > 0) {
-                    // Personalize news choice based on user ID and time segment
+                if (dataToUse && dataToUse.length > 0) {
                     const userIdHash = user?.id ? user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
-                    const newsIndex = (userIdHash + timeSegment) % data.news.length;
+                    const newsIndex = (userIdHash + timeSegment) % dataToUse.length;
                     
                     setTopNews({
-                        ...data.news[newsIndex],
+                        ...dataToUse[newsIndex],
                         relatedAsset: relatedAsset,
-                        aiSummary: data.news[newsIndex].aiSummary
+                        aiSummary: dataToUse[newsIndex].aiSummary
                     });
                 }
             } catch (error) {
@@ -65,11 +74,7 @@ export default function Dashboard() {
             }
         };
         fetchNews();
-
-        // Refresh news every 15 minutes
-        const interval = setInterval(fetchNews, 15 * 60 * 1000);
-        return () => clearInterval(interval);
-    }, [isDataLoaded, myAssets, user?.id]);
+    }, [isDataLoaded, myAssets, user?.id, globalNews]);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {

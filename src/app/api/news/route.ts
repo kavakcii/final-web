@@ -12,6 +12,10 @@ interface NewsItem {
   description: string;
 }
 
+// In-memory cache for AI summaries
+const summaryCache: Record<string, { summary: string, timestamp: number }> = {};
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
 const SOURCES = [
   {
     name: 'Mynet Finans',
@@ -106,12 +110,19 @@ export async function GET(request: Request) {
 
     const topNews = allNews.slice(0, 10);
     
-    // AI Summarization for the top 3 news
+    // AI Summarization with caching
     const summarizedNews = await Promise.all(
       topNews.map(async (item, index) => {
         if (index < 3) {
+          // Check cache
+          const cached = summaryCache[item.link];
+          if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+            return { ...item, aiSummary: cached.summary };
+          }
+
           try {
             const summary = await summarizeNewsWithAI(item.title, item.description);
+            summaryCache[item.link] = { summary, timestamp: Date.now() };
             return { ...item, aiSummary: summary };
           } catch (e) {
             return item;

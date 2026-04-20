@@ -24,6 +24,7 @@ interface UserContextType {
     portfolioHistory: any[];
     isDataLoaded: boolean;
     refreshDashboardData: () => Promise<void>;
+    globalNews: any[];
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -40,6 +41,28 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const [stats, setStats] = useState<any[]>([]);
     const [portfolioHistory, setPortfolioHistory] = useState<any[]>([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [globalNews, setGlobalNews] = useState<any[]>([]);
+
+    const prefetchNews = async () => {
+        try {
+            const res = await fetch('/api/news');
+            const data = await res.json();
+            if (data.success) {
+                setGlobalNews(data.news);
+            }
+        } catch (error) {
+            console.error("Background news prefetch error:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            prefetchNews();
+            // Refresh news every 15 mins in background
+            const interval = setInterval(prefetchNews, 15 * 60 * 1000);
+            return () => clearInterval(interval);
+        }
+    }, [isAuthenticated]);
 
     // Use a ref to track if auth check has completed to avoid closure staleness in timeout
     const isAuthCheckCompleted = React.useRef(false);
@@ -280,7 +303,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             stats,
             portfolioHistory,
             isDataLoaded,
-            refreshDashboardData
+            refreshDashboardData,
+            globalNews
         }}>
             {children}
         </UserContext.Provider>
@@ -308,7 +332,8 @@ export function useUser() {
             stats: [],
             portfolioHistory: [],
             isDataLoaded: false,
-            refreshDashboardData: async () => { }
+            refreshDashboardData: async () => { },
+            globalNews: []
         } as UserContextType;
     }
 
@@ -330,7 +355,8 @@ export function useUser() {
             stats: [],
             portfolioHistory: [],
             isDataLoaded: false,
-            refreshDashboardData: async () => { }
+            refreshDashboardData: async () => { },
+            globalNews: []
         } as UserContextType;
     }
     return context;

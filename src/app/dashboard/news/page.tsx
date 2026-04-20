@@ -26,7 +26,7 @@ interface AnalysisResult {
 }
 
 function NewsContent() {
-    const { user } = useUser();
+    const { user, globalNews } = useUser();
     const searchParams = useSearchParams();
     const router = useRouter();
     const [news, setNews] = useState<NewsItem[]>([]);
@@ -82,42 +82,20 @@ function NewsContent() {
         const fetchData = async () => {
             if (!user) return;
 
+            // If we have global news, use them first
+            if (globalNews && globalNews.length > 0 && news.length === 0) {
+                setNews(globalNews);
+                setLoading(false);
+                return;
+            }
+
             try {
-                // 1. Fetch User Portfolio
-                const { data: portfolioData, error: portfolioError } = await supabase
-                    .from('user_portfolios')
-                    .select('symbol, asset_type')
-                    .eq('user_id', user.id);
-
-                if (portfolioError) throw portfolioError;
-
-                const userAssets = new Set(portfolioData?.map(p => p.symbol.toUpperCase()) || []);
-
-                // 2. Fetch News
+                // Fetch news
                 const res = await fetch('/api/news');
                 const data = await res.json();
 
                 if (data.success && Array.isArray(data.news)) {
-                    // 3. Match News with Portfolio
-                    const processedNews: NewsItem[] = data.news.map((item: any) => {
-                        let relatedAssetString = '';
-                        const isRelevant = Array.from(userAssets).some(asset => {
-                            const regex = new RegExp(`\\b${asset}\\b`, 'i');
-                            if (regex.test(item.title) || regex.test(item.description)) {
-                                relatedAssetString = asset;
-                                return true;
-                            }
-                            return false;
-                        });
-
-                        return {
-                            ...item,
-                            isRelevant,
-                            relatedAsset: relatedAssetString
-                        };
-                    });
-
-                    setNews(processedNews);
+                    setNews(data.news);
                 } else {
                     setError("Haberler alınamadı.");
                 }
@@ -131,7 +109,7 @@ function NewsContent() {
         };
 
         fetchData();
-    }, [user]);
+    }, [user, globalNews]);
 
     const smartNews = news.filter(n => n.isRelevant);
     const generalNews = news.filter(n => !n.isRelevant);
