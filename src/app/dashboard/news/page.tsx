@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect, Suspense } from "react";
 import { Newspaper, Calendar, ExternalLink, Loader2, Target, TrendingUp, AlertCircle, Brain, X, Info, BarChart3, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
