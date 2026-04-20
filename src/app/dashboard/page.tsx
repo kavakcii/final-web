@@ -195,7 +195,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* News Widget Under the Card */}
-                        <div className="w-[225px]">
+                        <div className="w-[240px]">
                             {topNews && (
                                 <GradientCard 
                                     title={topNews.title} 

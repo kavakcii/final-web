@@ -44,8 +44,8 @@ export const GradientCard = ({
         ref={cardRef}
         className="relative rounded-[20px] overflow-hidden border border-slate-100"
         style={{
-          width: "225px",
-          height: "260px",
+          width: "240px",
+          height: "300px",
           transformStyle: "preserve-3d",
           backgroundColor: "#ffffff",
           boxShadow: isHovered ? "0 20px 40px -10px rgba(0, 0, 139, 0.2)" : "0 10px 20px -5px rgba(0, 0, 139, 0.1)",
@@ -93,17 +93,16 @@ export const GradientCard = ({
 
         {/* Content */}
         <div className="relative flex flex-col h-full p-5 z-40 justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-                <div className="w-1 h-3 bg-[#00008B] rounded-full" />
-                <span className="text-[11px] font-extrabold text-[#00008B] uppercase tracking-[0.15em]">FinAi Haberler</span>
+          <div className="space-y-4">
+            <div className="flex items-center">
+                <span className="text-[10px] font-black text-[#00008B] uppercase tracking-[0.25em] opacity-30">FinAi Haberler</span>
             </div>
 
-            <div className="space-y-1.5">
-                <h3 className="text-[12px] font-black text-[#00008B] line-clamp-3 leading-[1.3] tracking-tight">
+            <div className="space-y-2">
+                <h3 className="text-[14px] font-black text-[#00008B] line-clamp-3 leading-[1.3] tracking-tight">
                 {title}
                 </h3>
-                <p className="text-[10px] text-[#00008B]/50 line-clamp-4 leading-relaxed font-medium">
+                <p className="text-[11px] text-[#00008B]/50 line-clamp-6 leading-relaxed font-medium">
                 {description.replace(/<[^>]*>/g, '').trim()}
                 </p>
             </div>
