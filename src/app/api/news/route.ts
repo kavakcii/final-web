@@ -18,6 +18,17 @@ const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 const SOURCES = [
   {
+    name: 'Google Haberler (Ekonomi)',
+    url: 'https://news.google.com/rss/search?q=ekonomi+OR+borsa+OR+finans&hl=tr&gl=TR&ceid=TR:tr',
+    parser: (item: any) => ({
+      title: item.title,
+      link: item.link,
+      pubDate: item.pubDate,
+      source: 'Google News',
+      description: item.description || ''
+    })
+  },
+  {
     name: 'Mynet Finans',
     url: 'https://www.mynet.com/finans/rss/',
     parser: (item: any) => ({
@@ -40,13 +51,24 @@ const SOURCES = [
     })
   },
   {
-    name: 'Investing.com TR',
-    url: 'https://tr.investing.com/rss/news_25.rss',
+    name: 'Foreks Haber',
+    url: 'https://www.foreks.com/rss',
     parser: (item: any) => ({
       title: item.title,
       link: item.link,
       pubDate: item.pubDate,
-      source: 'Investing.com',
+      source: 'Foreks',
+      description: item.description || ''
+    })
+  },
+  {
+    name: 'Anadolu Ajansı',
+    url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi',
+    parser: (item: any) => ({
+      title: item.title,
+      link: item.link,
+      pubDate: item.pubDate,
+      source: 'AA',
       description: item.description || ''
     })
   }
@@ -70,7 +92,7 @@ export async function GET(request: Request) {
           title: item.title,
           link: item.link,
           pubDate: item.pubDate,
-          source: item.source ? (typeof item.source === 'string' ? item.source : item.source['#text']) : 'Google News',
+          source: 'Google News',
           description: item.description || ''
         })
       }
@@ -78,11 +100,15 @@ export async function GET(request: Request) {
 
     const allNews: NewsItem[] = [];
     const seenLinks = new Set<string>();
+    const seenTitles = new Set<string>(); // Tekilleştirme için başlık kontrolü
 
     const results = await Promise.allSettled(
       searchSources.map(async (source) => {
         try {
-          const response = await fetch(source.url, { next: { revalidate: 300 } });
+          const response = await fetch(source.url, { 
+            next: { revalidate: 300 },
+            headers: { 'User-Agent': 'Mozilla/5.0' } 
+          });
           if (!response.ok) throw new Error(`Failed to fetch ${source.name}`);
           const xmlData = await response.text();
           const parsed = parser.parse(xmlData);
@@ -98,8 +124,11 @@ export async function GET(request: Request) {
     for (const result of results) {
       if (result.status === 'fulfilled') {
         for (const item of result.value) {
-          if (!seenLinks.has(item.link)) {
+          // Gelişmiş Tekilleştirme: Hem link hem de benzer başlık kontrolü
+          const normalizedTitle = item.title.toLowerCase().replace(/\s+/g, '').slice(0, 50);
+          if (!seenLinks.has(item.link) && !seenTitles.has(normalizedTitle)) {
             seenLinks.add(item.link);
+            seenTitles.add(normalizedTitle);
             allNews.push(item);
           }
         }
@@ -108,14 +137,13 @@ export async function GET(request: Request) {
 
     allNews.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
-    const topNews = allNews.slice(0, 10);
+    // En güncel 12 haberi al
+    const topNews = allNews.slice(0, 12);
     
     // AI Summarization with caching - Optimized to only summarize TOP 1 to save quota
     const summarizedNews = await Promise.all(
       topNews.map(async (item, index) => {
-        // Only summarize the very first news item to be extremely light on API quota
         if (index < 1) {
-          // Check cache
           const cached = summaryCache[item.link];
           if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
             return { ...item, aiSummary: cached.summary };
@@ -126,8 +154,7 @@ export async function GET(request: Request) {
             summaryCache[item.link] = { summary, timestamp: Date.now() };
             return { ...item, aiSummary: summary };
           } catch (e) {
-            console.error("AI Summary Quota/Error:", e);
-            return item; // Fallback to original
+            return item;
           }
         }
         return item;
