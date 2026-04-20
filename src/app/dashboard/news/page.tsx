@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { Newspaper, Calendar, ExternalLink, Loader2, Target, TrendingUp, AlertCircle, Brain, X, Info, BarChart3, Star } from "lucide-react";
+import { Newspaper, Calendar, ExternalLink, Loader2, Target, TrendingUp, AlertCircle, Brain, X, Info, FileText } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/lib/supabase";
 import { useUser } from "@/components/providers/UserProvider";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -17,12 +16,10 @@ interface NewsItem {
     aiSummary?: string;
 }
 
-interface AnalysisResult {
-    summary: string;
-    keyPoints: string[];
-    marketImpact: string;
-    score: number;
-    sentiment: string;
+interface FullArticle {
+    title: string;
+    body: string;
+    sourceUrl: string;
 }
 
 function NewsContent() {
@@ -33,33 +30,33 @@ function NewsContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     
-    // AI Analysis states
+    // Article states
     const [analyzingUrl, setAnalyzingUrl] = useState<string | null>(null);
-    const [analysisData, setAnalysisData] = useState<AnalysisResult | null>(null);
+    const [articleData, setArticleData] = useState<FullArticle | null>(null);
     const [analysisLoading, setAnalysisLoading] = useState(false);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
 
     useEffect(() => {
         const urlParam = searchParams.get('url');
         if (urlParam) {
-            handleAnalyze(urlParam);
+            handleOpenArticle(urlParam);
         }
     }, [searchParams]);
 
-    const handleAnalyze = async (url: string) => {
+    const handleOpenArticle = async (url: string) => {
         setAnalyzingUrl(url);
         setAnalysisLoading(true);
         setAnalysisError(null);
-        setAnalysisData(null);
+        setArticleData(null);
         
         try {
             const res = await fetch(`/api/news/analyze?url=${encodeURIComponent(url)}`);
             const data = await res.json();
             
             if (data.success) {
-                setAnalysisData(data.analysis);
+                setArticleData(data.content);
             } else {
-                setAnalysisError(data.error || "Haber analiz edilemedi.");
+                setAnalysisError(data.error || "İçerik yüklenemedi.");
             }
         } catch (err) {
             setAnalysisError("Bağlantı hatası oluştu.");
@@ -68,9 +65,9 @@ function NewsContent() {
         }
     };
 
-    const closeAnalysis = () => {
+    const closeArticle = () => {
         setAnalyzingUrl(null);
-        setAnalysisData(null);
+        setArticleData(null);
         setAnalysisError(null);
         const params = new URLSearchParams(searchParams);
         params.delete('url');
@@ -118,7 +115,7 @@ function NewsContent() {
     return (
         <div className="p-6 md:p-8 space-y-8 min-h-full pb-20 max-w-7xl mx-auto relative">
             
-            {/* AI Analysis Modal Overlay */}
+            {/* Full Article Modal Overlay */}
             <AnimatePresence>
                 {analyzingUrl && (
                     <motion.div 
@@ -131,106 +128,77 @@ function NewsContent() {
                             initial={{ scale: 0.95, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.95, y: 20 }}
-                            className="bg-white border border-slate-100 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl shadow-[#00008B]/20"
+                            className="bg-white border border-slate-100 rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
                         >
                             {/* Modal Header */}
-                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
+                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-lg shadow-[#00008B]/20">
-                                        <Brain className="w-6 h-6" />
+                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white">
+                                        <FileText className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-[#00008B]">FinAi Zeki Okuyucu</h2>
-                                        <p className="text-[10px] font-bold text-[#00008B]/40 uppercase tracking-widest">Yapay Zeka Derin Analiz Raporu</p>
+                                        <h2 className="text-xl font-black text-[#00008B]">FinAi Özel Yayın</h2>
+                                        <p className="text-[10px] font-bold text-[#00008B]/40 uppercase tracking-widest text-emerald-600">Tam Metin Görünümü</p>
                                     </div>
                                 </div>
-                                <button onClick={closeAnalysis} className="p-2 hover:bg-slate-50 rounded-full transition-colors text-[#00008B]">
+                                <button onClick={closeArticle} className="p-2 hover:bg-slate-50 rounded-full transition-colors text-[#00008B]">
                                     <X className="w-6 h-6" />
                                 </button>
                             </div>
 
                             {/* Modal Body */}
-                            <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30">
+                            <div className="flex-1 overflow-y-auto p-8 md:p-12 scrollbar-thin scrollbar-thumb-slate-200">
                                 {analysisLoading ? (
                                     <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                         <div className="relative">
                                             <Loader2 className="w-12 h-12 text-[#00008B] animate-spin" />
                                             <Brain className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
                                         </div>
-                                        <p className="text-[#00008B] font-bold animate-pulse">Haber yapay zeka tarafından okunuyor ve analiz ediliyor...</p>
+                                        <p className="text-[#00008B] font-bold animate-pulse">Haber içeriği hazırlanıyor...</p>
                                     </div>
                                 ) : analysisError ? (
-                                    <div className="space-y-6">
-                                        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 text-blue-700">
-                                            <Info className="w-5 h-5" />
-                                            <p className="text-xs font-bold uppercase tracking-tight">FinAi Standart Okuyucu Devrede (AI Kotası Dolu)</p>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <h3 className="text-[#00008B] font-black uppercase text-xs tracking-widest">Haber Özeti</h3>
-                                            <p className="text-slate-700 leading-relaxed font-medium">Haber içeriği yapay zeka limitleri nedeniyle standart formatta sunuluyor. Orijinal kaynaktan tüm detayları okuyabilirsiniz.</p>
-                                        </div>
-                                        <a href={analyzingUrl} target="_blank" className="inline-block px-6 py-3 bg-[#00008B] text-white rounded-2xl font-black text-sm">Haberi Orijinal Sitede Oku</a>
+                                    <div className="flex flex-col items-center justify-center text-center py-20">
+                                        <AlertCircle className="w-16 h-16 text-red-100 mb-4" />
+                                        <h3 className="text-xl font-bold text-slate-800 mb-2">Haber Yüklenemedi</h3>
+                                        <p className="text-slate-400 mb-8 max-w-md">{analysisError}</p>
+                                        <a href={analyzingUrl} target="_blank" className="px-8 py-4 bg-[#00008B] text-white rounded-2xl font-black shadow-lg">Haberi Kaynağında Oku</a>
                                     </div>
-                                ) : analysisData ? (
-                                    <div className="space-y-8">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600">
-                                                        <Star className="w-5 h-5 fill-yellow-600" />
-                                                    </div>
-                                                    <span className="text-sm font-bold text-slate-600">Önem Derecesi</span>
-                                                </div>
-                                                <span className="text-2xl font-black text-[#00008B]">{analysisData.score}/10</span>
+                                ) : articleData ? (
+                                    <article className="max-w-3xl mx-auto space-y-8">
+                                        <h1 className="text-3xl md:text-4xl font-black text-[#00008B] leading-tight tracking-tighter">
+                                            {articleData.title}
+                                        </h1>
+                                        
+                                        <div className="flex items-center gap-4 py-6 border-y border-slate-50">
+                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-[#00008B] font-black text-xl">
+                                                F
                                             </div>
-                                            <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${analysisData.sentiment === 'positive' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                                                        <TrendingUp className={`w-5 h-5 ${analysisData.sentiment === 'negative' ? 'rotate-180' : ''}`} />
-                                                    </div>
-                                                    <span className="text-sm font-bold text-slate-600">Piyasa Duyarlılığı</span>
-                                                </div>
-                                                <span className={`text-sm font-black uppercase tracking-widest ${analysisData.sentiment === 'positive' ? 'text-emerald-600' : 'text-red-600'}`}>
-                                                    {analysisData.sentiment === 'positive' ? 'POZİTİF' : analysisData.sentiment === 'negative' ? 'NEGATİF' : 'NÖTR'}
-                                                </span>
+                                            <div>
+                                                <p className="text-sm font-black text-[#00008B]">FinAi Ekonomi Masası</p>
+                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Özel İçerik</p>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-3">
-                                            <h3 className="flex items-center gap-2 text-[#00008B] font-black uppercase text-xs tracking-widest">
-                                                <Info className="w-4 h-4" /> FinAi Özeti
-                                            </h3>
-                                            <p className="text-slate-700 leading-relaxed text-lg font-medium">
-                                                {analysisData.summary}
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <h3 className="flex items-center gap-2 text-[#00008B] font-black uppercase text-xs tracking-widest">
-                                                <Target className="w-4 h-4" /> Kritik Notlar
-                                            </h3>
-                                            <div className="grid gap-3">
-                                                {analysisData.keyPoints.map((point, i) => (
-                                                    <div key={i} className="flex gap-3 p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-                                                        <div className="w-6 h-6 rounded-full bg-[#00008B] text-white flex items-center justify-center text-[10px] font-bold shrink-0">{i+1}</div>
-                                                        <p className="text-sm font-bold text-slate-700">{point}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6 bg-[#00008B] rounded-[2rem] text-white shadow-xl shadow-[#00008B]/20 relative overflow-hidden">
-                                            <div className="absolute right-[-20px] top-[-20px] opacity-10">
-                                                <BarChart3 className="w-48 h-48" />
-                                            </div>
-                                            <div className="relative z-10 space-y-3">
-                                                <h3 className="text-xs font-black uppercase tracking-widest opacity-60">Piyasa ve Portföy Etkisi</h3>
-                                                <p className="text-lg font-bold leading-relaxed">
-                                                    {analysisData.marketImpact}
+                                        <div className="prose prose-slate max-w-none">
+                                            {articleData.body.split('\n\n').map((para, i) => (
+                                                <p key={i} className="text-lg md:text-xl text-slate-700 leading-relaxed font-medium mb-6">
+                                                    {para}
                                                 </p>
-                                            </div>
+                                            ))}
                                         </div>
-                                    </div>
+
+                                        <div className="mt-20 pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 pb-10">
+                                            <div className="text-center md:text-left">
+                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Kaynak</p>
+                                                <a href={articleData.sourceUrl} target="_blank" className="text-sm font-bold text-[#00008B] hover:underline flex items-center gap-1">
+                                                    Haberin Orijinal Kaynağı <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            </div>
+                                            <button onClick={closeArticle} className="px-8 py-4 bg-slate-50 text-[#00008B] rounded-2xl font-black text-sm hover:bg-slate-100 transition-colors">
+                                                Kapat
+                                            </button>
+                                        </div>
+                                    </article>
                                 ) : null}
                             </div>
                         </motion.div>
@@ -242,14 +210,14 @@ function NewsContent() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-10">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest animate-pulse">Canlı Analiz</span>
+                        <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest animate-pulse">Yayında</span>
                         <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase tracking-widest">Kişiselleştirilmiş Akış</span>
                     </div>
                     <h1 className="text-4xl font-black text-[#00008B] tracking-tighter">
                         Günün 10 Kritik Gelişmesi
                     </h1>
                     <p className="text-[#00008B]/50 mt-2 font-bold uppercase text-[10px] tracking-[0.2em]">
-                        Portföyünüz ve stratejik piyasalar için Bloomberg HT destekli derin analizler.
+                        Portföyünüz ve stratejik piyasalar için FinAi Ekonomi Masası'ndan özel içerikler.
                     </p>
                 </div>
                 <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
@@ -327,11 +295,11 @@ function NewsContent() {
                                                 {formatDate(item.pubDate)}
                                             </span>
                                             <button 
-                                                onClick={() => handleAnalyze(item.link)}
+                                                onClick={() => handleOpenArticle(item.link)}
                                                 className="px-6 py-3 bg-white text-[#00008B] text-xs font-black rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                                             >
-                                                <Brain className="w-4 h-4" />
-                                                Derin Analiz
+                                                <FileText className="w-4 h-4" />
+                                                Devamını Oku
                                             </button>
                                         </div>
                                     </div>
@@ -380,10 +348,10 @@ function NewsContent() {
 
                                     <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
                                         <button 
-                                            onClick={() => handleAnalyze(item.link)}
+                                            onClick={() => handleOpenArticle(item.link)}
                                             className="text-[10px] font-black text-[#00008B] hover:underline flex items-center gap-1"
                                         >
-                                            <Brain className="w-3 h-3" /> ANALİZİ OKU
+                                            <FileText className="w-3 h-3" /> DEVAMINI OKU
                                         </button>
                                         <a href={item.link} target="_blank" className="text-slate-300 hover:text-[#00008B] transition-colors">
                                             <ExternalLink className="w-4 h-4" />
