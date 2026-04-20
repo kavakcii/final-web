@@ -169,11 +169,16 @@ function NewsContent() {
                                         <p className="text-[#00008B] font-bold animate-pulse">Haber yapay zeka tarafından okunuyor ve analiz ediliyor...</p>
                                     </div>
                                 ) : analysisError ? (
-                                    <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-                                        <AlertCircle className="w-16 h-16 text-red-500 opacity-20" />
-                                        <h3 className="text-xl font-bold text-slate-800">Analiz Tamamlanamadı</h3>
-                                        <p className="text-slate-500 max-w-md">{analysisError}</p>
-                                        <a href={analyzingUrl} target="_blank" className="px-6 py-2 bg-[#00008B] text-white rounded-xl font-bold">Orijinal Kaynağa Git</a>
+                                    <div className="space-y-6">
+                                        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3 text-blue-700">
+                                            <Info className="w-5 h-5" />
+                                            <p className="text-xs font-bold uppercase tracking-tight">FinAi Standart Okuyucu Devrede (AI Kotası Dolu)</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <h3 className="text-[#00008B] font-black uppercase text-xs tracking-widest">Haber Özeti</h3>
+                                            <p className="text-slate-700 leading-relaxed font-medium">Haber içeriği yapay zeka limitleri nedeniyle standart formatta sunuluyor. Orijinal kaynaktan tüm detayları okuyabilirsiniz.</p>
+                                        </div>
+                                        <a href={analyzingUrl} target="_blank" className="inline-block px-6 py-3 bg-[#00008B] text-white rounded-2xl font-black text-sm">Haberi Orijinal Sitede Oku</a>
                                     </div>
                                 ) : analysisData ? (
                                     <div className="space-y-8">

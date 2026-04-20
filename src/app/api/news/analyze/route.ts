@@ -64,22 +64,32 @@ export async function GET(request: Request) {
     Lütfen sadece saf JSON yanıtı ver.
     `;
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
-    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-    
-    const analysis = JSON.parse(cleanJson);
+    try {
+      const result = await model.generateContent(prompt);
+      const responseText = result.response.text();
+      const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      
+      const analysis = JSON.parse(cleanJson);
 
-    return NextResponse.json({
-      success: true,
-      analysis: analysis
-    });
-
-  } catch (error: any) {
-    console.error("AI News Analysis Error:", error);
-    return NextResponse.json({
-      success: false,
-      error: error.message || 'Analysis failed'
-    }, { status: 500 });
-  }
+      return NextResponse.json({
+        success: true,
+        analysis: analysis
+      });
+    } catch (aiError) {
+      console.warn("AI Analysis failed, using basic fallback:", aiError);
+      
+      // Basic fallback analysis when AI is down/quota exceeded
+      const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 30);
+      
+      return NextResponse.json({
+        success: true,
+        analysis: {
+          summary: content.slice(0, 600) + "...",
+          keyPoints: sentences.slice(0, 3).map(s => s.trim()),
+          marketImpact: "Haber içeriği analiz ediliyor. Genel piyasa koşullarını takip ediniz.",
+          score: 5,
+          sentiment: "neutral"
+        }
+      });
+    }
 }

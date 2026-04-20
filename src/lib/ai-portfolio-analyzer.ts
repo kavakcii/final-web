@@ -87,10 +87,24 @@ export async function analyzePortfolioWithAI(assets: { symbol: string, changePer
 }
 
 /**
+ * Heuristic (kural tabanlı) özetleyici. AI çalışmadığında devreye girer.
+ */
+function heuristicSummarizer(title: string, description: string): string {
+    const cleanDesc = description.replace(/<[^>]*>/g, '').trim();
+    const sentences = cleanDesc.split(/[.!?]/).filter(s => s.length > 20);
+    
+    if (sentences.length === 0) return `${title}. Haberin detayları için tıklayınız.`;
+    
+    // İlk 2-3 cümleyi al
+    const summary = sentences.slice(0, 3).join('. ') + '.';
+    return summary.length > 250 ? summary.slice(0, 247) + "..." : summary;
+}
+
+/**
  * Haber başlığı ve açıklamasını alıp Gemini AI ile 2-4 cümlelik, vurucu bir finansal özet çıkarır.
  */
 export async function summarizeNewsWithAI(title: string, description: string): Promise<string> {
-    if (!genAI) return description.replace(/<[^>]*>/g, '').slice(0, 150) + "...";
+    if (!genAI) return heuristicSummarizer(title, description);
 
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
@@ -109,7 +123,7 @@ export async function summarizeNewsWithAI(title: string, description: string): P
         const result = await model.generateContent(prompt);
         return result.response.text().trim();
     } catch (error) {
-        console.error("AI News Summary Error:", error);
-        return description.replace(/<[^>]*>/g, '').slice(0, 150) + "...";
+        console.error("AI News Summary Error (Falling back to heuristic):", error);
+        return heuristicSummarizer(title, description);
     }
 }
