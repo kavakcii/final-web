@@ -140,10 +140,10 @@ export async function GET(request: Request) {
     // En güncel 12 haberi al
     const topNews = allNews.slice(0, 12);
     
-    // AI Summarization with caching - Optimized to only summarize TOP 1 to save quota
+    // AI Summarization with caching - Optimized to only summarize TOP 3 to save quota
     const summarizedNews = await Promise.all(
       topNews.map(async (item, index) => {
-        if (index < 1) {
+        if (index < 3) {
           const cached = summaryCache[item.link];
           if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
             return { ...item, aiSummary: cached.summary };

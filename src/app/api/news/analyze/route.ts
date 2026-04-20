@@ -20,10 +20,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'AI not configured' }, { status: 500 });
     }
 
-    // 1. Fetch the content
+    // 1. Fetch the content with a more realistic User-Agent
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
       },
       next: { revalidate: 3600 }
     });
@@ -35,17 +37,52 @@ export async function GET(request: Request) {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Remove scripts, styles, and common non-content elements
-    $('script, style, nav, footer, header, ads, .ads, #ads').remove();
+    // Remove noise
+    $('script, style, nav, footer, header, ads, .ads, #ads, iframe, .social-share').remove();
 
-    // Get main text content
-    let content = $('article').text() || $('main').text() || $('body').text();
+    // 2. SMART EXTRACTION
+    // Try multiple selectors for the main content
+    let content = '';
+    
+    // Check for Meta Description first (reliable backup)
+    const metaDesc = $('meta[property="og:description"]').attr('content') || 
+                     $('meta[name="description"]').attr('content');
+
+    // Try finding the main article body
+    const articleSelectors = [
+      'article', 
+      '.article-content', 
+      '.story-body', 
+      '.post-content', 
+      '.news-detail', 
+      'main', 
+      '.content'
+    ];
+
+    for (const selector of articleSelectors) {
+      const text = $(selector).text().trim();
+      if (text.length > content.length) {
+        content = text;
+      }
+    }
+
+    // If still empty or too short, use meta description
+    if (content.length < 200 && metaDesc) {
+      content = metaDesc;
+    }
+
+    // Final cleanup
     content = content.replace(/\s+/g, ' ').trim().slice(0, 5000);
 
-    // 2. Analyze with Gemini
+    if (content.length < 50) {
+      throw new Error("Content is too short to analyze");
+    }
+
+    // 3. Analyze with Gemini
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     const prompt = `
     Aşağıdaki haber metnini bir finansal analist gözüyle oku ve derinlemesine analiz et.
+    Eğer içerik kısıtlıysa eldeki verilerle piyasa yorumu yap.
     
     İÇERİK:
     ${content}
@@ -74,13 +111,13 @@ export async function GET(request: Request) {
       });
     } catch (aiError) {
       console.warn("AI Analysis failed, using basic fallback:", aiError);
-      const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 30);
+      const sentences = content.split(/[.!?]/).filter(s => s.trim().length > 20);
       return NextResponse.json({
         success: true,
         analysis: {
           summary: content.slice(0, 600) + "...",
           keyPoints: sentences.slice(0, 3).map(s => s.trim()),
-          marketImpact: "Haber içeriği analiz ediliyor. Genel piyasa koşullarını takip ediniz.",
+          marketImpact: "İçerik kısıtlı olduğundan temel analiz sunuluyor.",
           score: 5,
           sentiment: "neutral"
         }
