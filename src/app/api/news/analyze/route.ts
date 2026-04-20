@@ -16,94 +16,96 @@ export async function GET(request: Request) {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
       },
       next: { revalidate: 3600 }
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    if (!response.ok) throw new Error("Fetch failed");
 
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // Gereksiz öğeleri agresif bir şekilde temizle
-    $('script, style, nav, footer, header, ads, iframe, .ads, .social-share, .sidebar, .comments, .related-news, aside').remove();
+    // 1. ADIM: Sayfayı temizle (Gürültüleri at)
+    $('script, style, iframe, nav, footer, header, aside, form, .ads, .sidebar, .comments, .social-share, .related, .tags, .author-info').remove();
 
-    // Başlık Bulucu
+    // 2. ADIM: Başlığı Kesinleştir
     const title = $('h1').first().text().trim() || 
                   $('meta[property="og:title"]').attr('content') || 
                   $('title').text().trim();
 
-    // İçerik Bulucu - Haber sitelerinin en yaygın kullandığı kapsayıcılar
-    const articleSelectors = [
-      'article', 
-      '[itemprop="articleBody"]', 
-      '.article-body', 
-      '.news-content', 
-      '.detail-content', 
-      '.content-text',
-      '#article-body',
-      '.entry-content',
-      '.post-content',
-      '.news-detail',
-      '.story-body',
-      'main'
-    ];
+    // 3. ADIM: Readability Algoritması (Metin Yoğunluğu Analizi)
+    let bestElement: cheerio.Cheerio<cheerio.Element> | null = null;
+    let maxScore = 0;
 
-    let contentParts: string[] = [];
-    
-    // Önce özel kapsayıcılar içinde paragrafları ara
-    for (const selector of articleSelectors) {
-      const container = $(selector);
-      if (container.length > 0) {
-        const parts = container.find('p').map((_, el) => $(el).text().trim()).get();
-        if (parts.length > 2) {
-          contentParts = parts;
-          break;
-        }
+    // Tüm kapsayıcıları tara
+    $('div, article, section, main').each((_, el) => {
+      const element = $(el);
+      const text = element.clone().children().remove().end().text().trim(); // Sadece direkt metin
+      const paragraphCount = element.find('p').length;
+      const linkCount = element.find('a').length;
+      
+      // Puanlama: Paragraf sayısı yüksek, link sayısı düşük olan bölge asıl haberdir
+      const score = (paragraphCount * 20) + (text.length / 10) - (linkCount * 10);
+
+      if (score > maxScore) {
+        maxScore = score;
+        bestElement = element;
       }
+    });
+
+    let finalBody = "";
+
+    if (bestElement && maxScore > 100) {
+      // En iyi adayı bulduk, içindeki paragrafları al
+      finalBody = (bestElement as any).find('p, div.text, div.content').map((_: any, el: any) => $(el).text().trim()).get()
+        .filter((p: string) => p.length > 50)
+        .join('\n\n');
     }
 
-    // Eğer kapsayıcı bulunamadıysa doğrudan tüm p'leri al ama filtrele
-    if (contentParts.length === 0) {
-      contentParts = $('p').map((_, el) => $(el).text().trim()).get();
+    // 4. ADIM: Eğer Readability başarısızsa (SPA veya farklı yapı) LD+JSON dene
+    if (finalBody.length < 300) {
+      const ldJson = $('script[type="application/ld+json"]');
+      ldJson.each((_, el) => {
+        try {
+          const data = JSON.parse($(el).html() || '{}');
+          const articleBody = data.articleBody || data.description;
+          if (articleBody && articleBody.length > finalBody.length) {
+            finalBody = articleBody;
+          }
+        } catch (e) {}
+      });
     }
 
-    // Temizle ve Filtrele
-    let cleanContent = contentParts
-      .map(p => p.replace(/\s+/g, ' ').trim())
-      .filter(p => p.length > 40) // Kısa satırları at
-      .filter(p => !p.includes('tıklayın') && !p.includes('abone olun')) // Reklamımsı cümleleri at
-      .join('\n\n');
-
-    // Eğer hala metin yoksa (Bazı siteler metni div içinde tutar)
-    if (cleanContent.length < 200) {
-      cleanContent = $('div').map((_, el) => {
-        const text = $(el).children().length === 0 ? $(el).text().trim() : '';
-        return text;
-      }).get().filter(t => t.length > 100).join('\n\n');
+    // 5. ADIM: Son Çare - Tüm P'leri akıllıca topla
+    if (finalBody.length < 300) {
+      finalBody = $('p').map((_, el) => $(el).text().trim()).get()
+        .filter(p => p.length > 60 && !p.includes('cookie') && !p.includes('tıklayın'))
+        .join('\n\n');
     }
 
-    // Son Yedek: Meta Description
-    if (cleanContent.length < 100) {
-      cleanContent = $('meta[property="og:description"]').attr('content') || 
-                     $('meta[name="description"]').attr('content') || 
-                     "Haber içeriği bu kaynaktan çekilemedi. Lütfen orijinal kaynağı ziyaret edin.";
+    // Temizlik
+    finalBody = finalBody
+      .replace(/\s+/g, ' ')
+      .replace(/\n\s*\n/g, '\n\n')
+      .trim();
+
+    // Eğer hala boşsa meta fallback
+    if (finalBody.length < 100) {
+      finalBody = $('meta[property="og:description"]').attr('content') || 
+                   $('meta[name="description"]').attr('content') || 
+                   "Haber metni bu kaynaktan teknik olarak çekilemedi. Lütfen orijinal linki ziyaret edin.";
     }
 
     return NextResponse.json({ 
       success: true, 
       content: {
         title: title,
-        body: cleanContent.slice(0, 10000), // Çok uzun metinleri sınırla
+        body: finalBody.slice(0, 15000),
         sourceUrl: url
       }
     });
 
   } catch (error: any) {
-    console.error("Scraping error:", error);
-    return NextResponse.json({ success: false, error: "Haber içeriği şu an teknik olarak çekilemiyor." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Teknik bir hata oluştu." }, { status: 500 });
   }
 }
