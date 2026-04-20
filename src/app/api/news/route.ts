@@ -1,8 +1,28 @@
 import { NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
+import * as cheerio from 'cheerio';
 import { summarizeNewsWithAI } from '@/lib/ai-portfolio-analyzer';
 
 export const dynamic = 'force-dynamic';
+
+async function scrapeFullContent(url: string): Promise<string> {
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      next: { revalidate: 3600 }
+    });
+    if (!response.ok) return '';
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    $('script, style, nav, footer, header, ads').remove();
+    let content = $('article').text() || $('main').text() || $('body').text();
+    return content.replace(/\s+/g, ' ').trim().slice(0, 3000);
+  } catch (e) {
+    return '';
+  }
+}
 
 interface NewsItem {
   title: string;
@@ -152,7 +172,12 @@ export async function GET(request: Request) {
           }
 
           try {
-            const summary = await summarizeNewsWithAI(item.title, item.description);
+            // Haber metninin tamamını çek
+            const fullContent = await scrapeFullContent(item.link);
+            
+            // Tam metinden en çarpıcı özeti çıkar
+            const summary = await summarizeNewsWithAI(item.title, fullContent || item.description);
+            
             summaryCache[cacheKey] = { summary, timestamp: Date.now() };
             return { ...item, aiSummary: summary };
           } catch (e) {
