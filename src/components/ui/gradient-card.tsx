@@ -111,7 +111,7 @@ export const GradientCard = ({
           </div>
 
           <a
-            href="/dashboard/news"
+            href={`/dashboard/news?url=${encodeURIComponent(link)}`}
             className="flex items-center text-[#00008B] text-[10px] font-bold group mt-2 hover:translate-x-1 transition-transform"
           >
             Haberin Devamı

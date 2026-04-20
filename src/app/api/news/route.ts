@@ -14,13 +14,13 @@ interface NewsItem {
 
 const SOURCES = [
   {
-    name: 'Google News Ekonomi',
-    url: 'https://news.google.com/rss/search?q=ekonomi+OR+finans+OR+borsa+OR+dolar+OR+enflasyon&hl=tr&gl=TR&ceid=TR:tr',
+    name: 'Mynet Finans',
+    url: 'https://www.mynet.com/finans/rss/',
     parser: (item: any) => ({
       title: item.title,
       link: item.link,
       pubDate: item.pubDate,
-      source: item.source ? (typeof item.source === 'string' ? item.source : item.source['#text']) : 'Google News',
+      source: 'Mynet Finans',
       description: item.description || ''
     })
   },
@@ -36,8 +36,8 @@ const SOURCES = [
     })
   },
   {
-    name: 'Investing.com TR', // investing.com bazen blocklayabilir, dikkatli olalım. Alternatif: TradingView veya Foreks
-    url: 'https://tr.investing.com/rss/news_25.rss', // Hisse Senedi Haberleri
+    name: 'Investing.com TR',
+    url: 'https://tr.investing.com/rss/news_25.rss',
     parser: (item: any) => ({
       title: item.title,
       link: item.link,
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
     const searchSources = query ? [
       {
         name: 'Google News Search',
-        url: `https://news.google.com/rss/search?q=${encodeURIComponent(query)}+OR+${encodeURIComponent(query)}+borsa+OR+${encodeURIComponent(query)}+hisse&hl=tr&gl=TR&ceid=TR:tr`,
+        url: `https://news.google.com/rss/search?q=${encodeURIComponent(query)}+OR+${encodeURIComponent(query)}+borsa&hl=tr&gl=TR&ceid=TR:tr`,
         parser: (item: any) => ({
           title: item.title,
           link: item.link,
@@ -75,32 +75,25 @@ export async function GET(request: Request) {
     const allNews: NewsItem[] = [];
     const seenLinks = new Set<string>();
 
-    // Fetch all sources in parallel
     const results = await Promise.allSettled(
       searchSources.map(async (source) => {
         try {
-          const response = await fetch(source.url, { next: { revalidate: 300 } }); // 5 min cache
+          const response = await fetch(source.url, { next: { revalidate: 300 } });
           if (!response.ok) throw new Error(`Failed to fetch ${source.name}`);
           const xmlData = await response.text();
           const parsed = parser.parse(xmlData);
           const items = parsed.rss?.channel?.item || [];
-
-          // Normalize single item to array if needed
           const itemList = Array.isArray(items) ? items : [items];
-
           return itemList.map(source.parser);
         } catch (err) {
-          console.error(`Error fetching ${source.name}:`, err);
           return [];
         }
       })
     );
 
-    // Aggregate results
     for (const result of results) {
       if (result.status === 'fulfilled') {
         for (const item of result.value) {
-          // Basic deduplication
           if (!seenLinks.has(item.link)) {
             seenLinks.add(item.link);
             allNews.push(item);
@@ -109,12 +102,11 @@ export async function GET(request: Request) {
       }
     }
 
-    // Sort by date (newest first)
     allNews.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
     const topNews = allNews.slice(0, 10);
     
-    // AI Summarization for the top 3 news to keep it fast
+    // AI Summarization for the top 3 news
     const summarizedNews = await Promise.all(
       topNews.map(async (item, index) => {
         if (index < 3) {
@@ -132,10 +124,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, news: summarizedNews });
 
   } catch (error) {
-    console.error("News aggregator error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch news" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to fetch news" }, { status: 500 });
   }
 }
