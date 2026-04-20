@@ -82,16 +82,9 @@ function NewsContent() {
         const fetchData = async () => {
             if (!user) return;
 
-            // If we have global news, use them first
-            if (globalNews && globalNews.length > 0 && news.length === 0) {
-                setNews(globalNews);
-                setLoading(false);
-                return;
-            }
-
             try {
-                // Fetch news
-                const res = await fetch('/api/news');
+                // Fetch personalized news (Daily 10)
+                const res = await fetch(`/api/news?userId=${user.id}`);
                 const data = await res.json();
 
                 if (data.success && Array.isArray(data.news)) {
@@ -109,10 +102,10 @@ function NewsContent() {
         };
 
         fetchData();
-    }, [user, globalNews]);
+    }, [user]);
 
-    const smartNews = news.filter(n => n.isRelevant);
-    const generalNews = news.filter(n => !n.isRelevant);
+    const strategicNews = news.filter(n => n.category === 'Altın' || n.category === 'Enerji');
+    const portfolioNews = news.filter(n => n.category !== 'Altın' && n.category !== 'Enerji');
 
     const formatDate = (dateString: string) => {
         try {
@@ -259,22 +252,37 @@ function NewsContent() {
             </AnimatePresence>
 
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-black text-[#00008B] flex items-center gap-3 tracking-tighter">
-                    <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white">
-                        <Newspaper className="w-6 h-6" />
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-10">
+                <div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest animate-pulse">Canlı Analiz</span>
+                        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase tracking-widest">Kişiselleştirilmiş Akış</span>
                     </div>
-                    Piyasa Gündemi
-                </h1>
-                <p className="text-[#00008B]/50 mt-2 font-bold uppercase text-[10px] tracking-[0.2em]">
-                    Borsa ve finans dünyasına dair yapay zeka destekli haber merkezi.
-                </p>
+                    <h1 className="text-4xl font-black text-[#00008B] tracking-tighter">
+                        Günün 10 Kritik Gelişmesi
+                    </h1>
+                    <p className="text-[#00008B]/50 mt-2 font-bold uppercase text-[10px] tracking-[0.2em]">
+                        Portföyünüz ve stratejik piyasalar için Bloomberg HT destekli derin analizler.
+                    </p>
+                </div>
+                <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
+                    <div className="text-right">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Güncelleme</p>
+                        <p className="text-sm font-black text-[#00008B]">Her Gün 08:00</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-[#00008B]">
+                        <Calendar className="w-5 h-5" />
+                    </div>
+                </div>
             </div>
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center h-64 space-y-4">
-                    <Loader2 className="w-10 h-10 text-[#00008B] animate-spin" />
-                    <p className="text-[#00008B] font-bold opacity-40">Haberler derleniyor...</p>
+                    <div className="relative">
+                        <Loader2 className="w-12 h-12 text-[#00008B] animate-spin" />
+                        <Brain className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
+                    </div>
+                    <p className="text-[#00008B] font-bold opacity-40">Size özel finansal raporlar hazırlanıyor...</p>
                 </div>
             ) : error ? (
                 <div className="bg-red-50 border border-red-100 text-red-600 p-6 rounded-[2rem] flex items-center gap-4">
@@ -282,91 +290,91 @@ function NewsContent() {
                     <div>
                         <p className="font-bold">Haberler yüklenemedi</p>
                         <p className="text-sm opacity-70">{error}</p>
-                    </div>
-                </div>
-            ) : (
-                <div className="space-y-12">
+                                   <div className="space-y-16">
 
-                    {/* ✅ SMART RECOMMENDATIONS */}
-                    {smartNews.length > 0 && (
-                        <motion.section
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Target className="w-6 h-6 text-yellow-500" />
-                                    <h2 className="text-xl font-black text-[#00008B]">Sizin İçin Önemli</h2>
-                                </div>
-                                <span className="text-[10px] font-black text-[#00008B] bg-[#00008B]/5 px-3 py-1 rounded-full uppercase tracking-widest">
-                                    {smartNews.length} KRİTİK HABER
-                                </span>
+                    {/* 🚀 STRATEGIC FOCUS (Gold & Energy) */}
+                    <section className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-yellow-400 flex items-center justify-center text-yellow-900 shadow-lg shadow-yellow-400/20">
+                                <TrendingUp className="w-6 h-6" />
                             </div>
+                            <div>
+                                <h2 className="text-xl font-black text-[#00008B]">Stratejik Piyasa Odağı</h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Altın ve Enerji Piyasaları</p>
+                            </div>
+                        </div>
 
-                            <div className="grid gap-6 md:grid-cols-2">
-                                {smartNews.map((item, idx) => (
-                                    <motion.div
-                                        key={`smart-${idx}`}
-                                        whileHover={{ y: -5 }}
-                                        className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-[#00008B]/10 transition-all group relative overflow-hidden flex flex-col"
-                                    >
+                        <div className="grid gap-6 md:grid-cols-2">
+                            {strategicNews.map((item, idx) => (
+                                <motion.div
+                                    key={`strategic-${idx}`}
+                                    whileHover={{ y: -5 }}
+                                    className="bg-[#00008B] text-white rounded-[2.5rem] p-8 shadow-xl shadow-[#00008B]/20 transition-all group relative overflow-hidden flex flex-col"
+                                >
+                                    <div className="absolute right-[-20px] top-[-20px] opacity-10 group-hover:scale-110 transition-transform">
+                                        <Target className="w-48 h-48" />
+                                    </div>
+                                    <div className="relative z-10 flex flex-col h-full">
                                         <div className="flex justify-between items-start mb-6">
-                                            <span className="text-[9px] font-black text-[#00008B]/40 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full">
-                                                {item.source}
+                                            <span className="text-[9px] font-black bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest">
+                                                {item.category} Raporu
                                             </span>
-                                            {item.relatedAsset && (
-                                                <div className="px-3 py-1 bg-yellow-400 text-yellow-900 text-[9px] font-black rounded-full flex items-center gap-1">
-                                                    <Target className="w-3 h-3" />
-                                                    {item.relatedAsset}
-                                                </div>
-                                            )}
+                                            <span className="text-[9px] font-black bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full uppercase tracking-widest">
+                                                Önemli
+                                            </span>
                                         </div>
 
-                                        <h3 className="text-xl font-black text-[#00008B] mb-4 leading-snug group-hover:text-blue-700 transition-colors">
+                                        <h3 className="text-xl font-black mb-4 leading-snug">
                                             {item.title}
                                         </h3>
 
-                                        <p className="text-slate-500 text-sm font-medium mb-8 line-clamp-3 leading-relaxed" dangerouslySetInnerHTML={{ __html: item.description }} />
+                                        <p className="text-white/70 text-sm font-medium mb-8 line-clamp-3 leading-relaxed">
+                                            {item.aiSummary || item.description.replace(/<[^>]*>/g, '')}
+                                        </p>
 
-                                        <div className="mt-auto flex items-center justify-between pt-6 border-t border-slate-50">
-                                            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                                        <div className="mt-auto flex items-center justify-between pt-6 border-t border-white/10">
+                                            <span className="text-[10px] font-bold opacity-40 flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" />
                                                 {formatDate(item.pubDate)}
                                             </span>
                                             <button 
                                                 onClick={() => handleAnalyze(item.link)}
-                                                className="px-5 py-2.5 bg-[#00008B] text-white text-xs font-black rounded-xl shadow-lg shadow-[#00008B]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                                className="px-6 py-3 bg-white text-[#00008B] text-xs font-black rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                                             >
                                                 <Brain className="w-4 h-4" />
-                                                AI İle Oku
+                                                Derin Analiz
                                             </button>
                                         </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </motion.section>
-                    )}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </section>
 
-                    {/* 🌍 GENERAL NEWS */}
+                    {/* 📊 PORTFOLIO MATCHED NEWS */}
                     <section className="space-y-6">
                         <div className="flex items-center gap-3">
-                            <TrendingUp className="w-6 h-6 text-[#00008B]/40" />
-                            <h2 className="text-xl font-black text-[#00008B]">Genel Finans Gündemi</h2>
+                            <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 flex items-center justify-center text-[#00008B]">
+                                <Target className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-[#00008B]">Sizin İçin Seçilenler</h2>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Portföyünüzle Uyumlu Haberler</p>
+                            </div>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {generalNews.map((item, idx) => (
+                            {portfolioNews.map((item, idx) => (
                                 <motion.div
-                                    key={`gen-${idx}`}
+                                    key={`portfolio-${idx}`}
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                     className="bg-white rounded-[2rem] p-6 border border-slate-100 hover:border-[#00008B]/20 shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
                                 >
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                            {item.source}
+                                        <span className="text-[9px] font-black text-[#00008B] bg-[#00008B]/5 px-3 py-1 rounded-full uppercase tracking-widest">
+                                            {item.category === 'Portföy' ? 'Portföy Uyumu' : item.source}
                                         </span>
                                         <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
                                             {formatDate(item.pubDate)}
@@ -377,14 +385,16 @@ function NewsContent() {
                                         {item.title}
                                     </h3>
 
-                                    <p className="text-sm text-slate-400 font-medium line-clamp-3 mb-6" dangerouslySetInnerHTML={{ __html: item.description }} />
+                                    <p className="text-sm text-slate-400 font-medium line-clamp-3 mb-6">
+                                        {item.aiSummary || item.description.replace(/<[^>]*>/g, '')}
+                                    </p>
 
                                     <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
                                         <button 
                                             onClick={() => handleAnalyze(item.link)}
                                             className="text-[10px] font-black text-[#00008B] hover:underline flex items-center gap-1"
                                         >
-                                            <Brain className="w-3 h-3" /> AI ANALİZİ
+                                            <Brain className="w-3 h-3" /> ANALİZİ OKU
                                         </button>
                                         <a href={item.link} target="_blank" className="text-slate-300 hover:text-[#00008B] transition-colors">
                                             <ExternalLink className="w-4 h-4" />
@@ -393,6 +403,8 @@ function NewsContent() {
                                 </motion.div>
                             ))}
                         </div>
+                    </section>
+                </div>    </div>
                     </section>
                 </div>
             )}
