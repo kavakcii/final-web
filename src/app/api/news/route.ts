@@ -110,10 +110,11 @@ export async function GET(request: Request) {
 
     const topNews = allNews.slice(0, 10);
     
-    // AI Summarization with caching
+    // AI Summarization with caching - Optimized to only summarize TOP 1 to save quota
     const summarizedNews = await Promise.all(
       topNews.map(async (item, index) => {
-        if (index < 3) {
+        // Only summarize the very first news item to be extremely light on API quota
+        if (index < 1) {
           // Check cache
           const cached = summaryCache[item.link];
           if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
@@ -125,7 +126,8 @@ export async function GET(request: Request) {
             summaryCache[item.link] = { summary, timestamp: Date.now() };
             return { ...item, aiSummary: summary };
           } catch (e) {
-            return item;
+            console.error("AI Summary Quota/Error:", e);
+            return item; // Fallback to original
           }
         }
         return item;

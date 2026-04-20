@@ -56,13 +56,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && globalNews.length === 0) {
             prefetchNews();
-            // Refresh news every 15 mins in background
-            const interval = setInterval(prefetchNews, 15 * 60 * 1000);
+            // Refresh news every 30 mins in background (longer interval to protect quota)
+            const interval = setInterval(prefetchNews, 30 * 60 * 1000);
             return () => clearInterval(interval);
         }
-    }, [isAuthenticated]);
+    }, [isAuthenticated, globalNews.length]);
 
     // Use a ref to track if auth check has completed to avoid closure staleness in timeout
     const isAuthCheckCompleted = React.useRef(false);
