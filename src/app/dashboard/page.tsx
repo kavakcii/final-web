@@ -19,7 +19,7 @@ import { GradientCard } from "@/components/ui/gradient-card";
 import Link from "next/link";
 
 export default function Dashboard() {
-    const { email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded } = useUser();
+    const { user, email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded } = useUser();
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
     const [topNews, setTopNews] = useState<any>(null);
@@ -29,22 +29,33 @@ export default function Dashboard() {
             if (!isDataLoaded) return;
             
             try {
-                // Try to find news related to portfolio assets
+                // 15-minute rotation logic
+                const rotationInterval = 15 * 60 * 1000;
+                const timeSegment = Math.floor(Date.now() / rotationInterval);
+                
+                // Get unique assets
+                const uniqueSymbols = Array.from(new Set(myAssets.map(a => a.symbol.replace('.IS', '').replace('.is', ''))));
+                
                 let query = "";
                 let relatedAsset = "";
                 
-                if (myAssets && myAssets.length > 0) {
-                    const firstAsset = myAssets[0];
-                    query = firstAsset.symbol.replace('.IS', '').replace('.is', '');
-                    relatedAsset = firstAsset.symbol;
+                if (uniqueSymbols.length > 0) {
+                    // Pick a symbol based on the 15-min segment
+                    const symbolIndex = timeSegment % uniqueSymbols.length;
+                    query = uniqueSymbols[symbolIndex];
+                    relatedAsset = uniqueSymbols[symbolIndex];
                 }
 
                 const res = await fetch(`/api/news${query ? `?q=${query}` : ''}`);
                 const data = await res.json();
                 
                 if (data.success && data.news && data.news.length > 0) {
+                    // Personalize news choice based on user ID and time segment
+                    const userIdHash = user?.id ? user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+                    const newsIndex = (userIdHash + timeSegment) % data.news.length;
+                    
                     setTopNews({
-                        ...data.news[0],
+                        ...data.news[newsIndex],
                         relatedAsset: relatedAsset
                     });
                 }
@@ -53,7 +64,11 @@ export default function Dashboard() {
             }
         };
         fetchNews();
-    }, [isDataLoaded, myAssets]);
+
+        // Refresh news every 15 minutes
+        const interval = setInterval(fetchNews, 15 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [isDataLoaded, myAssets, user?.id]);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
