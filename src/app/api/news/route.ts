@@ -144,14 +144,16 @@ export async function GET(request: Request) {
     const summarizedNews = await Promise.all(
       topNews.map(async (item, index) => {
         if (index < 3) {
-          const cached = summaryCache[item.link];
+          // Check cache with title+link key for absolute uniqueness
+          const cacheKey = item.link + item.title;
+          const cached = summaryCache[cacheKey];
           if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
             return { ...item, aiSummary: cached.summary };
           }
 
           try {
             const summary = await summarizeNewsWithAI(item.title, item.description);
-            summaryCache[item.link] = { summary, timestamp: Date.now() };
+            summaryCache[cacheKey] = { summary, timestamp: Date.now() };
             return { ...item, aiSummary: summary };
           } catch (e) {
             return item;

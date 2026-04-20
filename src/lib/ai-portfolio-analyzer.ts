@@ -91,13 +91,19 @@ export async function analyzePortfolioWithAI(assets: { symbol: string, changePer
  */
 function heuristicSummarizer(title: string, description: string): string {
     const cleanDesc = description.replace(/<[^>]*>/g, '').trim();
-    const sentences = cleanDesc.split(/[.!?]/).filter(s => s.length > 20);
+    const sentences = cleanDesc.split(/[.!?]/).filter(s => s.length > 25);
     
-    if (sentences.length === 0) return `${title}. Haberin detayları için tıklayınız.`;
+    // Haberin başlığını mutlaka özete dahil et ki her haber benzersiz olsun
+    let finalSummary = `${title}: `;
     
-    // İlk 2-3 cümleyi al
-    const summary = sentences.slice(0, 3).join('. ') + '.';
-    return summary.length > 250 ? summary.slice(0, 247) + "..." : summary;
+    if (sentences.length > 0) {
+        // En anlamlı ilk 2 cümleyi ekle
+        finalSummary += sentences.slice(0, 2).join('. ') + '.';
+    } else {
+        finalSummary += "Ekonomi gündemindeki bu gelişmenin detayları ve piyasa analizleri için haberin devamını inceleyebilirsiniz.";
+    }
+    
+    return finalSummary.length > 300 ? finalSummary.slice(0, 297) + "..." : finalSummary;
 }
 
 /**
