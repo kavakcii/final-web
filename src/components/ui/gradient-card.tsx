@@ -44,7 +44,8 @@ export const GradientCard = ({
     <div className="w-fit h-fit flex items-center justify-center bg-transparent">
       <motion.div
         ref={cardRef}
-        className="relative rounded-[20px] overflow-hidden border border-slate-100"
+        className="relative rounded-[20px] overflow-hidden border border-slate-100 cursor-pointer"
+        onClick={() => window.location.href = '/dashboard/news'}
         style={{
           width: "240px",
           height: "300px",
@@ -112,6 +113,7 @@ export const GradientCard = ({
 
           <a
             href={`/dashboard/news?url=${encodeURIComponent(link)}`}
+            onClick={(e) => e.stopPropagation()}
             className="flex items-center text-[#00008B] text-[10px] font-bold group mt-2 hover:translate-x-1 transition-transform"
           >
             Haberin Devamı
