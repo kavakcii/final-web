@@ -99,13 +99,13 @@ export const GradientCard = ({
                     <div className="w-8 h-8 rounded-full bg-[#00008B]/5 flex items-center justify-center border border-[#00008B]/10">
                         <Newspaper className="w-4 h-4 text-[#00008B]" />
                     </div>
+                    <span className="text-[10px] font-black text-[#00008B] uppercase tracking-[0.1em]">FinAi Haberler</span>
                     {relatedAsset && (
                         <div className="px-2 py-0.5 bg-[#00008B] text-white text-[8px] font-black rounded-md tracking-tighter">
                             {relatedAsset}
                         </div>
                     )}
                 </div>
-                <span className="text-[9px] font-bold text-[#00008B]/60 uppercase tracking-[0.2em]">{source}</span>
             </div>
 
             <div className="space-y-1.5">
