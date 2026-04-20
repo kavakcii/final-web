@@ -404,13 +404,12 @@ function NewsContent() {
                             ))}
                         </div>
                     </section>
-                </div>    </div>
-                    </section>
                 </div>
             )}
         </div>
     );
 }
+
 
 export default function NewsPage() {
     return (
