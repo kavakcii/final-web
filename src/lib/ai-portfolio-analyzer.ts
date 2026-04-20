@@ -90,3 +90,29 @@ export async function analyzePortfolioWithAI(assets: { symbol: string, changePer
         return null;
     }
 }
+/**
+ * Haber başlığı ve açıklamasını alıp Gemini AI ile tek cümlelik, vurucu bir finansal özet çıkarır.
+ */
+export async function summarizeNewsWithAI(title: string, description: string): Promise<string> {
+    if (!genAI) return description.replace(/<[^>]*>/g, '').slice(0, 150) + "...";
+
+    try {
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const prompt = `
+        Aşağıdaki finansal haberin başlığını ve içeriğini oku. 
+        Kullanıcıya bu haberin ne anlama geldiğini anlatan, SADECE TEK CÜMLELİK, profesyonel ve vurucu bir özet yaz.
+        Haber linki veya kaynak belirtme. Reklam yapma. Sadece haberi yorumla/özetle.
+        
+        BAŞLIK: ${title}
+        İÇERİK: ${description.replace(/<[^>]*>/g, '')}
+        
+        ÖZET (TEK CÜMLE):
+        `;
+
+        const result = await model.generateContent(prompt);
+        return result.response.text().trim();
+    } catch (error) {
+        console.error("AI News Summary Error:", error);
+        return description.replace(/<[^>]*>/g, '').slice(0, 150) + "...";
+    }
+}

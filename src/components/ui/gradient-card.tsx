@@ -9,6 +9,7 @@ interface GradientCardProps {
   link?: string;
   source?: string;
   relatedAsset?: string;
+  aiSummary?: string;
 }
 
 export const GradientCard = ({ 
@@ -16,7 +17,8 @@ export const GradientCard = ({
   description = "",
   link = "#",
   source = "Haber",
-  relatedAsset
+  relatedAsset,
+  aiSummary
 }: GradientCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -95,15 +97,15 @@ export const GradientCard = ({
         <div className="relative flex flex-col h-full p-5 z-40 justify-between">
           <div className="space-y-4">
             <div className="flex items-center">
-                <span className="text-[10px] font-black text-[#00008B] uppercase tracking-[0.25em] opacity-30">FinAi Haberler</span>
+                <span className="text-[10px] font-black text-[#00008B] uppercase tracking-[0.25em] opacity-30">Gündem</span>
             </div>
 
             <div className="space-y-2">
                 <h3 className="text-[14px] font-black text-[#00008B] line-clamp-3 leading-[1.3] tracking-tight">
                 {title}
                 </h3>
-                <p className="text-[11px] text-[#00008B]/50 line-clamp-6 leading-relaxed font-medium">
-                {description.replace(/<[^>]*>/g, '').trim()}
+                <p className="text-[11px] text-[#00008B]/60 line-clamp-6 leading-relaxed font-medium italic">
+                {aiSummary || description.replace(/<[^>]*>/g, '').trim()}
                 </p>
             </div>
           </div>

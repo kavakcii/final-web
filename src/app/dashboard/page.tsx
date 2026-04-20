@@ -56,7 +56,8 @@ export default function Dashboard() {
                     
                     setTopNews({
                         ...data.news[newsIndex],
-                        relatedAsset: relatedAsset
+                        relatedAsset: relatedAsset,
+                        aiSummary: data.news[newsIndex].aiSummary
                     });
                 }
             } catch (error) {
@@ -203,6 +204,7 @@ export default function Dashboard() {
                                     link={topNews.link} 
                                     source={topNews.source}
                                     relatedAsset={topNews.relatedAsset}
+                                    aiSummary={topNews.aiSummary}
                                 />
                             )}
                         </div>

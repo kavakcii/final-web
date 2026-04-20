@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
+import { summarizeNewsWithAI } from '@/lib/ai-portfolio-analyzer';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,7 +112,24 @@ export async function GET(request: Request) {
     // Sort by date (newest first)
     allNews.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
-    return NextResponse.json({ success: true, news: allNews.slice(0, 30) });
+    const topNews = allNews.slice(0, 10);
+    
+    // AI Summarization for the top 3 news to keep it fast
+    const summarizedNews = await Promise.all(
+      topNews.map(async (item, index) => {
+        if (index < 3) {
+          try {
+            const summary = await summarizeNewsWithAI(item.title, item.description);
+            return { ...item, aiSummary: summary };
+          } catch (e) {
+            return item;
+          }
+        }
+        return item;
+      })
+    );
+
+    return NextResponse.json({ success: true, news: summarizedNews });
 
   } catch (error) {
     console.error("News aggregator error:", error);
