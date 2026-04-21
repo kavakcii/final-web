@@ -1,13 +1,12 @@
 "use client";
 
 import { AuthComponent } from "@/components/ui/sign-up";
-import { TrendingUp, Activity, DollarSign, BarChart2, ArrowUpRight, ArrowDownRight, Wallet, Newspaper } from "lucide-react";
+import { TrendingUp, Activity, DollarSign, BarChart2, ArrowUpRight, ArrowDownRight, Wallet, Newspaper, Loader2, CheckCircle2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
 import { cn } from "@/lib/utils";
-import { Loader2, CheckCircle2 } from "lucide-react";
 
 import TradingViewWidget from "@/components/TradingViewWidget";
 import { TefasChart } from "@/components/TefasChart";
@@ -30,31 +29,8 @@ export default function Dashboard() {
             if (!isDataLoaded) return;
             
             try {
-                // 15-minute rotation logic
-                const rotationInterval = 15 * 60 * 1000;
-                const timeSegment = Math.floor(Date.now() / rotationInterval);
-                
-                // Try to use globalNews first for instant loading
-                const newsPool = globalNews.length > 0 ? globalNews : null;
-                
-                let dataToUse = newsPool;
-                let relatedAsset = "";
-
-                // If we don't have global news yet, or need a specific asset search
-                const uniqueSymbols = Array.from(new Set(myAssets.map(a => a.symbol.replace('.IS', '').replace('.is', ''))));
-                
-                if (uniqueSymbols.length > 0) {
-                    const symbolIndex = timeSegment % uniqueSymbols.length;
-                    const query = uniqueSymbols[symbolIndex];
-                    relatedAsset = uniqueSymbols[symbolIndex];
-                    
-                    // Only fetch if global news is empty or we want fresh asset-specific news
-                    if (!newsPool) {
-                        const res = await fetch(`/api/news?q=${query}`);
-                        const data = await res.json();
-                        if (data.success) dataToUse = data.news;
-                    }
-                } else if (!newsPool) {
+                let dataToUse = globalNews;
+                if (!dataToUse || dataToUse.length === 0) {
                     const res = await fetch('/api/news');
                     const data = await res.json();
                     if (data.success) dataToUse = data.news;
@@ -62,21 +38,14 @@ export default function Dashboard() {
                 
                 if (dataToUse && dataToUse.length > 0) {
                     setNews(dataToUse);
-                    const userIdHash = user?.id ? user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
-                    const newsIndex = (userIdHash + timeSegment) % dataToUse.length;
-                    
-                    setTopNews({
-                        ...dataToUse[newsIndex],
-                        relatedAsset: relatedAsset,
-                        aiSummary: dataToUse[newsIndex].aiSummary
-                    });
+                    setTopNews(dataToUse[0]);
                 }
             } catch (error) {
                 console.error("Dashboard news fetch error:", error);
             }
         };
         fetchNews();
-    }, [isDataLoaded, myAssets, user?.id, globalNews]);
+    }, [isDataLoaded, globalNews]);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
@@ -102,7 +71,6 @@ export default function Dashboard() {
         }
     };
 
-    // Loading State with Steps
     const [loadingStep, setLoadingStep] = useState(0);
     const loadingMessages = [
         "Portföy verileri hazırlanıyor...",
@@ -120,110 +88,87 @@ export default function Dashboard() {
         }
     }, [isDataLoaded]);
 
+    if (!isAuthenticated && isDataLoaded) {
+        return <AuthComponent />;
+    }
+
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-hidden">
             {/* Background Glows */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-slate-50 blur-[100px] pointer-events-none" />
-
+            
             <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
-            {/* Loading Overlay */}
-            <AnimatePresence>
-                {!isDataLoaded && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md"
-                    >
-                        <div className="w-full max-w-md p-10 rounded-[2.5rem] bg-white border border-slate-100 text-[#00008B] shadow-2xl relative overflow-hidden text-center">
-                            <div className="relative z-10">
-                                <div className="w-24 h-24 mx-auto mb-8 relative">
-                                    <div className="absolute inset-0 border-4 border-slate-50 rounded-full" />
-                                    <div className="absolute inset-0 border-4 border-[#00008B] rounded-full border-t-transparent animate-spin" />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <TrendingUp className="w-10 h-10 text-[#00008B] animate-pulse" />
-                                    </div>
-                                </div>
-                                <h2 className="text-2xl font-bold text-[#00008B] mb-3 tracking-tight">Senkronize Ediliyor</h2>
-                                <p className="text-[#00008B]/40 text-sm font-bold uppercase tracking-widest">{loadingMessages[loadingStep]}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            {/* Welcome Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
-                <div>
-                    <h1 className="text-4xl font-bold text-[#00008B] flex items-center gap-3 tracking-tight">
-                        Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
-                        <motion.span
-                            animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }}
-                            transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}
+                
+                {/* Loading Overlay */}
+                <AnimatePresence>
+                    {!isDataLoaded && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md"
                         >
-                            👋
-                        </motion.span>
-                    </h1>
-                    <p className="text-[#00008B] mt-2 text-xs font-bold tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    <a
-                        href="/dashboard/portfolio/correlation"
-                        className="flex items-center gap-2 px-6 py-3 bg-[#00008B] rounded-2xl hover:bg-blue-900 transition-all text-white text-[11px] font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 active:scale-95"
-                    >
-                        <Activity className="w-4 h-4" />
-                        Korelasyon Analizi
-                    </a>
-                </div>
-            </div>
+                            <div className="w-full max-w-md p-10 rounded-[2.5rem] bg-white border border-slate-100 text-[#00008B] shadow-2xl text-center">
+                                <div className="w-24 h-24 mx-auto mb-8 relative">
+                                    <Loader2 className="w-24 h-24 text-[#00008B] animate-spin opacity-20" />
+                                    <TrendingUp className="w-10 h-10 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
+                                </div>
+                                <h2 className="text-2xl font-black mb-2 tracking-tighter">FinAi Hazırlanıyor</h2>
+                                <p className="text-sm font-bold text-slate-400 animate-pulse">{loadingMessages[loadingStep]}</p>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
-            {/* INTERACTIVE HEADER SECTION */}
-            <div className="flex flex-col gap-6">
-                <div className="flex flex-col lg:flex-row items-start gap-12 relative">
-                    {/* LEFT: CARD COLUMN */}
+                {/* Welcome Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
+                    <div>
+                        <h1 className="text-4xl font-bold text-[#00008B] flex items-center gap-3 tracking-tight">
+                            Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
+                            <motion.span animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}>👋</motion.span>
+                        </h1>
+                        <p className="text-[#00008B] mt-2 text-xs font-bold tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <Link href="/dashboard/portfolio/correlation" className="flex items-center gap-2 px-6 py-3 bg-[#00008B] rounded-2xl text-white text-[11px] font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 active:scale-95">
+                            <Activity className="w-4 h-4" />
+                            Korelasyon Analizi
+                        </Link>
+                    </div>
+                </div>
+
+                {/* INTERACTIVE HEADER SECTION */}
+                <div className="flex flex-col lg:flex-row items-start gap-12">
+                    {/* LEFT: CARD & NEWS */}
                     <div className="flex flex-col gap-6">
-                        <div className="relative z-20 group">
-                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-[10px_0_30px_-10px_rgba(0,0,139,0.3)] rounded-[16px] block transition-transform hover:scale-[1.01] active:scale-[0.99] w-[225px]">
-                                <PremiumCard 
-                                    userName={userName || ""} 
-                                    totalBalance={stats[0]?.value || "₺0,00"}
-                                />
+                        <div className="relative group">
+                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-2xl rounded-[16px] block transition-transform hover:scale-[1.01] w-[225px]">
+                                <PremiumCard userName={userName || ""} totalBalance={stats[0]?.value || "₺0,00"} />
                             </Link>
                             
-                            {/* Chart panel - slides out from behind the card on hover */}
                             <div className="absolute left-0 top-0 w-[225px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[16px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[100%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
-                                <BalanceChart 
-                                    totalBalance={stats[0]?.value || "₺0,00"} 
-                                    changePercent={stats[0]?.change || "%0"}
-                                    isPositive={stats[0]?.isPositive ?? true}
-                                    history={portfolioHistory}
-                                />
+                                <BalanceChart totalBalance={stats[0]?.value || "₺0,00"} changePercent={stats[0]?.change || "%0"} isPositive={stats[0]?.isPositive ?? true} history={portfolioHistory} />
                             </div>
                         </div>
 
-                        {/* News Widget - Split into two columns with only headlines */}
-                        <div className="w-full lg:w-[600px] bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
+                        {/* COMPACT NEWS WIDGET */}
+                        <div className="w-full lg:w-[450px] bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <Newspaper className="w-5 h-5 text-[#00008B]" />
-                                    <h3 className="text-sm font-black text-[#00008B] uppercase tracking-widest">Gündem</h3>
+                                    <Newspaper className="w-4 h-4 text-[#00008B]" />
+                                    <h3 className="text-[11px] font-black text-[#00008B] uppercase tracking-widest">Gündem</h3>
                                 </div>
-                                <Link href="/dashboard/news" className="text-[10px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
+                                <Link href="/dashboard/news" className="text-[9px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
-                                {news.slice(0, 10).map((item, idx) => (
-                                    <Link 
-                                        key={idx} 
-                                        href={`/dashboard/news?url=${encodeURIComponent(item.link)}`}
-                                        className="group border-b border-slate-50 pb-3 hover:border-[#00008B]/20 transition-all"
-                                    >
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[9px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                                {news.slice(0, 4).map((item, idx) => (
+                                    <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-2 hover:border-[#00008B]/20 transition-all">
+                                        <div className="flex flex-col gap-0.5">
+                                            <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">
                                                 {new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                                             </span>
-                                            <h4 className="text-[11px] font-bold text-slate-600 leading-snug group-hover:text-[#00008B] transition-colors line-clamp-2">
+                                            <h4 className="text-[10px] font-bold text-slate-600 leading-tight group-hover:text-[#00008B] transition-colors line-clamp-2">
                                                 {item.title}
                                             </h4>
                                         </div>
@@ -232,9 +177,27 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* RIGHT: PORTFOLIO WIDGET & CHART */}
+                    <div className="flex-1 w-full space-y-8">
+                        <DashboardPortfolioWidget groupedAssets={groupedAssets} prices={prices} stats={stats} onAssetSelect={handleAssetSelect} />
+                        
+                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 flex items-center justify-center text-[#00008B]">
+                                        <BarChart2 className="w-6 h-6" />
+                                    </div>
+                                    <h2 className="text-xl font-black text-[#00008B] tracking-tight">{isTefas ? 'Fon Analizi' : 'Hisse Analizi'}: {selectedAsset?.split(':')[1] || 'XU100'}</h2>
+                                </div>
+                            </div>
+                            <div className="h-[450px] w-full rounded-2xl overflow-hidden border border-slate-50">
+                                {isTefas ? <TefasChart symbol={selectedAsset || ""} /> : <TradingViewWidget symbol={selectedAsset || "FOREKS:XU100"} />}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-          </div>
         </div>
     );
 }
