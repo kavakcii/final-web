@@ -34,7 +34,7 @@ export async function GET(request: Request) {
                   $('title').text().trim();
 
     // 3. ADIM: Readability Algoritması (Metin Yoğunluğu Analizi)
-    let bestElement: cheerio.Cheerio<cheerio.Element> | null = null;
+    let bestElement: any = null;
     let maxScore = 0;
 
     // Tüm kapsayıcıları tara
