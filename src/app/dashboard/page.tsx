@@ -23,6 +23,7 @@ export default function Dashboard() {
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
     const [topNews, setTopNews] = useState<any>(null);
+    const [news, setNews] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -60,6 +61,7 @@ export default function Dashboard() {
                 }
                 
                 if (dataToUse && dataToUse.length > 0) {
+                    setNews(dataToUse);
                     const userIdHash = user?.id ? user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
                     const newsIndex = (userIdHash + timeSegment) % dataToUse.length;
                     
@@ -200,18 +202,34 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* News Widget Under the Card */}
-                        <div className="w-[240px]">
-                            {topNews && (
-                                <GradientCard 
-                                    title={topNews.title} 
-                                    description={topNews.description} 
-                                    link={topNews.link} 
-                                    source={topNews.source}
-                                    relatedAsset={topNews.relatedAsset}
-                                    aiSummary={topNews.aiSummary}
-                                />
-                            )}
+                        {/* News Widget - Split into two columns with only headlines */}
+                        <div className="w-full lg:w-[600px] bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-2">
+                                    <Newspaper className="w-5 h-5 text-[#00008B]" />
+                                    <h3 className="text-sm font-black text-[#00008B] uppercase tracking-widest">Gündem</h3>
+                                </div>
+                                <Link href="/dashboard/news" className="text-[10px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
+                                {news.slice(0, 10).map((item, idx) => (
+                                    <Link 
+                                        key={idx} 
+                                        href={`/dashboard/news?url=${encodeURIComponent(item.link)}`}
+                                        className="group border-b border-slate-50 pb-3 hover:border-[#00008B]/20 transition-all"
+                                    >
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[9px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">
+                                                {new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                            <h4 className="text-[11px] font-bold text-slate-600 leading-snug group-hover:text-[#00008B] transition-colors line-clamp-2">
+                                                {item.title}
+                                            </h4>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
