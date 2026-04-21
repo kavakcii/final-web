@@ -17,35 +17,32 @@ import { BalanceChart } from "@/components/BalanceChart";
 import { GradientCard } from "@/components/ui/gradient-card";
 import Link from "next/link";
 
-export default function Dashboard() {
+export default function DashboardPage() {
     const { user, email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded, globalNews } = useUser();
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
-    const [topNews, setTopNews] = useState<any>(null);
     const [news, setNews] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchNews = async () => {
-            if (!isDataLoaded) return;
+            if (!isDataLoaded || !user) return;
             
             try {
-                let dataToUse = globalNews;
-                if (!dataToUse || dataToUse.length === 0) {
-                    const res = await fetch('/api/news');
-                    const data = await res.json();
-                    if (data.success) dataToUse = data.news;
-                }
-                
-                if (dataToUse && dataToUse.length > 0) {
-                    setNews(dataToUse);
-                    setTopNews(dataToUse[0]);
+                // Fetch personalized news for the user
+                const res = await fetch(`/api/news?userId=${user.id}`);
+                const data = await res.json();
+                if (data.success) {
+                    setNews(data.news);
+                } else if (globalNews && globalNews.length > 0) {
+                    setNews(globalNews);
                 }
             } catch (error) {
                 console.error("Dashboard news fetch error:", error);
+                if (globalNews && globalNews.length > 0) setNews(globalNews);
             }
         };
         fetchNews();
-    }, [isDataLoaded, globalNews]);
+    }, [isDataLoaded, user, globalNews]);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
@@ -88,7 +85,7 @@ export default function Dashboard() {
         }
     }, [isDataLoaded]);
 
-    if (!isAuthenticated && isDataLoaded) {
+    if (isAuthenticated === false && isDataLoaded) {
         return <AuthComponent />;
     }
 
@@ -143,11 +140,11 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-6">
                         <div className="relative group">
                             <Link href="/dashboard/portfolio" className="relative z-30 shadow-2xl rounded-[16px] block transition-transform hover:scale-[1.01] w-[225px]">
-                                <PremiumCard userName={userName || ""} totalBalance={stats[0]?.value || "₺0,00"} />
+                                <PremiumCard userName={userName || ""} totalBalance={stats?.[0]?.value || "₺0,00"} />
                             </Link>
                             
                             <div className="absolute left-0 top-0 w-[225px] aspect-[1.586/1] bg-white border border-slate-100 rounded-[16px] shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[100%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
-                                <BalanceChart totalBalance={stats[0]?.value || "₺0,00"} changePercent={stats[0]?.change || "%0"} isPositive={stats[0]?.isPositive ?? true} history={portfolioHistory} />
+                                <BalanceChart totalBalance={stats?.[0]?.value || "₺0,00"} changePercent={stats?.[0]?.change || "%0"} isPositive={stats?.[0]?.isPositive ?? true} history={portfolioHistory} />
                             </div>
                         </div>
 
@@ -162,7 +159,7 @@ export default function Dashboard() {
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                                {news.slice(0, 4).map((item, idx) => (
+                                {news && news.length > 0 ? news.slice(0, 4).map((item, idx) => (
                                     <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-2 hover:border-[#00008B]/20 transition-all">
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">
@@ -173,7 +170,9 @@ export default function Dashboard() {
                                             </h4>
                                         </div>
                                     </Link>
-                                ))}
+                                )) : (
+                                    <p className="text-[10px] text-slate-300 col-span-2 py-4 text-center font-bold">Haberler yükleniyor...</p>
+                                )}
                             </div>
                         </div>
                     </div>
