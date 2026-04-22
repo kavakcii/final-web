@@ -191,7 +191,7 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                             <div className="h-[450px] w-full rounded-2xl overflow-hidden border border-slate-50">
-                                {isTefas ? <TefasChart symbol={selectedAsset || ""} /> : <TradingViewWidget symbol={selectedAsset || "FOREKS:XU100"} />}
+                                {isTefas ? <TefasChart fundCode={selectedAsset || ""} /> : <TradingViewWidget symbol={selectedAsset || "FOREKS:XU100"} />}
                             </div>
                         </div>
                     </div>
