@@ -1,11 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowUpRight, PieChart, Battery, ArrowDownRight, CheckCircle2, RotateCcw, ChevronRight, Wallet, Zap } from "lucide-react";
+import { ArrowUpRight, PieChart, Battery, ArrowDownRight, CheckCircle2, RotateCcw, ChevronRight, Wallet, Zap, TrendingUp, BarChart3 } from "lucide-react";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import Link from "next/link";
+import { motion } from "framer-motion";
 
-export function DashboardPortfolioWidget() {
+interface DashboardPortfolioWidgetProps {
+    groupedAssets?: any[];
+    prices?: Record<string, number>;
+    stats?: any[];
+    onAssetSelect?: (symbol: string, type: string) => void;
+}
+
+export function DashboardPortfolioWidget({ groupedAssets = [], prices = {}, stats = [], onAssetSelect }: DashboardPortfolioWidgetProps) {
     const [recommendation, setRecommendation] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -93,174 +101,153 @@ export function DashboardPortfolioWidget() {
             return {
                 title: "Dengeli Portföy",
                 persona: "Stratejik Mimar",
-                desc: "Risk ve getiri arasında ideal dengeyi kuran, piyasa dalgalanmalarına karşı kısmen korumalı yapı.",
+                desc: "Risk ve getiri arasında ideal dengeyi kuran, piyasa dalgalanmasına karşı kısmen korumalı yapı.",
                 advantages: [
                     "Hem koruma hem büyüme sağlar",
                     "Aşırı piyasa düşüşlerinde tampon görevi görür",
                     "Stresten uzak, sürdürülebilir bir yatırım deneyimi"
                 ],
-                reasoning: "Ne paranızı enflasyona ezdiriyorsunuz ne de aşırı risk alıyorsunuz. Portföyün %40'ı ile **" + (isIslamic ? "Katılım Hissesi" : "Hisse Senedi") + "** piyasasının getirisinden faydalanırken, toplamda %50'yi bulan **" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın** ağırlığı ile piyasa çöküşlerine karşı kalkan oluşturuyorsunuz. Bu yapı, 'geceleri rahat uyuyarak' büyüme sağlar.",
+                reasoning: "Dengeli bir risk profiliniz olduğu için portföyün %40'ı **" + (isIslamic ? "Katılım Hisselerine" : "Hisse Senetlerine") + "**, %30'u ise daha stabil olan **" + (isIslamic ? "Kira Sertifikalarına" : "Tahvil/Bono") + "** ve **Altın**'a paylaştırıldı. %20'lik **" + (isIslamic ? "Katılım Fonu" : "Fon") + "** sepeti ile getiri potansiyeli artırılırken, riskler minimize edildi.",
                 allocation: adjustForIslamic([
                     { name: "Hisse Senetleri", value: 40, color: "#3b82f6" },
-                    { name: "Tahvil / Bono", value: 30, color: "#22c55e" },
-                    { name: "Altın", value: 20, color: "#eab308" },
+                    { name: "Tahvil / Bono", value: 20, color: "#10b981" },
+                    { name: "Yatırım Fonları", value: 20, color: "#6366f1" },
+                    { name: "Emtia / Altın", value: 10, color: "#eab308" },
                     { name: "Nakit", value: 10, color: "#64748b" }
                 ])
             };
         } else {
             return {
-                title: "Koruyucu Portföy",
+                title: "Muhafazakar Portföy",
                 persona: "Güvenli Liman",
-                desc: "Sermaye koruma öncelikli, düşük riskli ve düzenli gelir odaklı portföy.",
+                desc: "Ana parayı koruma odaklı, düşük riskli ve düzenli getiri hedefleyen yapı.",
                 advantages: [
-                    "Anapara kaybı riski minimumdur",
-                    "Piyasa krizlerinden en az etkilenen yapıdır",
-                    "Düzenli ve öngörülebilir getiri akışı sağlar"
+                    "Düşük volatilite ve huzurlu uyku",
+                    "Düzenli temettü veya faiz/kira getirisi",
+                    "Piyasa krizlerinden en az etkilenen yapı"
                 ],
-                reasoning: "Ana parayı kaybetme riskiniz minimize edildi. Portföyün %80'i (**" + (isIslamic ? "Sukuk" : "Tahvil") + "** ve **Altın**) güvenli limanlarda tutularak krizlere karşı tam koruma sağlandı. Sadece %10'luk **" + (isIslamic ? "Katılım Hissesi" : "Hisse (Temettü)") + "** kısmı ile düzenli nakit akışı hedeflendi. Bu portföyün mottosu: 'Önce kaybetme, sonra kazan'.",
+                reasoning: "Düşük risk toleransınız nedeniyle portföyün %50'si en güvenli varlıklar olan **" + (isIslamic ? "Kira Sertifikaları" : "Tahvil/Bono") + "** ve **Altın**'a ayrıldı. %20'lik **" + (isIslamic ? "Katılım Hesabı" : "Nakit") + "** likidite sağlarken, %30'luk **" + (isIslamic ? "Katılım Temettü Hisseleri" : "Temettü Hisseleri") + "** ile enflasyon üzerinde getiri hedeflendi.",
                 allocation: adjustForIslamic([
-                    { name: "Tahvil / Bono", value: 50, color: "#22c55e" },
-                    { name: "Altın", value: 30, color: "#eab308" },
-                    { name: "Hisse (Temettü)", value: 10, color: "#3b82f6" },
-                    { name: "Nakit", value: 10, color: "#64748b" }
+                    { name: "Hisse (Temettü)", value: 30, color: "#3b82f6" },
+                    { name: "Tahvil / Bono", value: 30, color: "#10b981" },
+                    { name: "Emtia / Altın", value: 20, color: "#eab308" },
+                    { name: "Nakit", value: 20, color: "#64748b" }
                 ])
             };
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="w-full h-full glass-widget rounded-[2.5rem] p-8 flex items-center justify-center min-h-[600px]">
-                <div className="w-12 h-12 border-4 border-blue-500/10 border-t-blue-500 rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+    if (isLoading) return <div className="p-8 text-center"><RotateCcw className="w-8 h-8 animate-spin mx-auto text-[#00008B] opacity-20" /></div>;
 
-    if (recommendation) {
-        return (
-            <div className="w-full h-full relative glass-widget rounded-[2.5rem] overflow-hidden group flex flex-col items-center text-center">
-                <div className="absolute top-0 left-0 w-48 h-48 bg-blue-500/5 rounded-br-full blur-[80px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
-                
-                <div className="relative flex flex-col items-center justify-center gap-8 p-10 z-10 w-full h-full">
-
-                <div className="w-full h-[300px] relative z-10 mt-6 group-hover:scale-[1.03] transition-transform duration-700 ease-out">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <RechartsPie width={400} height={250}>
-                            <Pie
-                                data={recommendation.allocation}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={70}
-                                outerRadius={90}
-                                paddingAngle={5}
-                                dataKey="value"
-                                stroke="none"
-                            >
-                                {recommendation.allocation.map((entry: any, index: number) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(255,255,255,0.8)" strokeWidth={2} />
-                                ))}
-                            </Pie>
-                                <Tooltip
-                                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', boxShadow: '0 10px 25px -5px rgba(0,0,139,0.1)' }}
-                                itemStyle={{ color: '#00008B', fontWeight: 'bold' }}
-                                formatter={(value: any) => [`%${value}`, 'Oran']}
-                            />
-                        </RechartsPie>
-                    </ResponsiveContainer>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <span className="text-[#00008B] text-[8px] font-bold uppercase tracking-[0.3em] mt-1 opacity-30">Önerilen</span>
-                        <span className="text-[#00008B] font-black text-sm text-center px-4 leading-tight tracking-tighter uppercase">{recommendation.title}</span>
+    return (
+        <div className="space-y-6">
+            {/* Real Portfolio Status */}
+            {groupedAssets.length > 0 && (
+                <div className="bg-[#00008B] rounded-[2.5rem] p-8 text-white shadow-2xl shadow-[#00008B]/20 relative overflow-hidden">
+                    <div className="absolute right-[-20px] top-[-20px] opacity-10">
+                        <TrendingUp className="w-48 h-48" />
                     </div>
-                    <div className="absolute -bottom-4 left-0 w-full flex flex-wrap justify-center gap-3 px-4">
-                        {recommendation.allocation.map((item: any, idx: number) => (
-                            <div key={idx} className="flex flex-col items-center justify-center gap-1.5 px-3 py-2 bg-white border border-white rounded-2xl shadow-xl min-w-[85px] group/box hover:scale-105 transition-all duration-300">
-                                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: item.color }}></div>
-                                <span className="text-[10px] text-[#00008B]/60 font-bold whitespace-nowrap text-center flex flex-col gap-0.5 mt-1 transition-colors group-hover/box:text-[#00008B]">
-                                    {item.name} 
-                                    <span className="font-black text-lg leading-none text-[#00008B] mt-1">{`%${item.value}`}</span>
-                                    {item.amountStr && (
-                                        <span className="text-slate-400 font-medium block mt-0.5">({item.amountStr})</span>
-                                    )}
-                                </span>
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center">
+                                <Wallet className="w-6 h-6" />
                             </div>
-                        ))}
+                            <div>
+                                <h3 className="text-xl font-black tracking-tight">Canlı Portföy Durumu</h3>
+                                <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">Gerçek Zamanlı Varlık Analizi</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                            {groupedAssets.slice(0, 4).map((asset, idx) => (
+                                <button 
+                                    key={idx}
+                                    onClick={() => onAssetSelect?.(asset.symbol, asset.type)}
+                                    className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all text-left group"
+                                >
+                                    <p className="text-[10px] font-black opacity-40 mb-1 uppercase">{asset.symbol.split(':')[1] || asset.symbol}</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-sm font-black">{asset.quantity} Adet</p>
+                                        <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
+            )}
 
-                <div className="w-full relative z-10 text-center flex flex-col items-center justify-center max-w-2xl mx-auto">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <div className="p-2 bg-blue-500/10 rounded-xl text-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-                            <PieChart className="w-5 h-5" />
+            {/* Recommendation Logic */}
+            {recommendation ? (
+                <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <CheckCircle2 className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-[#00008B] tracking-tight">{recommendation.title}</h2>
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Stratejik Öneri: {recommendation.persona}</p>
+                            </div>
                         </div>
-                        <span className="text-[#00008B] font-bold text-[9px] tracking-[0.35em] uppercase opacity-30">AI Analizi</span>
-                        <div className="text-[10px] font-bold text-white bg-[#00008B] px-4 py-1.5 rounded-full ml-2 uppercase tracking-widest shadow-lg shadow-[#00008B]/20">
-                            {recommendation.persona}
-                        </div>
+                        <Link href="/reports" className="px-5 py-2.5 bg-slate-50 text-[#00008B] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#00008B] hover:text-white transition-all">Detaylı Rapor</Link>
                     </div>
 
-                    <h3 className="text-4xl font-black text-[#00008B] mb-4 tracking-tighter uppercase">{recommendation.title}</h3>
-                    <p className="text-[#00008B]/70 text-sm mb-8 leading-relaxed max-w-xl text-center font-medium">
-                        {recommendation.desc}
-                    </p>
-
-                    <div className="p-10 bg-white/40 border border-white rounded-[2.5rem] mb-8 text-sm leading-relaxed text-center shadow-2xl shadow-blue-900/5 w-full max-w-lg mx-auto relative overflow-hidden group/card shadow-sm">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-[#00008B] to-transparent opacity-20" />
-                        <strong className="text-[#00008B] block mb-5 font-bold text-xl tracking-tighter uppercase">Neden Bu Optimizasyon?</strong>
-                        <p className="text-left font-medium text-slate-700 px-2 mt-2 leading-relaxed">
-                        {recommendation.reasoning.split("**").map((part: string, i: number) =>
-                            i % 2 === 1 ? <span key={i} className="text-[#0a192f] font-black bg-[#0a192f]/5 px-1.5 py-0.5 rounded mx-0.5">{part}</span> : part
-                        )}
-                        </p>
-
-                        {recommendation.advantages && (
-                            <div className="mt-6 pt-5 border-t border-[#0a192f]/5 grid grid-cols-1 sm:grid-cols-2 gap-3 justify-items-center text-center">
+                    <div className="grid lg:grid-cols-2 gap-10">
+                        <div className="space-y-6">
+                            <p className="text-slate-600 font-medium leading-relaxed italic border-l-4 border-emerald-500 pl-4">
+                                {recommendation.desc}
+                            </p>
+                            <div className="grid gap-3">
                                 {recommendation.advantages.map((adv: string, i: number) => (
-                                    <div key={i} className="flex flex-col items-center justify-center gap-1.5 text-xs bg-slate-50 p-3 rounded-xl hover:bg-slate-100 transition-colors w-full border border-slate-100">
-                                        <CheckCircle2 className="w-5 h-5 text-[#00008B] flex-shrink-0" />
-                                        <span className="font-bold text-[#00008B]">{adv}</span>
+                                    <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                                        <Zap className="w-4 h-4 text-yellow-500" />
+                                        <span className="text-xs font-bold text-slate-700">{adv}</span>
                                     </div>
                                 ))}
                             </div>
-                        )}
-                    </div>
+                        </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                        <button
-                            onClick={() => {
-                                localStorage.removeItem("portfolio_answers");
-                                setRecommendation(null);
-                            }}
-                            className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-[#00008B] hover:bg-blue-900 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 shadow-[0_0_30px_rgba(0,0,139,0.3)] group/btn hover:scale-105"
-                        >
-                            <RotateCcw className="w-5 h-5 group-hover/btn:-rotate-180 transition-transform duration-500" />
-                            Yeni Test Yap
-                        </button>
+                        <div className="h-[220px] w-full relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <RechartsPie>
+                                    <Pie
+                                        data={recommendation.allocation}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {recommendation.allocation.map((entry: any, index: number) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip 
+                                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    />
+                                </RechartsPie>
+                            </ResponsiveContainer>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span className="text-xs font-bold text-slate-400 uppercase">Dağılım</span>
+                                <span className="text-xl font-black text-[#00008B]">Hedef</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        );
-    }
-
-    return (
-        <div className="w-full h-full relative glass-widget rounded-[2.5rem] overflow-hidden group flex flex-col justify-center min-h-[600px] text-center">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-bl-full blur-[120px] pointer-events-none transition-opacity group-hover:opacity-100 opacity-50" />
-            <div className="relative flex flex-col justify-center items-center text-center p-12 z-10 w-full h-full">
-                <div className="w-24 h-24 bg-[#00008B] rounded-[2.5rem] flex items-center justify-center mb-10 shadow-xl animate-bounce border border-white/20">
-                    <Wallet className="w-12 h-12 text-white" />
+            ) : (
+                <div className="bg-slate-50 rounded-[2.5rem] p-12 text-center border-2 border-dashed border-slate-200">
+                    <div className="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-6">
+                        <PieChart className="w-8 h-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-lg font-black text-[#00008B] mb-2">Henüz Bir Öneriniz Yok</h3>
+                    <p className="text-sm text-slate-400 font-bold mb-8 max-w-sm mx-auto">Size özel yatırım stratejisi oluşturmak için anketi tamamlayın.</p>
+                    <Link href="/reports" className="inline-flex items-center gap-2 px-8 py-4 bg-[#00008B] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#00008B]/20 hover:scale-105 transition-all">
+                        Anketi Başlat <ChevronRight className="w-4 h-4" />
+                    </Link>
                 </div>
-                <h3 className="text-6xl font-black text-[#00008B] mb-8 tracking-tighter leading-[0.9] uppercase">AI Portföyünüzü<br/>Hazırlayalım mı?</h3>
-                <p className="text-[#00008B]/60 text-lg mb-12 max-w-md font-bold leading-relaxed tracking-wider">
-                    Risk profilinize uygun, yapay zeka tarafından optimize edilmiş stratejinizi saniyeler içinde oluşturun.
-                </p>
-                <Link
-                    href="/dashboard/analysis"
-                    className="group relative inline-flex items-center gap-4 px-12 py-6 bg-[#00008B] text-white rounded-[1.8rem] font-bold text-xs uppercase tracking-[0.2em] transition-all duration-300 shadow-xl shadow-[#00008B]/20 hover:scale-105 active:scale-95"
-                >
-                    Hemen Analize Başla
-                    <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
-                </Link>
-            </div>
+            )}
         </div>
     );
 }
