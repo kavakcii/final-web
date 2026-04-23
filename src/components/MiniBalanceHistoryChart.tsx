@@ -6,6 +6,7 @@ import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 interface HistoryItem {
     date: string;
     balance: number;
+    isSimulated?: boolean;
 }
 
 interface MiniBalanceHistoryChartProps {
