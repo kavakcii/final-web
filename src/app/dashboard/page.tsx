@@ -144,7 +144,7 @@ export default function DashboardPage() {
                     {/* LEFT: CARD & NEWS */}
                     <div className="flex flex-col gap-6">
                         <div className="relative group">
-                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-2xl rounded-[16px] block transition-transform hover:scale-[1.01] w-80">
+                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-56">
                                 <VerificationCard 
                                     name={userName?.toUpperCase() || "FINAI USER"} 
                                     idNumber={maskedId}
@@ -153,7 +153,7 @@ export default function DashboardPage() {
                                 />
                             </Link>
                             
-                            <div className="absolute left-0 top-0 w-80 h-52 bg-white border border-slate-100 rounded-2xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
+                            <div className="absolute left-0 top-0 w-56 h-36 bg-white border border-slate-100 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
                                 <BalanceChart totalBalance={stats?.[0]?.value || "₺0,00"} changePercent={stats?.[0]?.change || "%0"} isPositive={stats?.[0]?.isPositive ?? true} history={portfolioHistory} />
                             </div>
                         </div>

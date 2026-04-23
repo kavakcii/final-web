@@ -24,7 +24,7 @@ export function VerificationCard({
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
-        "relative h-52 w-80 rounded-2xl p-6 shadow-2xl bg-white flex flex-col justify-between overflow-hidden group border border-slate-100"
+        "relative h-36 w-56 rounded-xl p-4 shadow-xl bg-white flex flex-col justify-between overflow-hidden group border border-slate-100"
       )}
     >
       {/* 1. Arkadan Geçen Lacivert Şeritler (Diagonal Navy Stripes) */}
@@ -32,30 +32,30 @@ export function VerificationCard({
       <div className="absolute bottom-[-10%] left-[-10%] w-[100%] h-[40%] bg-[#00008B]/5 rotate-[15deg] pointer-events-none" />
       
       {/* Decorative Neural Pattern */}
-      <div className="absolute right-[-10%] bottom-[-10%] w-40 h-40 border-[20px] border-[#00008B]/[0.03] rounded-full pointer-events-none" />
+      <div className="absolute right-[-10%] bottom-[-10%] w-24 h-24 border-[12px] border-[#00008B]/[0.03] rounded-full pointer-events-none" />
 
       {/* 2. Gökkuşağı Çizgisi (Rainbow Line at the top) */}
-      <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-blue-400 to-purple-500" />
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-blue-400 to-purple-500" />
 
       {/* Card Content */}
-      <div className="relative z-10 flex justify-between items-start text-[10px] font-black tracking-[0.2em] uppercase text-[#00008B]">
-        <span className="bg-[#00008B]/5 px-2 py-1 rounded-lg">{label}</span>
+      <div className="relative z-10 flex justify-between items-start text-[8px] font-black tracking-[0.15em] uppercase text-[#00008B]">
+        <span className="bg-[#00008B]/5 px-1.5 py-0.5 rounded-md">{label}</span>
         <span className="flex items-center gap-1 opacity-60">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#00008B] animate-pulse" />
+          <div className="w-1 h-1 rounded-full bg-[#00008B] animate-pulse" />
           VERIFIED
         </span>
       </div>
 
       <div className="relative z-10">
-        <p className="text-xl tracking-[0.25em] font-black mb-4 text-[#00008B]">{idNumber}</p>
+        <p className="text-sm tracking-[0.2em] font-black mb-2 text-[#00008B]">{idNumber}</p>
         <div className="flex justify-between items-end text-[#00008B]">
           <div className="flex flex-col">
-            <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest mb-0.5">Card Holder</span>
-            <span className="text-sm font-bold tracking-widest">{name}</span>
+            <span className="text-[6px] font-bold opacity-40 uppercase tracking-widest mb-0.5">Card Holder</span>
+            <span className="text-[10px] font-bold tracking-widest">{name}</span>
           </div>
           <div className="flex flex-col items-end">
-            <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest mb-0.5">Expires</span>
-            <span className="text-sm font-bold tracking-widest">{validThru}</span>
+            <span className="text-[6px] font-bold opacity-40 uppercase tracking-widest mb-0.5">Expires</span>
+            <span className="text-[10px] font-bold tracking-widest">{validThru}</span>
           </div>
         </div>
       </div>
