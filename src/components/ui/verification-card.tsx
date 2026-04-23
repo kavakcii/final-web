@@ -90,15 +90,15 @@ export function VerificationCard({
         </span>
       </div>
 
-      {/* Holographic Chip */}
-      <div className="relative z-10 w-8 h-6 rounded-md bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 shadow-inner overflow-hidden border border-yellow-700/20" style={{ transform: "translateZ(40px)" }}>
+      {/* Holographic Chip - Silver / Platinum */}
+      <div className="relative z-10 w-8 h-6 rounded-md bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500 shadow-inner overflow-hidden border border-slate-400/20" style={{ transform: "translateZ(40px)" }}>
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_50%,transparent_20%,black_100%)]" />
         <div className="grid grid-cols-3 grid-rows-2 h-full w-full opacity-30">
-            <div className="border-r border-b border-black/20" />
-            <div className="border-r border-b border-black/20" />
-            <div className="border-b border-black/20" />
-            <div className="border-r border-black/20" />
-            <div className="border-r border-black/20" />
+            <div className="border-r border-b border-black/10" />
+            <div className="border-r border-b border-black/10" />
+            <div className="border-b border-black/10" />
+            <div className="border-r border-black/10" />
+            <div className="border-r border-black/10" />
             <div className="" />
         </div>
       </div>
