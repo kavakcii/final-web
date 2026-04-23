@@ -13,7 +13,7 @@ import TradingViewWidget from "@/components/TradingViewWidget";
 import { TefasChart } from "@/components/TefasChart";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
-import { PortfolioHeatmap } from "@/components/PortfolioHeatmap";
+import { MiniBalanceHistoryChart } from "@/components/MiniBalanceHistoryChart";
 import { VerificationCard } from "@/components/ui/verification-card";
 import { GradientCard } from "@/components/ui/gradient-card";
 import Link from "next/link";
@@ -23,6 +23,8 @@ export default function DashboardPage() {
     const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
     const [isTefas, setIsTefas] = useState(false);
     const [news, setNews] = useState<any[]>([]);
+
+    const totalBalance = useMemo(() => stats?.[0]?.value || "₺0,00", [stats]);
 
     const maskedId = useMemo(() => {
         if (!user?.id) return "ID **** 0000";
@@ -138,10 +140,16 @@ export default function DashboardPage() {
                     <div className="flex flex-col gap-6">
                         <div className="relative group">
                             <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-56">
-                                <VerificationCard name={userName?.toUpperCase() || "FINAI USER"} idNumber={maskedId} label="FINAI PREMIUM" validThru="12/26" />
+                                <VerificationCard 
+                                    name={userName?.toUpperCase() || "FINAI USER"} 
+                                    idNumber={maskedId}
+                                    balance={totalBalance}
+                                    label="FINAI PREMIUM"
+                                    validThru="12/26"
+                                />
                             </Link>
-                            <div className="absolute left-0 top-0 w-56 h-36 bg-white/90 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[110%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden group/chart">
-                                <PortfolioHeatmap assets={myAssets} prices={prices} />
+                            <div className="absolute left-0 top-0 w-56 h-36 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[110%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden group/chart">
+                                <MiniBalanceHistoryChart history={portfolioHistory} />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/20 via-transparent to-transparent pointer-events-none" />
                             </div>
                         </div>
