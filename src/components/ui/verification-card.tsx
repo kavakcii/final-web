@@ -34,8 +34,8 @@ export function VerificationCard({
       {/* Decorative Neural Pattern */}
       <div className="absolute right-[-10%] bottom-[-10%] w-24 h-24 border-[12px] border-[#00008B]/[0.03] rounded-full pointer-events-none" />
 
-      {/* 2. Gökkuşağı Çizgisi (Rainbow Line at the top) */}
-      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-blue-400 to-purple-500" />
+      {/* 2. Lacivert Şerit (Navy Line at the top) */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-[#00008B]" />
 
       {/* Card Content */}
       <div className="relative z-10 flex justify-between items-start text-[8px] font-black tracking-[0.15em] uppercase text-[#00008B]">
