@@ -140,8 +140,13 @@ export default function DashboardPage() {
                             <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-56">
                                 <VerificationCard name={userName?.toUpperCase() || "FINAI USER"} idNumber={maskedId} label="FINAI PREMIUM" validThru="12/26" />
                             </Link>
-                            <div className="absolute left-0 top-0 w-56 h-36 bg-white border border-slate-100 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
+                            <div className="absolute left-0 top-0 w-56 h-36 bg-white/80 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[110%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden group/chart">
+                                <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 px-2 py-1 bg-[#00008B]/5 rounded-md backdrop-blur-md border border-[#00008B]/10">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                    <span className="text-[7px] font-black text-[#00008B] uppercase tracking-widest">Live Sync</span>
+                                </div>
                                 <BalanceChart totalBalance={stats?.[0]?.value || "₺0,00"} changePercent={stats?.[0]?.change || "%0"} isPositive={stats?.[0]?.isPositive ?? true} history={portfolioHistory} />
+                                <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/20 via-transparent to-transparent pointer-events-none" />
                             </div>
                         </div>
 
