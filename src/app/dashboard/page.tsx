@@ -1,5 +1,6 @@
 "use client";
 
+// Dashboard v1.1.5 - Optimized Build Sequence
 import { AuthComponent } from "@/components/ui/sign-up";
 import { TrendingUp, Activity, DollarSign, BarChart2, ArrowUpRight, ArrowDownRight, Wallet, Newspaper, Loader2, CheckCircle2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
@@ -33,7 +34,6 @@ export default function DashboardPage() {
             if (!isDataLoaded || !user) return;
             
             try {
-                // Fetch personalized news for the user
                 const res = await fetch(`/api/news?userId=${user.id}`);
                 const data = await res.json();
                 if (data.success) {
@@ -49,7 +49,6 @@ export default function DashboardPage() {
         fetchNews();
     }, [isDataLoaded, user, globalNews]);
 
-    // Group assets by symbol
     const groupedAssets = useMemo(() => {
         const groups: Record<string, { symbol: string, type: string, quantity: number, totalCost: number }> = {};
         myAssets.forEach((asset: Asset) => {
@@ -96,12 +95,9 @@ export default function DashboardPage() {
 
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-hidden">
-            {/* Background Glows */}
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
             
             <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
-                
-                {/* Loading Overlay */}
                 <AnimatePresence>
                     {!isDataLoaded && (
                         <motion.div
@@ -122,7 +118,6 @@ export default function DashboardPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Welcome Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
                     <div>
                         <h1 className="text-4xl font-bold text-[#00008B] flex items-center gap-3 tracking-tight">
@@ -139,26 +134,17 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* INTERACTIVE HEADER SECTION */}
                 <div className="flex flex-col lg:flex-row items-start gap-12">
-                    {/* LEFT: CARD & NEWS */}
                     <div className="flex flex-col gap-6">
                         <div className="relative group">
                             <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-56">
-                                <VerificationCard 
-                                    name={userName?.toUpperCase() || "FINAI USER"} 
-                                    idNumber={maskedId}
-                                    label="FINAI PREMIUM"
-                                    validThru="12/26"
-                                />
+                                <VerificationCard name={userName?.toUpperCase() || "FINAI USER"} idNumber={maskedId} label="FINAI PREMIUM" validThru="12/26" />
                             </Link>
-                            
                             <div className="absolute left-0 top-0 w-56 h-36 bg-white border border-slate-100 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[105%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
                                 <BalanceChart totalBalance={stats?.[0]?.value || "₺0,00"} changePercent={stats?.[0]?.change || "%0"} isPositive={stats?.[0]?.isPositive ?? true} history={portfolioHistory} />
                             </div>
                         </div>
 
-                        {/* COMPACT NEWS WIDGET */}
                         <div className="w-full lg:w-[450px] bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
@@ -167,17 +153,12 @@ export default function DashboardPage() {
                                 </div>
                                 <Link href="/dashboard/news" className="text-[9px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
                             </div>
-                            
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                                 {news && news.length > 0 ? news.slice(0, 4).map((item, idx) => (
                                     <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-2 hover:border-[#00008B]/20 transition-all">
                                         <div className="flex flex-col gap-0.5">
-                                            <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">
-                                                {new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                            <h4 className="text-[10px] font-bold text-slate-600 leading-tight group-hover:text-[#00008B] transition-colors line-clamp-2">
-                                                {item.title}
-                                            </h4>
+                                            <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">{new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                            <h4 className="text-[10px] font-bold text-slate-600 leading-tight group-hover:text-[#00008B] transition-colors line-clamp-2">{item.title}</h4>
                                         </div>
                                     </Link>
                                 )) : (
@@ -187,16 +168,12 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* RIGHT: PORTFOLIO WIDGET & CHART */}
                     <div className="flex-1 w-full space-y-8">
                         <DashboardPortfolioWidget groupedAssets={groupedAssets} prices={prices} stats={stats} onAssetSelect={handleAssetSelect} />
-                        
                         <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 flex items-center justify-center text-[#00008B]">
-                                        <BarChart2 className="w-6 h-6" />
-                                    </div>
+                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 flex items-center justify-center text-[#00008B]"><BarChart2 className="w-6 h-6" /></div>
                                     <h2 className="text-xl font-black text-[#00008B] tracking-tight">{isTefas ? 'Fon Analizi' : 'Hisse Analizi'}: {selectedAsset?.split(':')[1] || 'XU100'}</h2>
                                 </div>
                             </div>
