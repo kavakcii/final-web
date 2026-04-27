@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Brain, ArrowRight, Target, ShieldCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { PortfolioRecommendationModal } from "./PortfolioRecommendationModal";
 
 interface RiskTestWidgetProps {
   className?: string;
@@ -10,10 +11,12 @@ interface RiskTestWidgetProps {
   userProfile?: string;
   userScore?: number;
   investmentAmount?: string;
+  aiPortfolio?: any;
 }
 
-export function RiskTestWidget({ className, hasCompletedTest = false, userName, userProfile, userScore, investmentAmount }: RiskTestWidgetProps) {
+export function RiskTestWidget({ className, hasCompletedTest = false, userName, userProfile, userScore, investmentAmount, aiPortfolio }: RiskTestWidgetProps) {
   const displayName = userName || "Yatırımcı";
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const getProfileData = (profile?: string) => {
     if (profile?.includes("Korumacı")) return { color: "text-emerald-500", bg: "bg-emerald-50", border: "border-emerald-100", icon: ShieldCheck };
@@ -98,6 +101,22 @@ export function RiskTestWidget({ className, hasCompletedTest = false, userName, 
                  <span className={cn("text-xl font-black tracking-tight", pData.color)}>{investmentAmount || "0"} <span className="text-[10px] text-slate-400 ml-0.5">TL</span></span>
              </div>
         </div>
+
+        {/* AI Butonu */}
+        <button 
+            onClick={() => setIsModalOpen(true)}
+            disabled={!aiPortfolio}
+            className="mt-4 w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-[#00008B] to-blue-600 text-white rounded-xl text-xs font-bold tracking-[0.15em] uppercase shadow-lg shadow-[#00008B]/20 hover:-translate-y-0.5 transition-transform disabled:opacity-50 disabled:cursor-not-allowed group/ai"
+        >
+            <Brain className="w-4 h-4 group-hover/ai:scale-110 transition-transform" />
+            Yapay Zeka Portföy Önerimi Gör
+        </button>
+
+        <PortfolioRecommendationModal 
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            data={aiPortfolio}
+        />
     </div>
   );
 }

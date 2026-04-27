@@ -126,6 +126,16 @@ const QUESTIONS = [
       { text: "Her Ay Düzenli Yatırım", score: 0 },
       { text: "Üç Ayda Bir veya Yıllık Yatırım", score: 0 }
     ]
+  },
+  {
+    id: 12,
+    category: "Tercihler",
+    question: "Yatırımlarınızda faiz hassasiyetiniz (İslami finans prensiplerine uygunluk) var mı?",
+    type: "choice",
+    options: [
+      { text: "Evet, sadece faizsiz Katılım enstrümanlarına (Kira sertifikası, Altın, Katılım Endeksi) yatırım yaparım.", score: 0 },
+      { text: "Hayır, böyle bir hassasiyetim yok. Tüm piyasa enstrümanlarını değerlendirebilirim.", score: 0 }
+    ]
   }
 ];
 
@@ -184,50 +194,40 @@ export default function RiskTestPage() {
 
     let profile = { title: "", desc: "", icon: ShieldCheck, color: "", score: totalScore };
     
-    if (totalScore >= 9 && totalScore <= 14) {
-        profile = {
-            title: "Korumacı (Temkinli)",
-            desc: "Risk almayı sevmiyorsunuz. Sizin için anaparanın korunması, yüksek getiriden çok daha önemli. FinAi size düşük dalgalanmalı, güvenli limanlardan oluşan bir portföy hazırlayacaktır.",
-            icon: ShieldCheck,
-            color: "text-emerald-500",
-            score: totalScore
-        };
-    } else if (totalScore >= 15 && totalScore <= 21) {
-        profile = {
-            title: "Ilımlı (Dengeli)",
-            desc: "Risk ve getiri arasında dengeli bir yaklaşımınız var. Hem büyüme fırsatlarını değerlendirmek hem de aşırı kayıplardan korunmak istiyorsunuz. FinAi sizin için karma bir portföy sunacaktır.",
-            icon: Target,
-            color: "text-blue-500",
-            score: totalScore
-        };
-    } else {
-        profile = {
-            title: "Cesur (Atak)",
-            desc: "Yüksek getiri hedefleri için kısa vadeli dalgalanmaları göze alabiliyorsunuz. Büyüme odaklı fırsatları kovalıyorsunuz. FinAi sizin için dinamik ve atak bir portföy oluşturacaktır.",
-            icon: Zap,
-            color: "text-purple-500",
-            score: totalScore
-        };
-    }
+    try {
+        const aiResponse = await fetch("/api/ai-portfolio", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ answers })
+        });
+        const aiData = await aiResponse.json();
+        
+        if (aiData.profileName === "Defansif Stratejist") {
+            profile = { title: aiData.profileName, desc: aiData.aiAnalysis, icon: ShieldCheck, color: "text-emerald-500", score: totalScore };
+        } else if (aiData.profileName === "Optimum Denge") {
+            profile = { title: aiData.profileName, desc: aiData.aiAnalysis, icon: Target, color: "text-blue-500", score: totalScore };
+        } else {
+            profile = { title: aiData.profileName, desc: aiData.aiAnalysis, icon: Zap, color: "text-purple-500", score: totalScore };
+        }
 
-    setResultProfile(profile);
+        setResultProfile(profile);
 
-    // Supabase'e kaydet (eğer kullanıcı varsa)
-    if (user?.id) {
-        try {
+        // Supabase'e kaydet
+        if (user?.id) {
             await supabase.auth.updateUser({
                 data: {
                     riskProfile: profile.title,
                     riskScore: totalScore,
                     investmentAmount: answers[10]?.text || "Belirtilmedi",
                     investmentPeriod: answers[11]?.text || "Belirtilmedi",
+                    isIslamicFinance: answers[12]?.text?.includes("Evet") || false,
+                    aiPortfolio: aiData,
                     hasCompletedTest: true
                 }
             });
-            // Ayrica profil tablosu vb varsa oraya da yazilabilir.
-        } catch (error) {
-            console.error("Profil kaydedilirken hata:", error);
         }
+    } catch (error) {
+        console.error("AI Profil hesaplanırken hata:", error);
     }
     
     setIsSaving(false);

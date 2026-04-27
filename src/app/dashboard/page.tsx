@@ -187,6 +187,7 @@ export default function DashboardPage() {
                                 userProfile={user?.user_metadata?.riskProfile}
                                 userScore={user?.user_metadata?.riskScore}
                                 investmentAmount={user?.user_metadata?.investmentAmount}
+                                aiPortfolio={user?.user_metadata?.aiPortfolio}
                             />
                         </div>
                     </div>
