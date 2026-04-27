@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { Brain, TrendingUp, Sparkles, LineChart } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import Link from "next/link";
 
 interface Asset {
   asset: string;
@@ -70,6 +71,9 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                     </p>
                 </div>
             </div>
+            <Link href="/dashboard/test" className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-[10px] font-bold tracking-widest uppercase transition-colors">
+                Testi Yenile
+            </Link>
         </div>
 
         {/* Body Layout (2 Columns grid) */}
