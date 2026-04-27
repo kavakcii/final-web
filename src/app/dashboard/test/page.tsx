@@ -233,7 +233,7 @@ export default function RiskTestPage() {
     setIsSaving(false);
   };
 
-  const pageVariants = {
+  const pageVariants: any = {
     initial: (direction: number) => ({ x: direction > 0 ? 50 : -50, opacity: 0 }),
     animate: { x: 0, opacity: 1, transition: { duration: 0.4, ease: "easeOut" } },
     exit: (direction: number) => ({ x: direction > 0 ? -50 : 50, opacity: 0, transition: { duration: 0.3 } })
