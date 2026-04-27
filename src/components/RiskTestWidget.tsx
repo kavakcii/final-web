@@ -116,6 +116,8 @@ export function RiskTestWidget({ className, hasCompletedTest = false, userName, 
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             data={aiPortfolio}
+            userName={userName}
+            investmentAmount={investmentAmount}
         />
     </div>
   );

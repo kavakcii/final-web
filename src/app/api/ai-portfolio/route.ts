@@ -10,9 +10,11 @@ function generateFallbackPortfolio(answers: any) {
   let profileName = "Optimum Denge";
   let portfolio = [];
   let aiAnalysis = "";
+  let expectedAnnualReturn = 45;
 
   if (risk_score <= 14) {
     profileName = "Defansif Stratejist";
+    expectedAnnualReturn = 38;
     if (isIslamic) {
         aiAnalysis = "Riskten kaçınan ve sermayesini korumak isteyen yapınızı analiz ettim. İslami finans prensiplerinize uygun olarak, düşük dalgalanmalı ve güvenli limanlardan oluşan bir portföy hazırladım.";
         portfolio = [
@@ -30,6 +32,7 @@ function generateFallbackPortfolio(answers: any) {
     }
   } else if (risk_score >= 15 && risk_score <= 21) {
     profileName = "Optimum Denge";
+    expectedAnnualReturn = 52;
     if (isIslamic) {
         aiAnalysis = "Hem büyüme fırsatlarını yakalamak hem de riskleri dengelemek istediğinizi görüyorum. İslami finans prensipleriniz doğrultusunda, faizsiz büyüme potansiyeli sunan dengeli bir reçete oluşturdum.";
         portfolio = [
@@ -47,6 +50,7 @@ function generateFallbackPortfolio(answers: any) {
     }
   } else {
     profileName = "Alfa Odaklı";
+    expectedAnnualReturn = 78;
     if (isIslamic) {
         aiAnalysis = "Piyasa ortalamasının üzerinde getiri aradığınızı ve uzun vadeli vizyonunuzu analiz ettim. İslami hassasiyetinize uygun, tamamen büyüme ve yüksek teknoloji odaklı atak bir portföy tasarladım.";
         portfolio = [
@@ -64,7 +68,7 @@ function generateFallbackPortfolio(answers: any) {
     }
   }
 
-  return { profileName, aiAnalysis, portfolio };
+  return { profileName, aiAnalysis, expectedAnnualReturn, portfolio };
 }
 
 export async function POST(req: Request) {
@@ -92,6 +96,7 @@ export async function POST(req: Request) {
       {
         "profileName": "Profil Adı",
         "aiAnalysis": "FinAi ağzından profesyonel, doğrudan kullanıcıya hitap eden 2-3 cümlelik özel analiz metni.",
+        "expectedAnnualReturn": 55, // Kullanıcının profiline uygun portföyün tahmini YILLIK getiri yüzdesi (Sadece Number, örn: 45, 60, 75).
         "portfolio": [
           { "asset": "Varlık Adı", "percentage": Yüzde_Sayısı, "color": "#00008B", "description": "Kısa açıklama" }
         ]
