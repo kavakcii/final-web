@@ -16,6 +16,7 @@ import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget"
 import { MiniBalanceHistoryChart } from "@/components/MiniBalanceHistoryChart";
 import { VerificationCard } from "@/components/ui/verification-card";
 import { GradientCard } from "@/components/ui/gradient-card";
+import { RiskTestWidget } from "@/components/RiskTestWidget";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -152,6 +153,11 @@ export default function DashboardPage() {
                                 <MiniBalanceHistoryChart history={portfolioHistory} />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/20 via-transparent to-transparent pointer-events-none" />
                             </div>
+                        </div>
+
+                        {/* Yatırımcı Profil Testi Widget */}
+                        <div className="w-full lg:w-[450px]">
+                            <RiskTestWidget hasCompletedTest={false} userName={userName || user?.user_metadata?.full_name || userEmail?.split('@')[0]} />
                         </div>
 
                         <div className="w-full lg:w-[450px] bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
