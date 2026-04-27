@@ -155,10 +155,6 @@ export default function DashboardPage() {
                             </div>
                         </div>
 
-                        {/* Yatırımcı Profil Testi Widget */}
-                        <div className="w-full lg:w-[450px]">
-                            <RiskTestWidget hasCompletedTest={false} userName={userName || user?.user_metadata?.full_name || userEmail?.split('@')[0]} />
-                        </div>
 
                         <div className="w-full lg:w-[450px] bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
@@ -183,18 +179,15 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div className="flex-1 w-full space-y-8">
-                        <DashboardPortfolioWidget groupedAssets={groupedAssets} prices={prices} stats={stats} onAssetSelect={handleAssetSelect} />
-                        <div className="bg-white border border-slate-100 rounded-[2.5rem] p-8 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 flex items-center justify-center text-[#00008B]"><BarChart2 className="w-6 h-6" /></div>
-                                    <h2 className="text-xl font-black text-[#00008B] tracking-tight">{isTefas ? 'Fon Analizi' : 'Hisse Analizi'}: {selectedAsset?.split(':')[1] || 'XU100'}</h2>
-                                </div>
-                            </div>
-                            <div className="h-[450px] w-full rounded-2xl overflow-hidden border border-slate-50">
-                                {isTefas ? <TefasChart fundCode={selectedAsset || ""} /> : <TradingViewWidget symbol={selectedAsset || "FOREKS:XU100"} />}
-                            </div>
+                    <div className="flex-1 w-full flex items-start justify-center">
+                        <div className="w-full max-w-3xl">
+                            <RiskTestWidget 
+                                hasCompletedTest={user?.user_metadata?.hasCompletedTest || false} 
+                                userName={userName || user?.user_metadata?.full_name || userEmail?.split('@')[0]} 
+                                userProfile={user?.user_metadata?.riskProfile}
+                                userScore={user?.user_metadata?.riskScore}
+                                investmentAmount={user?.user_metadata?.investmentAmount}
+                            />
                         </div>
                     </div>
                 </div>
