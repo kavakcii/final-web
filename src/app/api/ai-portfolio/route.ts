@@ -77,7 +77,7 @@ export async function POST(req: Request) {
           { asset: "Para Piyasası Fonları", percentage: 40, color: "#00008B", description: "Risk almayı sevmediğiniz için bu fon, paranızı dalgalanmalardan koruyup her gün düzenli, stressiz bir getiri sağlar." },
           { asset: "Temettü Hisseleri (Defansif)", percentage: 30, color: "#3B82F6", description: "Sürdürülebilirlik odaklı karakterinizle uyumlu olarak, köklü şirketlerin her yıl hesabınıza düzenli nakit (temettü) yatırmasını hedefler." },
           { asset: "Kıymetli Madenler (Altın/Gümüş)", percentage: 20, color: "#10B981", description: "Güvenli liman arayışınızı yansıtır. Küresel krizlerde veya enflasyon artışında portföyünüzün değerini korur." },
-          { asset: "Kısa Vadeli Borçlanma Araçları", percentage: 10, color: "#F59E0B", description: "Esneklik ihtiyacınıza uygun olarak, paranızı bağlamadan düşük riskle değerlendirmenize olanak tanır." }
+          { asset: "Kısa Vadeli Tahvil / Bono", percentage: 10, color: "#F59E0B", description: "Esneklik ihtiyacınıza uygun olarak, paranızı bağlamadan düşük riskle değerlendirmenize olanak tanır." }
         ]);
       } else if (risk_score >= 15 && risk_score <= 21) {
         profileName = "Optimum Denge";
@@ -85,7 +85,7 @@ export async function POST(req: Request) {
         aiAnalysis = "Risk ve getiri beklentileriniz arasındaki o muhteşem dengeyi gördüm. Ne fırsatları kaçıran ne de gereksiz riskler alan stratejik karakteriniz için, hem büyüme hem koruma odaklı hibrit bir sepet tasarladım.";
         portfolio = applyVariation([
           { asset: "Büyüme (Growth) Hisseleri", percentage: 30, color: "#00008B", description: "Geleceğe yatırım yapmayı seven vizyoner yönünüz için, piyasa ortalamasının üzerinde büyüme potansiyeli taşıyan şirketler." },
-          { asset: "Eurobond / Döviz Fonları", percentage: 25, color: "#3B82F6", description: "Denge arayışınıza hitap eder; kur dalgalanmalarına karşı portföyünüzü hedge ederek döviz bazlı düzenli kupon getirisi sunar." },
+          { asset: "Eurobond", percentage: 25, color: "#3B82F6", description: "Denge arayışınıza hitap eder; kur dalgalanmalarına karşı portföyünüzü hedge ederek döviz bazlı düzenli kupon getirisi sunar." },
           { asset: "Temettü Hisseleri", percentage: 20, color: "#10B981", description: "Planlı yapınızla örtüşür; şirket kârlarından pay alarak yatırımınızın kendi kendini fonlamasını (pasif gelir) sağlar." },
           { asset: "Karma Fonlar", percentage: 15, color: "#F59E0B", description: "Dinamik piyasa koşullarına profesyonellerin hızla ayak uydurmasını sağlayarak, kontrol ihtiyacınızı güvene dönüştürür." },
           { asset: "Emtia Fonları", percentage: 10, color: "#8B5CF6", description: "Çeşitlendirmeye verdiğiniz önemin bir yansıması olarak, genel enflasyona karşı somut varlık koruması yaratır." }
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
         expectedAnnualReturn = 38;
         aiAnalysis = "İslami finans prensiplerinize bağlı kalarak riskten kaçınan yapınızı analiz ettim. Helal kazanç çerçevenizden çıkmadan sermayenizi güvenle koruyacak defansif bir yapı tasarladım.";
         portfolio = applyVariation([
-          { asset: "Katılım (Kira Sertifikası) Fonları", percentage: 45, color: "#00008B", description: "Hassasiyetlerinizle %100 uyumlu, faizsiz bir şekilde paranızın istikrarlı ve güvenli olarak büyümesini sağlar." },
+          { asset: "Kira Sertifikası (Sukuk)", percentage: 45, color: "#00008B", description: "Hassasiyetlerinizle %100 uyumlu, faizsiz bir şekilde paranızın istikrarlı ve güvenli olarak büyümesini sağlar." },
           { asset: "Katılım Endeksi Temettü Hisseleri", percentage: 30, color: "#3B82F6", description: "Planlı ve muhafazakar yapınıza uygun; reel ticaret yapan şirketlerin helal kârından düzenli pay (pasif gelir) almanızı sağlar." },
           { asset: "Fiziki / Kıymetli Madenler (Altın)", percentage: 25, color: "#10B981", description: "Geleneksel güvenli liman tercihinizdir; paranızın alım gücünü faizsiz olarak koruyup kriz anlarında kalkan olur." }
         ]);
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
           { asset: "Katılım Endeksi (Büyüme) Hisseleri", percentage: 35, color: "#00008B", description: "Gelişime açık karakteriniz için; faizsiz finans kriterlerine uyan, sağlam bilançolu şirketlerle uzun vadeli değer artışı sağlar." },
           { asset: "Altın ve Gümüş Fonları", percentage: 25, color: "#10B981", description: "Denge arayışınızla birebir örtüşür; kağıt varlıkların risklerine karşı portföyünüzün dayanıklılığını artırır." },
           { asset: "Kira Sertifikası (Sukuk)", percentage: 25, color: "#F59E0B", description: "Sabit getiri ihtiyacınızı İslami kurallara uygun şekilde, ticari varlıkların kiralanması modeliyle karşılar." },
-          { asset: "Gayrimenkul Yatırım Fonları", percentage: 15, color: "#3B82F6", description: "Reel varlıklara duyduğunuz güvene hitap eder; fiziksel mülklerin kira ve değer artışından faizsiz gelir sunar." }
+          { asset: "Gayrimenkul Hisseleri / Fonları", percentage: 15, color: "#3B82F6", description: "Reel varlıklara duyduğunuz güvene hitap eder; fiziksel mülklerin kira ve değer artışından faizsiz gelir sunar." }
         ]);
       } else {
         profileName = "Alfa Odaklı";
