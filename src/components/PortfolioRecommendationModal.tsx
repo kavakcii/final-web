@@ -237,35 +237,52 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                             <Sparkles className="w-3 h-3 text-emerald-500" /> Dağılımın Avantajları
                         </h3>
                         <ul className="text-[10px] text-slate-600 font-medium space-y-1.5 pl-1">
-                            {data.advantages && data.advantages.length > 0 ? (
-                                data.advantages.map((adv, idx) => (
-                                    <li key={idx} className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> {adv}</li>
-                                ))
-                            ) : (
-                                <>
-                                    {data.profileName === "Defansif Stratejist" && (
-                                        <>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Ana para garantisine en yakın, stressiz yatırım deneyimi.</li>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Anlık nakit ihtiyacında kayıpsız çıkış yapabilme özgürlüğü.</li>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Piyasa paniklerinden ve krizlerden izole edilmiş korunaklı yapı.</li>
-                                        </>
-                                    )}
-                                    {data.profileName === "Optimum Denge" && (
-                                        <>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Düşüşlerde koruyan, yükselişlerde kazandıran "Altın Oran" mimarisi.</li>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Kupon ve kâr payları ile düzenli, kesintisiz pasif nakit akışı.</li>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Küresel şoklara karşı döviz ve altın bazlı otomatik sigorta kalkanı.</li>
-                                        </>
-                                    )}
-                                    {data.profileName === "Alfa Odaklı" && (
-                                        <>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Uzun vadede piyasa ortalamasının çok üzerinde agresif kâr maksimizasyonu.</li>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Geleceğin dev şirketlerine (startup/teknoloji) henüz yolun başındayken ortak olma fırsatı.</li>
-                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Enflasyonu sadece yenmekle kalmayan, onu katlayarak ezen büyüme gücü.</li>
-                                        </>
-                                    )}
-                                </>
-                            )}
+                            {(() => {
+                                // Provide persuasive, varied advantages even for older saved data
+                                const advantagePools: Record<string, string[]> = {
+                                  "Defansif Stratejist": [
+                                    "Ana para garantisine en yakın, gece rahat uyumanızı sağlayacak stressiz yatırım mimarisi.",
+                                    "Anlık nakit ihtiyacında veya acil durumlarda hiçbir kayıp yaşamadan paranıza anında ulaşabilme özgürlüğü.",
+                                    "Küresel paniklerden, siyasi krizlerden ve borsa çöküşlerinden izole edilmiş %100 korunaklı yapı.",
+                                    "Enflasyon karşısında paranızın alım gücünü korurken, gereksiz risklerden tamamen arındırılmış sağlam temel.",
+                                    "Beklenmedik hayat olaylarına karşı 'finansal bir yastık' görevi gören, her dönem güven veren kalkan stratejisi.",
+                                    "Piyasadaki dalgalanmaları dışarıda bırakıp, paranızın yavaş ama en güvenli yoldan adım adım büyümesini garanti eden tasarım."
+                                  ],
+                                  "Optimum Denge": [
+                                    "Düşüşlerde koruyan, yükselişlerde kazandıran efsanevi 'Altın Oran' mimarisiyle yatırımın en akılcı hali.",
+                                    "Kuponlar ve hisse kâr payları (temettü) ile hayatınıza düzenli, kesintisiz bir pasif nakit akışı entegrasyonu.",
+                                    "Küresel şoklara karşı döviz ve değerli madenler üzerinden otomatik çalışan 'kendi kendini sigortalama' mekanizması.",
+                                    "Borsalar rekor kırarken kârdan mahrum bırakmayan, çakılırken ise zararı minimumda tutan mükemmel esneklik.",
+                                    "Paranızın sadece büyümesini değil, aynı zamanda size finansal bağımsızlık kazandıracak bir 'nakit makinesine' dönüşmesini sağlayan tasarım.",
+                                    "Tek bir varlığa bağlı kalmadan riskin tüm dünyaya yayılmasıyla elde edilen kusursuz ve huzurlu çeşitlendirme."
+                                  ],
+                                  "Alfa Odaklı": [
+                                    "Uzun vadede borsa ortalamasının çok üzerine çıkarak agresif ve sarsıcı bir kâr maksimizasyonu fırsatı.",
+                                    "Geleceğin dev şirketlerine (teknoloji/yapay zeka) henüz yolun başındayken ortak olma ve efsanevi büyümelere şahit olma ayrıcalığı.",
+                                    "Enflasyonu sadece yenmekle kalmayan, bileşik getirinin gücüyle onu katlayarak ezen rakipsiz büyüme motoru.",
+                                    "Piyasaların düştüğü günlerde bile, profesyonel fon yöneticilerinin özel taktikleriyle krizden fırsat yaratan elit bir strateji.",
+                                    "Finansal özgürlüğünüze giden yolu yıllarca kısaltabilecek, sıradan yatırımcıların cesaret edemediği olağanüstü kazanç potansiyeli.",
+                                    "Geleneksel ve hantal yatırımların aksine, dünyanın en hızlı büyüyen sektörlerinin tam merkezinde konumlanma avantajı."
+                                  ]
+                                };
+
+                                let displayAdvantages = data.advantages;
+
+                                if (!displayAdvantages || displayAdvantages.length === 0) {
+                                    const pool = advantagePools[data.profileName] || advantagePools["Optimum Denge"];
+                                    const seed = data.aiAnalysis ? data.aiAnalysis.length : 42;
+                                    const shuffledPool = [...pool].sort((a, b) => {
+                                        const hashA = (a.length * seed) % 100;
+                                        const hashB = (b.length * seed) % 100;
+                                        return hashA - hashB;
+                                    });
+                                    displayAdvantages = shuffledPool.slice(0, 3);
+                                }
+
+                                return displayAdvantages.map((adv, idx) => (
+                                    <li key={idx} className="flex items-start gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1 shrink-0" /> {adv}</li>
+                                ));
+                            })()}
                         </ul>
                     </div>
 
