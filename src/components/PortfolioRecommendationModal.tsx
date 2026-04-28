@@ -18,6 +18,12 @@ interface PortfolioData {
   expectedAnnualReturn?: number;
   portfolio: Asset[];
   advantages?: string[];
+  projections?: {
+    initial: number;
+    year1: number;
+    year3: number;
+    year5: number;
+  };
 }
 
 interface RecommendationCardProps {
@@ -33,31 +39,38 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
   const monthlyInvestmentAmount = parseFloat(cleanAmount) || 8000; 
 
   const simulations = useMemo(() => {
-    if (!data || !data.expectedAnnualReturn) return null;
-    
-    const r = data.expectedAnnualReturn / 100; 
-    const monthlyRate = r / 12; 
-
-    const calcFV = (months: number) => {
-        return monthlyInvestmentAmount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
-    };
-
-    const oneMonth = monthlyInvestmentAmount * (1 + monthlyRate);
-    const oneYear = calcFV(12);
-    const threeYears = calcFV(36);
-    const fiveYears = calcFV(60);
+    if (!data) return null;
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(val);
     };
 
+    // If backend provided projections based on initial capital, use them
+    if (data.projections) {
+        return [
+            { label: "Bugün", value: formatCurrency(data.projections.initial), growth: "Başlangıç" },
+            { label: "1 Yıl Sonra", value: formatCurrency(data.projections.year1), growth: `+%${((data.projections.year1 / data.projections.initial - 1) * 100).toFixed(0)}` },
+            { label: "3 Yıl Sonra", value: formatCurrency(data.projections.year3), growth: `+%${((data.projections.year3 / data.projections.initial - 1) * 100).toFixed(0)}` },
+            { label: "5 Yıl Sonra", value: formatCurrency(data.projections.year5), growth: `+%${((data.projections.year5 / data.projections.initial - 1) * 100).toFixed(0)}` }
+        ];
+    }
+
+    // Fallback to older monthly model if no projections in data
+    if (!data.expectedAnnualReturn) return null;
+    
+    const r = data.expectedAnnualReturn / 100; 
+    const monthlyRate = r / 12; 
+    const calcFV = (months: number) => {
+        return monthlyInvestmentAmount * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate) * (1 + monthlyRate);
+    };
+
     return [
-        { label: "1 Aylık", value: formatCurrency(oneMonth), growth: `+%${(monthlyRate*100).toFixed(1)}` },
-        { label: "1 Yıllık", value: formatCurrency(oneYear), growth: `+%${(data.expectedAnnualReturn).toFixed(0)}` },
-        { label: "3 Yıllık", value: formatCurrency(threeYears), growth: `+%${((Math.pow((1+r),3)-1)*100).toFixed(0)}` },
-        { label: "5 Yıllık", value: formatCurrency(fiveYears), growth: `+%${((Math.pow((1+r),5)-1)*100).toFixed(0)}` }
+        { label: "1 Aylık", value: formatCurrency(monthlyInvestmentAmount * (1 + monthlyRate)), growth: `+%${(monthlyRate*100).toFixed(1)}` },
+        { label: "1 Yıllık", value: formatCurrency(calcFV(12)), growth: `+%${(data.expectedAnnualReturn).toFixed(0)}` },
+        { label: "3 Yıllık", value: formatCurrency(calcFV(36)), growth: `+%${((Math.pow((1+r),3)-1)*100).toFixed(0)}` },
+        { label: "5 Yıllık", value: formatCurrency(calcFV(60)), growth: `+%${((Math.pow((1+r),5)-1)*100).toFixed(0)}` }
     ];
-  }, [data, monthlyInvestmentAmount]);
+  }, [data, monthlyInvestmentAmount, initialAmount]);
 
   const CustomTooltip = ({ active, payload, coordinate, viewBox }: any) => {
     if (active && payload && payload.length && coordinate) {
@@ -210,9 +223,9 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                             <div className="flex items-center justify-between mb-4">
                                 <div>
                                     <h3 className="text-[9px] font-black text-blue-200 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                                        <LineChart className="w-3 h-3" /> Büyüme Modeli
+                                        <LineChart className="w-3 h-3" /> Gerçekçi Büyüme Projeksiyonu
                                     </h3>
-                                    <p className="text-[9px] text-blue-100/70 font-medium">Her ay <span className="font-bold text-white">{monthlyInvestmentAmount.toLocaleString('tr-TR')} ₺</span> ile (Bileşik):</p>
+                                    <p className="text-[9px] text-blue-100/70 font-medium">Sermayenizin sektör bazlı büyüme tahminleri (Bileşik):</p>
                                 </div>
                             </div>
                             
