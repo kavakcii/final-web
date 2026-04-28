@@ -17,6 +17,7 @@ interface PortfolioData {
   aiAnalysis: string;
   expectedAnnualReturn?: number;
   portfolio: Asset[];
+  advantages?: string[];
 }
 
 interface RecommendationCardProps {
@@ -236,25 +237,33 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                             <Sparkles className="w-3 h-3 text-emerald-500" /> Dağılımın Avantajları
                         </h3>
                         <ul className="text-[10px] text-slate-600 font-medium space-y-1.5 pl-1">
-                            {data.profileName === "Defansif Stratejist" && (
+                            {data.advantages && data.advantages.length > 0 ? (
+                                data.advantages.map((adv, idx) => (
+                                    <li key={idx} className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> {adv}</li>
+                                ))
+                            ) : (
                                 <>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Ana para garantisine en yakın, stressiz yatırım deneyimi.</li>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Anlık nakit ihtiyacında kayıpsız çıkış yapabilme özgürlüğü.</li>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Piyasa paniklerinden ve krizlerden izole edilmiş korunaklı yapı.</li>
-                                </>
-                            )}
-                            {data.profileName === "Optimum Denge" && (
-                                <>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Düşüşlerde koruyan, yükselişlerde kazandıran "Altın Oran" mimarisi.</li>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Kupon ve kâr payları ile düzenli, kesintisiz pasif nakit akışı.</li>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Küresel şoklara karşı döviz ve altın bazlı otomatik sigorta kalkanı.</li>
-                                </>
-                            )}
-                            {data.profileName === "Alfa Odaklı" && (
-                                <>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Uzun vadede piyasa ortalamasının çok üzerinde agresif kâr maksimizasyonu.</li>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Geleceğin dev şirketlerine (startup/teknoloji) henüz yolun başındayken ortak olma fırsatı.</li>
-                                    <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Enflasyonu sadece yenmekle kalmayan, onu katlayarak ezen büyüme gücü.</li>
+                                    {data.profileName === "Defansif Stratejist" && (
+                                        <>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Ana para garantisine en yakın, stressiz yatırım deneyimi.</li>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Anlık nakit ihtiyacında kayıpsız çıkış yapabilme özgürlüğü.</li>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Piyasa paniklerinden ve krizlerden izole edilmiş korunaklı yapı.</li>
+                                        </>
+                                    )}
+                                    {data.profileName === "Optimum Denge" && (
+                                        <>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Düşüşlerde koruyan, yükselişlerde kazandıran "Altın Oran" mimarisi.</li>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Kupon ve kâr payları ile düzenli, kesintisiz pasif nakit akışı.</li>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Küresel şoklara karşı döviz ve altın bazlı otomatik sigorta kalkanı.</li>
+                                        </>
+                                    )}
+                                    {data.profileName === "Alfa Odaklı" && (
+                                        <>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Uzun vadede piyasa ortalamasının çok üzerinde agresif kâr maksimizasyonu.</li>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Geleceğin dev şirketlerine (startup/teknoloji) henüz yolun başındayken ortak olma fırsatı.</li>
+                                            <li className="flex items-start gap-1.5"><div className="w-1 h-1 rounded-full bg-emerald-400 mt-1.5 shrink-0" /> Enflasyonu sadece yenmekle kalmayan, onu katlayarak ezen büyüme gücü.</li>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </ul>

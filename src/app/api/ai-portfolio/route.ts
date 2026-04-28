@@ -16,6 +16,35 @@ export async function POST(req: Request) {
     let aiAnalysis = "";
     let expectedAnnualReturn = 45;
     let portfolio: any[] = [];
+    let advantages: string[] = [];
+
+    // Persuasive advantages pools
+    const advantagePools = {
+      "Defansif Stratejist": [
+        "Ana para garantisine en yakın, gece rahat uyumanızı sağlayacak stressiz yatırım mimarisi.",
+        "Anlık nakit ihtiyacında veya acil durumlarda hiçbir kayıp yaşamadan paranıza anında ulaşabilme özgürlüğü.",
+        "Küresel paniklerden, siyasi krizlerden ve borsa çöküşlerinden izole edilmiş %100 korunaklı yapı.",
+        "Enflasyon karşısında paranızın alım gücünü korurken, gereksiz risklerden tamamen arındırılmış sağlam temel.",
+        "Beklenmedik hayat olaylarına karşı 'finansal bir yastık' görevi gören, her dönem güven veren kalkan stratejisi.",
+        "Piyasadaki dalgalanmaları dışarıda bırakıp, paranızın yavaş ama en güvenli yoldan adım adım büyümesini garanti eden tasarım."
+      ],
+      "Optimum Denge": [
+        "Düşüşlerde koruyan, yükselişlerde kazandıran efsanevi 'Altın Oran' mimarisiyle yatırımın en akılcı hali.",
+        "Kuponlar ve hisse kâr payları (temettü) ile hayatınıza düzenli, kesintisiz bir pasif nakit akışı entegrasyonu.",
+        "Küresel şoklara karşı döviz ve değerli madenler üzerinden otomatik çalışan 'kendi kendini sigortalama' mekanizması.",
+        "Borsalar rekor kırarken kârdan mahrum bırakmayan, çakılırken ise zararı minimumda tutan mükemmel esneklik.",
+        "Paranızın sadece büyümesini değil, aynı zamanda size finansal bağımsızlık kazandıracak bir 'nakit makinesine' dönüşmesini sağlayan tasarım.",
+        "Tek bir varlığa bağlı kalmadan riskin tüm dünyaya yayılmasıyla elde edilen kusursuz ve huzurlu çeşitlendirme."
+      ],
+      "Alfa Odaklı": [
+        "Uzun vadede borsa ortalamasının çok üzerine çıkarak agresif ve sarsıcı bir kâr maksimizasyonu fırsatı.",
+        "Geleceğin dev şirketlerine (teknoloji/yapay zeka) henüz yolun başındayken ortak olma ve efsanevi büyümelere şahit olma ayrıcalığı.",
+        "Enflasyonu sadece yenmekle kalmayan, bileşik getirinin gücüyle onu katlayarak ezen rakipsiz büyüme motoru.",
+        "Piyasaların düştüğü günlerde bile, profesyonel fon yöneticilerinin özel taktikleriyle krizden fırsat yaratan elit bir strateji.",
+        "Finansal özgürlüğünüze giden yolu yıllarca kısaltabilecek, sıradan yatırımcıların cesaret edemediği olağanüstü kazanç potansiyeli.",
+        "Geleneksel ve hantal yatırımların aksine, dünyanın en hızlı büyüyen sektörlerinin tam merkezinde konumlanma avantajı."
+      ]
+    };
 
     // Helper to slightly randomize percentages but keep total 100
     const applyVariation = (basePortfolio: any[]) => {
@@ -112,11 +141,21 @@ export async function POST(req: Request) {
         expectedAnnualReturn -= 4;
     }
 
+    // Select 3 unique advantages pseudo-randomly based on userSeed
+    const pool = advantagePools[profileName as keyof typeof advantagePools] || advantagePools["Optimum Denge"];
+    const shuffledPool = [...pool].sort((a, b) => {
+        const hashA = (a.length * userSeed) % 100;
+        const hashB = (b.length * userSeed) % 100;
+        return hashA - hashB;
+    });
+    advantages = shuffledPool.slice(0, 3);
+
     return NextResponse.json({
         profileName,
         aiAnalysis,
         expectedAnnualReturn,
-        portfolio
+        portfolio,
+        advantages
     });
 
   } catch (error) {
