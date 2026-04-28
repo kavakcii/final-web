@@ -15,7 +15,8 @@ import {
     Database,
     FileText,
     Newspaper,
-    Bot
+    Bot,
+    LayoutGrid
 } from "lucide-react";
 import { FinancialTicker } from "@/components/FinancialTicker";
 
@@ -81,7 +82,7 @@ function DashboardShell({
         { icon: PieChart, label: "Portföyüm", href: "/dashboard/portfolio" },
         { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis" },
         { icon: Bot, label: "FinAi Robotum", href: "/dashboard/reports" },
-        { icon: Database, label: "Fon Verileri", href: "/dashboard/data" },
+        { icon: LayoutGrid, label: "Varlıklar", href: "/dashboard/data" },
         { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },
         { icon: Bell, label: "Bildirimler", href: "/dashboard/notifications" },
         { icon: Settings, label: "Ayarlar", href: "/dashboard/settings" }
