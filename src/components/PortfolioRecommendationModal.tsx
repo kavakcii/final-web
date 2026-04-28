@@ -70,7 +70,7 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
         { label: "3 Yıllık", value: formatCurrency(calcFV(36)), growth: `+%${((Math.pow((1+r),3)-1)*100).toFixed(0)}` },
         { label: "5 Yıllık", value: formatCurrency(calcFV(60)), growth: `+%${((Math.pow((1+r),5)-1)*100).toFixed(0)}` }
     ];
-  }, [data, monthlyInvestmentAmount, initialAmount]);
+  }, [data, monthlyInvestmentAmount]);
 
   const CustomTooltip = ({ active, payload, coordinate, viewBox }: any) => {
     if (active && payload && payload.length && coordinate) {
