@@ -12,20 +12,26 @@ export async function POST(req: Request) {
     const q5 = answers[5]?.score || 2; // Theme
     const q6 = answers[6]?.score || 2; // Crisis
     const q7 = answers[7]?.score || 2; // Psychology
+    const q9 = answers[9]?.score || 2; // Management Style
     const isIslamic = answers[8]?.text?.includes("Evet") || false;
     const initialCapital = Number(answers[10]?.text || 0);
 
     const totalScore = q1 + q2 + q3 + q4 + q5 + q6 + q7;
     const userSeed = totalScore + initialCapital;
 
-    // 2. Weighting Engine (Lego Model) with Real Sectors
+    // 2. Weighting Engine (Lego Model) with Real Sectors & TEFAS Umbrella Funds
     let assets = {
-        // Macro / Temel Varlıklar (Sabit Getirili ve Değerli Madenler)
-        "Para Piyasası Fonu / Repo": { weight: 0, color: "#94A3B8", desc: "Sıfır riskle, anlık dalgalanmalardan tamamen uzak, stressiz nakit park alanı." },
-        "Tahvil ve Bono Fonları": { weight: 0, color: "#64748B", desc: "Kısa ve orta vadede sermayeyi koruyan, risksiz sabit getiri enstrümanı." },
+        // TEFAS Şemsiye Fonları (Resmi Kategoriler)
+        "Para Piyasası Şemsiye Fonu": { weight: 0, color: "#94A3B8", desc: "Sıfır riskle, anlık dalgalanmalardan tamamen uzak, stressiz nakit park alanı." },
+        "Borçlanma Araçları Şemsiye Fonu": { weight: 0, color: "#64748B", desc: "Kısa ve orta vadede sermayeyi koruyan, risksiz sabit getiri enstrümanı." },
         "Eurobond": { weight: 0, color: "#3B82F6", desc: "Kur şoklarına karşı kalkan olan döviz bazlı kupon geliri." },
-        "Fiziki Altın ve Gümüş": { weight: 0, color: "#EAB308", desc: "Küresel krizler ve enflasyona karşı binlerce yıllık güvenilir liman." },
-        "Kira Sertifikası (Sukuk)": { weight: 0, color: "#0F172A", desc: "Faizsiz finansın temel taşı, sıfır riskli helal kazanç." },
+        "Kıymetli Madenler Şemsiye Fonu": { weight: 0, color: "#EAB308", desc: "Altın ve gümüş ağırlıklı, küresel krizlere karşı portföyün sigortası." },
+        "Hisse Senedi Şemsiye Fonu": { weight: 0, color: "#10B981", desc: "Profesyonel yöneticiler tarafından seçilen en iyi hisselerden oluşan sepet." },
+        "Değişken Şemsiye Fonu": { weight: 0, color: "#F59E0B", desc: "Piyasa koşullarına göre varlık dağılımını dinamik değiştiren esnek fonlar." },
+        "Karma Şemsiye Fonu": { weight: 0, color: "#F97316", desc: "Hisse ve tahvil dengesini profesyonelce koruyan hibrit yatırım aracı." },
+        "Fon Sepeti Şemsiye Fonu": { weight: 0, color: "#8B5CF6", desc: "Farklı fonları bir araya getirerek riski dağıtan otonom yönetim paketi." },
+        "Serbest Şemsiye Fonu": { weight: 0, color: "#EF4444", desc: "Nitelikli yatırımcılar için esnek ve yüksek getiri odaklı stratejiler." },
+        "Katılım Şemsiye Fonu": { weight: 0, color: "#0F172A", desc: "İslami finans prensiplerine tam uyumlu, faizsiz yatırım araçları." },
 
         // BIST Sektörleri (Non-Islamic / Karma)
         "Bankacılık Hisseleri": { weight: 0, color: "#00008B", desc: "Ekonominin bel kemiği, güçlü nakit akışı ve temettü potansiyeli yüksek finans devleri." },
@@ -42,7 +48,7 @@ export async function POST(req: Request) {
         "Ulaştırma Hisseleri": { weight: 0, color: "#0EA5E9", desc: "Küresel ticareti ve turizmi birbirine bağlayan devasa havacılık ve lojistik ağı." },
         "Girişim Sermayesi Yat. Ort.": { weight: 0, color: "#C084FC", desc: "Henüz bebek aşamasındaki projelere melek yatırımcı olarak girip x10 potansiyel arama." },
 
-        // İslami Katılım Varyasyonları
+        // İslami Katılım Varyasyonları (Özel Sektörler)
         "Katılım Bankacılığı Hisseleri": { weight: 0, color: "#00008B", desc: "Faizsiz prensiplerle büyüyen güçlü katılım bankaları." },
         "Faizsiz Bilişim ve Yazılım Hisseleri": { weight: 0, color: "#8B5CF6", desc: "İslami hassasiyetlere tam uyumlu teknoloji ve inovasyon yatırımları." },
         "Faizsiz Enerji ve Sanayi": { weight: 0, color: "#10B981", desc: "Katılım şartlarını sağlayan, reel ekonomi üreten büyük fabrikalar ve enerji tesisleri." },
@@ -59,37 +65,37 @@ export async function POST(req: Request) {
 
     // Q1: Yatırım Vadesi
     if (q1 === 1) { // Kısa Vade
-        if (!isIslamic) { addW("Para Piyasası Fonu / Repo", 50); addW("Tahvil ve Bono Fonları", 40); addW("Fiziki Altın ve Gümüş", 10); }
-        else { addW("Kira Sertifikası (Sukuk)", 70); addW("Fiziki Altın ve Gümüş", 30); }
+        if (!isIslamic) { addW("Para Piyasası Şemsiye Fonu", 50); addW("Borçlanma Araçları Şemsiye Fonu", 40); addW("Kıymetli Madenler Şemsiye Fonu", 10); }
+        else { addW("Katılım Şemsiye Fonu", 70); addW("Kıymetli Madenler Şemsiye Fonu", 30); }
     } else if (q1 === 2) { // Orta Vade
-        if (!isIslamic) { addW("Tahvil ve Bono Fonları", 20); addW("Eurobond", 20); addW("Holding Hisseleri", 15); addW("Otomotiv ve Yan Sanayi", 15); }
-        else { addW("Kira Sertifikası (Sukuk)", 30); addW("Katılım Bankacılığı Hisseleri", 15); addW("Faizsiz Enerji ve Sanayi", 15); }
+        if (!isIslamic) { addW("Borçlanma Araçları Şemsiye Fonu", 20); addW("Eurobond", 20); addW("Holding Hisseleri", 15); addW("Otomotiv ve Yan Sanayi", 15); }
+        else { addW("Katılım Şemsiye Fonu", 30); addW("Katılım Bankacılığı Hisseleri", 15); addW("Faizsiz Enerji ve Sanayi", 15); }
     } else { // Uzun Vade
-        if (!isIslamic) { addW("Bilişim ve Yazılım Hisseleri", 30); addW("Enerji Teknolojileri ve Üretim", 20); addW("Girişim Sermayesi Yat. Ort.", 10); }
-        else { addW("Faizsiz Bilişim ve Yazılım Hisseleri", 30); addW("Faizsiz Enerji ve Sanayi", 20); addW("Faizsiz Girişim Sermayesi", 10); }
+        if (!isIslamic) { addW("Hisse Senedi Şemsiye Fonu", 30); addW("Bilişim ve Yazılım Hisseleri", 20); addW("Enerji Teknolojileri ve Üretim", 20); }
+        else { addW("Katılım Şemsiye Fonu", 30); addW("Faizsiz Bilişim ve Yazılım Hisseleri", 30); addW("Faizsiz Enerji ve Sanayi", 20); }
     }
 
     // Q2: Drawdown Toleransı
     if (q2 === 1) { // Max %5
-        if (!isIslamic) { addW("Para Piyasası Fonu / Repo", 40); addW("Fiziki Altın ve Gümüş", 30); addW("Gıda ve İçecek / Perakende", 10); }
-        else { addW("Kira Sertifikası (Sukuk)", 50); addW("Fiziki Altın ve Gümüş", 30); addW("Faizsiz Gıda ve Perakende", 10); }
+        if (!isIslamic) { addW("Para Piyasası Şemsiye Fonu", 40); addW("Kıymetli Madenler Şemsiye Fonu", 30); }
+        else { addW("Katılım Şemsiye Fonu", 50); }
     } else if (q2 === 2) { // Max %20
-        if (!isIslamic) { addW("Bankacılık Hisseleri", 20); addW("Otomotiv ve Yan Sanayi", 20); addW("Eurobond", 20); }
+        if (!isIslamic) { addW("Karma Şemsiye Fonu", 30); addW("Bankacılık Hisseleri", 20); addW("Eurobond", 20); }
         else { addW("Faizsiz Enerji ve Sanayi", 30); addW("Katılım Gayrimenkul Fonları", 20); }
     } else { // Yüksek Tolerans
-        if (!isIslamic) { addW("Bilişim ve Yazılım Hisseleri", 25); addW("Savunma Hisseleri", 20); addW("Girişim Sermayesi Yat. Ort.", 15); }
+        if (!isIslamic) { addW("Serbest Şemsiye Fonu", 30); addW("Bilişim ve Yazılım Hisseleri", 25); addW("Savunma Hisseleri", 20); }
         else { addW("Faizsiz Bilişim ve Yazılım Hisseleri", 30); addW("Faizsiz Girişim Sermayesi", 20); }
     }
 
     // Q3: Income vs Growth (Nakit Akışı)
     if (q3 === 1) { // Temettü / Nakit
         if (!isIslamic) { addW("Bankacılık Hisseleri", 30); addW("Holding Hisseleri", 20); addW("Gayrimenkul Yatırım Ortaklıkları", 20); addW("Eurobond", 10); }
-        else { addW("Katılım Gayrimenkul Fonları", 30); addW("Kira Sertifikası (Sukuk)", 30); addW("Katılım Bankacılığı Hisseleri", 20); }
+        else { addW("Katılım Gayrimenkul Fonları", 30); addW("Katılım Şemsiye Fonu", 30); addW("Katılım Bankacılığı Hisseleri", 20); }
     } else if (q3 === 2) { // Dengeli
-        if (!isIslamic) { addW("Otomotiv ve Yan Sanayi", 20); addW("Ulaştırma Hisseleri", 20); addW("Enerji Teknolojileri ve Üretim", 10); }
-        else { addW("Faizsiz Enerji ve Sanayi", 30); addW("Katılım Gayrimenkul Fonları", 15); }
+        if (!isIslamic) { addW("Karma Şemsiye Fonu", 30); addW("Otomotiv ve Yan Sanayi", 20); addW("Ulaştırma Hisseleri", 20); }
+        else { addW("Katılım Şemsiye Fonu", 30); addW("Faizsiz Enerji ve Sanayi", 30); }
     } else { // Agresif Sermaye
-        if (!isIslamic) { addW("Bilişim ve Yazılım Hisseleri", 30); addW("Savunma Hisseleri", 20); }
+        if (!isIslamic) { addW("Hisse Senedi Şemsiye Fonu", 30); addW("Bilişim ve Yazılım Hisseleri", 30); addW("Serbest Şemsiye Fonu", 20); }
         else { addW("Faizsiz Bilişim ve Yazılım Hisseleri", 35); addW("Faizsiz Girişim Sermayesi", 15); }
     }
 
@@ -98,7 +104,7 @@ export async function POST(req: Request) {
         if (!isIslamic) { addW("Gıda ve İçecek / Perakende", 40); addW("İlaç ve Sağlık", 30); }
         else { addW("Faizsiz Gıda ve Perakende", 60); }
     } else if (q4 === 2) { // İhracat / Döviz
-        if (!isIslamic) { addW("Otomotiv ve Yan Sanayi", 40); addW("Ulaştırma Hisseleri", 30); }
+        if (!isIslamic) { addW("Otomotiv ve Yan Sanayi", 40); addW("Ulaştırma Hisseleri", 30); addW("Eurobond", 20); }
         else { addW("Faizsiz Enerji ve Sanayi", 50); } 
     } else { // Stratejik Tekel
         if (!isIslamic) { addW("Savunma Hisseleri", 40); addW("Enerji Teknolojileri ve Üretim", 30); }
@@ -108,7 +114,7 @@ export async function POST(req: Request) {
     // Q5: Şirket Değerleme Felsefesi (Value vs Growth)
     if (q5 === 1) { // Değer & Temettü
         if (!isIslamic) { addW("Bankacılık Hisseleri", 40); addW("Holding Hisseleri", 30); }
-        else { addW("Katılım Bankacılığı Hisseleri", 50); addW("Katılım Temettü Hisseleri", 20); }
+        else { addW("Katılım Bankacılığı Hisseleri", 50); }
     } else if (q5 === 2) { // Reel Varlık Koruma
         if (!isIslamic) { addW("Gayrimenkul Yatırım Ortaklıkları", 30); addW("Ana Metal ve İmalat Hisseleri", 20); addW("Taş, Toprak, Çimento Hisseleri", 20); }
         else { addW("Katılım Gayrimenkul Fonları", 50); }
@@ -119,26 +125,44 @@ export async function POST(req: Request) {
 
     // Q6: Kriz Reaksiyonu
     if (q6 === 1) { // Kaçış / Nakit
-        if (!isIslamic) { addW("Para Piyasası Fonu / Repo", 30); addW("Fiziki Altın ve Gümüş", 30); }
-        else { addW("Kira Sertifikası (Sukuk)", 40); addW("Fiziki Altın ve Gümüş", 30); }
+        if (!isIslamic) { addW("Para Piyasası Şemsiye Fonu", 30); addW("Kıymetli Madenler Şemsiye Fonu", 30); }
+        else { addW("Katılım Şemsiye Fonu", 40); addW("Kıymetli Madenler Şemsiye Fonu", 30); }
     } else if (q6 === 2) { // Bekle
-        if (!isIslamic) { addW("Holding Hisseleri", 20); addW("Eurobond", 20); }
-        else { addW("Katılım Gayrimenkul Fonları", 20); addW("Faizsiz Enerji ve Sanayi", 20); }
+        if (!isIslamic) { addW("Karma Şemsiye Fonu", 30); addW("Eurobond", 20); }
+        else { addW("Katılım Şemsiye Fonu", 30); addW("Katılım Gayrimenkul Fonları", 10); }
     } else { // Maliyet Düşür (Alım Fırsatı)
-        if (!isIslamic) { addW("Bilişim ve Yazılım Hisseleri", 20); addW("Ulaştırma Hisseleri", 20); }
+        if (!isIslamic) { addW("Hisse Senedi Şemsiye Fonu", 30); addW("Bilişim ve Yazılım Hisseleri", 20); }
         else { addW("Faizsiz Bilişim ve Yazılım Hisseleri", 30); }
     }
 
     // Q7: Psikoloji
     if (q7 === 1) { // Korkak/Korumacı
-        if (!isIslamic) { addW("Para Piyasası Fonu / Repo", 20); addW("Tahvil ve Bono Fonları", 20); }
-        else { addW("Kira Sertifikası (Sukuk)", 30); addW("Fiziki Altın ve Gümüş", 10); }
+        if (!isIslamic) { addW("Para Piyasası Şemsiye Fonu", 20); addW("Borçlanma Araçları Şemsiye Fonu", 20); }
+        else { addW("Katılım Şemsiye Fonu", 40); }
     } else if (q7 === 2) { // Rasyonel
-        if (!isIslamic) { addW("Bankacılık Hisseleri", 15); addW("Holding Hisseleri", 15); }
-        else { addW("Katılım Bankacılığı Hisseleri", 20); addW("Faizsiz Enerji ve Sanayi", 10); }
+        if (!isIslamic) { addW("Karma Şemsiye Fonu", 20); addW("Bankacılık Hisseleri", 15); }
+        else { addW("Katılım Bankacılığı Hisseleri", 20); }
     } else { // Cesur
-        if (!isIslamic) { addW("Girişim Sermayesi Yat. Ort.", 20); addW("Savunma Hisseleri", 20); }
+        if (!isIslamic) { addW("Serbest Şemsiye Fonu", 30); addW("Girişim Sermayesi Yat. Ort.", 20); }
         else { addW("Faizsiz Girişim Sermayesi", 25); }
+    }
+
+    // Q9: Yatırım Yönetim Modeli (Fon vs Hisse Karma Etkisi)
+    if (q9 === 1) { // Tam Otonom (Profesyonel Fon Yöneticilerine Bırak)
+        if (!isIslamic) { 
+            addW("Değişken Şemsiye Fonu", 50); 
+            addW("Fon Sepeti Şemsiye Fonu", 40); 
+            addW("Karma Şemsiye Fonu", 30); 
+            addW("Hisse Senedi Şemsiye Fonu", 20);
+        } else { 
+            addW("Katılım Şemsiye Fonu", 80); 
+        }
+    } else { // Dinamik Aktif (Hisseleri kendim seçerim)
+        if (!isIslamic) { 
+            addW("Hisse Senedi Şemsiye Fonu", 10); // Sadece düşük destek
+        } else {
+            addW("Katılım Şemsiye Fonu", 10);
+        }
     }
 
     // 3. Normalization (Convert weights to precise percentages summing to 100)
