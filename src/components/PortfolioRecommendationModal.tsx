@@ -105,11 +105,11 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
         </div>
 
         {/* Body Layout (2 Columns grid) - Boşluklar Yarıya İndirildi */}
-        <div className="flex-1 p-4 md:p-5 bg-white">
-            <div className="grid lg:grid-cols-2 gap-5">
+        <div className="flex-1 p-4 md:p-5 bg-white h-full">
+            <div className="grid lg:grid-cols-2 gap-5 h-full">
                 
                 {/* SOL SÜTUN */}
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-5 h-full">
                     {/* AI Analiz Kutusu */}
                     <div className="bg-[#00008B]/[0.02] border border-[#00008B]/10 rounded-2xl p-4 relative">
                         <div className="absolute -top-2.5 -left-2.5 w-6 h-6 rounded-full bg-[#00008B] flex items-center justify-center border-[3px] border-white shadow-md">
@@ -122,11 +122,11 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                     </div>
 
                     {/* Dağılım Listesi */}
-                    <div>
+                    <div className="flex-1 flex flex-col">
                         <h3 className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                            <TrendingUp className="w-3 h-3" /> Dağılım ve Kriz Stratejisi
+                            <TrendingUp className="w-3 h-3" /> Dağılım ve Kişisel Uyum
                         </h3>
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 flex-1 justify-between">
                             {data.portfolio.map((item, idx) => {
                                 const allocatedAmount = (monthlyInvestmentAmount * (item.percentage / 100)).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
                                 
@@ -142,10 +142,10 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                                             <div className="text-[9px] font-bold text-slate-400">Aylık: <span className="text-[#00008B]">{allocatedAmount}</span></div>
                                         </div>
                                     </div>
-                                    <div className="bg-white rounded-lg p-2 border border-red-50 flex items-start gap-1.5">
-                                        <Info className="w-3 h-3 text-red-400 shrink-0 mt-0.5" />
+                                    <div className="bg-white rounded-lg p-2 border border-[#00008B]/5 flex items-start gap-1.5">
+                                        <Info className="w-3 h-3 text-[#00008B]/60 shrink-0 mt-0.5" />
                                         <p className="text-[9px] text-slate-600 font-medium leading-tight">
-                                            <span className="font-bold text-red-600">Kriz Senaryosu:</span> {item.description}
+                                            <span className="font-bold text-[#00008B]">Neden Önerdik:</span> {item.description}
                                         </p>
                                     </div>
                                 </div>
@@ -156,7 +156,7 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
                 </div>
 
                 {/* SAĞ SÜTUN */}
-                <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-5 h-full">
                     
                     {/* Pasta Grafik - Yükseklik Yarıya İndi */}
                     <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center h-[220px] relative">

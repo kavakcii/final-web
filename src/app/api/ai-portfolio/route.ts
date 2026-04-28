@@ -8,79 +8,101 @@ export async function POST(req: Request) {
     const timeHorizon = answers[8]?.text || "Orta Vade"; 
     const risk_score = Object.values(answers).reduce((acc: number, curr: any) => acc + (curr.score || 0), 0) as number;
     
+    // Add a pseudo-random seed based on the user's risk score and the length of answers 
+    // to give slight variations to each user
+    const userSeed = risk_score + (answers[10]?.text?.length || 0);
+
     let profileName = "Optimum Denge";
     let aiAnalysis = "";
     let expectedAnnualReturn = 45;
     let portfolio: any[] = [];
 
+    // Helper to slightly randomize percentages but keep total 100
+    const applyVariation = (basePortfolio: any[]) => {
+        let currentTotal = 0;
+        const varied = basePortfolio.map((item, index) => {
+            // vary by -2 to +2 based on seed and index
+            let variation = (userSeed + index) % 5 - 2; 
+            // ensure we don't go below 5
+            if (item.percentage + variation < 5) variation = 0;
+            const newPercentage = item.percentage + variation;
+            currentTotal += newPercentage;
+            return { ...item, percentage: newPercentage };
+        });
+
+        // Fix the total to be exactly 100
+        let diff = 100 - currentTotal;
+        // Add/subtract diff to the largest allocation
+        if (diff !== 0) {
+            varied[0].percentage += diff;
+        }
+        return varied;
+    };
+
     if (!isIslamic) {
       if (risk_score <= 14) { 
         profileName = "Defansif Stratejist";
         expectedAnnualReturn = 38;
-        aiAnalysis = "Kısa vadeli beklentilerinizi ve riskten kaçınan yapınızı analiz ettim. Sermaye korumasına ve düşük dalgalanmaya büyük önem verdiğiniz için para piyasası fonları ve kısa vadeli borçlanma araçlarına ağırlık verdim.";
-        portfolio = [
-          { asset: "Para Piyasası Fonları", percentage: 40, color: "#00008B", description: "Piyasadaki sert rüzgarlardan asla etkilenmez. Borsa düştüğünde bile paranız güvende kalır ve her gün istikrarlı şekilde artmaya devam eder." },
-          { asset: "Kısa Vadeli Borçlanma Araçları Fonları", percentage: 30, color: "#3B82F6", description: "Olası piyasa krizlerinde kalkan görevi görür. Ana paranızı koruyarak risksiz, sağlam ve dalgalanmadan uzak bir büyüme garantiler." },
-          { asset: "Kıymetli Madenler Fonları", percentage: 20, color: "#10B981", description: "Tarihin en güvenli limanı. Ani enflasyon şoklarında veya küresel kriz anlarında portföyünüzün erimesini engelleyen mükemmel bir sigortadır." },
-          { asset: "Özel Sektör Borçlanma Araçları", percentage: 10, color: "#F59E0B", description: "Piyasa faizinin üzerinde, tahmin edilebilir ve güçlü nakit akışları yaratarak sürpriz düşüşlerde portföyünüzü dengeler." }
-        ];
+        aiAnalysis = "Kısa vadeli beklentilerinizi ve riskten kaçınan yapınızı analiz ettim. Sermaye korumasına ve düşük dalgalanmaya büyük önem verdiğiniz için paranızı enflasyona ezdirmeyecek ve stres yaratmayacak varlıklara yönlendirdim.";
+        portfolio = applyVariation([
+          { asset: "Para Piyasası Fonları", percentage: 40, color: "#00008B", description: "Risk almayı sevmediğiniz için bu fon, paranızı dalgalanmalardan koruyup her gün düzenli, stressiz bir getiri sağlar." },
+          { asset: "Temettü Hisseleri (Defansif)", percentage: 30, color: "#3B82F6", description: "Sürdürülebilirlik odaklı karakterinizle uyumlu olarak, köklü şirketlerin her yıl hesabınıza düzenli nakit (temettü) yatırmasını hedefler." },
+          { asset: "Kıymetli Madenler (Altın/Gümüş)", percentage: 20, color: "#10B981", description: "Güvenli liman arayışınızı yansıtır. Küresel krizlerde veya enflasyon artışında portföyünüzün değerini korur." },
+          { asset: "Kısa Vadeli Borçlanma Araçları", percentage: 10, color: "#F59E0B", description: "Esneklik ihtiyacınıza uygun olarak, paranızı bağlamadan düşük riskle değerlendirmenize olanak tanır." }
+        ]);
       } else if (risk_score >= 15 && risk_score <= 21) {
         profileName = "Optimum Denge";
         expectedAnnualReturn = 52;
-        aiAnalysis = "Risk ve getiri beklentileriniz arasındaki ideal dengeyi analiz ettim. Hem sermaye büyümesi hedefleyen hisse ve eurobond fonları hem de olası düşüşleri dengeleyecek karma bir dağılım hazırladım.";
-        portfolio = [
-          { asset: "Orta/Uzun Vadeli Borçlanma Araçları Fonları", percentage: 25, color: "#00008B", description: "Piyasa paniğe kapıldığında size düzenli nakit sağlar. Hisseler düştüğünde bile paranızın belirli bir kısmı kârlı kalmaya devam eder." },
-          { asset: "Eurobond Fonları", percentage: 20, color: "#3B82F6", description: "Döviz kurlarındaki ani fırlamalara karşı muazzam bir kalkan! TL değer kaybetse bile döviz bazlı kupon ödemeleriyle portföyünüzü korur." },
-          { asset: "Temettü (Dividend) Hisse Senedi Fonları", percentage: 20, color: "#10B981", description: "Borsada hisseler düşse dahi, bu köklü şirketler her yıl hesabınıza nakit kâr payı yatırmaya devam eder. Krizlerde bile pasif gelir sağlar." },
-          { asset: "Karma Fonlar", percentage: 15, color: "#F59E0B", description: "Yönetici zekası sayesinde piyasa düşerken hemen savunmaya geçer, piyasa yükselirken hisse ağırlığını artırarak kayıpları engeller." },
-          { asset: "Fon Sepeti Fonları", percentage: 10, color: "#8B5CF6", description: "Tüm paranızı tek bir ülkeye bağlamaz. Türkiye borsası düşerken, dünyadaki farklı varlıklardan kazanç sağlayarak riskinizi adeta sıfırlar." },
-          { asset: "Gayrimenkul Yatırım Fonları", percentage: 10, color: "#EC4899", description: "Gerçek ve somut varlıklara (bina, AVM vb.) yatırım yaparak, borsadaki sanal düşüşlerden korunmanızı sağlayan taş gibi bir yatırımdır." }
-        ];
+        aiAnalysis = "Risk ve getiri beklentileriniz arasındaki o muhteşem dengeyi gördüm. Ne fırsatları kaçıran ne de gereksiz riskler alan stratejik karakteriniz için, hem büyüme hem koruma odaklı hibrit bir sepet tasarladım.";
+        portfolio = applyVariation([
+          { asset: "Büyüme (Growth) Hisseleri", percentage: 30, color: "#00008B", description: "Geleceğe yatırım yapmayı seven vizyoner yönünüz için, piyasa ortalamasının üzerinde büyüme potansiyeli taşıyan şirketler." },
+          { asset: "Eurobond / Döviz Fonları", percentage: 25, color: "#3B82F6", description: "Denge arayışınıza hitap eder; kur dalgalanmalarına karşı portföyünüzü hedge ederek döviz bazlı düzenli kupon getirisi sunar." },
+          { asset: "Temettü Hisseleri", percentage: 20, color: "#10B981", description: "Planlı yapınızla örtüşür; şirket kârlarından pay alarak yatırımınızın kendi kendini fonlamasını (pasif gelir) sağlar." },
+          { asset: "Karma Fonlar", percentage: 15, color: "#F59E0B", description: "Dinamik piyasa koşullarına profesyonellerin hızla ayak uydurmasını sağlayarak, kontrol ihtiyacınızı güvene dönüştürür." },
+          { asset: "Emtia Fonları", percentage: 10, color: "#8B5CF6", description: "Çeşitlendirmeye verdiğiniz önemin bir yansıması olarak, genel enflasyona karşı somut varlık koruması yaratır." }
+        ]);
       } else {
         profileName = "Alfa Odaklı";
         expectedAnnualReturn = 78;
-        aiAnalysis = "Yüksek getiri iştahınızı ve dalgalanmaları tolere edebilme gücünüzü analiz ettim. Sektörel hisseler, serbest fonlar ve girişim sermayesi ile tamamen agresif büyümeye odaklanmış bir reçete sunuyorum.";
-        portfolio = [
-          { asset: "Teknoloji Hisse Senedi Fonları", percentage: 25, color: "#00008B", description: "Anlık düşüşler yaşansa da, uzun vadede yapay zeka ve dev teknoloji şirketlerinin milyar dolarlık kârlılıklarından maksimum pay almanızı sağlar." },
-          { asset: "Bankacılık Hisse Senedi Fonları", percentage: 20, color: "#3B82F6", description: "Piyasa faizleri değiştiğinde anında tepki verir. Dalgalanmaları doğru yakaladığınızda portföyünüze çok kısa sürede muazzam bir ivme katar." },
-          { asset: "Sanayi & Enerji Hisse Senedi Fonları", percentage: 15, color: "#10B981", description: "Ülke ekonomisinin belkemiğidir. Kriz anlarında sarsılsalar da, kriz bitiminde en hızlı toparlanan ve en agresif büyüyen şirketlerdir." },
-          { asset: "Değişken Fonlar", percentage: 15, color: "#F59E0B", description: "Profesyonel yöneticiler, borsa çakılırken saniyeler içinde paranızı güvenli limanlara taşıyarak zararı durdurur; yükselişte tekrar atağa geçer." },
-          { asset: "Girişim Sermayesi Yatırım Fonları", percentage: 10, color: "#8B5CF6", description: "Geleceğin Trendyol'larına veya Getir'lerine çok erken aşamada ortak olursunuz. Kısa vadeli borsa düşüşlerinden tamamen bağımsız, efsanevi kazanç potansiyeli taşır." },
-          { asset: "Serbest Fonlar", percentage: 10, color: "#EC4899", description: "Kurallar ve sınırlar yoktur. Piyasa çökerken bile 'açığa satış' gibi karmaşık stratejilerle düşüşten bile para kazanabilen elit bir araçtır." },
-          { asset: "Endeks Fonları", percentage: 5, color: "#EF4444", description: "Hiçbir yöneticinin inisiyatifine kalmadan, doğrudan borsanın uzun vadeli yükseliş trendini portföyünüze kopyalar." }
-        ];
+        aiAnalysis = "Yüksek getiri iştahınızı, cesaretinizi ve dalgalanmaları tolere edebilme gücünüzü analiz ettim. Piyasayı yenme arzunuza uygun olarak, agresif büyüme hisselerine ve teknoloji fonlarına odaklandım.";
+        portfolio = applyVariation([
+          { asset: "Teknoloji ve Yapay Zeka Hisseleri", percentage: 35, color: "#00008B", description: "Yenilikçi ve fırsat kovalayan yapınıza tam uyar. Geleceği şekillendiren devlerin büyümesinden maksimum alfa getirisi sağlar." },
+          { asset: "Yüksek Büyüme (Startup) Fonları", percentage: 20, color: "#3B82F6", description: "Erken aşamada değer yakalama hevesinizi yansıtır. Risk yüksek olsa da, hedeflediğiniz efsanevi kazanç potansiyelini sunar." },
+          { asset: "Küresel Hisse Senetleri", percentage: 20, color: "#10B981", description: "Sınır tanımayan vizyonunuzla eşleşir; sadece yerel piyasada kalmayıp dünyadaki fırsatlara ortak olmanızı sağlar." },
+          { asset: "Değişken / Serbest Fonlar", percentage: 15, color: "#F59E0B", description: "Agresif taktiklere uygun olarak, profesyonellerin limitsiz stratejilerle düşüşten bile kâr çıkarmasını hedefler." },
+          { asset: "Sanayi & Enerji Hisseleri", percentage: 10, color: "#8B5CF6", description: "Güçlü atakların arkasındaki sarsılmaz temeldir; ekonomik büyümenin dinamosu olan ana sektörlerle portföye ivme katar." }
+        ]);
       }
     } else { 
       if (risk_score <= 14) { 
         profileName = "Defansif Stratejist";
         expectedAnnualReturn = 38;
-        aiAnalysis = "İslami finans prensiplerinize uygun olarak riskten kaçınan yapınızı analiz ettim. Faizsiz nakit yönetimi araçları ve reel varlıklardan (Altın, Gayrimenkul) oluşan, sermayenizi güvenle koruyacak defansif bir dağılım tasarladım.";
-        portfolio = [
-          { asset: "Katılım Fonları", percentage: 50, color: "#00008B", description: "Piyasalar çakılsa bile paranız erimez. Faizsiz, katılım esaslarına dayalı sistemle ana paranızı güvenle muhafaza eder ve büyütür." },
-          { asset: "Kıymetli Madenler Fonları", percentage: 30, color: "#10B981", description: "Enflasyon fırladığında paranızın alım gücünü anında korur. Küresel krizlerde değerini ikiye, üçe katlama potansiyeline sahiptir." },
-          { asset: "Gayrimenkul Yatırım Fonları", percentage: 20, color: "#3B82F6", description: "Somut tuğlaya yatırımdır. Borsa endeksleri düşerken, gayrimenkulün kira gelirleri hesabınıza akmaya devam eder." }
-        ];
+        aiAnalysis = "İslami finans prensiplerinize bağlı kalarak riskten kaçınan yapınızı analiz ettim. Helal kazanç çerçevenizden çıkmadan sermayenizi güvenle koruyacak defansif bir yapı tasarladım.";
+        portfolio = applyVariation([
+          { asset: "Katılım (Kira Sertifikası) Fonları", percentage: 45, color: "#00008B", description: "Hassasiyetlerinizle %100 uyumlu, faizsiz bir şekilde paranızın istikrarlı ve güvenli olarak büyümesini sağlar." },
+          { asset: "Katılım Endeksi Temettü Hisseleri", percentage: 30, color: "#3B82F6", description: "Planlı ve muhafazakar yapınıza uygun; reel ticaret yapan şirketlerin helal kârından düzenli pay (pasif gelir) almanızı sağlar." },
+          { asset: "Fiziki / Kıymetli Madenler (Altın)", percentage: 25, color: "#10B981", description: "Geleneksel güvenli liman tercihinizdir; paranızın alım gücünü faizsiz olarak koruyup kriz anlarında kalkan olur." }
+        ]);
       } else if (risk_score >= 15 && risk_score <= 21) {
         profileName = "Optimum Denge";
         expectedAnnualReturn = 52;
-        aiAnalysis = "Risk ve getiri arasında kurduğunuz mantıksal dengeyi analiz ettim. Katılım endeksi hisseleri ve gayrimenkul gibi faizsiz büyüme potansiyeli sunan hem de enflasyona karşı koruyan dengeli bir reçete oluşturdum.";
-        portfolio = [
-          { asset: "Katılım Fonları", percentage: 40, color: "#00008B", description: "Hisse senedi piyasalarında panik satışları yaşandığında, portföyünüzün bu kısmı kaya gibi sağlam durarak toplam bakiyenizi dengeler." },
-          { asset: "Kıymetli Madenler Fonları", percentage: 25, color: "#10B981", description: "Her dönem değerlidir. Kağıt paraların pul olduğu günlerde, altın gümüş yatırımlarınız portföyünüzün kahramanı olur." },
-          { asset: "Temettü (Dividend) Hisse Senedi Fonları (Katılım Endeksi)", percentage: 20, color: "#F59E0B", description: "Katılım şartlarını sağlayan dev şirketler, borsa düşse dahi elde ettikleri reel kârları nakit olarak her yıl hesabınıza yatırır." },
-          { asset: "Gayrimenkul Yatırım Fonları", percentage: 15, color: "#3B82F6", description: "Borsadaki anlık krizlerden tamamen izoledir. Fiziksel mülklerin kira ve değer artışıyla sarsılmaz bir defans duvarı örer." }
-        ];
+        aiAnalysis = "Faizsiz yatırım prensipleriniz ile makul getiri hedefiniz arasındaki o mantıksal dengeyi analiz ettim. Hem ticari ortaklıklarla büyüyen hem de gayrimenkulle korunan dengeli bir sepet oluşturdum.";
+        portfolio = applyVariation([
+          { asset: "Katılım Endeksi (Büyüme) Hisseleri", percentage: 35, color: "#00008B", description: "Gelişime açık karakteriniz için; faizsiz finans kriterlerine uyan, sağlam bilançolu şirketlerle uzun vadeli değer artışı sağlar." },
+          { asset: "Altın ve Gümüş Fonları", percentage: 25, color: "#10B981", description: "Denge arayışınızla birebir örtüşür; kağıt varlıkların risklerine karşı portföyünüzün dayanıklılığını artırır." },
+          { asset: "Kira Sertifikası (Sukuk)", percentage: 25, color: "#F59E0B", description: "Sabit getiri ihtiyacınızı İslami kurallara uygun şekilde, ticari varlıkların kiralanması modeliyle karşılar." },
+          { asset: "Gayrimenkul Yatırım Fonları", percentage: 15, color: "#3B82F6", description: "Reel varlıklara duyduğunuz güvene hitap eder; fiziksel mülklerin kira ve değer artışından faizsiz gelir sunar." }
+        ]);
       } else {
         profileName = "Alfa Odaklı";
         expectedAnnualReturn = 78;
-        aiAnalysis = "Helal kazanç ve uzun vadeli yüksek büyüme vizyonunuzu analiz ettim. Tamamen katılım uyumlu teknoloji, sanayi şirketleri ve girişim sermayesine odaklanan oldukça atak bir portföy tasarladım.";
-        portfolio = [
-          { asset: "Teknoloji Hisse Senedi Fonları (Katılım Uyumlu)", percentage: 30, color: "#00008B", description: "Kısa süreli düzeltmelere takılmayın! İslami şartlara uygun milyar dolarlık teknoloji devlerinin büyüme serüveninden efsanevi kârlar sağlar." },
-          { asset: "Sanayi Hisse Senedi Fonları (Katılım Uyumlu)", percentage: 25, color: "#3B82F6", description: "Borsa dalgalansa bile bu şirketler gerçek fabrikalarda üretim yapar, ihracat yapar. Kriz sonrası en agresif yükselen sektörlerdir." },
-          { asset: "Ulaştırma & Enerji Hisse Senedi Fonları (Katılım Uyumlu)", percentage: 20, color: "#F59E0B", description: "Maliyet artışlarını direkt fiyatlarına yansıtabildikleri için enflasyon şoklarına karşı mükemmel koruma ve büyüme fırsatı sunarlar." },
-          { asset: "Girişim Sermayesi Yatırım Fonları", percentage: 15, color: "#10B981", description: "Borsada işlem görmeyen muazzam startuplara ortak olursunuz. Borsadaki düşüşlerden zerre etkilenmeden değerine değer katar." },
-          { asset: "Katılım Endeksi Fonları", percentage: 10, color: "#8B5CF6", description: "Tek tek hisse seçme stresini sıfırlar. Borsa toparlandığında endeksin tüm coşkusunu zahmetsizce portföyünüze taşır." }
-        ];
+        aiAnalysis = "Helal kazanç prensibinizden taviz vermeden, uzun vadeli ve efsanevi yüksek büyüme vizyonunuzu analiz ettim. Cesur yapınıza uygun, katılım şartlarını sağlayan agresif şirket hisselerine odaklandım.";
+        portfolio = applyVariation([
+          { asset: "Teknoloji Hisseleri (Katılım Uyumlu)", percentage: 35, color: "#00008B", description: "İnovasyona olan güçlü inancınız için; geleceği yazan ancak faizsiz prensiplere uyan global/yerel şirketlere yatırım." },
+          { asset: "Sanayi & Üretim Hisseleri", percentage: 25, color: "#3B82F6", description: "Risk alabilen dinamik yapınıza tam uyar; ekonominin çarklarını döndüren fabrikalara güçlü ortaklıklar sağlar." },
+          { asset: "Girişim Sermayesi (Faizsiz)", percentage: 20, color: "#10B981", description: "Fırsatçı ve vizyoner tarafınızı besler; henüz borsaya açılmamış yüksek potansiyelli startuplara İslami usullere göre yatırım yapar." },
+          { asset: "Katılım Hisse Senedi Fonları", percentage: 20, color: "#8B5CF6", description: "Agresif stratejinizin denge unsurudur; profesyonel yöneticilerin anlık fırsatları değerlendirdiği esnek fonlarla kazancı maksimize eder." }
+        ]);
       }
     }
 
