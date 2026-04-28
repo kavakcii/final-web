@@ -137,6 +137,34 @@ export function DashboardPortfolioWidget({ groupedAssets = [], prices = {}, stat
         }
     };
 
+    const CustomWidgetTooltip = ({ active, payload, coordinate, viewBox }: any) => {
+        if (active && payload && payload.length && coordinate) {
+            const pData = payload[0].payload;
+            const cx = viewBox?.width ? viewBox.width / 2 : 150;
+            const cy = viewBox?.height ? viewBox.height / 2 : 110;
+            const dx = coordinate.x - cx;
+            const dy = coordinate.y - cy;
+            const angle = Math.atan2(dy, dx);
+            const pushDistance = 60;
+            const shiftX = Math.cos(angle) * pushDistance;
+            const shiftY = Math.sin(angle) * pushDistance;
+
+            return (
+                <div 
+                    className="bg-white/95 backdrop-blur-md p-3 border border-slate-100 rounded-xl shadow-xl min-w-[120px] pointer-events-none transition-transform duration-100"
+                    style={{ transform: `translate(${shiftX}px, ${shiftY}px)` }}
+                >
+                    <p className="font-bold text-slate-800 text-xs mb-1.5">{pData.name}</p>
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">Oran:</span>
+                        <span className="text-sm font-black" style={{ color: pData.fill || '#00008B' }}>%{pData.value}</span>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
+
     if (isLoading) return <div className="p-8 text-center"><RotateCcw className="w-8 h-8 animate-spin mx-auto text-[#00008B] opacity-20" /></div>;
 
     return (
@@ -224,9 +252,7 @@ export function DashboardPortfolioWidget({ groupedAssets = [], prices = {}, stat
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
-                                    <Tooltip 
-                                        contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    />
+                                    <Tooltip content={<CustomWidgetTooltip />} />
                                 </RechartsPie>
                             </ResponsiveContainer>
                             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">

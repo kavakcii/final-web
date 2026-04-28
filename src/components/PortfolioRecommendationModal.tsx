@@ -58,21 +58,36 @@ export function PortfolioRecommendationModal({ data, userName, investmentAmount 
     ];
   }, [data, monthlyInvestmentAmount]);
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+  const CustomTooltip = ({ active, payload, coordinate, viewBox }: any) => {
+    if (active && payload && payload.length && coordinate) {
       const pData = payload[0].payload as Asset;
       const allocatedAmount = (monthlyInvestmentAmount * (pData.percentage / 100)).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 });
       
+      const cx = viewBox?.width ? viewBox.width / 2 : 150;
+      const cy = viewBox?.height ? viewBox.height / 2 : 110;
+      
+      const dx = coordinate.x - cx;
+      const dy = coordinate.y - cy;
+      const angle = Math.atan2(dy, dx);
+      
+      // Calculate a shift to push the tooltip box to the outer edges
+      const pushDistance = 60;
+      const shiftX = Math.cos(angle) * pushDistance;
+      const shiftY = Math.sin(angle) * pushDistance;
+
       return (
-        <div className="bg-white/95 backdrop-blur-md p-2 border border-slate-100 rounded-xl shadow-xl min-w-[140px] -mt-16 pointer-events-none">
-          <p className="font-black text-slate-800 text-[10px] mb-1 leading-tight">{pData.asset}</p>
+        <div 
+          className="bg-white/95 backdrop-blur-md p-2.5 border border-slate-100 rounded-xl shadow-2xl min-w-[140px] pointer-events-none transition-transform duration-100"
+          style={{ transform: `translate(${shiftX}px, ${shiftY}px)` }}
+        >
+          <p className="font-black text-slate-800 text-[11px] mb-1.5 leading-tight">{pData.asset}</p>
           <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[9px] font-bold text-slate-400">Oran:</span>
-              <span className="text-[10px] font-black" style={{ color: pData.color }}>%{pData.percentage}</span>
+              <span className="text-[10px] font-bold text-slate-400">Oran:</span>
+              <span className="text-[11px] font-black" style={{ color: pData.color }}>%{pData.percentage}</span>
           </div>
-          <div className="flex items-center justify-between pt-1 border-t border-slate-100">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Aktarım:</span>
-              <span className="text-[10px] font-black text-[#00008B]">{allocatedAmount}</span>
+          <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Aktarım:</span>
+              <span className="text-[11px] font-black text-[#00008B]">{allocatedAmount}</span>
           </div>
         </div>
       );
