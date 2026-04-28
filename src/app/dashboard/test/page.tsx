@@ -12,130 +12,107 @@ import { cn } from "@/lib/utils";
 const QUESTIONS = [
   {
     id: 1,
-    category: "Davranışsal",
-    question: "Elinize geçen birikimi nasıl değerlendirirsiniz?",
+    category: "Yatırım Vadesi (Horizon)",
+    question: "Oluşturacağımız bu portföydeki sermayenizi ne kadar süreyle piyasada tutmayı hedefliyorsunuz?",
     type: "choice",
     options: [
-      { text: "Tatil ve eğlence için biriktirdiğim parayı harcarım. Bu kadar uzun vadeli bir yatırımı tercih etmem.", score: 1 },
-      { text: "Birikimlerimi son model dev ekran bir televizyon için kullanırım. Ev yatırımını şimdilik düşünmem.", score: 2 },
-      { text: "İyi bir yatırım fırsatı. Bir miktar kredi kullanıp kemer sıkmam gerekir ama ev için buna değer.", score: 3 }
+      { text: "Kısa Vade (0-1 Yıl) - Beklenmedik nakit ihtiyaçlarım doğabilir, likidite esnekliği benim için kritiktir.", score: 1 },
+      { text: "Orta Vade (1-3 Yıl) - Paraya yakın zamanda ihtiyacım olmayacak, stratejik fırsatların olgunlaşmasını bekleyebilirim.", score: 2 },
+      { text: "Uzun Vade (3 Yıl ve Üzeri) - Bu tamamen geleceğe yatırımdır. Kısa vadeli döngüleri umursamadan bileşik getiri hedeflerim.", score: 3 }
     ]
   },
   {
     id: 2,
-    category: "Davranışsal",
-    question: "Tuttuğunuz takımın yöneticisi olsanız önceliğiniz ne olurdu?",
+    category: "Maksimum Kayıp Töleransı (Drawdown Limit)",
+    question: "Piyasalarda yaşanabilecek şiddetli bir düzeltme hareketinde, portföyünüzün geçici olarak yüzde kaç değer kaybetmesini tolere edebilirsiniz?",
     type: "choice",
     options: [
-      { text: "Kulübün geleceğini garanti altına alacak alt yapı oyuncularıyla kadroyu sağlamlaştırmayı tercih ederim.", score: 1 },
-      { text: "Kulübümü bu sene şampiyonluğa götürecek stratejik transferler yapılmasını tercih ederim.", score: 2 },
-      { text: "Kulübümün önümüzdeki haftaki derbi maçını her ne pahasına olursa olsun kazanmasını isterim.", score: 3 }
+      { text: "Maksimum %5 - %10 | Sermayemi korumak önceliğimdir. Uykularımı kaçıracak dalgalanmalardan kesinlikle uzak durmak isterim.", score: 1 },
+      { text: "Maksimum %15 - %25 | Makul oranda riski kabul ediyorum. Kalıcı getiri için geçici dalgalanmaları göğüsleyebilirim.", score: 2 },
+      { text: "%30 ve Üzeri | Yüksek getiri için yüksek riski alırım. Kriz anlarında bile stratejime sadık kalarak satmam, gerekirse ekleme yaparım.", score: 3 }
     ]
   },
   {
     id: 3,
-    category: "Risk Toleransı",
-    question: "Yatırım kararlarında risk ve getiri tercihiniz nasıldır?",
+    category: "Getiri Modeli ve Nakit Akışı",
+    question: "Yatırımlarınızın size nasıl bir dönüş sağlamasını tercih edersiniz?",
     type: "choice",
     options: [
-      { text: "Anaparanızın tamamı kadar kesin kazanç.", score: 1 },
-      { text: "%25 ihtimal ile anaparanızın 4 katını kazanma ya da %75 ihtimal ile tamamını kaybetme.", score: 2 },
-      { text: "%10 ihtimal ile anaparanızın 10 katını kazanma ya da %90 ihtimal ile tamamını kaybetme.", score: 3 }
+      { text: "Düzenli Nakit Akışı (Pasif Gelir) - Şirketlerden kâr payı (temettü) veya tahvillerden düzenli kupon ödemesi almayı hedeflerim.", score: 1 },
+      { text: "Dengeli Karma - Hem düzenli nakit akışı olsun hem de portföyümün anaparası enflasyon üzerinde büyümeye devam etsin.", score: 2 },
+      { text: "Maksimum Sermaye Büyümesi - Nakit akışına ihtiyacım yok. Tüm kâr yatırıma dönerek şirketin piyasa değerinin agresif büyümesine yansısın.", score: 3 }
     ]
   },
   {
     id: 4,
-    category: "Davranışsal",
-    question: "Beklenmedik bir finansal krizde (örn. işten çıkma) tatil planınızı ne yaparsınız?",
+    category: "Makroekonomik Beklenti ve Korunma",
+    question: "Olası bir ekonomik daralma (resesyon) ve kur şoku senaryosunda, şirketlerin hangi finansal veya operasyonel özelliğine daha çok güvenirsiniz?",
     type: "choice",
     options: [
-      { text: "Tatilimi iptal eder, hemen yeni bir iş aramaya başlarım.", score: 1 },
-      { text: "Planladığım gibi tatile giderim ancak tatilde ekstra masraflardan kaçınırım.", score: 2 },
-      { text: "Tatilimi uzatırım, yeterli birikimim var.", score: 3 }
+      { text: "Zorunlu Tüketim (Defansif) - Sadece zorunlu ihtiyaç ürünleri satmasına ve krizde bile talebin asla sıfırlanmamasına.", score: 1 },
+      { text: "Döviz Pozisyonu (İhracat) - Yurt dışına satış yaparak güçlü döviz geliri elde etmesine ve kur şoklarından korunmasına.", score: 2 },
+      { text: "Stratejik Tekel - Devlet destekli, sektöründe tekel (fiyat belirleyici) konumunda veya vazgeçilmez bir altyapı sunmasına.", score: 3 }
     ]
   },
   {
     id: 5,
-    category: "Davranışsal",
-    question: "İşe giderken trafikte sıkıştığınızı fark ettiğinizde ne yaparsınız?",
+    category: "Şirket Değerleme Felsefesi (Value vs Growth)",
+    question: "Bir şirkete uzun vadeli ortak olacaksanız, şirketin finansal rasyoları ve politikası nasıl olmalıdır?",
     type: "choice",
     options: [
-      { text: "İşe geç kalacağımı bilsem de bildiğim yoldan devam ederim.", score: 1 },
-      { text: "Navigasyonu açıp alternatif yol aramaya başlarım.", score: 2 },
-      { text: "Önümdeki aracın saptığı ilk ara yola ben de saparım.", score: 3 }
+      { text: "Değer (Value) ve Temettü - Varlıklarına göre ucuz kalmış (Düşük PD/DD), istikrarlı ve düzenli nakit (temettü) dağıtan köklü şirketler.", score: 1 },
+      { text: "Reel Varlık Koruma - Sahip olduğu fiziksel üretim tesisleri, arsalar ve gayrimenkuller ile enflasyona karşı somut/fiziki koruma sağlayan şirketler.", score: 2 },
+      { text: "Büyüme (Growth) ve İnovasyon - Kâr dağıtmak yerine tüm gelirini Ar-Ge'ye harcayan, agresif ve devasa büyüme çarpanına sahip şirketler.", score: 3 }
     ]
   },
   {
     id: 6,
-    category: "Risk Toleransı",
-    question: "Yeni aldığınız bir varlığın değeri kısa sürede çok artarsa ne yaparsınız?",
+    category: "Kriz Yönetimi (Reaksiyon)",
+    question: "Küresel bir ekonomik kriz haberiyle borsa endeksleri bir haftada %15 düştüğünde ilk tepkiniz ne olur?",
     type: "choice",
     options: [
-      { text: "Satmayı düşünmem, değerini korusun yeter.", score: 1 },
-      { text: "Satar ve kârımı cebime koyarak farklı bir yatırıma yönlendiririm.", score: 2 },
-      { text: "Fiyatın daha da yükseleceğini düşündüğümden satmak için beklemeyi tercih ederim.", score: 3 }
+      { text: "Derhal zararı keser, kalan paramı nakde veya tamamen güvenli limanlara (altın/para piyasası) park ederim.", score: 1 },
+      { text: "Hiçbir şey yapmam. Portföyümün çeşitlendirmesine güvenir ve fırtınanın dinmesini beklerim.", score: 2 },
+      { text: "Mükemmel bir alım fırsatı! Kenardaki nakdimi kullanarak maliyet düşürür ve iskontolu hisseleri toplarım.", score: 3 }
     ]
   },
   {
     id: 7,
-    category: "Teknoloji",
-    question: "Blokzincir ve yeni nesil teknolojilere yatırım bakış açınız nedir?",
+    category: "Yatırım Psikolojisi",
+    question: "Aşağıdaki ifadelerden hangisi sizin yatırımcı kimliğinizi en iyi yansıtır?",
     type: "choice",
     options: [
-      { text: "Yaygınlaşacağını düşünmediğim için yatırım yapmayı planlamıyorum.", score: 1 },
-      { text: "İlgi artıyor ancak çok bilgi sahibi değilim. Yeterli bilgi edindiğimde karar veririm.", score: 2 },
-      { text: "Yakın gelecekte günlük hayatımızı şekillendireceğini düşündüğüm için yatırım yaparım.", score: 3 }
+      { text: "Kaybetme korkum, kazanma arzumdan çok daha ağır basar. Güvende hissetmek benim için en kritik noktadır.", score: 1 },
+      { text: "Rasyonel ve analitik düşünürüm. Risk ile getiriyi bir teraziye koyar, matematiğin gösterdiği optimum yoldan ilerlerim.", score: 2 },
+      { text: "Büyük oynamayı severim. Risk almadan sıradanlıktan kurtulunamayacağını bilir, cesur pozisyonlar almaktan çekinmem.", score: 3 }
     ]
   },
   {
     id: 8,
-    category: "Finansal Hedef",
-    question: "Yatırımlarınızı ne kadar süreyle (hangi vadede) değerlendirmeyi düşünüyorsunuz?",
+    category: "Etik ve Katılım Finans Prensipleri",
+    question: "Yatırım kararlarınızda İslami finans kurallarına (faizsiz enstrümanlar) uyum hassasiyetiniz var mı?",
     type: "choice",
     options: [
-      { text: "Kısa Vade (0 - 1 Yıl) - Paramı her an çekebilirim.", score: 1 },
-      { text: "Orta Vade (1 - 3 Yıl) - Birkaç yıl boyunca dokunmayı düşünmüyorum.", score: 2 },
-      { text: "Uzun Vade (3 Yıl ve üzeri) - Emekliliğim veya uzun vadeli hedeflerim için.", score: 3 }
+      { text: "Evet, Kesinlikle. Sadece faizsiz ve katılım esaslarına (Kira sertifikası, Katılım hisseleri) %100 uyumlu portföy oluşturulmalı.", score: 1 },
+      { text: "Hayır, böyle bir kısıtlamam yok. Portföyümü maksimize edecek tüm küresel ve yerel finansal araçlar değerlendirilebilir.", score: 2 }
     ]
   },
   {
     id: 9,
-    category: "Kriz Tepkisi",
-    question: "Piyasada sert bir düşüş yaşandı ve portföyünüz %20 değer kaybetti. Ne yaparsınız?",
+    category: "Yatırım Yönetim Modeli",
+    question: "Oluşturulacak portföyün yönetimi konusunda nasıl bir otomasyon bekliyorsunuz?",
     type: "choice",
     options: [
-      { text: "Daha fazla zarar etmemek için panik yapmadan tüm yatırımlarımı nakde çeviririm.", score: 1 },
-      { text: "Piyasaların toparlanmasını bekler, portföyümde hiçbir değişiklik yapmam.", score: 2 },
-      { text: "Bu düşüşü bir alım fırsatı olarak görür, ucuzlayan varlıklara daha fazla yatırım yaparım.", score: 3 }
+      { text: "Tam Otonom - Portföyümüze FinAi algoritmaları ve profesyonel yöneticiler baksın. Ben günlük ekran izlemek istemiyorum.", score: 1 },
+      { text: "Dinamik Aktif - Ara sıra trend değişikliklerini görmek, stratejik bildirimler almak ve müdahale etmek hoşuma gider.", score: 2 }
     ]
   },
   {
     id: 10,
-    category: "Finansal Hedef",
-    question: "FinAi ile yatırıma başlayacağınız ilk tutar ne kadar olacak? (TL)",
+    category: "Sermaye Alokasyonu",
+    question: "FinAi zeki kural motorunun sizin için yapılandıracağı bu profesyonel portföye ne kadarlık bir başlangıç sermayesi tahsis etmeyi planlıyorsunuz?",
     type: "input",
-    placeholder: "Örn: 50000"
-  },
-  {
-    id: 11,
-    category: "Finansal Hedef",
-    question: "Yatırımlarınızı hangi aralıklarla yapmayı planlıyorsunuz?",
-    type: "choice",
-    options: [
-      { text: "Tek Seferlik Toplu Yatırım", score: 0 },
-      { text: "Her Ay Düzenli Yatırım", score: 0 },
-      { text: "Üç Ayda Bir veya Yıllık Yatırım", score: 0 }
-    ]
-  },
-  {
-    id: 12,
-    category: "Tercihler",
-    question: "Yatırımlarınızda faiz hassasiyetiniz (İslami finans prensiplerine uygunluk) var mı?",
-    type: "choice",
-    options: [
-      { text: "Evet, sadece faizsiz Katılım enstrümanlarına (Kira sertifikası, Altın, Katılım Endeksi) yatırım yaparım.", score: 0 },
-      { text: "Hayır, böyle bir hassasiyetim yok. Tüm piyasa enstrümanlarını değerlendirebilirim.", score: 0 }
-    ]
+    placeholder: "Örn: 250000"
   }
 ];
 
@@ -155,7 +132,7 @@ export default function RiskTestPage() {
 
   const handleSelectOption = (score: number, text: string) => {
     setAnswers(prev => ({ ...prev, [currentQ.id]: { score, text } }));
-    setTimeout(() => handleNext(), 400); // Otomatik geçiş
+    setTimeout(() => handleNext(), 400); 
   };
 
   const handleInputNext = (val: string) => {
@@ -186,9 +163,10 @@ export default function RiskTestPage() {
     setIsCompleted(true);
     setIsSaving(true);
     
-    // Puan hesaplama (1'den 9'a kadar olan sorular)
+    // Calculate a basic risk score for visual UI purpose. 
+    // The actual heavy lifting is now done inside the new API.
     let totalScore = 0;
-    for (let i = 1; i <= 9; i++) {
+    for (let i = 1; i <= 7; i++) {
         totalScore += (answers[i]?.score || 0);
     }
 
@@ -212,15 +190,13 @@ export default function RiskTestPage() {
 
         setResultProfile(profile);
 
-        // Supabase'e kaydet
         if (user?.id) {
             await supabase.auth.updateUser({
                 data: {
                     riskProfile: profile.title,
                     riskScore: totalScore,
                     investmentAmount: answers[10]?.text || "Belirtilmedi",
-                    investmentPeriod: answers[11]?.text || "Belirtilmedi",
-                    isIslamicFinance: answers[12]?.text?.includes("Evet") || false,
+                    isIslamicFinance: answers[8]?.text?.includes("Evet") || false,
                     aiPortfolio: aiData,
                     hasCompletedTest: true
                 }
@@ -239,7 +215,6 @@ export default function RiskTestPage() {
     exit: (direction: number) => ({ x: direction > 0 ? -50 : 50, opacity: 0, transition: { duration: 0.3 } })
   };
 
-  // Sonuç Ekranı
   if (isCompleted && resultProfile) {
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 items-center justify-center p-6 relative overflow-hidden">
@@ -255,7 +230,7 @@ export default function RiskTestPage() {
                     <resultProfile.icon className={cn("w-12 h-12", resultProfile.color)} />
                 </div>
                 
-                <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-2">SİZE EN UYGUN PROFİL</h3>
+                <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Zeki Motor Tarafından Tasarlandı</h3>
                 <h1 className={cn("text-4xl md:text-5xl font-black mb-6 tracking-tight", resultProfile.color)}>
                     {resultProfile.title}
                 </h1>
@@ -266,18 +241,18 @@ export default function RiskTestPage() {
 
                 <div className="flex items-center justify-center gap-4 text-xs font-bold text-slate-400 uppercase tracking-widest mb-10 p-6 bg-slate-50 rounded-3xl">
                     <div className="flex flex-col gap-1">
-                        <span>Risk Skoru</span>
-                        <span className="text-2xl text-slate-800">{resultProfile.score} <span className="text-sm text-slate-400">/ 27</span></span>
+                        <span>Puan</span>
+                        <span className="text-2xl text-slate-800">{resultProfile.score} <span className="text-sm text-slate-400">/ 21</span></span>
                     </div>
                     <div className="w-px h-10 bg-slate-200 mx-4" />
                     <div className="flex flex-col gap-1">
-                        <span>Başlangıç</span>
-                        <span className="text-2xl text-slate-800">{answers[10]?.text || "-"} <span className="text-sm text-slate-400">TL</span></span>
+                        <span>Sermaye</span>
+                        <span className="text-2xl text-slate-800">{Number(answers[10]?.text || 0).toLocaleString('tr-TR')} <span className="text-sm text-slate-400">TL</span></span>
                     </div>
                 </div>
 
                 <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-[#00008B] text-white rounded-2xl text-sm font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 hover:-translate-y-1 transition-transform group">
-                    Kontrol Paneline Dön
+                    Portföy Dağılımını İncele
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
             </motion.div>
@@ -285,7 +260,6 @@ export default function RiskTestPage() {
     );
   }
 
-  // Test Ekranı
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full relative overflow-hidden">
         {/* Progress Bar */}
@@ -373,7 +347,7 @@ export default function RiskTestPage() {
                                     disabled={!answers[currentQ.id]?.text}
                                     className="w-full flex items-center justify-center gap-2 py-5 bg-[#00008B] disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-2xl text-sm font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 transition-all"
                                 >
-                                    Devam Et
+                                    Portföyü Hesapla
                                     <ArrowRight className="w-5 h-5" />
                                 </button>
                             </div>
