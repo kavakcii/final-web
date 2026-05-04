@@ -81,6 +81,7 @@ function DashboardShell({
         { icon: Home, label: "Ana Sayfa", href: "/dashboard" },
         { icon: PieChart, label: "Portföyüm", href: "/dashboard/portfolio" },
         { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis" },
+        { icon: Brain, label: "Karakter Testi", href: "/dashboard/behavioral" },
         { icon: Bot, label: "FinAi Robotum", href: "/dashboard/reports" },
         { icon: LayoutGrid, label: "Varlıklar", href: "/dashboard/data" },
         { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },
