@@ -16,7 +16,8 @@ import {
     FileText,
     Newspaper,
     Bot,
-    LayoutGrid
+    LayoutGrid,
+    Brain
 } from "lucide-react";
 import { FinancialTicker } from "@/components/FinancialTicker";
 
