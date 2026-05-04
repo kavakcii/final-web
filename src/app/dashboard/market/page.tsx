@@ -6,6 +6,8 @@ import { ArrowRight, CheckCircle2, ChevronRight, PieChart, ShieldCheck, Target, 
 import { motion, AnimatePresence } from "framer-motion";
 import { PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
+import { BehavioralTest } from "@/components/BehavioralTest";
+import { analyzeInvestorProfile } from "@/lib/behavioral-engine";
 
 export default function MarketPage() {
     const [isLoading, setIsLoading] = useState(true);
@@ -260,10 +262,17 @@ export default function MarketPage() {
                     score: 1
                 }
             ]
+        },
+        {
+            id: 9, // Special Simulation Step
+            question: "Şimdi Piyasa Şokuna Hazır Mısınız?",
+            isSimulation: true,
+            options: []
         }
     ];
 
     const [inputValue, setInputValue] = useState("");
+    const [simulationResult, setSimulationResult] = useState<any>(null);
 
     const handleAnswer = (score: number | string) => {
         const newAnswers = { ...answers, [currentQuestion]: score.toString() };
@@ -298,19 +307,30 @@ export default function MarketPage() {
         // If 6 questions (old version), Islamic is index 5.
         // If 8 questions (new version), Islamic is index 7.
         // Amount question is index 6 in new version.
-        const islamicIndex = numQuestions === 6 ? 5 : 7;
-        const amountIndex = numQuestions === 8 ? 6 : -1;
+        const islamicIndex = questions.findIndex(q => q.id === 8);
+        const amountIndex = questions.findIndex(q => q.id === 7);
+        const simulationIndex = questions.findIndex(q => q.isSimulation);
 
         Object.entries(answers).forEach(([qIndex, val]) => {
             const idx = parseInt(qIndex);
 
             if (idx === amountIndex) {
-                // This is the amount question, not a score
                 investmentAmount = parseInt(val) || 0;
+            } else if (idx === simulationIndex) {
+                try {
+                    const actions = JSON.parse(val);
+                    const analysis = analyzeInvestorProfile(actions);
+                    // Profile based score adjustment
+                    if (analysis.profile === 'VALUE_HUNTER') totalScore += 3;
+                    if (analysis.profile === 'PANIC_SELLER') totalScore -= 3;
+                    if (analysis.profile === 'PATIENT_INVESTOR') totalScore += 1;
+                } catch (e) {
+                    console.error("Simulation analysis error", e);
+                }
             } else {
                 const s = parseInt(val);
-                totalScore += s;
-                // Check for interest sensitivity based on detected version
+                if (!isNaN(s)) totalScore += s;
+                
                 if (idx === islamicIndex && s === 0) {
                     isIslamic = true;
                 }
@@ -529,7 +549,15 @@ export default function MarketPage() {
                         </h2>
 
                         <div className="space-y-4">
-                            {questions[currentQuestion].id === 7 ? (
+                            {questions[currentQuestion].isSimulation ? (
+                                <div className="mt-4">
+                                    <BehavioralTest 
+                                        onFinish={(actions) => {
+                                            handleAnswer(JSON.stringify(actions));
+                                        }}
+                                    />
+                                </div>
+                            ) : questions[currentQuestion].id === 7 ? (
                                 <div className="space-y-6">
                                     <div className="relative">
                                         <input

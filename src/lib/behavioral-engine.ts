@@ -40,6 +40,35 @@ export const getSmoothScenario = () => {
     return points;
 };
 
+// Quick 15-second scenario (30 points, 0.5s each)
+export const getQuickScenario = (): SimulationPoint[] => {
+    const points: SimulationPoint[] = [];
+    let price = 100;
+    
+    for (let i = 0; i < 30; i++) {
+        let change = (Math.random() - 0.45) * 2; // Slight upward bias initially
+        
+        // Rapid Crash between 10-20 (Seconds 5-10)
+        if (i >= 10 && i <= 20) change = -4 - (Math.random() * 3); 
+        // Late Recovery between 21-30 (Seconds 10.5-15)
+        if (i > 20) change = 3 + (Math.random() * 4);
+
+        price = Math.max(10, price + change);
+        
+        let event;
+        if (i === 10) event = "ANİ SATIŞ DALGASI!";
+        if (i === 15) event = "PANİK ARTIYOR!";
+        if (i === 21) event = "DİPTEN TEPKİ GELDİ!";
+
+        points.push({
+            time: i,
+            price: parseFloat(price.toFixed(2)),
+            event
+        });
+    }
+    return points;
+};
+
 // KARAR MOTORU: Kullanıcıyı Kararlarına Göre Sınıflandırır
 export const analyzeInvestorProfile = (actions: UserAction[]): { profile: InvestorProfile, description: string, recommendation: string } => {
     if (actions.length === 0) {
