@@ -62,21 +62,33 @@ export default function HomeClient() {
   const features = [
     { 
       step: 'Adım 1', 
-      title: 'Tek Ekranda Portföy Takibi',
-      content: 'BIST hisselerinizi ve TEFAS fonlarınızı tek bir panoda toplayın. Anlık fiyatlarla portföyünüzü canlı izleyin.', 
-      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80' 
+      title: 'Anlık Portföy Takibi',
+      content: 'Borsa İstanbul hisselerinden TEFAS fonlarına kadar tüm yatırımlarınızı tek bir panoda toplayın. Fiyat değişimlerini saniyelik takip edin ve varlıklarınızın toplam değerini anlık olarak görüntüleyin.', 
+      image: '/images/portfolio_tracking.jpg' 
     },
     { 
       step: 'Adım 2',
-      title: 'AI Destekli Analiz',
-      content: 'Yapay zeka asistanınıza portföyünüzle ilgili sorular sorun, korelasyon analizleri yapın ve piyasa haberlerini takip edin.',
-      image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80'
+      title: 'Anlık Haber Takibi',
+      content: 'Piyasadaki hareketliliği belirleyen haberleri kaçırmayın. Yatırımlarınızı etkileyebilecek sıcak gelişmeleri, bildirimler ve güncel akışlar sayesinde ilk siz öğrenin.',
+      image: '/images/news_tracking.jpg'
     },
     { 
       step: 'Adım 3',
-      title: 'Detaylı Raporlama',
-      content: 'Portföy performansınızı grafikler ve raporlarla analiz edin. Varlık dağılımınızı ve getiri oranlarınızı net bir şekilde görün.',
-      image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80'
+      title: 'Olası Senaryo Analizleri',
+      content: '"Ya şöyle olursa?" sorusuna yanıt bulun. Piyasada yaşanabilecek farklı durumlarda portföyünüzün nasıl tepki vereceğini önceden test edin ve stratejinizi güvenceye alın.',
+      image: '/images/scenario_analysis.jpg'
+    },
+    { 
+      step: 'Adım 4',
+      title: 'Portföye Özel Korelasyon Analizleri',
+      content: 'Varlıklarınız arasındaki gizli bağları keşfedin. Yapay zeka asistanımızla yatırımlarınızın birbirini nasıl etkilediğini analiz edin ve portföyünüzü dengeleyerek riskinizi optimize edin.',
+      image: '/images/correlation_analysis.jpg'
+    },
+    { 
+      step: 'Adım 5',
+      title: 'Kişiye Özel Portföy Yaratma Testi',
+      content: 'Yatırım karakterinizi belirleyin. Risk toleransınıza ve hedeflerinize en uygun varlık dağılımını, size özel oluşturulan analiz testimizle keşfedin.',
+      image: '/images/portfolio_test.jpg'
     },
   ];
 
@@ -178,7 +190,7 @@ export default function HomeClient() {
         <section id="features" className="flex flex-col justify-center bg-white overflow-hidden w-full relative z-20">
              <FeatureSteps 
                 features={features} 
-                title="Sistem Nasıl Çalışır?" 
+                title="Özellikler" 
                 autoPlayInterval={5000} 
                 imageHeight="h-[300px] md:h-[450px]" 
               />
