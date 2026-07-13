@@ -175,7 +175,7 @@ export default function HomeClient() {
         {/* 
             FEATURES SECTION
         */}
-        <section id="features" className="flex flex-col justify-center bg-white overflow-hidden w-full relative z-20 border-t border-slate-100">
+        <section id="features" className="flex flex-col justify-center bg-white overflow-hidden w-full relative z-20">
              <FeatureSteps 
                 features={features} 
                 title="Sistem Nasıl Çalışır?" 
