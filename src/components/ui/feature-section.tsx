@@ -29,25 +29,8 @@ export function FeatureSteps({
   features,
   className,
   title = "Nasıl Çalışır?",
-  autoPlayInterval = 4000,
-  imageHeight = "h-[400px]",
 }: FeatureStepsProps) {
   const [currentFeature, setCurrentFeature] = useState(0)
-  const [progress, setProgress] = useState(0)
-
-  // Auto-play interval logic
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (progress < 100) {
-        setProgress((prev) => prev + 100 / (autoPlayInterval / 100))
-      } else {
-        setCurrentFeature((prev) => (prev + 1) % features.length)
-        setProgress(0)
-      }
-    }, 100)
-
-    return () => clearInterval(timer)
-  }, [progress, features.length, autoPlayInterval])
 
   return (
     <div className={cn("py-12 md:py-16 bg-white", className)}>
@@ -56,79 +39,78 @@ export function FeatureSteps({
           {title}
         </h2>
 
-        <div className="flex flex-col md:grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-10 md:gap-16 items-stretch">
           
-          {/* Sol Kolon - Adımlar */}
-          <div className="order-2 md:order-1 space-y-10">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                className="flex items-start gap-6 -mx-4 p-4 md:-mx-6 md:p-6 rounded-3xl hover:bg-blue-50/50 active:bg-blue-50 transition-colors cursor-pointer"
-                initial={{ opacity: 0.3 }}
-                animate={{ opacity: index === currentFeature ? 1 : 0.4 }}
-                transition={{ duration: 0.5 }}
-                onClick={() => {
-                   setCurrentFeature(index);
-                   setProgress(0);
-                }}
-              >
-                {/* Daire (Icon/No) */}
-                <motion.div
-                  className={cn(
-                    "w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center border-2 transition-colors duration-300",
-                    index === currentFeature
-                      ? "bg-[#00008B] border-[#00008B] text-white scale-110 shadow-lg shadow-[#00008B]/20"
-                      : "bg-white border-blue-100 text-[#00008B]/30",
-                  )}
+          {/* Sol Kolon - Başlıklar (Accordion) */}
+          <div className="order-2 md:order-1 flex flex-col justify-center divide-y divide-slate-100">
+            {features.map((feature, index) => {
+              const isActive = index === currentFeature
+              return (
+                <div
+                  key={index}
+                  className="py-5 cursor-pointer first:pt-0 last:pb-0"
+                  onClick={() => {
+                    setCurrentFeature(index)
+                  }}
                 >
-                  {index <= currentFeature ? (
-                    <span className="text-xl font-bold">✓</span>
-                  ) : (
-                    <span className="text-xl font-bold">{index + 1}</span>
-                  )}
-                </motion.div>
-
-                {/* İçerik */}
-                <div className="flex-1 mt-1">
-                  <h3 className={cn(
-                      "text-2xl font-bold transition-colors duration-300 pointer-events-none",
-                      index === currentFeature ? "text-[#00008B]" : "text-[#00008B]/40"
-                  )}>
-                    {feature.title || feature.step}
-                  </h3>
-                  <p className="mt-2 text-base md:text-lg text-[#00008B]/70 font-medium leading-relaxed pointer-events-none">
-                    {feature.content}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <h3
+                      className={cn(
+                        "text-xl md:text-2xl font-bold transition-all duration-300 pointer-events-none",
+                        isActive ? "text-[#00008B] translate-x-1" : "text-[#00008B]/40 hover:text-[#00008B]/70"
+                      )}
+                    >
+                      {feature.title}
+                    </h3>
+                    <motion.span
+                      animate={{ rotate: isActive ? 90 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={cn(
+                        "text-lg font-bold pointer-events-none transition-colors",
+                        isActive ? "text-[#00008B]" : "text-[#00008B]/30"
+                      )}
+                    >
+                      →
+                    </motion.span>
+                  </div>
+                  
+                  <AnimatePresence initial={false}>
+                    {isActive && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <p className="mt-3 text-base text-[#00008B]/70 font-medium leading-relaxed pointer-events-none">
+                          {feature.content}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </motion.div>
-            ))}
+              )
+            })}
           </div>
 
           {/* Sağ Kolon - Resim */}
-          <div
-            className={cn(
-              "order-1 md:order-2 relative w-full overflow-hidden rounded-3xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] ring-1 ring-slate-100",
-              imageHeight
-            )}
-          >
-            {/* Direkt Geçiş (Anlık Kesme) - Sıfır Beyazlama Garantisi! */}
-            <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#00008B]">
+          <div className="order-1 md:order-2 relative w-full min-h-[350px] md:min-h-full rounded-3xl overflow-hidden shadow-[0_20px_50px_-12px_rgba(0,0,0,0.08)] border border-slate-100/80 bg-white">
+            <div className="absolute inset-0 bg-white flex items-center justify-center">
               {features.map((feature, index) => (
                 <Image
                   key={index}
                   src={feature.image}
                   alt={feature.title || feature.step}
                   className={cn(
-                    "absolute inset-0 w-full h-full object-cover transition-opacity duration-0",
+                    "absolute inset-0 w-full h-full object-contain p-8 transition-opacity duration-300 bg-white",
                     index === currentFeature ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                   )}
                   width={1000}
-                  height={800}
+                  height={1000}
                   priority={index === 0}
                 />
               ))}
-              {/* Daha Yumuşak Çerçeve Blend */}
-              <div className="absolute inset-0 border border-black/5 rounded-3xl pointer-events-none z-20" />
             </div>
           </div>
 

@@ -63,32 +63,32 @@ export default function HomeClient() {
     { 
       step: 'Adım 1', 
       title: 'Anlık Portföy Takibi',
-      content: 'Borsa İstanbul hisselerinden TEFAS fonlarına kadar tüm yatırımlarınızı tek bir panoda toplayın. Fiyat değişimlerini saniyelik takip edin ve varlıklarınızın toplam değerini anlık olarak görüntüleyin.', 
-      image: '/images/portfolio_tracking.jpg' 
+      content: 'Tüm yatırımlarınızı tek bir panoda, saniyelik güncellemelerle takip edin.', 
+      image: '/images/portfolio_tracking_white.jpg' 
     },
     { 
       step: 'Adım 2',
       title: 'Anlık Haber Takibi',
-      content: 'Piyasadaki hareketliliği belirleyen haberleri kaçırmayın. Yatırımlarınızı etkileyebilecek sıcak gelişmeleri, bildirimler ve güncel akışlar sayesinde ilk siz öğrenin.',
-      image: '/images/news_tracking.jpg'
+      content: 'Piyasa haberlerini yapay zeka süzgeciyle, zaman kaybetmeden yakalayın.',
+      image: '/images/news_tracking_white.jpg'
     },
     { 
       step: 'Adım 3',
       title: 'Olası Senaryo Analizleri',
-      content: '"Ya şöyle olursa?" sorusuna yanıt bulun. Piyasada yaşanabilecek farklı durumlarda portföyünüzün nasıl tepki vereceğini önceden test edin ve stratejinizi güvenceye alın.',
-      image: '/images/scenario_analysis.jpg'
+      content: 'Farklı piyasa senaryolarında portföyünüzün nasıl tepki vereceğini test edin.',
+      image: '/images/scenario_analysis_white.jpg'
     },
     { 
       step: 'Adım 4',
-      title: 'Portföye Özel Korelasyon Analizleri',
-      content: 'Varlıklarınız arasındaki gizli bağları keşfedin. Yapay zeka asistanımızla yatırımlarınızın birbirini nasıl etkilediğini analiz edin ve portföyünüzü dengeleyerek riskinizi optimize edin.',
-      image: '/images/correlation_analysis.jpg'
+      title: 'Korelasyon Analizleri',
+      content: 'Varlıklarınız arasındaki gizli bağları keşfedip riskinizi dengeleyin.',
+      image: '/images/correlation_analysis_white.jpg'
     },
     { 
       step: 'Adım 5',
-      title: 'Kişiye Özel Portföy Yaratma Testi',
-      content: 'Yatırım karakterinizi belirleyin. Risk toleransınıza ve hedeflerinize en uygun varlık dağılımını, size özel oluşturulan analiz testimizle keşfedin.',
-      image: '/images/portfolio_test.jpg'
+      title: 'Kişiye Özel Portföy Testi',
+      content: 'Yatırım karakterinizi analiz edin, size en uygun portföyü oluşturun.',
+      image: '/images/portfolio_test_white.jpg'
     },
   ];
 
