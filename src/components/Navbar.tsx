@@ -108,7 +108,13 @@ export default function Navbar() {
                     >
                         <div className="px-5 py-6 space-y-3">
                             {navItems.map((item) => (
-                                <Link key={item.name} href={item.url} onClick={() => setIsOpen(false)} className="flex items-center gap-4 px-4 py-3.5 text-base font-bold text-[#00008B] hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-2xl transition-all">
+                                <Link 
+                                    key={item.name} 
+                                    href={item.url} 
+                                    onClick={() => setIsOpen(false)} 
+                                    className="flex items-center gap-4 px-4 py-3.5 text-base font-bold text-[#00008B] hover:bg-slate-50 border border-transparent hover:border-slate-100 rounded-2xl transition-all border-b-0"
+                                    style={{ borderBottom: 'none' }}
+                                >
                                     <item.icon className="w-5 h-5 text-blue-600" />
                                     {item.name}
                                 </Link>

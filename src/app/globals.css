@@ -146,6 +146,10 @@ body {
   min-height: 100vh;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @media (max-width: 767px) {
   html {
     font-size: 65%;
