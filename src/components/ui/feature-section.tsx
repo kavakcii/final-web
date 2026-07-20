@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
+import { ChevronDown } from "lucide-react"
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
@@ -30,7 +31,19 @@ export function FeatureSteps({
   className,
   title = "Nasıl Çalışır?",
 }: FeatureStepsProps) {
-  const [currentFeature, setCurrentFeature] = useState(0)
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
+  const [activeImageIndex, setActiveImageIndex] = useState<number>(0)
+
+  const handleToggle = (index: number) => {
+    if (openIndex === index) {
+      setOpenIndex(null)
+    } else {
+      setOpenIndex(index)
+      setActiveImageIndex(index)
+    }
+  }
+
+  const currentImage = openIndex !== null ? openIndex : activeImageIndex
 
   return (
     <div className={cn("py-12 md:py-16 bg-white", className)}>
@@ -44,14 +57,12 @@ export function FeatureSteps({
           {/* Sol Kolon - Başlıklar (Accordion) */}
           <div className="order-2 md:order-1 flex flex-col justify-center divide-y divide-slate-100">
             {features.map((feature, index) => {
-              const isActive = index === currentFeature
+              const isActive = index === openIndex
               return (
                 <div
                   key={index}
                   className="py-5 cursor-pointer first:pt-0 last:pb-0"
-                  onClick={() => {
-                    setCurrentFeature(index)
-                  }}
+                  onClick={() => handleToggle(index)}
                 >
                   <div className="flex items-center justify-between">
                     <h3
@@ -62,16 +73,16 @@ export function FeatureSteps({
                     >
                       {feature.title}
                     </h3>
-                    <motion.span
-                      animate={{ rotate: isActive ? 90 : 0 }}
+                    <motion.div
+                      animate={{ rotate: isActive ? 180 : 0 }}
                       transition={{ duration: 0.2 }}
                       className={cn(
-                        "text-lg font-bold pointer-events-none transition-colors",
+                        "pointer-events-none transition-colors",
                         isActive ? "text-[#00008B]" : "text-[#00008B]/30"
                       )}
                     >
-                      →
-                    </motion.span>
+                      <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </motion.div>
                   </div>
                   
                   <AnimatePresence initial={false}>
@@ -104,7 +115,7 @@ export function FeatureSteps({
                   alt={feature.title || feature.step}
                   className={cn(
                     "absolute inset-0 w-full h-full object-contain p-8 transition-opacity duration-300 bg-white",
-                    index === currentFeature ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                    index === currentImage ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
                   )}
                   width={1000}
                   height={1000}
