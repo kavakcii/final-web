@@ -31,7 +31,7 @@ export default function Navbar() {
 
     const navItems = [
         { name: 'Ana Sayfa', url: '#hero', icon: Home },
-        { name: 'Neler Var?', url: '#features', icon: Compass },
+        { name: 'Özellikler', url: '#features', icon: Compass },
         { name: 'Merak Ettikleriniz', url: '#faq', icon: Info },
     ];
 

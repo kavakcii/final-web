@@ -153,9 +153,9 @@ export default function HomeClient() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="text-base sm:text-xl md:text-2xl text-[#00008B]/70 max-w-2xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
+                className="text-base sm:text-xl md:text-2xl text-[#00008B]/70 max-w-3xl mx-auto leading-relaxed font-medium mt-6 px-4 sm:px-0"
               >
-                BIST hisseleri ve TEFAS fonlarını tek bir panoda takip edin. <b className="text-[#00008B]">AI destekli analizlerle</b> portföyünüzü yönetin.
+                Karmaşaya Son, Kontrol Sizde: Tüm Yatırımlarınızı Tek Ekrandan, <b className="text-[#00008B]">Yapay Zeka Destekli Analizlerle</b> Takip Edin.
               </motion.p>
 
               {/* CTAs */}
