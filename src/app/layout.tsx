@@ -3,16 +3,36 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "FinAi - Yapay Zeka Yatırım Asistanı",
-  description: "Yapay zeka asistanınızla yatırımlarınızı kolayca takip edin.",
+  description: "BIST ve TEFAS portföyünüzü AI destekli analizlerle tek bir panoda yönetin.",
+  manifest: "/manifest.json",
   icons: {
-    icon: "/logo.svg",
-    apple: "/logo.svg",
+    icon: [
+      { url: "/logo.png", type: "image/png" },
+      { url: "/logo.svg", type: "image/svg+xml" },
+    ],
+    shortcut: ["/logo.png"],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   openGraph: {
     title: "FinAi - Yapay Zeka Yatırım Asistanı",
-    description: "Yapay zeka asistanınızla yatırımlarınızı kolayca takip edin.",
-    images: ["/logo.svg"],
+    description: "BIST ve TEFAS portföyünüzü AI destekli analizlerle tek bir panoda yönetin.",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "FinAi Logo",
+      },
+    ],
     siteName: "FinAi",
+  },
+  twitter: {
+    card: "summary",
+    title: "FinAi - Yapay Zeka Yatırım Asistanı",
+    description: "BIST ve TEFAS portföyünüzü AI destekli analizlerle tek bir panoda yönetin.",
+    images: ["/logo.png"],
   },
 };
 
