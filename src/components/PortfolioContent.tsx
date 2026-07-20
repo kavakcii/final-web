@@ -86,12 +86,20 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Yavaşlatılmış Apple iOS Spring Fizik Motoru Konfigürasyonu (~0.65 Hız Ayarı)
+    // Ana Odak Kartı İçin Yumuşak Apple iOS Spring Fizik Motoru Konfigürasyonu
     const iosSpringAnimationConfig: any = useMemo(() => ({
         type: "spring",
         stiffness: 75,
         damping: 15,
         mass: 1.1
+    }), []);
+
+    // Sağa Küçülerek Kayma Giriş Hareketi İçin Seri ve Hızlı Spring Konfigürasyonu
+    const fastSpringAnimationConfig: any = useMemo(() => ({
+        type: "spring",
+        stiffness: 135,
+        damping: 17,
+        mass: 0.85
     }), []);
 
     // Group assets by symbol
@@ -1156,7 +1164,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (SCROLLBAR-FREE COMPACT RIGHT SIDEBAR STACK) */
+                    /* 2. ODAK MODU DURUMU (SAĞ ÜSTTE SABİT TOPLAM VARLIK & NET KÂR/ZARAR BLOĞU + SIKIŞTIRILMIŞ ŞERİTLER) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1187,53 +1195,64 @@ export default function PortfolioPage() {
                             {renderWidgetCard(focusedWidget, true)}
                         </div>
 
-                        {/* SAĞ TARAFTA SCROLLBAR OLMADAN TAM SIĞAN DİKEY SIKIŞTIRILMIŞ MODÜL ŞERİTLERİ (%35 - 4/12 Cols) */}
-                        <div className="xl:col-span-4 space-y-3">
-                            <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
-                                <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
-                                    <Layers className="w-4 h-4 text-[#00008B]" />
-                                    Diğer Modüller ({widgetDefinitions.length - 1})
-                                </span>
-                                <span className="text-[10px] text-slate-400 font-bold">Değiştirmek İçin Tıkla</span>
+                        {/* SAĞ TARAFTA SÜREKLİ EN ÜSTTE SABİT TOPLAM VARLIK & NET KÂR/ZARAR + DİKEY SIKIŞTIRILMIŞ DİĞER ŞERİTLER (%35 - 4/12 Cols) */}
+                        <div className="xl:col-span-4 space-y-5">
+                            
+                            {/* TOPLAM VARLIK DEĞERİ VE NET KÂR/ZARAR ÖZET KARTI - SÜREKLİ SAĞ ÜSTTE SABİT */}
+                            {focusedWidget !== 'summary' && (
+                                <div className="w-full">
+                                    {renderWidgetCard('summary')}
+                                </div>
+                            )}
+
+                            {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER (SCROLLBAR-FREE) */}
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
+                                    <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
+                                        <Layers className="w-4 h-4 text-[#00008B]" />
+                                        Diğer Modüller
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 font-bold">Tıkla Odağa Al</span>
+                                </div>
+
+                                <div className="space-y-2 overflow-hidden">
+                                    {widgetDefinitions
+                                        .filter(w => w.id !== focusedWidget && w.id !== 'summary')
+                                        .map((widget) => {
+                                            const WidgetIcon = widget.icon;
+                                            return (
+                                                <motion.div
+                                                    key={widget.id}
+                                                    layoutId={`widget-card-${widget.id}`}
+                                                    layout
+                                                    transition={fastSpringAnimationConfig}
+                                                    onClick={() => setFocusedWidget(widget.id)}
+                                                    className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors shrink-0">
+                                                            <WidgetIcon className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-black text-[#00008B] text-xs group-hover:text-blue-600 transition-colors leading-tight">
+                                                                {widget.name}
+                                                            </h4>
+                                                            <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                                                                {widget.desc}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-1 text-[10px] font-black text-[#00008B] bg-slate-50 group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 transition-all shrink-0">
+                                                        <span>Sola Taşı</span>
+                                                        <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                </div>
                             </div>
 
-                            {/* SCROLLBAR-FREE COMPACT CONTAINER - EXACTLY FITS VERTICALLY */}
-                            <div className="space-y-2.5 overflow-hidden">
-                                {widgetDefinitions
-                                    .filter(w => w.id !== focusedWidget)
-                                    .map((widget) => {
-                                        const WidgetIcon = widget.icon;
-                                        return (
-                                            <motion.div
-                                                key={widget.id}
-                                                layoutId={`widget-card-${widget.id}`}
-                                                layout
-                                                transition={iosSpringAnimationConfig}
-                                                onClick={() => setFocusedWidget(widget.id)}
-                                                className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3.5 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors shrink-0">
-                                                        <WidgetIcon className="w-4.5 h-4.5" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-black text-[#00008B] text-xs group-hover:text-blue-600 transition-colors leading-tight">
-                                                            {widget.name}
-                                                        </h4>
-                                                        <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                                                            {widget.desc}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-1 text-[10px] font-black text-[#00008B] bg-slate-50 group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 transition-all shrink-0">
-                                                    <span>Sola Taşı</span>
-                                                    <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                </div>
-                                            </motion.div>
-                                        );
-                                    })}
-                            </div>
                         </div>
                     </>
                 )}
