@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Instagram } from "lucide-react";
 import { FinAiLogo } from "@/components/ui/logo";
+
 export default function Footer() {
     return (
         <footer className="bg-white border-t border-[#00008B]/10 mt-auto text-[#00008B]">
@@ -50,10 +51,11 @@ export default function Footer() {
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div className="mt-8 pt-8 border-t border-[#00008B]/20 text-center text-xs text-[#00008B] font-bold uppercase tracking-widest opacity-40">
-                    © {new Date().getFullYear()} FinAi. Tüm hakları saklıdır.
-                </div>
+            {/* Alt Mavi Bant (Full-Width Navy Blue Bar) */}
+            <div className="bg-[#00008B] py-5 px-4 text-center text-xs text-white font-bold uppercase tracking-widest">
+                © {new Date().getFullYear()} FinAi. Tüm hakları saklıdır.
             </div>
         </footer>
     );
