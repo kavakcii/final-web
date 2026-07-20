@@ -86,7 +86,7 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Orijinal Apple iOS Paylaşımlı Öge (Shared-Element) 0.65 Hızındaki Spring Fizik Motoru
+    // 0.65 Hızındaki Pürüzsüz Apple iOS Spring Fizik Motoru
     const iosSpring065Config: any = useMemo(() => ({
         type: "spring",
         stiffness: 75,
@@ -397,21 +397,18 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Container for Main Grid Widgets (Orijinal Apple iOS Shared-Element Morphing)
+    // Shared Container for Main Grid Widgets (Temiz, Çakışmasız 0.65 iOS Spring Akışı)
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
-            <motion.div
+            <div
                 key={id}
-                layoutId={`widget-card-${id}`}
-                layout
-                transition={iosSpring065Config}
                 className={cn(
-                    "w-full transition-shadow duration-300 overflow-hidden",
+                    "w-full transition-shadow duration-300 rounded-3xl overflow-hidden",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
             >
                 {renderWidgetContent(id, isFocused)}
-            </motion.div>
+            </div>
         );
     };
 
@@ -1110,7 +1107,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED AUTHENTIC APPLE iOS SHARED-ELEMENT MORPHING LAYOUT (0.65 SPEED) */}
+            {/* UNIFIED CLEAN 0.65 SPEED iOS SPRING PHYSICS LAYOUT (NO OVERLAPPING GIANT CARDS) */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1138,7 +1135,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (ORİJİNAL APPLE iOS SHARED-ELEMENT MORPHING) */
+                    /* 2. ODAK MODU DURUMU (TEMİZ VE PÜRÜZSÜZ 0.65 iOS SPRING GEÇİŞİ) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1165,8 +1162,19 @@ export default function PortfolioPage() {
                                 </button>
                             </div>
 
-                            {/* ODAKLANILAN WIDGET CARD */}
-                            {renderWidgetCard(focusedWidget, true)}
+                            {/* ODAKLANILAN WIDGET CARD - PÜRÜZSÜZ 0.65 iOS SPRING GEÇİŞİ */}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={focusedWidget}
+                                    initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -15, scale: 0.98 }}
+                                    transition={iosSpring065Config}
+                                    className="w-full"
+                                >
+                                    {renderWidgetCard(focusedWidget, true)}
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
 
                         {/* SAĞ TARAFTA SÜREKLİ EN ÜSTTE SABİT TOPLAM VARLIK & NET KÂR/ZARAR + DİKEY SIKIŞTIRILMIŞ DİĞER ŞERİTLER (%35 - 4/12 Cols) */}
@@ -1190,40 +1198,44 @@ export default function PortfolioPage() {
                                 </div>
 
                                 <div className="space-y-2 overflow-hidden">
-                                    {widgetDefinitions
-                                        .filter(w => w.id !== focusedWidget && w.id !== 'summary')
-                                        .map((widget) => {
-                                            const WidgetIcon = widget.icon;
-                                            return (
-                                                <motion.div
-                                                    key={widget.id}
-                                                    layoutId={`widget-card-${widget.id}`}
-                                                    layout
-                                                    transition={iosSpring065Config}
-                                                    onClick={() => setFocusedWidget(widget.id)}
-                                                    className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group overflow-hidden"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors shrink-0">
-                                                            <WidgetIcon className="w-4 h-4" />
+                                    <AnimatePresence initial={false}>
+                                        {widgetDefinitions
+                                            .filter(w => w.id !== focusedWidget && w.id !== 'summary')
+                                            .map((widget) => {
+                                                const WidgetIcon = widget.icon;
+                                                return (
+                                                    <motion.div
+                                                        key={widget.id}
+                                                        layout="position"
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        transition={iosSpring065Config}
+                                                        onClick={() => setFocusedWidget(widget.id)}
+                                                        className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group overflow-hidden"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors shrink-0">
+                                                                <WidgetIcon className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="font-black text-[#00008B] text-xs group-hover:text-blue-600 transition-colors leading-tight">
+                                                                    {widget.name}
+                                                                </h4>
+                                                                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                                                                    {widget.desc}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <h4 className="font-black text-[#00008B] text-xs group-hover:text-blue-600 transition-colors leading-tight">
-                                                                {widget.name}
-                                                            </h4>
-                                                            <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                                                                {widget.desc}
-                                                            </span>
-                                                        </div>
-                                                    </div>
 
-                                                    <div className="flex items-center gap-1 text-[10px] font-black text-[#00008B] bg-slate-50 group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 transition-all shrink-0">
-                                                        <span>Sola Taşı</span>
-                                                        <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })}
+                                                        <div className="flex items-center gap-1 text-[10px] font-black text-[#00008B] bg-slate-50 group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 transition-all shrink-0">
+                                                            <span>Sola Taşı</span>
+                                                            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                    </AnimatePresence>
                                 </div>
                             </div>
 
