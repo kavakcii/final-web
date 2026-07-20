@@ -86,12 +86,12 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Kalıcı Apple iOS Spring Fizik Motoru Konfigürasyonu
+    // Yavaşlatılmış Apple iOS Spring Fizik Motoru Konfigürasyonu (~0.65 Hız Ayarı)
     const iosSpringAnimationConfig: any = useMemo(() => ({
         type: "spring",
-        stiffness: 120,
-        damping: 18,
-        mass: 1
+        stiffness: 75,
+        damping: 15,
+        mass: 1.1
     }), []);
 
     // Group assets by symbol
