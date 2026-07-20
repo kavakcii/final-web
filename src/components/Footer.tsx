@@ -5,38 +5,38 @@ import { FinAiLogo } from "@/components/ui/logo";
 
 export default function Footer() {
     return (
-        <footer className="bg-white border-t border-[#00008B]/10 mt-auto text-[#00008B]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <footer className="bg-[#00008B] mt-auto text-white">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
                         <div className="flex items-center">
-                            <FinAiLogo className="h-12 w-auto" />
+                            <FinAiLogo className="h-12 w-auto [&_span]:text-white" />
                         </div>
-                        <p className="text-sm text-[#00008B] font-medium leading-relaxed">
+                        <p className="text-sm text-white/80 font-medium leading-relaxed">
                             BIST ve TEFAS portföyünüzü AI destekli analizlerle
                             tek bir panoda yönetin.
                         </p>
                     </div>
 
                     <div>
-                        <h3 className="font-bold mb-4 text-[#00008B]">Ürün</h3>
-                        <ul className="space-y-2 text-sm text-[#00008B] font-medium">
-                            <li><Link href="#features" className="hover:underline transition-colors opacity-90 hover:opacity-100">Özellikler</Link></li>
-                            <li><Link href="/login" className="hover:underline transition-colors opacity-90 hover:opacity-100">Giriş Yap</Link></li>
+                        <h3 className="font-bold mb-4 text-white">Ürün</h3>
+                        <ul className="space-y-2 text-sm text-white/80 font-medium">
+                            <li><Link href="#features" className="hover:underline transition-colors text-white/80 hover:text-white">Özellikler</Link></li>
+                            <li><Link href="/login" className="hover:underline transition-colors text-white/80 hover:text-white">Giriş Yap</Link></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 className="font-bold mb-4 text-[#00008B]">Şirket</h3>
-                        <ul className="space-y-2 text-sm text-[#00008B] font-medium">
-                            <li><Link href="#hero" className="hover:underline transition-colors opacity-90 hover:opacity-100">Hakkımızda</Link></li>
-                            <li><Link href="#" className="hover:underline transition-colors opacity-90 hover:opacity-100">Kullanım Şartları</Link></li>
-                            <li><Link href="#" className="hover:underline transition-colors opacity-90 hover:opacity-100">KVKK Aydınlatma Metni</Link></li>
+                        <h3 className="font-bold mb-4 text-white">Şirket</h3>
+                        <ul className="space-y-2 text-sm text-white/80 font-medium">
+                            <li><Link href="#hero" className="hover:underline transition-colors text-white/80 hover:text-white">Hakkımızda</Link></li>
+                            <li><Link href="#" className="hover:underline transition-colors text-white/80 hover:text-white">Kullanım Şartları</Link></li>
+                            <li><Link href="#" className="hover:underline transition-colors text-white/80 hover:text-white">KVKK Aydınlatma Metni</Link></li>
                         </ul>
                     </div>
 
                     <div>
-                        <h3 className="font-bold mb-4 text-[#00008B]">Takip Et</h3>
+                        <h3 className="font-bold mb-4 text-white">Takip Et</h3>
                         <div className="flex space-x-4">
                             <Link 
                                 href="https://www.instagram.com/finai.net.tr/" 
@@ -53,8 +53,8 @@ export default function Footer() {
                 </div>
             </div>
 
-            {/* Alt Mavi Bant (Full-Width Navy Blue Bar) */}
-            <div className="bg-[#00008B] py-5 px-4 text-center text-xs text-white font-bold uppercase tracking-widest">
+            {/* Alt Telif Yazısı (İnce Çizgisiz, Bütünleşik Mavi Arka Plan) */}
+            <div className="py-6 px-4 text-center text-xs text-white/60 font-bold uppercase tracking-widest bg-[#00008B]">
                 © {new Date().getFullYear()} FinAi. Tüm hakları saklıdır.
             </div>
         </footer>
