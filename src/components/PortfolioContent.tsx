@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import Link from "next/link";
+import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 
 // Grouped Asset Type
 interface GroupedAsset {
@@ -37,9 +38,11 @@ export default function PortfolioPage() {
     const [prices, setPrices] = useState<Record<string, number>>({});
     const [priceExtremes, setPriceExtremes] = useState<Record<string, {low: number, high: number, current: number, target?: number, rating?: string}>>({});
     const [earningsDates, setEarningsDates] = useState<Record<string, number>>({});
-    const [dividendData, setDividendData] = useState<Record<string, { date: number, amount: number, isEstimate?: boolean }>>({});
+    const [halkarzDividends, setHalkarzDividends] = useState<HalkarzDividendItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAllDividendsModalOpen, setIsAllDividendsModalOpen] = useState(false);
+    const [allDividendsSearch, setAllDividendsSearch] = useState("");
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
@@ -53,7 +56,6 @@ export default function PortfolioPage() {
     // Truncate / Expand States
     const [isTableExpanded, setIsTableExpanded] = useState(false);
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
-    const [isDividendExpanded, setIsDividendExpanded] = useState(false);
     const [isExtremesExpanded, setIsExtremesExpanded] = useState(false);
 
     // UI states
@@ -106,6 +108,23 @@ export default function PortfolioPage() {
         });
     }, [assets]);
 
+    // Kullanıcının elinde bulunan hisselere filtrelenmiş temettü verisi
+    const userPortfolioDividends = useMemo(() => {
+        const assetMap = new Map(groupedAssets.map(g => [g.symbol.toUpperCase(), g.totalQuantity]));
+        
+        return halkarzDividends
+            .filter(item => assetMap.has(item.symbol))
+            .map(item => {
+                const quantity = assetMap.get(item.symbol) || 0;
+                const totalIncome = quantity * item.netAmountPerShare;
+                return {
+                    ...item,
+                    userQuantity: quantity,
+                    totalIncome
+                };
+            });
+    }, [halkarzDividends, groupedAssets]);
+
     // Fetch Data
     const fetchPortfolioData = async () => {
         setLoading(true);
@@ -113,22 +132,27 @@ export default function PortfolioPage() {
             const storedAssets = await PortfolioService.getAssets();
             setAssets(storedAssets);
 
+            // Fetch HalkArz Dividends
+            try {
+                const divRes = await fetch('/api/halkarz-dividends');
+                const divJson = await divRes.json();
+                if (divJson.success && Array.isArray(divJson.data)) {
+                    setHalkarzDividends(divJson.data);
+                }
+            } catch (e) {
+                console.error("HalkArz dividends fetch error:", e);
+            }
+
             if (storedAssets.length > 0) {
                 const uniqueSymbols = Array.from(new Set(storedAssets.map(a => a.symbol))).join(',');
                 try {
                     const res = await fetch(`/api/finance?symbols=${uniqueSymbols}`);
                     const json = await res.json();
-                    
-                    let divResponse: any = null;
-                    try {
-                        divResponse = await fetch(`/api/dividends?symbols=${uniqueSymbols}`);
-                    } catch (e) { console.error(e); }
 
                     if (json.results) {
                         const priceMap: Record<string, number> = {};
                         const extremesMap: Record<string, {low: number, high: number, current: number, target?: number, rating?: string}> = {};
                         const earningsMap: Record<string, number> = {};
-                        const dividendMap: Record<string, { date: number, amount: number, isEstimate?: boolean }> = {};
 
                         json.results.forEach((r: any) => {
                             if (r.symbol && r.regularMarketPrice) {
@@ -155,25 +179,12 @@ export default function PortfolioPage() {
                                     const parsedTime = typeof rawTime === 'number' ? rawTime * 1000 : new Date(rawTime).getTime();
                                     if (!isNaN(parsedTime)) earningsMap[baseSymbol] = parsedTime; 
                                 }
-                                if (r.dividendDate) { dividendMap[baseSymbol] = { date: r.dividendDate * 1000, amount: 0 }; }
                             }
                         });
-
-                        if (divResponse && divResponse.ok) {
-                            const divJson = await divResponse.json();
-                            if (divJson && !divJson.error) {
-                                Object.entries(divJson).forEach(([sym, data]: [string, any]) => {
-                                    if (data && data.amount > 0) {
-                                        dividendMap[sym] = { date: data.date, amount: data.amount, isEstimate: data.isEstimate };
-                                    }
-                                });
-                            }
-                        }
 
                         setPrices(priceMap);
                         setPriceExtremes(extremesMap);
                         setEarningsDates(earningsMap);
-                        setDividendData(dividendMap);
                     }
                 } catch (e) {
                     console.error("Network/Parse Error:", e);
@@ -295,14 +306,19 @@ export default function PortfolioPage() {
     const totalProfit = totalValue - totalCostValue;
     const profitRatio = totalCostValue > 0 ? (totalProfit / totalCostValue) * 100 : 0;
 
-    // Filtered lists for truncated views (first 5 items default)
+    // Filtered lists for truncated views (first 5 for tables/calendars, max 4 for user dividends)
     const displayedAssets = isTableExpanded ? groupedAssets : groupedAssets.slice(0, 5);
     const earningsEntries = Object.entries(earningsDates);
     const displayedEarnings = isCalendarExpanded ? earningsEntries : earningsEntries.slice(0, 5);
-    const dividendEntries = Object.entries(dividendData).filter(([_, data]) => data.amount > 0).sort((a, b) => b[1].date - a[1].date);
-    const displayedDividends = isDividendExpanded ? dividendEntries : dividendEntries.slice(0, 5);
+    const displayedUserDividends = userPortfolioDividends.slice(0, 4); // Sadece portföydeki hisseler, en fazla 4 adet
     const extremesEntries = Object.entries(priceExtremes);
     const displayedExtremes = isExtremesExpanded ? extremesEntries : extremesEntries.slice(0, 5);
+
+    // Filtered all dividends for the full market modal
+    const filteredAllDividends = halkarzDividends.filter(item => 
+        item.symbol.toLowerCase().includes(allDividendsSearch.toLowerCase()) ||
+        item.companyName.toLowerCase().includes(allDividendsSearch.toLowerCase())
+    );
 
     return (
         <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-hidden font-sans">
@@ -557,7 +573,7 @@ export default function PortfolioPage() {
                                                 <div className="flex justify-between items-center">
                                                     <div className="flex flex-col">
                                                         <span className="font-bold text-[#00008B] text-sm">{sym}</span>
-                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
+                                                        <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
                                                     </div>
                                                     <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
                                                         {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
@@ -581,57 +597,82 @@ export default function PortfolioPage() {
                             </motion.div>
                         </div>
 
-                        {/* Temettü Takvimi (Nakit Akışı) Widget */}
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                                <div className="flex items-center gap-2">
-                                    <Wallet className="w-4 h-4 text-emerald-600" />
-                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Temettü Takvimi</h3>
-                                </div>
-                                {dividendEntries.length > 5 && (
+                        {/* Temettü Takvimi Widget (HalkArz Canlı Veri - Portföye Özel En Fazla 4 Tane) */}
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                    <div className="flex items-center gap-2">
+                                        <Coins className="w-4 h-4 text-emerald-600" />
+                                        <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Temettü Takvimim</h3>
+                                    </div>
                                     <button 
-                                        onClick={() => setIsDividendExpanded(!isDividendExpanded)}
-                                        className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
+                                        onClick={() => setIsAllDividendsModalOpen(true)}
+                                        className="text-[10px] font-black text-[#00008B] bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 hover:bg-blue-100/70 transition-all flex items-center gap-1"
                                     >
-                                        {isDividendExpanded ? "Daralt" : `Tüm (${dividendEntries.length})`}
+                                        Tüm Temettü Takvimi
+                                        <ArrowUpRight className="w-3 h-3" />
                                     </button>
-                                )}
-                            </div>
-                            <motion.div 
-                                layout
-                                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                                className="space-y-3 overflow-hidden"
-                            >
-                                {dividendEntries.length === 0 ? (
-                                    <p className="text-xs text-slate-400 py-4 text-center font-medium">Temettü ödeme takvimi bulunamadı.</p>
-                                ) : (
-                                    displayedDividends.map(([sym, data]) => {
-                                        const days = Math.ceil((data.date - Date.now()) / (86400000));
-                                        const isPast = days < 0;
-                                        const isEstimate = data.isEstimate;
-                                        const portfolioItem = groupedAssets.find(a => a.symbol === sym);
-                                        const quantity = portfolioItem?.totalQuantity || 0;
-                                        const totalGross = quantity * data.amount;
+                                </div>
 
-                                        return (
-                                            <div key={sym} className={cn("flex flex-col gap-2 p-3.5 rounded-2xl border transition-all", isPast && !isEstimate ? "bg-slate-50 border-slate-200/60" : isEstimate ? "bg-amber-50/70 border-amber-200/60" : "bg-emerald-50/70 border-emerald-200/60")}>
-                                                <div className="flex justify-between items-center">
+                                <motion.div 
+                                    layout
+                                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                                    className="space-y-3 overflow-hidden"
+                                >
+                                    {displayedUserDividends.length === 0 ? (
+                                        <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
+                                            <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                            <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
+                                            <button 
+                                                onClick={() => setIsAllDividendsModalOpen(true)}
+                                                className="mt-3 text-[11px] font-bold text-[#00008B] hover:underline inline-flex items-center gap-1"
+                                            >
+                                                Tüm Piyasa Temettü Takvimini İncele
+                                                <ChevronRight className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        displayedUserDividends.map((item) => (
+                                            <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
+                                                <div className="flex justify-between items-start">
                                                     <div className="flex flex-col">
-                                                        <span className="font-black text-[#00008B] text-sm">{sym}</span>
-                                                        <span className={cn("text-[9px] font-bold uppercase tracking-wider", isEstimate ? "text-amber-700" : isPast ? "text-slate-400" : "text-emerald-700")}>
-                                                            {isEstimate ? "BEKLENEN TEMETTÜ" : isPast ? "ÖDENMİŞ TEMETTÜ" : "KESİNLEŞEN TEMETTÜ"}
-                                                        </span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                                %{item.yieldPercent} Verim
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-[10px] text-slate-500 font-semibold line-clamp-1 mt-0.5">{item.companyName}</span>
                                                     </div>
                                                     <div className="text-right">
-                                                        <span className="text-emerald-700 font-black text-sm block">{formatCurrency(totalGross)}</span>
-                                                        <span className="text-[9px] text-slate-400 font-bold">BRÜT TUTAR</span>
+                                                        <span className="text-emerald-700 font-black text-sm block">{formatCurrency(item.totalIncome)}</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase">{item.userQuantity} Adet İçin Net</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
+                                                    <div className="flex items-center gap-1 text-slate-600 font-semibold">
+                                                        <Calendar className="w-3 h-3 text-[#00008B]" />
+                                                        <span>Tarih: {item.paymentDate}</span>
+                                                    </div>
+                                                    <div className="text-slate-600 font-bold">
+                                                        Net: <span className="text-[#00008B] font-black">{item.netAmountFormatted}</span> / Pay
                                                     </div>
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                                )}
-                            </motion.div>
+                                        ))
+                                    )}
+                                </motion.div>
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+                                <span className="text-[10px] text-slate-400 font-semibold">HalkArz Canlı Veri Senkronizasyonu</span>
+                                <button 
+                                    onClick={() => setIsAllDividendsModalOpen(true)}
+                                    className="text-[10px] font-bold text-[#00008B] hover:underline"
+                                >
+                                    Tümünü Gör ({halkarzDividends.length} Şirket) →
+                                </button>
+                            </div>
                         </div>
 
                     </div>
@@ -837,6 +878,97 @@ export default function PortfolioPage() {
             </div>
 
             {/* Modals & AnimatePresence Blocks */}
+
+            {/* Full BIST Temettü Takvimi Modal */}
+            <AnimatePresence>
+                {isAllDividendsModalOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                        <div onClick={() => setIsAllDividendsModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
+                                        <Coins className="w-5 h-5 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#00008B]">Tüm Temettü Takvimi</h2>
+                                        <p className="text-xs text-slate-400 font-medium">HalkArz Canlı Veri Akışı ile BIST Temettü Tarihleri ve Hisse Başı Tutarları</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsAllDividendsModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            {/* Search bar */}
+                            <div className="relative mb-6">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Hisse Kodu veya Şirket Adı Ara..."
+                                    className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-sm rounded-2xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
+                                    value={allDividendsSearch}
+                                    onChange={(e) => setAllDividendsSearch(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-3">
+                                {filteredAllDividends.length === 0 ? (
+                                    <p className="text-center py-10 text-slate-400 font-medium text-sm">Aramanızla eşleşen temettü verisi bulunamadı.</p>
+                                ) : (
+                                    filteredAllDividends.map((item) => {
+                                        const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
+                                        const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
+                                        const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
+
+                                        return (
+                                            <div 
+                                                key={item.symbol} 
+                                                className={cn(
+                                                    "p-4 rounded-2xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4",
+                                                    isUserAsset ? "bg-emerald-50/80 border-emerald-300" : "bg-slate-50/60 border-slate-100 hover:bg-blue-50/40"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center font-black text-[#00008B] text-base shrink-0 shadow-sm">
+                                                        {item.symbol}
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <h4 className="font-black text-[#00008B] text-base">{item.companyName}</h4>
+                                                            {isUserAsset && (
+                                                                <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white uppercase">
+                                                                    Portföyünüzde Var ({userAssetObj?.totalQuantity} Adet)
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-xs text-slate-500 font-medium">Ödeme Tarihi: <b>{item.paymentDate}</b></span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-6 justify-between md:justify-end border-t md:border-t-0 border-slate-200/60 pt-2 md:pt-0">
+                                                    <div className="text-left md:text-right">
+                                                        <span className="text-xs text-slate-400 font-semibold block">Hisse Başı Net</span>
+                                                        <span className="text-[#00008B] font-black text-sm">{item.netAmountFormatted}</span>
+                                                    </div>
+                                                    <div className="text-left md:text-right">
+                                                        <span className="text-xs text-slate-400 font-semibold block">Verim</span>
+                                                        <span className="text-emerald-700 font-black text-sm">%{item.yieldPercent}</span>
+                                                    </div>
+                                                    {isUserAsset && (
+                                                        <div className="text-right bg-white px-3 py-1.5 rounded-xl border border-emerald-200 shadow-sm">
+                                                            <span className="text-[10px] text-emerald-800 font-bold block">Toplam Kazancınız</span>
+                                                            <span className="text-emerald-700 font-black text-sm">{formatCurrency(userTotalNet)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* AI Analysis Modal */}
             <AnimatePresence>
