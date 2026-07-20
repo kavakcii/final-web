@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter, Sparkles, Sliders } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
@@ -49,6 +49,9 @@ export default function PortfolioPage() {
     // Dynamic Focus Mode State
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
 
+    // 4 Animasyon Planı Lokal Önizleme Seçim State'i ('plan1' | 'plan2' | 'plan3' | 'plan4')
+    const [animationPlan, setAnimationPlan] = useState<'plan1' | 'plan2' | 'plan3' | 'plan4'>('plan1');
+
     // Temettü Takvimi Akıllı Sıralama State
     const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
 
@@ -85,6 +88,26 @@ export default function PortfolioPage() {
 
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    // 4 Animasyon Konfigürasyon Yapılandırması
+    const animationConfig: any = useMemo(() => {
+        switch (animationPlan) {
+            case 'plan1':
+                // Plan 1: Lüks İpek & Sinematik Akış (0.95s macOS Easing)
+                return { duration: 0.95, ease: [0.16, 1, 0.3, 1] };
+            case 'plan2':
+                // Plan 2: Dinamik Yaylanma & Fizik Motoru (iOS Spring Physics)
+                return { type: "spring", stiffness: 120, damping: 18, mass: 1 };
+            case 'plan3':
+                // Plan 3: Kademeli Deste Akışı (Staggered 0.80s)
+                return { duration: 0.80, ease: [0.22, 1, 0.36, 1] };
+            case 'plan4':
+                // Plan 4: Ambient Glassmorphism & Soft Glow (0.75s Glow)
+                return { duration: 0.75, ease: [0.19, 1, 0.22, 1] };
+            default:
+                return { duration: 0.95, ease: [0.16, 1, 0.3, 1] };
+        }
+    }, [animationPlan]);
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
@@ -364,19 +387,30 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Element Container with 0.65s Luxury Transition Duration and Soft Easing Curve [0.25, 1, 0.5, 1]
-    const renderWidgetCard = (id: string, isFocused: boolean = false) => {
+    // Shared Element Container with Dynamic Animation Config
+    const renderWidgetCard = (id: string, isFocused: boolean = false, indexInStack: number = 0) => {
+        // Plan 3'te kademeli gecikme (staggered delay)
+        const customTransition = animationPlan === 'plan3' && !isFocused
+            ? { ...animationConfig, delay: indexInStack * 0.05 }
+            : animationConfig;
+
         return (
             <motion.div
                 key={id}
                 layoutId={`widget-card-${id}`}
                 layout
-                transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
+                transition={customTransition}
                 className={cn(
-                    "w-full transition-shadow duration-500",
-                    isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
+                    "w-full transition-all relative",
+                    isFocused && animationPlan === 'plan4' && "ring-4 ring-blue-500/20 shadow-2xl shadow-blue-900/10",
+                    isFocused && animationPlan !== 'plan4' && "ring-2 ring-[#00008B]/20 shadow-2xl",
+                    !isFocused && animationPlan === 'plan4' && "opacity-90 hover:opacity-100"
                 )}
             >
+                {/* Plan 4 Ambient Glow Backplate */}
+                {isFocused && animationPlan === 'plan4' && (
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-sky-400/20 to-indigo-600/20 rounded-[2.2rem] blur-xl -z-10 animate-pulse" />
+                )}
                 {renderWidgetContent(id, isFocused)}
             </motion.div>
         );
@@ -508,7 +542,7 @@ export default function PortfolioPage() {
                                                                 initial={{ opacity: 0, height: 0 }}
                                                                 animate={{ opacity: 1, height: "auto" }}
                                                                 exit={{ opacity: 0, height: 0 }}
-                                                                transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
+                                                                transition={animationConfig}
                                                                 className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
                                                                 onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
                                                             >
@@ -615,7 +649,7 @@ export default function PortfolioPage() {
                         </div>
                         <motion.div 
                             layout
-                            transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
+                            transition={animationConfig}
                             className="space-y-3 overflow-hidden"
                         >
                             {earningsEntries.length === 0 ? (
@@ -775,7 +809,7 @@ export default function PortfolioPage() {
                                 /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA LİSTE */
                                 <motion.div 
                                     layout
-                                    transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
+                                    transition={animationConfig}
                                     className="space-y-3 overflow-hidden"
                                 >
                                     {displayedUserDividends.length === 0 ? (
@@ -926,7 +960,7 @@ export default function PortfolioPage() {
                         </div>
                         <motion.div 
                             layout
-                            transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
+                            transition={animationConfig}
                             className="space-y-3 overflow-hidden"
                         >
                             {extremesEntries.length === 0 ? (
@@ -1016,6 +1050,47 @@ export default function PortfolioPage() {
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
             <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full pointer-events-none -z-10" />
 
+            {/* LOKAL ANİMASYON TEST VE SEÇİM ÇUBUĞU (ANIMATION SWITCHER) */}
+            <div className="bg-gradient-to-r from-blue-900 via-[#00008B] to-indigo-900 rounded-3xl p-5 text-white shadow-xl shadow-[#00008B]/20 border border-blue-700/50">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h3 className="font-black text-base text-white">Canlı Animasyon Test Laboratuvarı</h3>
+                                <span className="bg-amber-400 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider">Lokal Mod</span>
+                            </div>
+                            <p className="text-xs text-blue-200 font-medium">Aşağıdaki 4 farklı animasyon planına tıklayarak widget odak geçişlerini canlı test edebilirsiniz:</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full lg:w-auto">
+                        {[
+                            { id: 'plan1', label: '🌟 Plan 1: Lüks İpek (0.95s)', desc: 'macOS Soft Flow' },
+                            { id: 'plan2', label: '🌿 Plan 2: iOS Spring (Yaylanma)', desc: 'Fizik Motoru' },
+                            { id: 'plan3', label: '🎨 Plan 3: Kademeli Deste (0.80s)', desc: 'Staggered Delay' },
+                            { id: 'plan4', label: '🔮 Plan 4: Ambient Glow (0.75s)', desc: 'Soft Lighting' }
+                        ].map((plan) => (
+                            <button
+                                key={plan.id}
+                                onClick={() => setAnimationPlan(plan.id as any)}
+                                className={cn(
+                                    "px-3.5 py-2.5 rounded-2xl text-left transition-all border font-bold text-xs flex flex-col justify-center",
+                                    animationPlan === plan.id 
+                                        ? "bg-white text-[#00008B] border-white shadow-lg scale-105 font-black" 
+                                        : "bg-white/10 hover:bg-white/20 text-blue-100 border-white/10"
+                                )}
+                            >
+                                <span className="text-[11px] leading-tight">{plan.label}</span>
+                                <span className={cn("text-[9px] mt-0.5", animationPlan === plan.id ? "text-blue-700" : "text-blue-300")}>{plan.desc}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* Notification Feedback Toast */}
             <AnimatePresence>
                 {feedback && (
@@ -1052,11 +1127,11 @@ export default function PortfolioPage() {
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
+                                transition={animationConfig}
                                 className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
-                                Odak Modu
+                                Odak Modu ({animationPlan.toUpperCase()})
                             </motion.span>
                         )}
                     </h1>
@@ -1093,7 +1168,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED SHARED-ELEMENT (layoutId) LAYOUT FOR 0.65s LUXURY FLIP MORPHING ANIMATIONS */}
+            {/* UNIFIED SHARED-ELEMENT (layoutId) LAYOUT FOR DYNAMIC FLIP MORPHING ANIMATIONS */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1121,7 +1196,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (0.65s LUXURY SOFT ANIMATED LAYOUT) */
+                    /* 2. ODAK MODU DURUMU (SELECTED ANIMATION PLAN LAYOUT) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1132,7 +1207,9 @@ export default function PortfolioPage() {
                                         <Eye className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block">Odak Modu Etkin (0.65s Soft)</span>
+                                        <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block">
+                                            Odak Modu Etkin ({animationPlan.toUpperCase()})
+                                        </span>
                                         <span className="text-[11px] text-slate-500 font-semibold">Tıklanan widget sol ekranda büyütüldü</span>
                                     </div>
                                 </div>
@@ -1163,7 +1240,7 @@ export default function PortfolioPage() {
                             <div className="max-h-[80vh] overflow-y-auto pr-1 space-y-4 custom-scrollbar">
                                 {widgetDefinitions
                                     .filter(w => w.id !== focusedWidget)
-                                    .map(widget => (
+                                    .map((widget, idx) => (
                                         <div 
                                             key={widget.id}
                                             onClick={() => setFocusedWidget(widget.id)}
@@ -1176,7 +1253,7 @@ export default function PortfolioPage() {
                                                 </span>
                                             </div>
                                             <div className="transform scale-[0.97] group-hover:scale-100 transition-transform origin-top-right">
-                                                {renderWidgetCard(widget.id, false)}
+                                                {renderWidgetCard(widget.id, false, idx)}
                                             </div>
                                         </div>
                                     ))}
