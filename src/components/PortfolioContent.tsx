@@ -86,7 +86,7 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Tek ve Kalıcı 0.65 Hızındaki Asil Apple iOS Spring Fizik Motoru Konfigürasyonu
+    // Orijinal Apple iOS Paylaşımlı Öge (Shared-Element) 0.65 Hızındaki Spring Fizik Motoru
     const iosSpring065Config: any = useMemo(() => ({
         type: "spring",
         stiffness: 75,
@@ -397,16 +397,16 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Container for Main Grid Widgets (Tüm Geçişler 0.65 iOS Spring Fiziği)
+    // Shared Container for Main Grid Widgets (Orijinal Apple iOS Shared-Element Morphing)
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <motion.div
                 key={id}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
+                layoutId={`widget-card-${id}`}
+                layout
                 transition={iosSpring065Config}
                 className={cn(
-                    "w-full transition-shadow duration-300",
+                    "w-full transition-shadow duration-300 overflow-hidden",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
             >
@@ -1110,7 +1110,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED 0.65 SPEED iOS SPRING PHYSICS LAYOUT */}
+            {/* UNIFIED AUTHENTIC APPLE iOS SHARED-ELEMENT MORPHING LAYOUT (0.65 SPEED) */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1138,7 +1138,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (0.65 HIZINDA YUMUŞAK VE ASİL GEÇİŞLER) */
+                    /* 2. ODAK MODU DURUMU (ORİJİNAL APPLE iOS SHARED-ELEMENT MORPHING) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1197,11 +1197,11 @@ export default function PortfolioPage() {
                                             return (
                                                 <motion.div
                                                     key={widget.id}
-                                                    initial={{ opacity: 0, scale: 0.97 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    layoutId={`widget-card-${widget.id}`}
+                                                    layout
                                                     transition={iosSpring065Config}
                                                     onClick={() => setFocusedWidget(widget.id)}
-                                                    className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
+                                                    className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group overflow-hidden"
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors shrink-0">
