@@ -86,20 +86,10 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Ana Odak Kartı İçin Yumuşak Apple iOS Spring Fizik Motoru Konfigürasyonu
-    const iosSpringAnimationConfig: any = useMemo(() => ({
-        type: "spring",
-        stiffness: 75,
-        damping: 15,
-        mass: 1.1
-    }), []);
-
-    // Sağa Küçülerek Kayma Giriş Hareketi İçin Seri ve Hızlı Spring Konfigürasyonu
-    const fastSpringAnimationConfig: any = useMemo(() => ({
-        type: "spring",
-        stiffness: 135,
-        damping: 17,
-        mass: 0.85
+    // Ultra Hızlı ve Esnemesiz Geçiş Konfigürasyonu (~0.18s)
+    const fastTransitionConfig: any = useMemo(() => ({
+        duration: 0.18,
+        ease: "easeOut"
     }), []);
 
     // Group assets by symbol
@@ -405,16 +395,16 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Element Container for Main Grid Widgets
+    // Shared Container for Main Grid Widgets - Ultra Fast & Clean (No Stretch Distortion)
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <motion.div
                 key={id}
-                layoutId={`widget-card-${id}`}
-                layout
-                transition={iosSpringAnimationConfig}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={fastTransitionConfig}
                 className={cn(
-                    "w-full transition-shadow duration-300",
+                    "w-full transition-shadow duration-200",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
             >
@@ -544,12 +534,7 @@ export default function PortfolioPage() {
 
                                                     return (
                                                         <React.Fragment key={group.symbol}>
-                                                            <motion.tr 
-                                                                layout
-                                                                initial={{ opacity: 0, height: 0 }}
-                                                                animate={{ opacity: 1, height: "auto" }}
-                                                                exit={{ opacity: 0, height: 0 }}
-                                                                transition={iosSpringAnimationConfig}
+                                                            <tr 
                                                                 className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
                                                                 onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
                                                             >
@@ -588,7 +573,7 @@ export default function PortfolioPage() {
                                                                         <ChevronRight className={cn("w-4 h-4 text-slate-400 transition-transform", isExpanded && "rotate-90 text-[#00008B]")} />
                                                                     </div>
                                                                 </td>
-                                                            </motion.tr>
+                                                            </tr>
                                                             {isExpanded && (
                                                                 <tr>
                                                                     <td colSpan={6} className="bg-slate-50/80 p-4 border-t border-b border-slate-100">
@@ -654,11 +639,7 @@ export default function PortfolioPage() {
                                 </button>
                             </div>
                         </div>
-                        <motion.div 
-                            layout
-                            transition={iosSpringAnimationConfig}
-                            className="space-y-3 overflow-hidden"
-                        >
+                        <div className="space-y-3 overflow-hidden">
                             {earningsEntries.length === 0 ? (
                                 <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
                             ) : (
@@ -694,7 +675,7 @@ export default function PortfolioPage() {
                                     );
                                 })
                             )}
-                        </motion.div>
+                        </div>
                     </div>
                 );
 
@@ -816,11 +797,7 @@ export default function PortfolioPage() {
                                 </div>
                             ) : (
                                 /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA LİSTE */
-                                <motion.div 
-                                    layout
-                                    transition={iosSpringAnimationConfig}
-                                    className="space-y-3 overflow-hidden"
-                                >
+                                <div className="space-y-3 overflow-hidden">
                                     {displayedUserDividends.length === 0 ? (
                                         <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
                                             <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
@@ -863,7 +840,7 @@ export default function PortfolioPage() {
                                             </div>
                                         ))
                                     )}
-                                </motion.div>
+                                </div>
                             )}
                         </div>
 
@@ -906,15 +883,14 @@ export default function PortfolioPage() {
                                         const weight = (marketValue / totalValue) * 100;
                                         const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
                                         return (
-                                            <motion.div 
+                                            <div 
                                                 key={group.symbol} 
-                                                initial={{ width: 0 }} 
-                                                animate={{ width: `${weight}%` }} 
-                                                className={`h-full ${colors[idx % colors.length]} flex items-center justify-center relative first:rounded-l-xl last:rounded-r-xl`}
+                                                className={`h-full ${colors[idx % colors.length]} flex items-center justify-center relative first:rounded-l-xl last:rounded-r-xl transition-all duration-300`}
+                                                style={{ width: `${weight}%` }}
                                                 title={`${group.symbol}: %${weight.toFixed(1)}`}
                                             >
                                                 {weight > 6 && <span className="text-white font-bold text-[10px] truncate px-1">{group.symbol}</span>}
-                                            </motion.div>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -967,11 +943,7 @@ export default function PortfolioPage() {
                                 </button>
                             </div>
                         </div>
-                        <motion.div 
-                            layout
-                            transition={iosSpringAnimationConfig}
-                            className="space-y-3 overflow-hidden"
-                        >
+                        <div className="space-y-3 overflow-hidden">
                             {extremesEntries.length === 0 ? (
                                 <p className="text-xs text-slate-400 py-4 text-center font-medium">Analiz verisi bekleniyor...</p>
                             ) : (
@@ -1007,7 +979,7 @@ export default function PortfolioPage() {
                                     );
                                 })
                             )}
-                        </motion.div>
+                        </div>
                     </div>
                 );
 
@@ -1095,7 +1067,7 @@ export default function PortfolioPage() {
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                transition={iosSpringAnimationConfig}
+                                transition={fastTransitionConfig}
                                 className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
@@ -1136,7 +1108,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED SHARED-ELEMENT (layoutId) LAYOUT FOR iOS SPRING PHYSICS MORPHING ANIMATIONS */}
+            {/* UNIFIED ULTRA FAST & CLEAN LAYOUT (ZERO TEXT STRETCHING) */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1164,7 +1136,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (SAĞ ÜSTTE SABİT TOPLAM VARLIK & NET KÂR/ZARAR BLOĞU + SIKIŞTIRILMIŞ ŞERİTLER) */
+                    /* 2. ODAK MODU DURUMU (ULTRA HIZLI & ESNEMESİZ) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1205,7 +1177,7 @@ export default function PortfolioPage() {
                                 </div>
                             )}
 
-                            {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER (SCROLLBAR-FREE) */}
+                            {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER (ULTRA HIZLI & ESNEMESİZ) */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
                                     <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
@@ -1223,9 +1195,9 @@ export default function PortfolioPage() {
                                             return (
                                                 <motion.div
                                                     key={widget.id}
-                                                    layoutId={`widget-card-${widget.id}`}
-                                                    layout
-                                                    transition={fastSpringAnimationConfig}
+                                                    initial={{ opacity: 0, scale: 0.96 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    transition={fastTransitionConfig}
                                                     onClick={() => setFocusedWidget(widget.id)}
                                                     className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
                                                 >
@@ -1265,7 +1237,7 @@ export default function PortfolioPage() {
                 {isAllDividendsModalOpen && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                         <div onClick={() => setIsAllDividendsModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} transition={{ duration: 0.35 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]">
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} transition={{ duration: 0.25 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]">
                             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
@@ -1447,7 +1419,7 @@ export default function PortfolioPage() {
                                                     "py-2.5 text-xs font-bold rounded-xl transition-all border",
                                                     newItemType === item.type 
                                                         ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
-                                                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                                                        : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-slate-100"
                                                 )}
                                             >
                                                 {item.label}
