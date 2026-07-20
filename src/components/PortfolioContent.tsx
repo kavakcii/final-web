@@ -46,7 +46,7 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
-    // Dynamic Focus Mode State & Entry Tracking
+    // Dynamic Focus Mode State & Initial Entry Tracking
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
     const [isInitialFocusEntry, setIsInitialFocusEntry] = useState<boolean>(false);
 
@@ -54,7 +54,7 @@ export default function PortfolioPage() {
     const handleWidgetFocus = (id: string | null) => {
         if (focusedWidget === null && id !== null) {
             setIsInitialFocusEntry(true);
-            setTimeout(() => setIsInitialFocusEntry(false), 250);
+            setTimeout(() => setIsInitialFocusEntry(false), 400);
         }
         setFocusedWidget(id);
     };
@@ -96,19 +96,24 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // 0.65 Hızındaki Asil Apple iOS Spring Fizik Motoru Konfigürasyonu (Odak İçi Widget Değişimleri İçin)
-    const iosSpringAnimationConfig: any = useMemo(() => ({
+    // 1.0 Hızındaki Apple iOS Spring Fizik Motoru Konfigürasyonu (İlk Odak Modu Girişi İçin)
+    const iosSpring1Config: any = useMemo(() => ({
+        type: "spring",
+        stiffness: 120,
+        damping: 18,
+        mass: 1
+    }), []);
+
+    // 0.65 Hızındaki Apple iOS Spring Fizik Motoru Konfigürasyonu (Odak İçi Widget Değişimleri İçin)
+    const iosSpring065Config: any = useMemo(() => ({
         type: "spring",
         stiffness: 75,
         damping: 15,
         mass: 1.1
     }), []);
 
-    // Odak Moduna İlk Girişte Şerit Kartların Anında Yerine Oturması İçin Ultra Hızlı Konfigürasyon (~0.12s)
-    const entryFastTransitionConfig: any = useMemo(() => ({
-        duration: 0.12,
-        ease: "easeOut"
-    }), []);
+    // Active animation config based on focus state
+    const activeAnimationConfig = isInitialFocusEntry ? iosSpring1Config : iosSpring065Config;
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
@@ -413,14 +418,14 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Container for Main Grid Widgets (Odak modunda widget değişimleri 0.65 iOS Spring Fiziği ile akar)
+    // Shared Container for Main Grid Widgets
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <motion.div
                 key={id}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={iosSpringAnimationConfig}
+                transition={activeAnimationConfig}
                 className={cn(
                     "w-full transition-shadow duration-300",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
@@ -1085,7 +1090,7 @@ export default function PortfolioPage() {
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                transition={iosSpringAnimationConfig}
+                                transition={activeAnimationConfig}
                                 className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
@@ -1126,7 +1131,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED DUAL-MODE LAYOUT (ODAK İÇİ GEÇİŞLER 0.65 iOS SPRING, İLK GİRİŞ İSE ANINDA HIZLI) */}
+            {/* UNIFIED DUAL-SPEED LAYOUT: İLK GİRİŞ 1 HIZI, ODAK İÇİ GEÇİŞLER 0.65 HIZI */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1210,14 +1215,12 @@ export default function PortfolioPage() {
                                         .filter(w => w.id !== focusedWidget && w.id !== 'summary')
                                         .map((widget) => {
                                             const WidgetIcon = widget.icon;
-                                            const activeStripTransition = isInitialFocusEntry ? entryFastTransitionConfig : iosSpringAnimationConfig;
-
                                             return (
                                                 <motion.div
                                                     key={widget.id}
                                                     initial={{ opacity: 0, scale: 0.97 }}
                                                     animate={{ opacity: 1, scale: 1 }}
-                                                    transition={activeStripTransition}
+                                                    transition={activeAnimationConfig}
                                                     onClick={() => handleWidgetFocus(widget.id)}
                                                     className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
                                                 >
