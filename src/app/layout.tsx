@@ -7,10 +7,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/logo.png", type: "image/png" },
-      { url: "/logo.svg", type: "image/svg+xml" },
     ],
-    shortcut: ["/logo.png"],
+    shortcut: ["/icon-512.png"],
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     description: "BIST ve TEFAS portföyünüzü AI destekli analizlerle tek bir panoda yönetin.",
     images: [
       {
-        url: "/logo.png",
+        url: "/icon-512.png",
         width: 512,
         height: 512,
         alt: "FinAi Logo",
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "FinAi - Yapay Zeka Yatırım Asistanı",
     description: "BIST ve TEFAS portföyünüzü AI destekli analizlerle tek bir panoda yönetin.",
-    images: ["/logo.png"],
+    images: ["/icon-512.png"],
   },
 };
 
