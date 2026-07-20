@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
+import Link from "next/link";
 
 // Grouped Asset Type
 interface GroupedAsset {
@@ -48,6 +49,12 @@ export default function PortfolioPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isAssetSelected, setIsAssetSelected] = useState(false);
+
+    // Truncate / Expand States
+    const [isTableExpanded, setIsTableExpanded] = useState(false);
+    const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
+    const [isDividendExpanded, setIsDividendExpanded] = useState(false);
+    const [isExtremesExpanded, setIsExtremesExpanded] = useState(false);
 
     // UI states
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -288,10 +295,19 @@ export default function PortfolioPage() {
     const totalProfit = totalValue - totalCostValue;
     const profitRatio = totalCostValue > 0 ? (totalProfit / totalCostValue) * 100 : 0;
 
+    // Filtered lists for truncated views (first 5 items default)
+    const displayedAssets = isTableExpanded ? groupedAssets : groupedAssets.slice(0, 5);
+    const earningsEntries = Object.entries(earningsDates);
+    const displayedEarnings = isCalendarExpanded ? earningsEntries : earningsEntries.slice(0, 5);
+    const dividendEntries = Object.entries(dividendData).filter(([_, data]) => data.amount > 0).sort((a, b) => b[1].date - a[1].date);
+    const displayedDividends = isDividendExpanded ? dividendEntries : dividendEntries.slice(0, 5);
+    const extremesEntries = Object.entries(priceExtremes);
+    const displayedExtremes = isExtremesExpanded ? extremesEntries : extremesEntries.slice(0, 5);
+
     return (
-        <div className="p-[#00008B] font-sans p-6 md:p-10 space-y-10 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-hidden font-sans">
+        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-hidden font-sans">
             
-            {/* Ambient Soft Blue Light Leaks (Matches Landing Page) */}
+            {/* Ambient Soft Blue Light Leaks */}
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
             <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full pointer-events-none -z-10" />
 
@@ -315,7 +331,7 @@ export default function PortfolioPage() {
                 )}
             </AnimatePresence>
 
-            {/* Page Header Title Section (Landing Page Style) */}
+            {/* Page Header Title Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
                 <div>
                     <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50/80 border border-blue-200/50 text-[#00008B] text-xs font-bold mb-2 shadow-sm">
@@ -352,312 +368,244 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* Bento Grid Summary Cards - Clean White & Navy Theme */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Total Portfolio Value Card */}
-                <div className="md:col-span-2 bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group hover:border-blue-200 transition-all">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 rounded-full blur-2xl pointer-events-none" />
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
-                                <Wallet className="w-4 h-4 text-[#00008B]" />
-                            </div>
-                            <span className="text-[#00008B]/60 text-[11px] font-bold uppercase tracking-widest">Toplam Varlık Değeri</span>
-                        </div>
-                        <h2 className="text-4xl md:text-5xl font-black text-[#00008B] tracking-tighter mt-2">
-                            {formatCurrency(totalValue)}
-                        </h2>
-                        <div className="flex items-center gap-2 mt-4">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                            <p className="text-slate-400 text-[11px] font-semibold uppercase tracking-wider">Canlı Piyasa Değerlemesi</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Net Profit / Loss Card */}
-                <div className="md:col-span-1 bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between hover:border-blue-200 transition-all">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100">
-                                {totalProfit >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-600" /> : <TrendingDown className="w-4 h-4 text-rose-600" />}
-                            </div>
-                            <span className="text-[#00008B]/60 text-[11px] font-bold uppercase tracking-widest">Net Kâr / Zarar</span>
-                        </div>
-                        <div className="mt-4">
-                            <span className={cn("text-2xl md:text-3xl font-black tracking-tight block", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2">
-                        <div className={cn("px-2.5 py-1 rounded-xl text-xs font-black border", totalProfit >= 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" : "bg-rose-50 text-rose-700 border-rose-200/60")}>
-                            %{profitRatio.toFixed(2)}
-                        </div>
-                        <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Toplam Getiri</span>
-                    </div>
-                </div>
-
-                {/* Quick Add Asset Card */}
-                <div className="md:col-span-1">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="w-full h-full min-h-[140px] bg-blue-50/30 hover:bg-blue-50 border border-dashed border-blue-200/80 hover:border-[#00008B] rounded-3xl p-6 flex flex-col items-center justify-center gap-3 text-[#00008B] transition-all group shadow-sm hover:shadow-md"
-                    >
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border border-blue-200 shadow-sm group-hover:bg-[#00008B] group-hover:text-white transition-all text-[#00008B]">
-                            <Plus className="w-5 h-5" />
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-widest text-[#00008B]">Yeni İşlem Ekle</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Risk & Distribution Chart */}
-            {assets.length > 0 && totalValue > 0 && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                            <PieChart className="w-4 h-4 text-[#00008B]" />
-                            <h3 className="font-bold text-[#00008B] text-sm tracking-tight">Risk & Yığılma Haritası</h3>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Varlık Dağılımı</span>
-                    </div>
-                    <div className="h-6 w-full rounded-2xl flex overflow-hidden border border-slate-100 bg-slate-50 p-0.5 shadow-inner">
-                        {groupedAssets.sort((a,b) => (prices[b.symbol]*b.totalQuantity) - (prices[a.symbol]*a.totalQuantity)).map((group, idx) => {
-                            const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
-                            if (marketValue <= 0) return null;
-                            const weight = (marketValue / totalValue) * 100;
-                            const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
-                            return (
-                                <motion.div 
-                                    key={group.symbol} 
-                                    initial={{ width: 0 }} 
-                                    animate={{ width: `${weight}%` }} 
-                                    className={`h-full ${colors[idx % colors.length]} flex items-center justify-center relative first:rounded-l-xl last:rounded-r-xl`}
-                                    title={`${group.symbol}: %${weight.toFixed(1)}`}
-                                >
-                                    {weight > 6 && <span className="text-white font-bold text-[10px] truncate px-1">{group.symbol}</span>}
-                                </motion.div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Main Content Layout: Table & Sidebar Widgets */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            {/* MAIN 65% - 35% GRID ARCHITECTURE */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 
-                {/* Main Table Section */}
-                <div className="xl:col-span-2 bg-white border border-slate-100 rounded-3xl shadow-xl shadow-[#00008B]/5 overflow-hidden flex flex-col justify-between">
-                    <div>
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                            <h3 className="text-xl font-black text-[#00008B] tracking-tight">Portföy Tablosu</h3>
-                            <div className="text-[10px] font-bold text-[#00008B] bg-blue-50 border border-blue-200/50 px-3 py-1 rounded-full">
-                                {groupedAssets.length} VARLIK
+                {/* SOL SÜTUN (%65 - 8/12 Cols) */}
+                <div className="xl:col-span-8 space-y-8">
+                    
+                    {/* Üst Kısım: Portföy Tablosu (5-Satır Daraltılmış + GPU Akıcı Genişleme) */}
+                    <div className="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-[#00008B]/5 overflow-hidden flex flex-col justify-between">
+                        <div>
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                                <div className="flex items-center gap-3">
+                                    <h3 className="text-xl font-black text-[#00008B] tracking-tight">Portföy Tablosu</h3>
+                                    <div className="text-[10px] font-bold text-[#00008B] bg-blue-50 border border-blue-200/50 px-3 py-1 rounded-full">
+                                        {groupedAssets.length} VARLIK
+                                    </div>
+                                </div>
+
+                                {groupedAssets.length > 5 && (
+                                    <button
+                                        onClick={() => setIsTableExpanded(!isTableExpanded)}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100/70 text-[#00008B] text-xs font-bold transition-all border border-blue-200/40"
+                                    >
+                                        {isTableExpanded ? (
+                                            <>
+                                                <Minimize2 className="w-3.5 h-3.5" />
+                                                Daralt (İlk 5)
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Maximize2 className="w-3.5 h-3.5" />
+                                                Tümünü Gör ({groupedAssets.length})
+                                            </>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="text-[10px] text-[#00008B]/50 uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/50">
+                                            <th className="py-4 px-6">Varlık</th>
+                                            <th className="py-4 px-4">Maliyet / Adet</th>
+                                            <th className="py-4 px-4">Anlık</th>
+                                            <th className="py-4 px-4">Bakiye</th>
+                                            <th className="py-4 px-4">Kâr/Zarar</th>
+                                            <th className="py-4 px-6 text-right">İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
+                                        {groupedAssets.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={6} className="py-12 text-center text-[#00008B]/40 font-medium text-sm">
+                                                    Henüz eklenmiş bir varlığınız bulunmuyor.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            <AnimatePresence initial={false}>
+                                                {displayedAssets.map((group) => {
+                                                    const currentPrice = prices[group.symbol] || 0;
+                                                    const marketValue = currentPrice * group.totalQuantity;
+                                                    const profit = marketValue - group.totalCost;
+                                                    const isProfit = profit >= 0;
+                                                    const isExpanded = expandedSymbol === group.symbol;
+
+                                                    return (
+                                                        <React.Fragment key={group.symbol}>
+                                                            <motion.tr 
+                                                                layout
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: "auto" }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                                                                className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
+                                                                onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
+                                                            >
+                                                                <td className="py-4 px-6 font-bold text-[#00008B]">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-base font-black tracking-tight">{group.symbol}</span>
+                                                                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200/50 text-blue-700 font-bold uppercase tracking-wider">{group.type}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-4 px-4">
+                                                                    <div className="flex flex-col text-xs font-semibold">
+                                                                        <span className="text-[#00008B]">{group.totalQuantity} adet</span>
+                                                                        <span className="text-slate-400 text-[11px]">{formatCurrency(group.avgCost)}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-4 px-4 font-bold text-[#00008B]">
+                                                                    {currentPrice > 0 ? formatCurrency(currentPrice) : "-"}
+                                                                </td>
+                                                                <td className="py-4 px-4 font-black text-[#00008B]">
+                                                                    {formatCurrency(marketValue)}
+                                                                </td>
+                                                                <td className="py-4 px-4">
+                                                                    <div className={cn("inline-flex items-center px-2.5 py-1 rounded-xl font-bold text-xs border", isProfit ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" : "bg-rose-50 text-rose-700 border-rose-200/60")}>
+                                                                        {isProfit ? "+" : ""}{formatCurrency(profit)}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-4 px-6 text-right">
+                                                                    <div className="flex items-center justify-end gap-1">
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); handleAnalyze(group.symbol, group.type); }} 
+                                                                            className="p-2 hover:bg-blue-100/60 text-[#00008B] rounded-xl transition-colors"
+                                                                            title="AI Analizi"
+                                                                        >
+                                                                            <Brain className="w-4 h-4" />
+                                                                        </button>
+                                                                        <ChevronRight className={cn("w-4 h-4 text-slate-400 transition-transform", isExpanded && "rotate-90 text-[#00008B]")} />
+                                                                    </div>
+                                                                </td>
+                                                            </motion.tr>
+                                                            {isExpanded && (
+                                                                <tr>
+                                                                    <td colSpan={6} className="bg-slate-50/80 p-4 border-t border-b border-slate-100">
+                                                                        <div className="space-y-2 max-w-2xl">
+                                                                            <div className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest mb-2">İşlem Geçmişi</div>
+                                                                            {group.transactions.map(tx => (
+                                                                                <div key={tx.id} className="flex justify-between text-xs py-2 px-3 bg-white rounded-xl border border-slate-100 items-center">
+                                                                                    <span className="text-slate-400 font-medium">{formatDate(tx.dateAdded)}</span>
+                                                                                    <span className="text-[#00008B] font-bold">{tx.quantity} adet @ {formatCurrency(tx.avgCost)}</span>
+                                                                                    <button onClick={() => confirmDelete(tx.id, group.symbol, true)} className="text-slate-400 hover:text-rose-600 p-1 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </AnimatePresence>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="text-[10px] text-[#00008B]/50 uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/50">
-                                        <th className="py-4 px-6">Varlık</th>
-                                        <th className="py-4 px-4">Maliyet / Adet</th>
-                                        <th className="py-4 px-4">Anlık</th>
-                                        <th className="py-4 px-4">Bakiye</th>
-                                        <th className="py-4 px-4">Kâr/Zarar</th>
-                                        <th className="py-4 px-6 text-right">İşlem</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 text-sm text-slate-700">
-                                    {groupedAssets.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={6} className="py-12 text-center text-[#00008B]/40 font-medium text-sm">
-                                                Henüz eklenmiş bir varlığınız bulunmuyor.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        groupedAssets.map((group) => {
-                                            const currentPrice = prices[group.symbol] || 0;
-                                            const marketValue = currentPrice * group.totalQuantity;
-                                            const profit = marketValue - group.totalCost;
-                                            const isProfit = profit >= 0;
-                                            const isExpanded = expandedSymbol === group.symbol;
+                        {groupedAssets.length > 5 && (
+                            <div className="p-3 bg-slate-50/50 border-t border-slate-100 text-center">
+                                <button
+                                    onClick={() => setIsTableExpanded(!isTableExpanded)}
+                                    className="text-xs font-bold text-[#00008B] hover:underline inline-flex items-center gap-1"
+                                >
+                                    {isTableExpanded ? "Görünümü Daralt (İlk 5 Varlık)" : `Tüm Varlıkları Göster (${groupedAssets.length} Varlık)`}
+                                    <ChevronDown className={cn("w-4 h-4 transition-transform", isTableExpanded && "rotate-180")} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
 
-                                            return (
-                                                <React.Fragment key={group.symbol}>
-                                                    <tr 
-                                                        className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
-                                                        onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
+                    {/* Alt Kısım: "Bilanço Takvimi" ve "Temettü Takvimi" (Sol Sütun İçi 2-Kolon) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        
+                        {/* Bilanço Takvimi Widget */}
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-[#00008B]" />
+                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
+                                </div>
+                                {earningsEntries.length > 5 && (
+                                    <button 
+                                        onClick={() => setIsCalendarExpanded(!isCalendarExpanded)}
+                                        className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
+                                    >
+                                        {isCalendarExpanded ? "Daralt" : `Tüm (${earningsEntries.length})`}
+                                    </button>
+                                )}
+                            </div>
+                            <motion.div 
+                                layout
+                                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                                className="space-y-3 overflow-hidden"
+                            >
+                                {earningsEntries.length === 0 ? (
+                                    <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
+                                ) : (
+                                    displayedEarnings.map(([sym, time]) => {
+                                        const days = Math.ceil((time - Date.now()) / (86400000));
+                                        if (days < -30) return null;
+                                        const isReported = days <= 0;
+                                        const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
+
+                                        return (
+                                            <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-[#00008B] text-sm">{sym}</span>
+                                                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
+                                                    </div>
+                                                    <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
+                                                        {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
+                                                    </span>
+                                                </div>
+                                                {kapUrl && (
+                                                    <a 
+                                                        href={kapUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
                                                     >
-                                                        <td className="py-4 px-6 font-bold text-[#00008B]">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-base font-black tracking-tight">{group.symbol}</span>
-                                                                <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200/50 text-blue-700 font-bold uppercase tracking-wider">{group.type}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4 px-4">
-                                                            <div className="flex flex-col text-xs font-semibold">
-                                                                <span className="text-[#00008B]">{group.totalQuantity} adet</span>
-                                                                <span className="text-slate-400 text-[11px]">{formatCurrency(group.avgCost)}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4 px-4 font-bold text-[#00008B]">
-                                                            {currentPrice > 0 ? formatCurrency(currentPrice) : "-"}
-                                                        </td>
-                                                        <td className="py-4 px-4 font-black text-[#00008B]">
-                                                            {formatCurrency(marketValue)}
-                                                        </td>
-                                                        <td className="py-4 px-4">
-                                                            <div className={cn("inline-flex items-center px-2.5 py-1 rounded-xl font-bold text-xs border", isProfit ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" : "bg-rose-50 text-rose-700 border-rose-200/60")}>
-                                                                {isProfit ? "+" : ""}{formatCurrency(profit)}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-4 px-6 text-right">
-                                                            <div className="flex items-center justify-end gap-1">
-                                                                <button 
-                                                                    onClick={(e) => { e.stopPropagation(); handleAnalyze(group.symbol, group.type); }} 
-                                                                    className="p-2 hover:bg-blue-100/60 text-[#00008B] rounded-xl transition-colors"
-                                                                    title="AI Analizi"
-                                                                >
-                                                                    <Brain className="w-4 h-4" />
-                                                                </button>
-                                                                <ChevronRight className={cn("w-4 h-4 text-slate-400 transition-transform", isExpanded && "rotate-90 text-[#00008B]")} />
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    {isExpanded && (
-                                                        <tr>
-                                                            <td colSpan={6} className="bg-slate-50/80 p-4 border-t border-b border-slate-100">
-                                                                <div className="space-y-2 max-w-2xl">
-                                                                    <div className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest mb-2">İşlem Geçmişi</div>
-                                                                    {group.transactions.map(tx => (
-                                                                        <div key={tx.id} className="flex justify-between text-xs py-2 px-3 bg-white rounded-xl border border-slate-100 items-center">
-                                                                            <span className="text-slate-400 font-medium">{formatDate(tx.dateAdded)}</span>
-                                                                            <span className="text-[#00008B] font-bold">{tx.quantity} adet @ {formatCurrency(tx.avgCost)}</span>
-                                                                            <button onClick={() => confirmDelete(tx.id, group.symbol, true)} className="text-slate-400 hover:text-rose-600 p-1 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    )}
-                                                </React.Fragment>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sidebar Widgets Section */}
-                <div className="xl:col-span-1 space-y-6">
-                    
-                    {/* Takvim Widget */}
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                        <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                            <Calendar className="w-4 h-4 text-[#00008B]" />
-                            <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Takvim & Bilanço</h3>
-                        </div>
-                        <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
-                            {Object.keys(earningsDates).length === 0 ? (
-                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
-                            ) : (
-                                Object.entries(earningsDates).map(([sym, time]) => {
-                                    const days = Math.ceil((time - Date.now()) / (86400000));
-                                    if (days < -30) return null;
-                                    const isReported = days <= 0;
-                                    const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
-
-                                    return (
-                                        <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
-                                            <div className="flex justify-between items-center">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-[#00008B] text-sm">{sym}</span>
-                                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
-                                                </div>
-                                                <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
-                                                    {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
-                                                </span>
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        Bilançoya ulaşmak için tıklayınız
+                                                    </a>
+                                                )}
                                             </div>
-                                            {kapUrl && (
-                                                <a 
-                                                    href={kapUrl} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
-                                                >
-                                                    <ExternalLink className="w-3 h-3" />
-                                                    Bilançoya ulaşmak için tıklayınız
-                                                </a>
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            )}
+                                        );
+                                    })
+                                )}
+                            </motion.div>
                         </div>
-                    </div>
 
-                    {/* Fiyat Analizi Widget */}
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                        <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                            <Activity className="w-4 h-4 text-[#00008B]" />
-                            <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Fiyat Analizi (52H)</h3>
-                        </div>
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                            {Object.keys(priceExtremes).length === 0 ? (
-                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Analiz verisi bekleniyor...</p>
-                            ) : (
-                                Object.entries(priceExtremes).map(([sym, ext]) => {
-                                    const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
-                                    return (
-                                        <div key={sym} className="space-y-2.5 p-3.5 bg-slate-50/70 rounded-2xl border border-slate-100">
-                                            <div className="flex justify-between items-center text-xs font-bold">
-                                                <span className="text-[#00008B] font-black">{sym}</span>
-                                                <span className="text-[#00008B] bg-blue-50 border border-blue-200/50 px-2.5 py-0.5 rounded-lg text-[11px]">
-                                                    {formatCurrency(ext.current)}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="relative py-1">
-                                                <div className="h-2 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
-                                                    <div 
-                                                        className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 relative transition-all duration-1000"
-                                                        style={{ width: `${pos}%` }}
-                                                    />
-                                                </div>
-                                                <div 
-                                                    className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#00008B] rounded-full border-2 border-white shadow-md ring-2 ring-blue-500/20 z-10 transition-all duration-1000"
-                                                    style={{ left: `calc(${pos}% - 7px)` }}
-                                                />
-                                            </div>
-
-                                            <div className="flex justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                                                <span>52H Düşük: {formatCurrency(ext.low)}</span>
-                                                <span>52H Yüksek: {formatCurrency(ext.high)}</span>
-                                            </div>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Nakit Akışı (Temettü) Widget */}
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                        <div className="flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                            <Wallet className="w-4 h-4 text-emerald-600" />
-                            <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Nakit Akışı (Temettü)</h3>
-                        </div>
-                        <div className="space-y-3 max-h-[250px] overflow-y-auto pr-1 custom-scrollbar">
-                            {Object.entries(dividendData).filter(([_, data]) => data.amount > 0).length === 0 ? (
-                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Temettü ödeme takvimi bulunamadı.</p>
-                            ) : (
-                                Object.entries(dividendData)
-                                    .filter(([_, data]) => data.amount > 0)
-                                    .sort((a, b) => b[1].date - a[1].date)
-                                    .map(([sym, data]) => {
+                        {/* Temettü Takvimi (Nakit Akışı) Widget */}
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Wallet className="w-4 h-4 text-emerald-600" />
+                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Temettü Takvimi</h3>
+                                </div>
+                                {dividendEntries.length > 5 && (
+                                    <button 
+                                        onClick={() => setIsDividendExpanded(!isDividendExpanded)}
+                                        className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
+                                    >
+                                        {isDividendExpanded ? "Daralt" : `Tüm (${dividendEntries.length})`}
+                                    </button>
+                                )}
+                            </div>
+                            <motion.div 
+                                layout
+                                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                                className="space-y-3 overflow-hidden"
+                            >
+                                {dividendEntries.length === 0 ? (
+                                    <p className="text-xs text-slate-400 py-4 text-center font-medium">Temettü ödeme takvimi bulunamadı.</p>
+                                ) : (
+                                    displayedDividends.map(([sym, data]) => {
                                         const days = Math.ceil((data.date - Date.now()) / (86400000));
                                         const isPast = days < 0;
                                         const isEstimate = data.isEstimate;
@@ -679,29 +627,213 @@ export default function PortfolioPage() {
                                                         <span className="text-[9px] text-slate-400 font-bold">BRÜT TUTAR</span>
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-slate-100">
-                                                    <div className="flex items-center gap-1 text-slate-500 font-semibold">
-                                                        <Calendar className="w-3 h-3 text-[#00008B]" />
-                                                        <span>{formatDate(new Date(data.date).toISOString())}</span>
-                                                    </div>
-                                                    <div className="text-slate-500 font-bold">
-                                                        {formatCurrency(data.amount)} / Pay
-                                                    </div>
-                                                </div>
                                             </div>
                                         );
                                     })
-                            )}
+                                )}
+                            </motion.div>
                         </div>
-                        <div className="mt-4 p-3.5 bg-blue-50/60 border border-blue-100 rounded-2xl flex gap-2.5 items-start">
-                            <Info className="w-4 h-4 text-[#00008B] shrink-0 mt-0.5" />
-                            <p className="text-[10px] text-[#00008B]/70 leading-relaxed font-medium">
-                                <b>Bilgilendirme:</b> Hesaplanan tutarlar Brüt değerlerdir. BIST hisselerinde %10 yasal stopaj kesintisi otomatik uygulanır.
-                            </p>
-                        </div>
+
                     </div>
 
                 </div>
+
+                {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
+                <div className="xl:col-span-4 space-y-8">
+                    
+                    {/* Üst Kısım: Özet Widget'ları (Toplam Varlık Değeri & Net Kâr/Zarar) */}
+                    <div className="space-y-4">
+                        {/* Toplam Varlık Değeri */}
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group hover:border-blue-200 transition-all">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+                                    <Wallet className="w-3.5 h-3.5 text-[#00008B]" />
+                                </div>
+                                <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Toplam Varlık Değeri</span>
+                            </div>
+                            <h2 className="text-3xl font-black text-[#00008B] tracking-tighter mt-1">
+                                {formatCurrency(totalValue)}
+                            </h2>
+                            <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">Canlı Piyasa Değerlemesi</p>
+                            </div>
+                        </div>
+
+                        {/* Net Kar / Zarar */}
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 hover:border-blue-200 transition-all">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
+                                        {totalProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
+                                    </div>
+                                    <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Net Kâr / Zarar</span>
+                                </div>
+                                <div className={cn("px-2 py-0.5 rounded-lg text-xs font-black border", totalProfit >= 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" : "bg-rose-50 text-rose-700 border-rose-200/60")}>
+                                    %{profitRatio.toFixed(2)}
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <span className={cn("text-2xl font-black tracking-tight block", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                    {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Hızlı İşlem Butonu */}
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="w-full bg-blue-50/40 hover:bg-blue-50 border border-dashed border-blue-200/80 hover:border-[#00008B] rounded-2xl p-4 flex items-center justify-center gap-2.5 text-[#00008B] font-bold text-xs uppercase tracking-wider transition-all group shadow-sm"
+                        >
+                            <Plus className="w-4 h-4 text-[#00008B] group-hover:scale-110 transition-transform" />
+                            <span>Yeni İşlem Ekle</span>
+                        </button>
+                    </div>
+
+                    {/* Alt Kısım: Varlık Dağılım Grafiği (Risk & Yığılma Haritası) */}
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <PieChart className="w-4 h-4 text-[#00008B]" />
+                                <h3 className="font-bold text-[#00008B] text-xs uppercase tracking-wider">Varlık Dağılım Grafiği</h3>
+                            </div>
+                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Dağılım</span>
+                        </div>
+
+                        {assets.length > 0 && totalValue > 0 ? (
+                            <div className="space-y-4">
+                                <div className="h-5 w-full rounded-2xl flex overflow-hidden border border-slate-100 bg-slate-50 p-0.5 shadow-inner">
+                                    {groupedAssets.sort((a,b) => (prices[b.symbol]*b.totalQuantity) - (prices[a.symbol]*a.totalQuantity)).map((group, idx) => {
+                                        const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
+                                        if (marketValue <= 0) return null;
+                                        const weight = (marketValue / totalValue) * 100;
+                                        const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
+                                        return (
+                                            <motion.div 
+                                                key={group.symbol} 
+                                                initial={{ width: 0 }} 
+                                                animate={{ width: `${weight}%` }} 
+                                                className={`h-full ${colors[idx % colors.length]} flex items-center justify-center relative first:rounded-l-xl last:rounded-r-xl`}
+                                                title={`${group.symbol}: %${weight.toFixed(1)}`}
+                                            >
+                                                {weight > 8 && <span className="text-white font-bold text-[9px] truncate px-1">{group.symbol}</span>}
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    {groupedAssets.slice(0, 6).map((group, idx) => {
+                                        const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
+                                        const weight = totalValue > 0 ? (marketValue / totalValue) * 100 : 0;
+                                        const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
+                                        return (
+                                            <div key={group.symbol} className="flex items-center justify-between p-2 bg-slate-50/70 rounded-xl border border-slate-100">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className={`w-2.5 h-2.5 rounded-full ${colors[idx % colors.length]}`} />
+                                                    <span className="font-bold text-[#00008B] text-[11px]">{group.symbol}</span>
+                                                </div>
+                                                <span className="font-black text-slate-500 text-[10px]">%{weight.toFixed(1)}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
+                        )}
+                    </div>
+
+                    {/* Fiyat Analizi Widget */}
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <div className="flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-[#00008B]" />
+                                <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Fiyat Analizi (52H)</h3>
+                            </div>
+                            {extremesEntries.length > 5 && (
+                                <button 
+                                    onClick={() => setIsExtremesExpanded(!isExtremesExpanded)}
+                                    className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
+                                >
+                                    {isExtremesExpanded ? "Daralt" : `Tüm (${extremesEntries.length})`}
+                                </button>
+                            )}
+                        </div>
+                        <motion.div 
+                            layout
+                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            className="space-y-3 overflow-hidden"
+                        >
+                            {extremesEntries.length === 0 ? (
+                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Analiz verisi bekleniyor...</p>
+                            ) : (
+                                displayedExtremes.map(([sym, ext]) => {
+                                    const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
+                                    return (
+                                        <div key={sym} className="space-y-2 p-3 bg-slate-50/70 rounded-2xl border border-slate-100">
+                                            <div className="flex justify-between items-center text-xs font-bold">
+                                                <span className="text-[#00008B] font-black">{sym}</span>
+                                                <span className="text-[#00008B] bg-blue-50 border border-blue-200/50 px-2 py-0.5 rounded-md text-[10px]">
+                                                    {formatCurrency(ext.current)}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="relative py-0.5">
+                                                <div className="h-1.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
+                                                    <div 
+                                                        className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 relative transition-all duration-1000"
+                                                        style={{ width: `${pos}%` }}
+                                                    />
+                                                </div>
+                                                <div 
+                                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-[#00008B] rounded-full border-2 border-white shadow-md z-10 transition-all duration-1000"
+                                                    style={{ left: `calc(${pos}% - 6px)` }}
+                                                />
+                                            </div>
+
+                                            <div className="flex justify-between text-[8px] text-slate-400 font-bold uppercase tracking-wider">
+                                                <span>DÜŞÜK: {formatCurrency(ext.low)}</span>
+                                                <span>YÜKSEK: {formatCurrency(ext.high)}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </motion.div>
+                    </div>
+
+                </div>
+
+                {/* TAM GENİŞLİK (ALT ALAN): KORELASYON ANALİZİ MODÜLÜ */}
+                <div className="xl:col-span-12">
+                    <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/60 rounded-full blur-3xl pointer-events-none" />
+                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                            <div className="space-y-2 max-w-3xl">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#00008B] text-xs font-bold border border-blue-200/50">
+                                    <Activity className="w-3.5 h-3.5" />
+                                    Yapay Zeka Destekli Risk Dengesi
+                                </div>
+                                <h3 className="text-2xl md:text-3xl font-black text-[#00008B] tracking-tight">
+                                    Korelasyon Analizi
+                                </h3>
+                                <p className="text-sm font-medium text-[#00008B]/60 leading-relaxed">
+                                    Portföyünüzdeki varlıkların birbirleriyle olan etkileşimini ve risk yığılmalarını analiz edin. Yapay zeka algoritmamızla yatırımlarınız arasındaki ilişkileri inceleyerek portföy dengenizi optimize edin.
+                                </p>
+                            </div>
+
+                            <Link 
+                                href="/dashboard/portfolio/correlation" 
+                                className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs tracking-wider uppercase shadow-lg shadow-[#00008B]/20 transition-all shrink-0 active:scale-95"
+                            >
+                                <span>Korelasyon Analizini Başlat</span>
+                                <ArrowUpRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {/* Modals & AnimatePresence Blocks */}
