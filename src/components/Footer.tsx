@@ -4,7 +4,7 @@ import { Instagram } from "lucide-react";
 import { FinAiLogo } from "@/components/ui/logo";
 export default function Footer() {
     return (
-        <footer className="bg-white border-t border-slate-100 mt-auto text-[#00008B]">
+        <footer className="bg-white border-t border-[#00008B]/10 mt-auto text-[#00008B]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-4">
@@ -51,7 +51,7 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="mt-8 pt-8 border-t border-slate-100 text-center text-xs text-[#00008B] font-bold uppercase tracking-widest opacity-40">
+                <div className="mt-8 pt-8 border-t border-[#00008B]/20 text-center text-xs text-[#00008B] font-bold uppercase tracking-widest opacity-40">
                     © {new Date().getFullYear()} FinAi. Tüm hakları saklıdır.
                 </div>
             </div>
