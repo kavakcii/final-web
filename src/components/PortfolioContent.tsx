@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins, Layers, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
@@ -45,6 +45,9 @@ export default function PortfolioPage() {
     const [allDividendsSearch, setAllDividendsSearch] = useState("");
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
+
+    // Dynamic Focus Mode State ('summary' | 'table' | 'earnings' | 'dividends' | 'distribution' | 'extremes' | 'correlation' | null)
+    const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
 
     // Smart Search Autocomplete States
     const [searchQuery, setSearchQuery] = useState("");
@@ -306,92 +309,91 @@ export default function PortfolioPage() {
     const totalProfit = totalValue - totalCostValue;
     const profitRatio = totalCostValue > 0 ? (totalProfit / totalCostValue) * 100 : 0;
 
-    // Filtered lists for truncated views (first 5 for tables/calendars, max 4 for user dividends)
-    const displayedAssets = isTableExpanded ? groupedAssets : groupedAssets.slice(0, 5);
-    const earningsEntries = Object.entries(earningsDates);
-    const displayedEarnings = isCalendarExpanded ? earningsEntries : earningsEntries.slice(0, 5);
-    const displayedUserDividends = userPortfolioDividends.slice(0, 4); // Sadece portföydeki hisseler, en fazla 4 adet
-    const extremesEntries = Object.entries(priceExtremes);
-    const displayedExtremes = isExtremesExpanded ? extremesEntries : extremesEntries.slice(0, 5);
+    // Filtered lists for truncated views vs full views
+    const isTableFullyShown = focusedWidget === 'table' || isTableExpanded;
+    const displayedAssets = isTableFullyShown ? groupedAssets : groupedAssets.slice(0, 5);
 
-    // Filtered all dividends for the full market modal
+    const isCalendarFullyShown = focusedWidget === 'earnings' || isCalendarExpanded;
+    const earningsEntries = Object.entries(earningsDates);
+    const displayedEarnings = isCalendarFullyShown ? earningsEntries : earningsEntries.slice(0, 5);
+
+    const isDividendFullyShown = focusedWidget === 'dividends';
+    const displayedUserDividends = isDividendFullyShown ? userPortfolioDividends : userPortfolioDividends.slice(0, 4);
+
+    const isExtremesFullyShown = focusedWidget === 'extremes' || isExtremesExpanded;
+    const extremesEntries = Object.entries(priceExtremes);
+    const displayedExtremes = isExtremesFullyShown ? extremesEntries : extremesEntries.slice(0, 5);
+
     const filteredAllDividends = halkarzDividends.filter(item => 
         item.symbol.toLowerCase().includes(allDividendsSearch.toLowerCase()) ||
         item.companyName.toLowerCase().includes(allDividendsSearch.toLowerCase())
     );
 
-    return (
-        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-hidden font-sans">
-            
-            {/* Ambient Soft Blue Light Leaks */}
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
-            <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full pointer-events-none -z-10" />
+    // Widget Definition List for Dynamic Focus Mode Sidebar
+    const widgetDefinitions = [
+        { id: 'summary', name: 'Bakiye & Özet Kartlar', icon: Wallet, desc: 'Toplam Varlık ve Net Kar/Zarar' },
+        { id: 'table', name: 'Portföy Tablosu', icon: FileText, desc: `${groupedAssets.length} Varlık Listesi` },
+        { id: 'earnings', name: 'Bilanço Takvimi', icon: Calendar, desc: 'Yaklaşan Şirket Bilançoları' },
+        { id: 'dividends', name: 'Temettü Takvimim', icon: Coins, desc: 'HalkaArz Temettü Tarihleri' },
+        { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Portföy Risk & Yığılma Oranı' },
+        { id: 'extremes', name: 'Fiyat Analizi (52H)', icon: Activity, desc: '52 Haftalık Fiyat Bantları' },
+        { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
+    ];
 
-            {/* Notification Feedback Toast */}
-            <AnimatePresence>
-                {feedback && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -20, scale: 0.95 }} 
-                        animate={{ opacity: 1, y: 0, scale: 1 }} 
-                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                        className={cn(
-                            "fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3.5 rounded-2xl shadow-2xl border backdrop-blur-xl font-bold text-sm tracking-tight",
-                            feedback.type === 'success' 
-                                ? 'bg-white/95 border-emerald-200 text-emerald-700 shadow-emerald-900/5' 
-                                : 'bg-white/95 border-rose-200 text-rose-700 shadow-rose-900/5'
-                        )}
-                    >
-                        {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <AlertTriangle className="w-5 h-5 text-rose-600" />}
-                        <span>{feedback.message}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+    // Render Widget Content Helper
+    const renderWidgetContent = (id: string, isFocused: boolean = false) => {
+        switch(id) {
+            case 'summary':
+                return (
+                    <div className="space-y-4">
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group">
+                            <div className="flex items-center gap-2 mb-2">
+                                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
+                                    <Wallet className="w-3.5 h-3.5 text-[#00008B]" />
+                                </div>
+                                <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Toplam Varlık Değeri</span>
+                            </div>
+                            <h2 className="text-3xl md:text-4xl font-black text-[#00008B] tracking-tighter mt-1">
+                                {formatCurrency(totalValue)}
+                            </h2>
+                            <div className="flex items-center gap-2 mt-3">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">Canlı Piyasa Değerlemesi</p>
+                            </div>
+                        </div>
 
-            {/* Page Header Title Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-                <div>
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50/80 border border-blue-200/50 text-[#00008B] text-xs font-bold mb-2 shadow-sm">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00008B]"></span>
-                        </span>
-                        Akıllı Portföy Yönetimi
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
+                                        {totalProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
+                                    </div>
+                                    <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Net Kâr / Zarar</span>
+                                </div>
+                                <div className={cn("px-2 py-0.5 rounded-lg text-xs font-black border", totalProfit >= 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" : "bg-rose-50 text-rose-700 border-rose-200/60")}>
+                                    %{profitRatio.toFixed(2)}
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <span className={cn("text-2xl md:text-3xl font-black tracking-tight block", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                    {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="w-full bg-blue-50/40 hover:bg-blue-50 border border-dashed border-blue-200/80 hover:border-[#00008B] rounded-2xl p-4 flex items-center justify-center gap-2.5 text-[#00008B] font-bold text-xs uppercase tracking-wider transition-all group shadow-sm"
+                        >
+                            <Plus className="w-4 h-4 text-[#00008B] group-hover:scale-110 transition-transform" />
+                            <span>Yeni İşlem Ekle</span>
+                        </button>
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-black text-[#00008B] tracking-tight">
-                        Portföyüm
-                    </h1>
-                    <p className="text-sm font-medium text-[#00008B]/60 mt-1">
-                        BIST hisseleriniz ve TEFAS fonlarınızın canlı analizlerini tek bir ekrandan yönetin.
-                    </p>
-                </div>
+                );
 
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={fetchPortfolioData}
-                        disabled={loading}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[#00008B] font-bold rounded-2xl border border-slate-200 text-xs transition-all active:scale-95 shadow-sm"
-                    >
-                        <RefreshCw className={cn("w-4 h-4 text-[#00008B]", loading && "animate-spin")} />
-                        Yenile
-                    </button>
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs shadow-lg shadow-[#00008B]/20 transition-all active:scale-95"
-                    >
-                        <Plus className="w-4 h-4" />
-                        İşlem Ekle
-                    </button>
-                </div>
-            </div>
-
-            {/* MAIN 65% - 35% GRID ARCHITECTURE */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-                
-                {/* SOL SÜTUN (%65 - 8/12 Cols) */}
-                <div className="xl:col-span-8 space-y-8">
-                    
-                    {/* Üst Kısım: Portföy Tablosu (5-Satır Daraltılmış + GPU Akıcı Genişleme) */}
-                    <div className="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-[#00008B]/5 overflow-hidden flex flex-col justify-between">
+            case 'table':
+                return (
+                    <div className="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-[#00008B]/5 overflow-hidden flex flex-col justify-between h-full">
                         <div>
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
                                 <div className="flex items-center gap-3">
@@ -401,24 +403,24 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
 
-                                {groupedAssets.length > 5 && (
-                                    <button
-                                        onClick={() => setIsTableExpanded(!isTableExpanded)}
-                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100/70 text-[#00008B] text-xs font-bold transition-all border border-blue-200/40"
+                                <div className="flex items-center gap-2">
+                                    {groupedAssets.length > 5 && !isFocused && (
+                                        <button
+                                            onClick={() => setIsTableExpanded(!isTableExpanded)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100/70 text-[#00008B] text-xs font-bold transition-all border border-blue-200/40"
+                                        >
+                                            {isTableExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                                            {isTableExpanded ? "Daralt" : "Genişlet"}
+                                        </button>
+                                    )}
+                                    <button 
+                                        onClick={() => setFocusedWidget(isFocused ? null : 'table')}
+                                        className={cn("p-2 rounded-xl transition-all border", isFocused ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
+                                        title={isFocused ? "Odak Modundan Çık" : "Odak Moduna Geç"}
                                     >
-                                        {isTableExpanded ? (
-                                            <>
-                                                <Minimize2 className="w-3.5 h-3.5" />
-                                                Daralt (İlk 5)
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Maximize2 className="w-3.5 h-3.5" />
-                                                Tümünü Gör ({groupedAssets.length})
-                                            </>
-                                        )}
+                                        <Maximize2 className="w-4 h-4" />
                                     </button>
-                                )}
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -522,7 +524,7 @@ export default function PortfolioPage() {
                             </div>
                         </div>
 
-                        {groupedAssets.length > 5 && (
+                        {groupedAssets.length > 5 && !isFocused && (
                             <div className="p-3 bg-slate-50/50 border-t border-slate-100 text-center">
                                 <button
                                     onClick={() => setIsTableExpanded(!isTableExpanded)}
@@ -534,18 +536,18 @@ export default function PortfolioPage() {
                             </div>
                         )}
                     </div>
+                );
 
-                    {/* Alt Kısım: "Bilanço Takvimi" ve "Temettü Takvimi" (Sol Sütun İçi 2-Kolon) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        
-                        {/* Bilanço Takvimi Widget */}
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-[#00008B]" />
-                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
-                                </div>
-                                {earningsEntries.length > 5 && (
+            case 'earnings':
+                return (
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-[#00008B]" />
+                                <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {earningsEntries.length > 5 && !isFocused && (
                                     <button 
                                         onClick={() => setIsCalendarExpanded(!isCalendarExpanded)}
                                         className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
@@ -553,197 +555,155 @@ export default function PortfolioPage() {
                                         {isCalendarExpanded ? "Daralt" : `Tüm (${earningsEntries.length})`}
                                     </button>
                                 )}
+                                <button 
+                                    onClick={() => setFocusedWidget(isFocused ? null : 'earnings')}
+                                    className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
+                                >
+                                    <Maximize2 className="w-3.5 h-3.5" />
+                                </button>
                             </div>
+                        </div>
+                        <motion.div 
+                            layout
+                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            className="space-y-3 overflow-hidden"
+                        >
+                            {earningsEntries.length === 0 ? (
+                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
+                            ) : (
+                                displayedEarnings.map(([sym, time]) => {
+                                    const days = Math.ceil((time - Date.now()) / (86400000));
+                                    if (days < -30) return null;
+                                    const isReported = days <= 0;
+                                    const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
+
+                                    return (
+                                        <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-[#00008B] text-sm">{sym}</span>
+                                                    <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
+                                                </div>
+                                                <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
+                                                    {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
+                                                </span>
+                                            </div>
+                                            {kapUrl && (
+                                                <a 
+                                                    href={kapUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                    Bilançoya ulaşmak için tıklayınız
+                                                </a>
+                                            )}
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </motion.div>
+                    </div>
+                );
+
+            case 'dividends':
+                return (
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between h-full">
+                        <div>
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Coins className="w-4 h-4 text-emerald-600" />
+                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Temettü Takvimim</h3>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button 
+                                        onClick={() => setIsAllDividendsModalOpen(true)}
+                                        className="text-[10px] font-black text-[#00008B] bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 hover:bg-blue-100/70 transition-all flex items-center gap-1"
+                                    >
+                                        Tüm Takvim
+                                        <ArrowUpRight className="w-3 h-3" />
+                                    </button>
+                                    <button 
+                                        onClick={() => setFocusedWidget(isFocused ? null : 'dividends')}
+                                        className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
+                                    >
+                                        <Maximize2 className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+
                             <motion.div 
                                 layout
                                 transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
                                 className="space-y-3 overflow-hidden"
                             >
-                                {earningsEntries.length === 0 ? (
-                                    <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
+                                {displayedUserDividends.length === 0 ? (
+                                    <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
+                                        <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                        <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
+                                        <button 
+                                            onClick={() => setIsAllDividendsModalOpen(true)}
+                                            className="mt-3 text-[11px] font-bold text-[#00008B] hover:underline inline-flex items-center gap-1"
+                                        >
+                                            Tüm Piyasa Temettü Takvimini İncele
+                                            <ChevronRight className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
                                 ) : (
-                                    displayedEarnings.map(([sym, time]) => {
-                                        const days = Math.ceil((time - Date.now()) / (86400000));
-                                        if (days < -30) return null;
-                                        const isReported = days <= 0;
-                                        const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
-
-                                        return (
-                                            <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-[#00008B] text-sm">{sym}</span>
-                                                        <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
+                                    displayedUserDividends.map((item) => (
+                                        <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex flex-col">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                            %{item.yieldPercent} Verim
+                                                        </span>
                                                     </div>
-                                                    <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
-                                                        {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
-                                                    </span>
+                                                    <span className="text-[10px] text-slate-500 font-semibold line-clamp-1 mt-0.5">{item.companyName}</span>
                                                 </div>
-                                                {kapUrl && (
-                                                    <a 
-                                                        href={kapUrl} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer" 
-                                                        className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
-                                                    >
-                                                        <ExternalLink className="w-3 h-3" />
-                                                        Bilançoya ulaşmak için tıklayınız
-                                                    </a>
-                                                )}
+                                                <div className="text-right">
+                                                    <span className="text-emerald-700 font-black text-sm block">{formatCurrency(item.totalIncome)}</span>
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase">{item.userQuantity} Adet İçin Net</span>
+                                                </div>
                                             </div>
-                                        );
-                                    })
+                                            <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
+                                                <div className="flex items-center gap-1 text-slate-600 font-semibold">
+                                                    <Calendar className="w-3 h-3 text-[#00008B]" />
+                                                    <span>Tarih: {item.paymentDate}</span>
+                                                </div>
+                                                <div className="text-slate-600 font-bold">
+                                                    Net: <span className="text-[#00008B] font-black">{item.netAmountFormatted}</span> / Pay
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
                                 )}
                             </motion.div>
                         </div>
-
-                        {/* Temettü Takvimi Widget (HalkArz Canlı Veri - Portföye Özel En Fazla 4 Tane) */}
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between">
-                            <div>
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                                    <div className="flex items-center gap-2">
-                                        <Coins className="w-4 h-4 text-emerald-600" />
-                                        <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Temettü Takvimim</h3>
-                                    </div>
-                                    <button 
-                                        onClick={() => setIsAllDividendsModalOpen(true)}
-                                        className="text-[10px] font-black text-[#00008B] bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 hover:bg-blue-100/70 transition-all flex items-center gap-1"
-                                    >
-                                        Tüm Temettü Takvimi
-                                        <ArrowUpRight className="w-3 h-3" />
-                                    </button>
-                                </div>
-
-                                <motion.div 
-                                    layout
-                                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
-                                    className="space-y-3 overflow-hidden"
-                                >
-                                    {displayedUserDividends.length === 0 ? (
-                                        <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
-                                            <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                            <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
-                                            <button 
-                                                onClick={() => setIsAllDividendsModalOpen(true)}
-                                                className="mt-3 text-[11px] font-bold text-[#00008B] hover:underline inline-flex items-center gap-1"
-                                            >
-                                                Tüm Piyasa Temettü Takvimini İncele
-                                                <ChevronRight className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        displayedUserDividends.map((item) => (
-                                            <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex flex-col">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
-                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                                %{item.yieldPercent} Verim
-                                                            </span>
-                                                        </div>
-                                                        <span className="text-[10px] text-slate-500 font-semibold line-clamp-1 mt-0.5">{item.companyName}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="text-emerald-700 font-black text-sm block">{formatCurrency(item.totalIncome)}</span>
-                                                        <span className="text-[9px] text-slate-400 font-bold uppercase">{item.userQuantity} Adet İçin Net</span>
-                                                    </div>
-                                                </div>
-                                                <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
-                                                    <div className="flex items-center gap-1 text-slate-600 font-semibold">
-                                                        <Calendar className="w-3 h-3 text-[#00008B]" />
-                                                        <span>Tarih: {item.paymentDate}</span>
-                                                    </div>
-                                                    <div className="text-slate-600 font-bold">
-                                                        Net: <span className="text-[#00008B] font-black">{item.netAmountFormatted}</span> / Pay
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
-                                </motion.div>
-                            </div>
-
-                            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
-                                <span className="text-[10px] text-slate-400 font-semibold">HalkArz Canlı Veri Senkronizasyonu</span>
-                                <button 
-                                    onClick={() => setIsAllDividendsModalOpen(true)}
-                                    className="text-[10px] font-bold text-[#00008B] hover:underline"
-                                >
-                                    Tümünü Gör ({halkarzDividends.length} Şirket) →
-                                </button>
-                            </div>
-                        </div>
-
                     </div>
+                );
 
-                </div>
-
-                {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
-                <div className="xl:col-span-4 space-y-8">
-                    
-                    {/* Üst Kısım: Özet Widget'ları (Toplam Varlık Değeri & Net Kâr/Zarar) */}
-                    <div className="space-y-4">
-                        {/* Toplam Varlık Değeri */}
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group hover:border-blue-200 transition-all">
-                            <div className="flex items-center gap-2 mb-2">
-                                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100">
-                                    <Wallet className="w-3.5 h-3.5 text-[#00008B]" />
-                                </div>
-                                <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Toplam Varlık Değeri</span>
-                            </div>
-                            <h2 className="text-3xl font-black text-[#00008B] tracking-tighter mt-1">
-                                {formatCurrency(totalValue)}
-                            </h2>
-                            <div className="flex items-center gap-2 mt-3">
-                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                <p className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">Canlı Piyasa Değerlemesi</p>
-                            </div>
-                        </div>
-
-                        {/* Net Kar / Zarar */}
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 hover:border-blue-200 transition-all">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-100">
-                                        {totalProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
-                                    </div>
-                                    <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Net Kâr / Zarar</span>
-                                </div>
-                                <div className={cn("px-2 py-0.5 rounded-lg text-xs font-black border", totalProfit >= 0 ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" : "bg-rose-50 text-rose-700 border-rose-200/60")}>
-                                    %{profitRatio.toFixed(2)}
-                                </div>
-                            </div>
-                            <div className="mt-3">
-                                <span className={cn("text-2xl font-black tracking-tight block", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                    {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Hızlı İşlem Butonu */}
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="w-full bg-blue-50/40 hover:bg-blue-50 border border-dashed border-blue-200/80 hover:border-[#00008B] rounded-2xl p-4 flex items-center justify-center gap-2.5 text-[#00008B] font-bold text-xs uppercase tracking-wider transition-all group shadow-sm"
-                        >
-                            <Plus className="w-4 h-4 text-[#00008B] group-hover:scale-110 transition-transform" />
-                            <span>Yeni İşlem Ekle</span>
-                        </button>
-                    </div>
-
-                    {/* Alt Kısım: Varlık Dağılım Grafiği (Risk & Yığılma Haritası) */}
+            case 'distribution':
+                return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 <PieChart className="w-4 h-4 text-[#00008B]" />
                                 <h3 className="font-bold text-[#00008B] text-xs uppercase tracking-wider">Varlık Dağılım Grafiği</h3>
                             </div>
-                            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Dağılım</span>
+                            <button 
+                                onClick={() => setFocusedWidget(isFocused ? null : 'distribution')}
+                                className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
+                            >
+                                <Maximize2 className="w-3.5 h-3.5" />
+                            </button>
                         </div>
 
                         {assets.length > 0 && totalValue > 0 ? (
                             <div className="space-y-4">
-                                <div className="h-5 w-full rounded-2xl flex overflow-hidden border border-slate-100 bg-slate-50 p-0.5 shadow-inner">
+                                <div className="h-6 w-full rounded-2xl flex overflow-hidden border border-slate-100 bg-slate-50 p-0.5 shadow-inner">
                                     {groupedAssets.sort((a,b) => (prices[b.symbol]*b.totalQuantity) - (prices[a.symbol]*a.totalQuantity)).map((group, idx) => {
                                         const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
                                         if (marketValue <= 0) return null;
@@ -757,24 +717,24 @@ export default function PortfolioPage() {
                                                 className={`h-full ${colors[idx % colors.length]} flex items-center justify-center relative first:rounded-l-xl last:rounded-r-xl`}
                                                 title={`${group.symbol}: %${weight.toFixed(1)}`}
                                             >
-                                                {weight > 8 && <span className="text-white font-bold text-[9px] truncate px-1">{group.symbol}</span>}
+                                                {weight > 6 && <span className="text-white font-bold text-[10px] truncate px-1">{group.symbol}</span>}
                                             </motion.div>
                                         );
                                     })}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 text-xs">
-                                    {groupedAssets.slice(0, 6).map((group, idx) => {
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                                    {groupedAssets.map((group, idx) => {
                                         const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
                                         const weight = totalValue > 0 ? (marketValue / totalValue) * 100 : 0;
                                         const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
                                         return (
-                                            <div key={group.symbol} className="flex items-center justify-between p-2 bg-slate-50/70 rounded-xl border border-slate-100">
+                                            <div key={group.symbol} className="flex items-center justify-between p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
                                                 <div className="flex items-center gap-1.5">
                                                     <div className={`w-2.5 h-2.5 rounded-full ${colors[idx % colors.length]}`} />
-                                                    <span className="font-bold text-[#00008B] text-[11px]">{group.symbol}</span>
+                                                    <span className="font-bold text-[#00008B] text-xs">{group.symbol}</span>
                                                 </div>
-                                                <span className="font-black text-slate-500 text-[10px]">%{weight.toFixed(1)}</span>
+                                                <span className="font-black text-slate-500 text-xs">%{weight.toFixed(1)}</span>
                                             </div>
                                         );
                                     })}
@@ -784,22 +744,32 @@ export default function PortfolioPage() {
                             <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
                         )}
                     </div>
+                );
 
-                    {/* Fiyat Analizi Widget */}
+            case 'extremes':
+                return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
                             <div className="flex items-center gap-2">
                                 <Activity className="w-4 h-4 text-[#00008B]" />
                                 <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Fiyat Analizi (52H)</h3>
                             </div>
-                            {extremesEntries.length > 5 && (
+                            <div className="flex items-center gap-2">
+                                {extremesEntries.length > 5 && !isFocused && (
+                                    <button 
+                                        onClick={() => setIsExtremesExpanded(!isExtremesExpanded)}
+                                        className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
+                                    >
+                                        {isExtremesExpanded ? "Daralt" : `Tüm (${extremesEntries.length})`}
+                                    </button>
+                                )}
                                 <button 
-                                    onClick={() => setIsExtremesExpanded(!isExtremesExpanded)}
-                                    className="text-[10px] font-bold text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/40 hover:bg-blue-100/60 transition-colors"
+                                    onClick={() => setFocusedWidget(isFocused ? null : 'extremes')}
+                                    className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                                 >
-                                    {isExtremesExpanded ? "Daralt" : `Tüm (${extremesEntries.length})`}
+                                    <Maximize2 className="w-3.5 h-3.5" />
                                 </button>
-                            )}
+                            </div>
                         </div>
                         <motion.div 
                             layout
@@ -812,28 +782,28 @@ export default function PortfolioPage() {
                                 displayedExtremes.map(([sym, ext]) => {
                                     const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
                                     return (
-                                        <div key={sym} className="space-y-2 p-3 bg-slate-50/70 rounded-2xl border border-slate-100">
+                                        <div key={sym} className="space-y-2 p-3.5 bg-slate-50/70 rounded-2xl border border-slate-100">
                                             <div className="flex justify-between items-center text-xs font-bold">
                                                 <span className="text-[#00008B] font-black">{sym}</span>
-                                                <span className="text-[#00008B] bg-blue-50 border border-blue-200/50 px-2 py-0.5 rounded-md text-[10px]">
+                                                <span className="text-[#00008B] bg-blue-50 border border-blue-200/50 px-2.5 py-0.5 rounded-lg text-xs">
                                                     {formatCurrency(ext.current)}
                                                 </span>
                                             </div>
                                             
-                                            <div className="relative py-0.5">
-                                                <div className="h-1.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
+                                            <div className="relative py-1">
+                                                <div className="h-2 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
                                                     <div 
                                                         className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 relative transition-all duration-1000"
                                                         style={{ width: `${pos}%` }}
                                                     />
                                                 </div>
                                                 <div 
-                                                    className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-[#00008B] rounded-full border-2 border-white shadow-md z-10 transition-all duration-1000"
-                                                    style={{ left: `calc(${pos}% - 6px)` }}
+                                                    className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#00008B] rounded-full border-2 border-white shadow-md z-10 transition-all duration-1000"
+                                                    style={{ left: `calc(${pos}% - 7px)` }}
                                                 />
                                             </div>
 
-                                            <div className="flex justify-between text-[8px] text-slate-400 font-bold uppercase tracking-wider">
+                                            <div className="flex justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider">
                                                 <span>DÜŞÜK: {formatCurrency(ext.low)}</span>
                                                 <span>YÜKSEK: {formatCurrency(ext.high)}</span>
                                             </div>
@@ -843,19 +813,25 @@ export default function PortfolioPage() {
                             )}
                         </motion.div>
                     </div>
+                );
 
-                </div>
-
-                {/* TAM GENİŞLİK (ALT ALAN): KORELASYON ANALİZİ MODÜLÜ */}
-                <div className="xl:col-span-12">
+            case 'correlation':
+                return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/60 rounded-full blur-3xl pointer-events-none" />
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#00008B] text-xs font-bold border border-blue-200/50">
+                                <Activity className="w-3.5 h-3.5" />
+                                Yapay Zeka Destekli Risk Dengesi
+                            </div>
+                            <button 
+                                onClick={() => setFocusedWidget(isFocused ? null : 'correlation')}
+                                className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-blue-600 text-white border-blue-600" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
+                            >
+                                <Maximize2 className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
                         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                             <div className="space-y-2 max-w-3xl">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#00008B] text-xs font-bold border border-blue-200/50">
-                                    <Activity className="w-3.5 h-3.5" />
-                                    Yapay Zeka Destekli Risk Dengesi
-                                </div>
                                 <h3 className="text-2xl md:text-3xl font-black text-[#00008B] tracking-tight">
                                     Korelasyon Analizi
                                 </h3>
@@ -873,9 +849,228 @@ export default function PortfolioPage() {
                             </Link>
                         </div>
                     </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-hidden font-sans">
+            
+            {/* Ambient Soft Blue Light Leaks */}
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full pointer-events-none -z-10" />
+
+            {/* Notification Feedback Toast */}
+            <AnimatePresence>
+                {feedback && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }} 
+                        animate={{ opacity: 1, y: 0, scale: 1 }} 
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        className={cn(
+                            "fixed top-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-3.5 rounded-2xl shadow-2xl border backdrop-blur-xl font-bold text-sm tracking-tight",
+                            feedback.type === 'success' 
+                                ? 'bg-white/95 border-emerald-200 text-emerald-700 shadow-emerald-900/5' 
+                                : 'bg-white/95 border-rose-200 text-rose-700 shadow-rose-900/5'
+                        )}
+                    >
+                        {feedback.type === 'success' ? <CheckCircle2 className="w-5 h-5 text-emerald-600" /> : <AlertTriangle className="w-5 h-5 text-rose-600" />}
+                        <span>{feedback.message}</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Page Header Title Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                <div>
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50/80 border border-blue-200/50 text-[#00008B] text-xs font-bold mb-2 shadow-sm">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00008B]"></span>
+                        </span>
+                        Akıllı Portföy Yönetimi
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-black text-[#00008B] tracking-tight flex items-center gap-3">
+                        Portföyüm
+                        {focusedWidget && (
+                            <motion.span 
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                            >
+                                <Eye className="w-3.5 h-3.5" />
+                                Odak Modu Aktif
+                            </motion.span>
+                        )}
+                    </h1>
+                    <p className="text-sm font-medium text-[#00008B]/60 mt-1">
+                        BIST hisseleriniz ve TEFAS fonlarınızın canlı analizlerini tek bir ekrandan yönetin.
+                    </p>
                 </div>
 
+                <div className="flex items-center gap-3">
+                    {focusedWidget && (
+                        <button
+                            onClick={() => setFocusedWidget(null)}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-2xl border border-rose-200/60 text-xs transition-all active:scale-95 shadow-sm"
+                        >
+                            <X className="w-4 h-4" />
+                            Odak Modundan Çık
+                        </button>
+                    )}
+                    <button
+                        onClick={fetchPortfolioData}
+                        disabled={loading}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[#00008B] font-bold rounded-2xl border border-slate-200 text-xs transition-all active:scale-95 shadow-sm"
+                    >
+                        <RefreshCw className={cn("w-4 h-4 text-[#00008B]", loading && "animate-spin")} />
+                        Yenile
+                    </button>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs shadow-lg shadow-[#00008B]/20 transition-all active:scale-95"
+                    >
+                        <Plus className="w-4 h-4" />
+                        İşlem Ekle
+                    </button>
+                </div>
             </div>
+
+            {/* DYNAMIC DUAL LAYOUT: DEFAULT 65/35 GRID VS FOCUS MODE */}
+            <AnimatePresence mode="wait">
+                {focusedWidget === null ? (
+                    /* 1. AŞAMA: BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
+                    <motion.div 
+                        key="default-grid"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                        className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start"
+                    >
+                        {/* SOL SÜTUN (%65 - 8/12 Cols) */}
+                        <div className="xl:col-span-8 space-y-8">
+                            {renderWidgetContent('table')}
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {renderWidgetContent('earnings')}
+                                {renderWidgetContent('dividends')}
+                            </div>
+                        </div>
+
+                        {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
+                        <div className="xl:col-span-4 space-y-8">
+                            {renderWidgetContent('summary')}
+                            {renderWidgetContent('distribution')}
+                            {renderWidgetContent('extremes')}
+                        </div>
+
+                        {/* ALT ALAN: KORELASYON ANALİZİ MODÜLÜ */}
+                        <div className="xl:col-span-12">
+                            {renderWidgetContent('correlation')}
+                        </div>
+                    </motion.div>
+                ) : (
+                    /* 2. AŞAMA: ODAN MODU (FOCUS MODE LAYOUT) */
+                    <motion.div 
+                        key="focus-mode"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                        className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start"
+                    >
+                        {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - %75) */}
+                        <motion.div 
+                            layout
+                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            className="xl:col-span-8 space-y-4"
+                        >
+                            {/* Odak Modu Başlık Çubuğu */}
+                            <div className="bg-blue-50/80 border border-blue-200/60 rounded-2xl p-4 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-[#00008B] text-white flex items-center justify-center font-bold">
+                                        <Eye className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block">Odak Modu Etkin</span>
+                                        <span className="text-[11px] text-slate-500 font-semibold">Tüm veriler genişletilmiş modda görüntüleniyor</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setFocusedWidget(null)}
+                                    className="px-4 py-2 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-bold rounded-xl text-xs border border-slate-200 transition-all flex items-center gap-1.5 shadow-sm"
+                                >
+                                    <X className="w-4 h-4" />
+                                    Odaktan Çık ("X")
+                                </button>
+                            </div>
+
+                            {/* Ana Odak Widget Content */}
+                            <div className="w-full">
+                                {renderWidgetContent(focusedWidget, true)}
+                            </div>
+                        </motion.div>
+
+                        {/* SAĞ TARAFTA DİKEY DİZİLEN DİĞER WIDGET'LAR (SIDEBAR STACK - %35) */}
+                        <motion.div 
+                            layout
+                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            className="xl:col-span-4 space-y-4"
+                        >
+                            <div className="flex items-center justify-between px-2">
+                                <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
+                                    <Layers className="w-4 h-4 text-[#00008B]" />
+                                    Diğer Modüller ({widgetDefinitions.length - 1})
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-bold">Değiştirmek İçin Tıkla</span>
+                            </div>
+
+                            <div className="max-h-[80vh] overflow-y-auto pr-1 space-y-4 custom-scrollbar">
+                                {widgetDefinitions
+                                    .filter(w => w.id !== focusedWidget)
+                                    .map(widget => {
+                                        const WidgetIcon = widget.icon;
+                                        return (
+                                            <motion.div
+                                                key={widget.id}
+                                                layout
+                                                whileHover={{ scale: 1.01 }}
+                                                onClick={() => setFocusedWidget(widget.id)}
+                                                className="bg-white hover:bg-blue-50/40 border border-slate-100 hover:border-blue-200 rounded-3xl p-5 shadow-md hover:shadow-xl cursor-pointer transition-all relative group"
+                                            >
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors">
+                                                            <WidgetIcon className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-black text-[#00008B] text-sm group-hover:text-blue-600 transition-colors">{widget.name}</h4>
+                                                            <span className="text-[10px] text-slate-400 font-medium">{widget.desc}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <span className="text-[10px] font-bold text-[#00008B] bg-blue-50 group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1 rounded-xl transition-colors">
+                                                        Odağa Al
+                                                    </span>
+                                                </div>
+
+                                                {/* Mini Truncated Preview of Content */}
+                                                <div className="opacity-80 pointer-events-none scale-95 origin-top">
+                                                    {renderWidgetContent(widget.id, false)}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Modals & AnimatePresence Blocks */}
 
