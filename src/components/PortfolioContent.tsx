@@ -50,7 +50,7 @@ export default function PortfolioPage() {
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
 
     // Temettü Takvimi Akıllı Sıralama State
-    const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
+    const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'yield-desc' | 'yield-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
 
     // Smart Search Autocomplete States
     const [searchQuery, setSearchQuery] = useState("");
@@ -126,7 +126,7 @@ export default function PortfolioPage() {
     const userPortfolioDividends = useMemo(() => {
         const assetMap = new Map(groupedAssets.map(g => [g.symbol.toUpperCase(), g.totalQuantity]));
         
-        return halkarzDividends
+        const list = halkarzDividends
             .filter(item => assetMap.has(item.symbol))
             .map(item => {
                 const quantity = assetMap.get(item.symbol) || 0;
@@ -137,7 +137,28 @@ export default function PortfolioPage() {
                     totalIncome
                 };
             });
-    }, [halkarzDividends, groupedAssets]);
+
+        switch (dividendSortOption) {
+            case 'amount-asc':
+                return list.sort((a, b) => a.netAmountPerShare - b.netAmountPerShare);
+            case 'amount-desc':
+                return list.sort((a, b) => b.netAmountPerShare - a.netAmountPerShare);
+            case 'yield-desc':
+                return list.sort((a, b) => b.yieldPercent - a.yieldPercent);
+            case 'yield-asc':
+                return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
+            case 'date-asc':
+                return list.sort((a, b) => a.timestamp - b.timestamp);
+            case 'date-desc':
+                return list.sort((a, b) => b.timestamp - a.timestamp);
+            case 'symbol-asc':
+                return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            case 'symbol-desc':
+                return list.sort((a, b) => b.symbol.localeCompare(a.symbol));
+            default:
+                return list;
+        }
+    }, [halkarzDividends, groupedAssets, dividendSortOption]);
 
     // Fetch Data
     const fetchPortfolioData = async () => {
@@ -344,14 +365,18 @@ export default function PortfolioPage() {
 
         const list = [...filtered];
         switch (dividendSortOption) {
+            case 'amount-asc':
+                return list.sort((a, b) => a.netAmountPerShare - b.netAmountPerShare);
+            case 'amount-desc':
+                return list.sort((a, b) => b.netAmountPerShare - a.netAmountPerShare);
+            case 'yield-desc':
+                return list.sort((a, b) => b.yieldPercent - a.yieldPercent);
+            case 'yield-asc':
+                return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
             case 'date-asc':
                 return list.sort((a, b) => a.timestamp - b.timestamp);
             case 'date-desc':
                 return list.sort((a, b) => b.timestamp - a.timestamp);
-            case 'amount-desc':
-                return list.sort((a, b) => b.netAmountPerShare - a.netAmountPerShare);
-            case 'amount-asc':
-                return list.sort((a, b) => a.netAmountPerShare - b.netAmountPerShare);
             case 'symbol-asc':
                 return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
             case 'symbol-desc':
@@ -372,7 +397,7 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Element Container with iOS Spring Physics Engine
+    // Shared Element Container for Main Grid Widgets
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <motion.div
@@ -679,7 +704,7 @@ export default function PortfolioPage() {
                                 <div className="flex items-center gap-2">
                                     {/* TEMETTÜ TAKVİMİ AKILLI SIRALAMA DROPDOWN MENÜSÜ */}
                                     {isFocused && (
-                                        <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1">
+                                        <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1.5 shadow-sm">
                                             <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
                                             <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
                                             <select
@@ -687,10 +712,12 @@ export default function PortfolioPage() {
                                                 onChange={(e) => setDividendSortOption(e.target.value as any)}
                                                 className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
                                             >
+                                                <option value="amount-asc">Net Tutar: En Düşük → En Yüksek (₺/Pay)</option>
+                                                <option value="amount-desc">Net Tutar: En Yüksek → En Düşük (₺/Pay)</option>
+                                                <option value="yield-desc">Verim: En Yüksek → En Düşük (%)</option>
+                                                <option value="yield-asc">Verim: En Düşük → En Yüksek (%)</option>
                                                 <option value="date-asc">Tarih: En Yakın → En Uzak</option>
                                                 <option value="date-desc">Tarih: En Uzak → En Yakın</option>
-                                                <option value="amount-desc">Net Tutar: En Yüksek → En Düşük</option>
-                                                <option value="amount-asc">Net Tutar: En Düşük → En Yüksek</option>
                                                 <option value="symbol-asc">Hisse Kodu: A → Z</option>
                                                 <option value="symbol-desc">Hisse Kodu: Z → A</option>
                                             </select>
@@ -1064,7 +1091,7 @@ export default function PortfolioPage() {
                                 className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
-                                Odak Modu (iOS Spring)
+                                Odak Modu
                             </motion.span>
                         )}
                     </h1>
@@ -1129,7 +1156,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (PERMANENT iOS SPRING PHYSICS LAYOUT) */
+                    /* 2. ODAK MODU DURUMU (SCROLLBAR-FREE COMPACT RIGHT SIDEBAR STACK) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1141,9 +1168,9 @@ export default function PortfolioPage() {
                                     </div>
                                     <div>
                                         <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block">
-                                            Odak Modu Etkin (iOS Spring)
+                                            Odak Modu Etkin
                                         </span>
-                                        <span className="text-[11px] text-slate-500 font-semibold">Tıklanan widget sol ekranda büyütüldü</span>
+                                        <span className="text-[11px] text-slate-500 font-semibold">Tıklanan widget sol ekranda genişletildi</span>
                                     </div>
                                 </div>
 
@@ -1160,9 +1187,9 @@ export default function PortfolioPage() {
                             {renderWidgetCard(focusedWidget, true)}
                         </div>
 
-                        {/* SAĞ TARAFTA DİKEY KÜÇÜLÜP SÜZÜLEN DİĞER WIDGET'LAR (SIDEBAR STACK - %35 - 4/12 Cols) */}
-                        <div className="xl:col-span-4 space-y-4">
-                            <div className="flex items-center justify-between px-2">
+                        {/* SAĞ TARAFTA SCROLLBAR OLMADAN TAM SIĞAN DİKEY SIKIŞTIRILMIŞ MODÜL ŞERİTLERİ (%35 - 4/12 Cols) */}
+                        <div className="xl:col-span-4 space-y-3">
+                            <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
                                 <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
                                     <Layers className="w-4 h-4 text-[#00008B]" />
                                     Diğer Modüller ({widgetDefinitions.length - 1})
@@ -1170,26 +1197,42 @@ export default function PortfolioPage() {
                                 <span className="text-[10px] text-slate-400 font-bold">Değiştirmek İçin Tıkla</span>
                             </div>
 
-                            <div className="max-h-[80vh] overflow-y-auto pr-1 space-y-4 custom-scrollbar">
+                            {/* SCROLLBAR-FREE COMPACT CONTAINER - EXACTLY FITS VERTICALLY */}
+                            <div className="space-y-2.5 overflow-hidden">
                                 {widgetDefinitions
                                     .filter(w => w.id !== focusedWidget)
-                                    .map((widget) => (
-                                        <div 
-                                            key={widget.id}
-                                            onClick={() => setFocusedWidget(widget.id)}
-                                            className="cursor-pointer group relative hover:ring-2 hover:ring-blue-400/40 rounded-3xl transition-all"
-                                        >
-                                            <div className="absolute inset-0 bg-blue-50/20 group-hover:bg-blue-50/40 rounded-3xl z-20 pointer-events-none transition-colors" />
-                                            <div className="absolute top-4 right-4 z-30 pointer-events-none">
-                                                <span className="text-[10px] font-black text-[#00008B] bg-white group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1 rounded-xl shadow-sm border border-slate-200 transition-colors">
-                                                    Sola Taşı
-                                                </span>
-                                            </div>
-                                            <div className="transform scale-[0.97] group-hover:scale-100 transition-transform origin-top-right">
-                                                {renderWidgetCard(widget.id, false)}
-                                            </div>
-                                        </div>
-                                    ))}
+                                    .map((widget) => {
+                                        const WidgetIcon = widget.icon;
+                                        return (
+                                            <motion.div
+                                                key={widget.id}
+                                                layoutId={`widget-card-${widget.id}`}
+                                                layout
+                                                transition={iosSpringAnimationConfig}
+                                                onClick={() => setFocusedWidget(widget.id)}
+                                                className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3.5 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[#00008B] group-hover:bg-[#00008B] group-hover:text-white transition-colors shrink-0">
+                                                        <WidgetIcon className="w-4.5 h-4.5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-[#00008B] text-xs group-hover:text-blue-600 transition-colors leading-tight">
+                                                            {widget.name}
+                                                        </h4>
+                                                        <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
+                                                            {widget.desc}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-1 text-[10px] font-black text-[#00008B] bg-slate-50 group-hover:bg-[#00008B] group-hover:text-white px-2.5 py-1.5 rounded-xl border border-slate-200 transition-all shrink-0">
+                                                    <span>Sola Taşı</span>
+                                                    <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
                             </div>
                         </div>
                     </>
@@ -1238,10 +1281,12 @@ export default function PortfolioPage() {
                                         onChange={(e) => setDividendSortOption(e.target.value as any)}
                                         className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
                                     >
+                                        <option value="amount-asc">Net Tutar: En Düşük → En Yüksek (₺/Pay)</option>
+                                        <option value="amount-desc">Net Tutar: En Yüksek → En Düşük (₺/Pay)</option>
+                                        <option value="yield-desc">Verim: En Yüksek → En Düşük (%)</option>
+                                        <option value="yield-asc">Verim: En Düşük → En Yüksek (%)</option>
                                         <option value="date-asc">Tarih: En Yakın → En Uzak</option>
                                         <option value="date-desc">Tarih: En Uzak → En Yakın</option>
-                                        <option value="amount-desc">Net Tutar: En Yüksek → En Düşük</option>
-                                        <option value="amount-asc">Net Tutar: En Düşük → En Yüksek</option>
                                         <option value="symbol-asc">Hisse Kodu: A → Z</option>
                                         <option value="symbol-desc">Hisse Kodu: Z → A</option>
                                     </select>
@@ -1464,7 +1509,7 @@ export default function PortfolioPage() {
                                     disabled={loading}
                                     className="w-full py-3.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl shadow-lg shadow-[#00008B]/20 transition-all text-sm mt-4 flex items-center justify-center gap-2"
                                 >
-                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "İşlemi Kaydet"}
+                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "İşlem Kaydet"}
                                 </button>
                             </form>
                         </motion.div>
