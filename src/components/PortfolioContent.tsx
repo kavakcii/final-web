@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins, Layers, Eye } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, Maximize2, Minimize2, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
@@ -46,8 +46,11 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
-    // Dynamic Focus Mode State ('summary' | 'table' | 'earnings' | 'dividends' | 'distribution' | 'extremes' | 'correlation' | null)
+    // Dynamic Focus Mode State
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
+
+    // Temettü Takvimi Akıllı Sıralama State
+    const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
 
     // Smart Search Autocomplete States
     const [searchQuery, setSearchQuery] = useState("");
@@ -317,7 +320,6 @@ export default function PortfolioPage() {
     const earningsEntries = Object.entries(earningsDates);
     const displayedEarnings = isCalendarFullyShown ? earningsEntries : earningsEntries.slice(0, 5);
 
-    // Temettü Takvimi odaklandığında TÜM temettüleri göster, aksi halde sadece portföydeki 4 adet
     const isDividendFullyShown = focusedWidget === 'dividends';
     const displayedUserDividends = userPortfolioDividends.slice(0, 4);
 
@@ -325,10 +327,31 @@ export default function PortfolioPage() {
     const extremesEntries = Object.entries(priceExtremes);
     const displayedExtremes = isExtremesFullyShown ? extremesEntries : extremesEntries.slice(0, 5);
 
-    const filteredAllDividends = halkarzDividends.filter(item => 
-        item.symbol.toLowerCase().includes(allDividendsSearch.toLowerCase()) ||
-        item.companyName.toLowerCase().includes(allDividendsSearch.toLowerCase())
-    );
+    // Filtered & Sorted All Dividends for Modal and Focus Mode
+    const sortedFilteredAllDividends = useMemo(() => {
+        const filtered = halkarzDividends.filter(item => 
+            item.symbol.toLowerCase().includes(allDividendsSearch.toLowerCase()) ||
+            item.companyName.toLowerCase().includes(allDividendsSearch.toLowerCase())
+        );
+
+        const list = [...filtered];
+        switch (dividendSortOption) {
+            case 'date-asc':
+                return list.sort((a, b) => a.timestamp - b.timestamp);
+            case 'date-desc':
+                return list.sort((a, b) => b.timestamp - a.timestamp);
+            case 'amount-desc':
+                return list.sort((a, b) => b.netAmountPerShare - a.netAmountPerShare);
+            case 'amount-asc':
+                return list.sort((a, b) => a.netAmountPerShare - b.netAmountPerShare);
+            case 'symbol-asc':
+                return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            case 'symbol-desc':
+                return list.sort((a, b) => b.symbol.localeCompare(a.symbol));
+            default:
+                return list;
+        }
+    }, [halkarzDividends, allDividendsSearch, dividendSortOption]);
 
     // Widget Definitions
     const widgetDefinitions = [
@@ -341,16 +364,16 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Helper: Render individual Widget with Framer Motion layoutId for shared element 60FPS Morphing
+    // Shared Element Container with 0.65s Luxury Transition Duration and Soft Easing Curve [0.25, 1, 0.5, 1]
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <motion.div
                 key={id}
                 layoutId={`widget-card-${id}`}
                 layout
-                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
                 className={cn(
-                    "w-full transition-shadow duration-300",
+                    "w-full transition-shadow duration-500",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
             >
@@ -485,7 +508,7 @@ export default function PortfolioPage() {
                                                                 initial={{ opacity: 0, height: 0 }}
                                                                 animate={{ opacity: 1, height: "auto" }}
                                                                 exit={{ opacity: 0, height: 0 }}
-                                                                transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                                                                transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
                                                                 className="hover:bg-blue-50/40 transition-colors cursor-pointer group"
                                                                 onClick={() => setExpandedSymbol(isExpanded ? null : group.symbol)}
                                                             >
@@ -592,7 +615,7 @@ export default function PortfolioPage() {
                         </div>
                         <motion.div 
                             layout
-                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
                             className="space-y-3 overflow-hidden"
                         >
                             {earningsEntries.length === 0 ? (
@@ -638,7 +661,7 @@ export default function PortfolioPage() {
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between h-full">
                         <div>
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => setFocusedWidget(isFocused ? null : 'dividends')}>
                                     <Coins className="w-4 h-4 text-emerald-600" />
                                     <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
@@ -646,6 +669,26 @@ export default function PortfolioPage() {
                                     </h3>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    {/* TEMETTÜ TAKVİMİ AKILLI SIRALAMA DROPDOWN MENÜSÜ */}
+                                    {isFocused && (
+                                        <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1">
+                                            <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
+                                            <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
+                                            <select
+                                                value={dividendSortOption}
+                                                onChange={(e) => setDividendSortOption(e.target.value as any)}
+                                                className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
+                                            >
+                                                <option value="date-asc">Tarih: En Yakın → En Uzak</option>
+                                                <option value="date-desc">Tarih: En Uzak → En Yakın</option>
+                                                <option value="amount-desc">Net Tutar: En Yüksek → En Düşük</option>
+                                                <option value="amount-asc">Net Tutar: En Düşük → En Yüksek</option>
+                                                <option value="symbol-asc">Hisse Kodu: A → Z</option>
+                                                <option value="symbol-desc">Hisse Kodu: Z → A</option>
+                                            </select>
+                                        </div>
+                                    )}
+
                                     {!isFocused && (
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); setIsAllDividendsModalOpen(true); }}
@@ -658,32 +701,34 @@ export default function PortfolioPage() {
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'dividends'); }}
                                         className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
-                                        title={isFocused ? "Odak Modundan Çık" : "Odak Modunda Tüm Takvimi Gör"}
+                                        title={isFocused ? "Odak Modundan Çık" : "Odak Modunda Tüm Takvimi Gör ve Sırala"}
                                     >
                                         {isFocused ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* ODAK MODUNDA DOĞRUDAN TÜM PİYASA TEMETTÜ TAKVİMİ LİSTESİ */}
+                            {/* ODAK MODUNDA DOĞRUDAN TÜM PİYASA TEMETTÜ TAKVİMİ LİSTESİ VE AKILLI SIRALAMA */}
                             {isFocused ? (
                                 <div className="space-y-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input
-                                            type="text"
-                                            placeholder="Hisse Kodu veya Şirket Adı Ara..."
-                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
-                                            value={allDividendsSearch}
-                                            onChange={(e) => setAllDividendsSearch(e.target.value)}
-                                        />
+                                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                                        <div className="relative flex-1 w-full">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Hisse Kodu veya Şirket Adı Ara..."
+                                                className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
+                                                value={allDividendsSearch}
+                                                onChange={(e) => setAllDividendsSearch(e.target.value)}
+                                            />
+                                        </div>
                                     </div>
 
-                                    <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
-                                        {filteredAllDividends.length === 0 ? (
+                                    <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
+                                        {sortedFilteredAllDividends.length === 0 ? (
                                             <p className="text-center py-6 text-slate-400 text-xs font-medium">Aramanızla eşleşen temettü verisi bulunamadı.</p>
                                         ) : (
-                                            filteredAllDividends.map((item) => {
+                                            sortedFilteredAllDividends.map((item) => {
                                                 const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
                                                 const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
                                                 const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
@@ -692,29 +737,29 @@ export default function PortfolioPage() {
                                                     <div 
                                                         key={item.symbol} 
                                                         className={cn(
-                                                            "p-3 rounded-2xl border transition-all flex items-center justify-between text-xs gap-3",
-                                                            isUserAsset ? "bg-emerald-50/80 border-emerald-300" : "bg-slate-50/70 border-slate-100 hover:bg-blue-50/40"
+                                                            "p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs gap-3",
+                                                            isUserAsset ? "bg-emerald-50/80 border-emerald-300 shadow-sm" : "bg-slate-50/70 border-slate-100 hover:bg-blue-50/40"
                                                         )}
                                                     >
-                                                        <div className="flex items-center gap-2.5">
-                                                            <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-[#00008B] text-xs shrink-0 shadow-sm">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-[#00008B] text-xs shrink-0 shadow-sm">
                                                                 {item.symbol}
                                                             </div>
                                                             <div>
                                                                 <div className="flex items-center gap-1.5">
-                                                                    <span className="font-black text-[#00008B]">{item.companyName}</span>
+                                                                    <span className="font-black text-[#00008B] text-sm">{item.companyName}</span>
                                                                     {isUserAsset && (
                                                                         <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">
                                                                             Portföyde ({userAssetObj?.totalQuantity} Adet)
                                                                         </span>
                                                                     )}
                                                                 </div>
-                                                                <span className="text-[10px] text-slate-400 font-medium">Tarih: <b>{item.paymentDate}</b></span>
+                                                                <span className="text-[10px] text-slate-400 font-semibold">Tarih: <b>{item.paymentDate}</b></span>
                                                             </div>
                                                         </div>
 
                                                         <div className="text-right">
-                                                            <span className="text-[#00008B] font-black block">{item.netAmountFormatted} / Pay</span>
+                                                            <span className="text-[#00008B] font-black text-sm block">{item.netAmountFormatted} / Pay</span>
                                                             <span className="text-emerald-700 font-bold text-[10px]">%{item.yieldPercent} Verim</span>
                                                             {isUserAsset && (
                                                                 <span className="text-emerald-800 font-black text-[11px] block mt-0.5">{formatCurrency(userTotalNet)} Net</span>
@@ -730,7 +775,7 @@ export default function PortfolioPage() {
                                 /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA LİSTE */
                                 <motion.div 
                                     layout
-                                    transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                                    transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
                                     className="space-y-3 overflow-hidden"
                                 >
                                     {displayedUserDividends.length === 0 ? (
@@ -881,7 +926,7 @@ export default function PortfolioPage() {
                         </div>
                         <motion.div 
                             layout
-                            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                            transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
                             className="space-y-3 overflow-hidden"
                         >
                             {extremesEntries.length === 0 ? (
@@ -1007,6 +1052,7 @@ export default function PortfolioPage() {
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
                                 className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
@@ -1047,7 +1093,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED SHARED-ELEMENT (layoutId) LAYOUT FOR 60 FPS FLIP ANIMATIONS */}
+            {/* UNIFIED SHARED-ELEMENT (layoutId) LAYOUT FOR 0.65s LUXURY FLIP MORPHING ANIMATIONS */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1075,7 +1121,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (FOCUS MODE WITH SHARED ELEMENT SLIDE/GROW ANIMATIONS) */
+                    /* 2. ODAK MODU DURUMU (0.65s LUXURY SOFT ANIMATED LAYOUT) */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1086,7 +1132,7 @@ export default function PortfolioPage() {
                                         <Eye className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block">Odak Modu Etkin</span>
+                                        <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block">Odak Modu Etkin (0.65s Soft)</span>
                                         <span className="text-[11px] text-slate-500 font-semibold">Tıklanan widget sol ekranda büyütüldü</span>
                                     </div>
                                 </div>
@@ -1100,7 +1146,7 @@ export default function PortfolioPage() {
                                 </button>
                             </div>
 
-                            {/* ODAKLANILAN WIDGET CARD (Framer Motion layoutId ile Sola Büyüyen / Genişleyen Kart) */}
+                            {/* ODAKLANILAN WIDGET CARD */}
                             {renderWidgetCard(focusedWidget, true)}
                         </div>
 
@@ -1147,7 +1193,7 @@ export default function PortfolioPage() {
                 {isAllDividendsModalOpen && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                         <div onClick={() => setIsAllDividendsModalOpen(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]">
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} transition={{ duration: 0.35 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]">
                             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100">
@@ -1161,23 +1207,42 @@ export default function PortfolioPage() {
                                 <button onClick={() => setIsAllDividendsModalOpen(false)} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
                             </div>
 
-                            {/* Search bar */}
-                            <div className="relative mb-6">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Hisse Kodu veya Şirket Adı Ara..."
-                                    className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-sm rounded-2xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
-                                    value={allDividendsSearch}
-                                    onChange={(e) => setAllDividendsSearch(e.target.value)}
-                                />
+                            {/* Search bar & Sort Controls */}
+                            <div className="flex flex-col sm:flex-row gap-3 items-center justify-between mb-6">
+                                <div className="relative flex-1 w-full">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Hisse Kodu veya Şirket Adı Ara..."
+                                        className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-sm rounded-2xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
+                                        value={allDividendsSearch}
+                                        onChange={(e) => setAllDividendsSearch(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="flex items-center gap-2 bg-blue-50/80 border border-blue-200/60 rounded-2xl px-3 py-2.5 w-full sm:w-auto">
+                                    <ArrowUpDown className="w-4 h-4 text-[#00008B]" />
+                                    <span className="text-xs font-bold text-[#00008B] uppercase">Sırala:</span>
+                                    <select
+                                        value={dividendSortOption}
+                                        onChange={(e) => setDividendSortOption(e.target.value as any)}
+                                        className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
+                                    >
+                                        <option value="date-asc">Tarih: En Yakın → En Uzak</option>
+                                        <option value="date-desc">Tarih: En Uzak → En Yakın</option>
+                                        <option value="amount-desc">Net Tutar: En Yüksek → En Düşük</option>
+                                        <option value="amount-asc">Net Tutar: En Düşük → En Yüksek</option>
+                                        <option value="symbol-asc">Hisse Kodu: A → Z</option>
+                                        <option value="symbol-desc">Hisse Kodu: Z → A</option>
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="space-y-3">
-                                {filteredAllDividends.length === 0 ? (
+                                {sortedFilteredAllDividends.length === 0 ? (
                                     <p className="text-center py-10 text-slate-400 font-medium text-sm">Aramanızla eşleşen temettü verisi bulunamadı.</p>
                                 ) : (
-                                    filteredAllDividends.map((item) => {
+                                    sortedFilteredAllDividends.map((item) => {
                                         const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
                                         const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
                                         const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
