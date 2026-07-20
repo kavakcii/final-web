@@ -46,8 +46,18 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
-    // Dynamic Focus Mode State
+    // Dynamic Focus Mode State & Entry Tracking
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
+    const [isInitialFocusEntry, setIsInitialFocusEntry] = useState<boolean>(false);
+
+    // Function to set focus mode with entry tracking
+    const handleWidgetFocus = (id: string | null) => {
+        if (focusedWidget === null && id !== null) {
+            setIsInitialFocusEntry(true);
+            setTimeout(() => setIsInitialFocusEntry(false), 250);
+        }
+        setFocusedWidget(id);
+    };
 
     // Temettü Takvimi Akıllı Sıralama State
     const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'yield-desc' | 'yield-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
@@ -86,9 +96,17 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // Ultra Hızlı ve Esnemesiz Geçiş Konfigürasyonu (~0.18s)
-    const fastTransitionConfig: any = useMemo(() => ({
-        duration: 0.18,
+    // 0.65 Hızındaki Asil Apple iOS Spring Fizik Motoru Konfigürasyonu (Odak İçi Widget Değişimleri İçin)
+    const iosSpringAnimationConfig: any = useMemo(() => ({
+        type: "spring",
+        stiffness: 75,
+        damping: 15,
+        mass: 1.1
+    }), []);
+
+    // Odak Moduna İlk Girişte Şerit Kartların Anında Yerine Oturması İçin Ultra Hızlı Konfigürasyon (~0.12s)
+    const entryFastTransitionConfig: any = useMemo(() => ({
+        duration: 0.12,
         ease: "easeOut"
     }), []);
 
@@ -395,16 +413,16 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Container for Main Grid Widgets - Ultra Fast & Clean (No Stretch Distortion)
+    // Shared Container for Main Grid Widgets (Odak modunda widget değişimleri 0.65 iOS Spring Fiziği ile akar)
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <motion.div
                 key={id}
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={fastTransitionConfig}
+                transition={iosSpringAnimationConfig}
                 className={cn(
-                    "w-full transition-shadow duration-200",
+                    "w-full transition-shadow duration-300",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
             >
@@ -428,7 +446,7 @@ export default function PortfolioPage() {
                                     <span className="text-[#00008B]/60 text-[10px] font-bold uppercase tracking-widest">Toplam Varlık Değeri</span>
                                 </div>
                                 <button 
-                                    onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'summary'); }}
+                                    onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'summary'); }}
                                     className="p-1 rounded-lg text-slate-400 hover:text-[#00008B] hover:bg-blue-50 transition-colors"
                                 >
                                     {isFocused ? <X className="w-4 h-4 text-rose-600" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -477,7 +495,7 @@ export default function PortfolioPage() {
                     <div className="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-[#00008B]/5 overflow-hidden flex flex-col justify-between h-full">
                         <div>
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                                <div className="flex items-center gap-3 cursor-pointer" onClick={() => setFocusedWidget(isFocused ? null : 'table')}>
+                                <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleWidgetFocus(isFocused ? null : 'table')}>
                                     <h3 className="text-xl font-black text-[#00008B] tracking-tight">Portföy Tablosu</h3>
                                     <div className="text-[10px] font-bold text-[#00008B] bg-blue-50 border border-blue-200/50 px-3 py-1 rounded-full">
                                         {groupedAssets.length} VARLIK
@@ -495,7 +513,7 @@ export default function PortfolioPage() {
                                         </button>
                                     )}
                                     <button 
-                                        onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'table'); }}
+                                        onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'table'); }}
                                         className={cn("p-2 rounded-xl transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                                         title={isFocused ? "Odak Modundan Çık" : "Odak Moduna Geç"}
                                     >
@@ -618,7 +636,7 @@ export default function PortfolioPage() {
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setFocusedWidget(isFocused ? null : 'earnings')}>
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleWidgetFocus(isFocused ? null : 'earnings')}>
                                 <Calendar className="w-4 h-4 text-[#00008B]" />
                                 <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
                             </div>
@@ -632,7 +650,7 @@ export default function PortfolioPage() {
                                     </button>
                                 )}
                                 <button 
-                                    onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'earnings'); }}
+                                    onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'earnings'); }}
                                     className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                                 >
                                     {isFocused ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -684,7 +702,7 @@ export default function PortfolioPage() {
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between h-full">
                         <div>
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
-                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => setFocusedWidget(isFocused ? null : 'dividends')}>
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleWidgetFocus(isFocused ? null : 'dividends')}>
                                     <Coins className="w-4 h-4 text-emerald-600" />
                                     <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
                                         {isFocused ? "Tüm Piyasa Temettü Takvimi" : "Temettü Takvimim"}
@@ -723,7 +741,7 @@ export default function PortfolioPage() {
                                         </button>
                                     )}
                                     <button 
-                                        onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'dividends'); }}
+                                        onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'dividends'); }}
                                         className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                                         title={isFocused ? "Odak Modundan Çık" : "Odak Modunda Tüm Takvimi Gör ve Sırala"}
                                     >
@@ -803,7 +821,7 @@ export default function PortfolioPage() {
                                             <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                                             <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
                                             <button 
-                                                onClick={() => setFocusedWidget('dividends')}
+                                                onClick={() => handleWidgetFocus('dividends')}
                                                 className="mt-3 text-[11px] font-bold text-[#00008B] hover:underline inline-flex items-center gap-1"
                                             >
                                                 Tüm Piyasa Temettü Takvimini İncele
@@ -848,7 +866,7 @@ export default function PortfolioPage() {
                             <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
                                 <span className="text-[10px] text-slate-400 font-semibold">HalkArz Canlı Veri</span>
                                 <button 
-                                    onClick={() => setFocusedWidget('dividends')}
+                                    onClick={() => handleWidgetFocus('dividends')}
                                     className="text-[10px] font-bold text-[#00008B] hover:underline"
                                 >
                                     Tümünü Gör ({halkarzDividends.length} Şirket) →
@@ -862,12 +880,12 @@ export default function PortfolioPage() {
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
                         <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setFocusedWidget(isFocused ? null : 'distribution')}>
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleWidgetFocus(isFocused ? null : 'distribution')}>
                                 <PieChart className="w-4 h-4 text-[#00008B]" />
                                 <h3 className="font-bold text-[#00008B] text-xs uppercase tracking-wider">Varlık Dağılım Grafiği</h3>
                             </div>
                             <button 
-                                onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'distribution'); }}
+                                onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'distribution'); }}
                                 className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                             >
                                 {isFocused ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -922,7 +940,7 @@ export default function PortfolioPage() {
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
                         <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setFocusedWidget(isFocused ? null : 'extremes')}>
+                            <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleWidgetFocus(isFocused ? null : 'extremes')}>
                                 <Activity className="w-4 h-4 text-[#00008B]" />
                                 <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Fiyat Analizi (52H)</h3>
                             </div>
@@ -936,7 +954,7 @@ export default function PortfolioPage() {
                                     </button>
                                 )}
                                 <button 
-                                    onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'extremes'); }}
+                                    onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'extremes'); }}
                                     className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                                 >
                                     {isFocused ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -992,7 +1010,7 @@ export default function PortfolioPage() {
                                 Yapay Zeka Destekli Risk Dengesi
                             </div>
                             <button 
-                                onClick={(e) => { e.stopPropagation(); setFocusedWidget(isFocused ? null : 'correlation'); }}
+                                onClick={(e) => { e.stopPropagation(); handleWidgetFocus(isFocused ? null : 'correlation'); }}
                                 className={cn("p-1.5 rounded-lg transition-all border", isFocused ? "bg-rose-50 text-rose-600 border-rose-200" : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-blue-50")}
                             >
                                 {isFocused ? <X className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -1067,7 +1085,7 @@ export default function PortfolioPage() {
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                transition={fastTransitionConfig}
+                                transition={iosSpringAnimationConfig}
                                 className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
                             >
                                 <Eye className="w-3.5 h-3.5" />
@@ -1083,7 +1101,7 @@ export default function PortfolioPage() {
                 <div className="flex items-center gap-3">
                     {focusedWidget && (
                         <button
-                            onClick={() => setFocusedWidget(null)}
+                            onClick={() => handleWidgetFocus(null)}
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-2xl border border-rose-200/60 text-xs transition-all active:scale-95 shadow-sm"
                         >
                             <X className="w-4 h-4" />
@@ -1108,7 +1126,7 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
-            {/* UNIFIED ULTRA FAST & CLEAN LAYOUT (ZERO TEXT STRETCHING) */}
+            {/* UNIFIED DUAL-MODE LAYOUT (ODAK İÇİ GEÇİŞLER 0.65 iOS SPRING, İLK GİRİŞ İSE ANINDA HIZLI) */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
@@ -1136,7 +1154,7 @@ export default function PortfolioPage() {
                         </div>
                     </>
                 ) : (
-                    /* 2. ODAK MODU DURUMU (ULTRA HIZLI & ESNEMESİZ) */
+                    /* 2. ODAK MODU DURUMU */
                     <>
                         {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-4">
@@ -1155,7 +1173,7 @@ export default function PortfolioPage() {
                                 </div>
 
                                 <button
-                                    onClick={() => setFocusedWidget(null)}
+                                    onClick={() => handleWidgetFocus(null)}
                                     className="px-4 py-2 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 font-bold rounded-xl text-xs border border-slate-200 transition-all flex items-center gap-1.5 shadow-sm"
                                 >
                                     <X className="w-4 h-4 text-rose-600" />
@@ -1177,7 +1195,7 @@ export default function PortfolioPage() {
                                 </div>
                             )}
 
-                            {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER (ULTRA HIZLI & ESNEMESİZ) */}
+                            {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
                                     <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
@@ -1192,13 +1210,15 @@ export default function PortfolioPage() {
                                         .filter(w => w.id !== focusedWidget && w.id !== 'summary')
                                         .map((widget) => {
                                             const WidgetIcon = widget.icon;
+                                            const activeStripTransition = isInitialFocusEntry ? entryFastTransitionConfig : iosSpringAnimationConfig;
+
                                             return (
                                                 <motion.div
                                                     key={widget.id}
-                                                    initial={{ opacity: 0, scale: 0.96 }}
+                                                    initial={{ opacity: 0, scale: 0.97 }}
                                                     animate={{ opacity: 1, scale: 1 }}
-                                                    transition={fastTransitionConfig}
-                                                    onClick={() => setFocusedWidget(widget.id)}
+                                                    transition={activeStripTransition}
+                                                    onClick={() => handleWidgetFocus(widget.id)}
                                                     className="bg-white hover:bg-blue-50/70 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group"
                                                 >
                                                     <div className="flex items-center gap-3">
@@ -1498,7 +1518,7 @@ export default function PortfolioPage() {
                                 <button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="w-full py-3.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl shadow-lg shadow-[#00008B]/20 transition-all text-sm mt-4 flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl shadow-[#00008B]/20 transition-all text-sm mt-4 flex items-center justify-center gap-2"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "İşlem Kaydet"}
                                 </button>
