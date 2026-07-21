@@ -86,22 +86,21 @@ function DashboardShell({
         { icon: Bot, label: "FinAi Robotum", href: "/dashboard/reports" },
         { icon: LayoutGrid, label: "Varlıklar", href: "/dashboard/data" },
         { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },
-        { icon: Bell, label: "Bildirimler", href: "/dashboard/notifications" },
         { icon: Settings, label: "Ayarlar", href: "/dashboard/settings" }
     ];
 
     return (
-        <div className="min-h-screen flex relative selection:bg-blue-500/30 overflow-hidden font-sans bg-transparent">
+        <div className="min-h-screen flex relative selection:bg-blue-500/30 font-sans bg-transparent">
             {/* Luminous Light Leaks */}
             <div className="absolute left-[10%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-50 blur-[140px] pointer-events-none" />
             <div className="absolute right-[-5%] bottom-[-5%] -z-10 h-[500px] w-[500px] rounded-full bg-slate-50 blur-[120px] pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
-                <div className="flex-1 flex overflow-hidden bg-transparent">
+                <div className="flex-1 flex bg-transparent">
                     
                     {/* Sidebar (Premium Frosted Glass) */}
-                    <aside className="w-20 hover:w-64 border-r border-white/40 premium-frost hidden md:flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 h-full relative">
+                    <aside className="w-20 hover:w-64 border-r border-white/40 premium-frost hidden md:flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen">
                         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10 relative z-10">
                             <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
@@ -137,7 +136,7 @@ function DashboardShell({
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1 relative overflow-hidden flex flex-col min-w-0 bg-transparent">
+                    <main className="flex-1 relative flex flex-col min-w-0 bg-transparent">
                         {/* Header (Glassified) */}
                         <header className="h-16 border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/40 backdrop-blur-xl flex-shrink-0 relative">
                             <h1 className="text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
@@ -188,7 +187,7 @@ function DashboardShell({
 
                         <FinancialTicker />
 
-                        <div className="flex-1 overflow-auto bg-transparent p-0 relative custom-scrollbar">
+                        <div className="flex-1 bg-transparent p-0 relative">
                             {children}
                         </div>
                     </main>

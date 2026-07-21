@@ -33,12 +33,15 @@ const formatDate = (dateString: string) => {
     });
 };
 
-// Robust Helper for dividend date display
+// Robust Helper for dividend date display - Catches "...", "..", empty, null, etc.
 const getDividendDisplayDate = (dateStr?: string) => {
     if (!dateStr || 
         typeof dateStr !== "string" ||
         dateStr.trim() === "" || 
         dateStr.trim() === "-" || 
+        dateStr.includes("..") ||
+        dateStr.includes("...") ||
+        dateStr.replaceAll(".", "").trim() === "" ||
         dateStr.includes("00.00") || 
         dateStr.toLowerCase().includes("belirtilmedi") || 
         dateStr.toLowerCase().includes("undefined") || 
@@ -755,7 +758,7 @@ export default function PortfolioPage() {
                                                                 <td className="py-3.5 px-4 text-slate-700 font-semibold">{item.companyName}</td>
                                                                 <td className="py-3.5 px-4">
                                                                     <span className={cn(
-                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs",
+                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs whitespace-nowrap",
                                                                         isUnannounced 
                                                                             ? "bg-amber-50 text-amber-700 border-amber-200/80" 
                                                                             : "bg-blue-50 text-[#00008B] border-blue-200/50"
