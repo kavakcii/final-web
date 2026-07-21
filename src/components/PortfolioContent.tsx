@@ -89,6 +89,9 @@ export default function PortfolioPage() {
         mass: 1.1
     }), []);
 
+    // Color Palette for Pie/Donut Chart & Cards
+    const CHART_COLORS = ["#00008B", "#00b4d8", "#4361ee", "#7209b7", "#4895ef", "#f72585", "#4cc9f0", "#3a0ca3"];
+
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
         const groups: Record<string, GroupedAsset> = {};
@@ -392,7 +395,7 @@ export default function PortfolioPage() {
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ];
 
-    // Shared Container for Main Grid Widgets (Kartın Herhangi Bir Yerine Tıklandığında Doğrudan Odak Modu)
+    // Shared Container for Main Grid Widgets
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
         return (
             <div
@@ -411,7 +414,7 @@ export default function PortfolioPage() {
         );
     };
 
-    // Helper: Internal Widget Renderer (Mavi Varlık Kartı, Yeşil/Kırmızı Kâr Zarar Kartı & Portföy Tablosunda İşlem Ekle Butonu)
+    // Helper: Internal Widget Renderer
     const renderWidgetContent = (id: string, isFocused: boolean = false) => {
         switch(id) {
             case 'summary':
@@ -682,55 +685,68 @@ export default function PortfolioPage() {
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
-                                        {sortedFilteredAllDividends.length === 0 ? (
-                                            <p className="text-center py-6 text-slate-400 text-xs font-medium">Aramanızla eşleşen temettü verisi bulunamadı.</p>
-                                        ) : (
-                                            sortedFilteredAllDividends.map((item) => {
-                                                const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
-                                                const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
-                                                const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
+                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU */}
+                                    <div className="overflow-x-auto rounded-2xl border border-slate-100">
+                                        <table className="w-full text-left border-collapse text-xs">
+                                            <thead>
+                                                <tr className="text-[10px] text-[#00008B]/60 uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/80">
+                                                    <th className="py-3.5 px-4">Hisse</th>
+                                                    <th className="py-3.5 px-4">Şirket Adı</th>
+                                                    <th className="py-3.5 px-4">Ödeme Tarihi</th>
+                                                    <th className="py-3.5 px-4">Net Tutar / Pay</th>
+                                                    <th className="py-3.5 px-4">Verim %</th>
+                                                    <th className="py-3.5 px-4 text-right">Portföy Kazancı</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {sortedFilteredAllDividends.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={6} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen temettü verisi bulunamadı.</td>
+                                                    </tr>
+                                                ) : (
+                                                    sortedFilteredAllDividends.map((item) => {
+                                                        const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
+                                                        const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
+                                                        const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
 
-                                                return (
-                                                    <div 
-                                                        key={item.symbol} 
-                                                        className={cn(
-                                                            "p-3.5 rounded-2xl border transition-all flex items-center justify-between text-xs gap-3",
-                                                            isUserAsset ? "bg-emerald-50/80 border-emerald-300 shadow-sm" : "bg-slate-50/70 border-slate-100 hover:bg-blue-50/40"
-                                                        )}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-black text-[#00008B] text-xs shrink-0 shadow-sm">
-                                                                {item.symbol}
-                                                            </div>
-                                                            <div>
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <span className="font-black text-[#00008B] text-sm">{item.companyName}</span>
-                                                                    {isUserAsset && (
-                                                                        <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">
-                                                                            Portföyde ({userAssetObj?.totalQuantity} Adet)
+                                                        return (
+                                                            <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
+                                                                <td className="py-3.5 px-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
+                                                                        {isUserAsset && (
+                                                                            <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">Portföyde</span>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-3.5 px-4 text-slate-700 font-semibold">{item.companyName}</td>
+                                                                <td className="py-3.5 px-4">
+                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 text-[#00008B] font-bold border border-blue-200/50">
+                                                                        <Calendar className="w-3 h-3 text-[#00008B]" />
+                                                                        {item.paymentDate}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="py-3.5 px-4 font-black text-[#00008B]">{item.netAmountFormatted}</td>
+                                                                <td className="py-3.5 px-4 font-black text-emerald-700">%{item.yieldPercent}</td>
+                                                                <td className="py-3.5 px-4 text-right">
+                                                                    {isUserAsset ? (
+                                                                        <span className="text-emerald-800 font-black text-xs bg-emerald-100/80 border border-emerald-300 px-2.5 py-1 rounded-xl">
+                                                                            {formatCurrency(userTotalNet)}
                                                                         </span>
+                                                                    ) : (
+                                                                        <span className="text-slate-300 font-medium">-</span>
                                                                     )}
-                                                                </div>
-                                                                <span className="text-[10px] text-slate-400 font-semibold">Tarih: <b>{item.paymentDate}</b></span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="text-right">
-                                                            <span className="text-[#00008B] font-black text-sm block">{item.netAmountFormatted} / Pay</span>
-                                                            <span className="text-emerald-700 font-bold text-[10px]">%{item.yieldPercent} Verim</span>
-                                                            {isUserAsset && (
-                                                                <span className="text-emerald-800 font-black text-[11px] block mt-0.5">{formatCurrency(userTotalNet)} Net</span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             ) : (
-                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA LİSTE */
+                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE */
                                 <div className="space-y-3 overflow-hidden">
                                     {displayedUserDividends.length === 0 ? (
                                         <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
@@ -756,7 +772,7 @@ export default function PortfolioPage() {
                                                     </div>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
-                                                    <div className="flex items-center gap-1 text-slate-600 font-semibold">
+                                                    <div className="flex items-center gap-1 text-[#00008B] font-bold bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/50">
                                                         <Calendar className="w-3 h-3 text-[#00008B]" />
                                                         <span>Tarih: {item.paymentDate}</span>
                                                     </div>
@@ -784,41 +800,71 @@ export default function PortfolioPage() {
                         </div>
 
                         {assets.length > 0 && totalValue > 0 ? (
-                            <div className="space-y-4">
-                                <div className="h-6 w-full rounded-2xl flex overflow-hidden border border-slate-100 bg-slate-50 p-0.5 shadow-inner">
-                                    {groupedAssets.sort((a,b) => (prices[b.symbol]*b.totalQuantity) - (prices[a.symbol]*a.totalQuantity)).map((group, idx) => {
-                                        const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
-                                        if (marketValue <= 0) return null;
-                                        const weight = (marketValue / totalValue) * 100;
-                                        const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
-                                        return (
-                                            <div 
-                                                key={group.symbol} 
-                                                className={`h-full ${colors[idx % colors.length]} flex items-center justify-center relative first:rounded-l-xl last:rounded-r-xl transition-all duration-300`}
-                                                style={{ width: `${weight}%` }}
-                                                title={`${group.symbol}: %${weight.toFixed(1)}`}
-                                            >
-                                                {weight > 6 && <span className="text-white font-bold text-[10px] truncate px-1">{group.symbol}</span>}
-                                            </div>
-                                        );
-                                    })}
+                            <div className="space-y-6">
+                                {/* SVG PASTA DİLİMİ (DONUT CHART) GRAFİĞİ */}
+                                <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+                                    <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                                        {(() => {
+                                            const sorted = groupedAssets
+                                                .map(g => ({ ...g, marketVal: (prices[g.symbol] || g.avgCost) * g.totalQuantity }))
+                                                .filter(g => g.marketVal > 0)
+                                                .sort((a, b) => b.marketVal - a.marketVal);
+
+                                            let currentOffset = 0;
+                                            const C = 2 * Math.PI * 36; // Radius r=36, Circumference C=226.195
+
+                                            return sorted.map((group, idx) => {
+                                                const weight = (group.marketVal / totalValue);
+                                                const strokeLength = weight * C;
+                                                const color = CHART_COLORS[idx % CHART_COLORS.length];
+                                                const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
+                                                const strokeDashoffset = -currentOffset;
+                                                currentOffset += strokeLength;
+
+                                                return (
+                                                    <circle
+                                                        key={group.symbol}
+                                                        cx="50"
+                                                        cy="50"
+                                                        r="36"
+                                                        fill="transparent"
+                                                        stroke={color}
+                                                        strokeWidth="16"
+                                                        strokeDasharray={strokeDasharray}
+                                                        strokeDashoffset={strokeDashoffset}
+                                                        className="transition-all duration-700 hover:opacity-85"
+                                                    />
+                                                );
+                                            });
+                                        })()}
+                                    </svg>
+                                    
+                                    {/* PASTA GRAFİK MERKEZ YAZISI */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
+                                        <span className="text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
+                                    </div>
                                 </div>
 
+                                {/* LEJANT KARTLARI (PASTA DİLİMLERİ İLE UYUMLU RENKLER) */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                    {groupedAssets.map((group, idx) => {
-                                        const marketValue = (prices[group.symbol] || group.avgCost) * group.totalQuantity;
-                                        const weight = totalValue > 0 ? (marketValue / totalValue) * 100 : 0;
-                                        const colors = ["bg-[#00008B]", "bg-sky-500", "bg-indigo-600", "bg-teal-500", "bg-amber-500", "bg-rose-500"];
-                                        return (
-                                            <div key={group.symbol} className="flex items-center justify-between p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className={`w-2.5 h-2.5 rounded-full ${colors[idx % colors.length]}`} />
-                                                    <span className="font-bold text-[#00008B] text-xs">{group.symbol}</span>
+                                    {groupedAssets
+                                        .map(g => ({ ...g, marketVal: (prices[g.symbol] || g.avgCost) * g.totalQuantity }))
+                                        .filter(g => g.marketVal > 0)
+                                        .sort((a, b) => b.marketVal - a.marketVal)
+                                        .map((group, idx) => {
+                                            const weight = totalValue > 0 ? (group.marketVal / totalValue) * 100 : 0;
+                                            const color = CHART_COLORS[idx % CHART_COLORS.length];
+                                            return (
+                                                <div key={group.symbol} className="flex items-center justify-between p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-3 h-3 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: color }} />
+                                                        <span className="font-bold text-[#00008B] text-xs">{group.symbol}</span>
+                                                    </div>
+                                                    <span className="font-black text-slate-600 text-xs">%{weight.toFixed(1)}</span>
                                                 </div>
-                                                <span className="font-black text-slate-500 text-xs">%{weight.toFixed(1)}</span>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
                                 </div>
                             </div>
                         ) : (
@@ -851,10 +897,11 @@ export default function PortfolioPage() {
                                                 </span>
                                             </div>
                                             
+                                            {/* BEYAZDAN LACİVERTE/MAVİYE SÜZÜLEN MÜKEMMEL MARKA GRADYAN BARI */}
                                             <div className="relative py-1">
                                                 <div className="h-2 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
                                                     <div 
-                                                        className="h-full bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-500 relative transition-all duration-1000"
+                                                        className="h-full bg-gradient-to-r from-slate-200 via-sky-400 to-[#00008B] relative transition-all duration-1000"
                                                         style={{ width: `${pos}%` }}
                                                     />
                                                 </div>
