@@ -8,6 +8,7 @@ import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import Link from "next/link";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
+import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
 
 // Grouped Asset Type
 interface GroupedAsset {
@@ -60,10 +61,12 @@ export default function PortfolioPage() {
     const [priceExtremes, setPriceExtremes] = useState<Record<string, {low: number, high: number, current: number, target?: number, rating?: string}>>({});
     const [earningsDates, setEarningsDates] = useState<Record<string, number>>({});
     const [halkarzDividends, setHalkarzDividends] = useState<HalkarzDividendItem[]>([]);
+    const [halkarzEarnings, setHalkarzEarnings] = useState<HalkarzEarningsItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isAllDividendsModalOpen, setIsAllDividendsModalOpen] = useState(false);
     const [allDividendsSearch, setAllDividendsSearch] = useState("");
+    const [allEarningsSearch, setAllEarningsSearch] = useState("");
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
@@ -73,6 +76,10 @@ export default function PortfolioPage() {
     // Temettü Takvimi Akıllı Sıralama & Sayfalama State
     const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'yield-desc' | 'yield-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
     const [dividendPage, setDividendPage] = useState(1);
+
+    // Bilanço Takvimi Akıllı Sıralama & Sayfalama State
+    const [earningsSortOption, setEarningsSortOption] = useState<'date-asc' | 'date-desc' | 'days-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
+    const [earningsPage, setEarningsPage] = useState(1);
 
     // Smart Search Autocomplete States
     const [searchQuery, setSearchQuery] = useState("");
@@ -191,7 +198,7 @@ export default function PortfolioPage() {
         }
     }, [halkarzDividends, groupedAssets, dividendSortOption]);
 
-    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Aramada BIST Kataloğu Dahil)
+    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Temettü Takvimi)
     const combinedDividendsList = useMemo(() => {
         const existingSymbols = new Set<string>();
         const list: (HalkarzDividendItem & { isDividend: boolean })[] = [];
@@ -233,14 +240,13 @@ export default function PortfolioPage() {
         setDividendPage(1);
     }, [allDividendsSearch, dividendSortOption]);
 
-    // Filtered & Sorted All Dividends (Genel Listede Yalnızca Temettü Ödeyenler, Aramada Tümü)
+    // Filtered & Sorted All Dividends (Temettü Takvimi)
     const sortedFilteredAllDividends = useMemo(() => {
         const query = allDividendsSearch.toLowerCase().trim();
         
-        // Arama yapılmadığında genel listeyi 500+ temettüsüz hisse ile kalabalıklaştırmama kuralı
         const filtered = combinedDividendsList.filter(item => {
             if (!query) {
-                return item.isDividend; // Sadece temettü kararı olanlar sıralanır
+                return item.isDividend;
             }
             return item.symbol.toLowerCase().includes(query) || item.companyName.toLowerCase().includes(query);
         });
@@ -276,13 +282,101 @@ export default function PortfolioPage() {
         }
     }, [combinedDividendsList, allDividendsSearch, dividendSortOption]);
 
-    // Sayfalama (10'arlı Gruplar)
+    // Temettü Sayfalama (10'arlı Gruplar)
     const DIVIDEND_ITEMS_PER_PAGE = 10;
     const totalDividendPages = Math.max(1, Math.ceil(sortedFilteredAllDividends.length / DIVIDEND_ITEMS_PER_PAGE));
     const paginatedDividends = useMemo(() => {
         const start = (dividendPage - 1) * DIVIDEND_ITEMS_PER_PAGE;
         return sortedFilteredAllDividends.slice(start, start + DIVIDEND_ITEMS_PER_PAGE);
     }, [sortedFilteredAllDividends, dividendPage]);
+
+    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Bilanço Takvimi)
+    const combinedEarningsList = useMemo(() => {
+        const existingSymbols = new Set<string>();
+        const list: (HalkarzEarningsItem & { isEarnings: boolean })[] = [];
+
+        halkarzEarnings.forEach(item => {
+            const sym = item.symbol.toUpperCase();
+            if (!existingSymbols.has(sym)) {
+                existingSymbols.add(sym);
+                list.push({
+                    ...item,
+                    isEarnings: true
+                });
+            }
+        });
+
+        BIST_CATALOG.forEach(stock => {
+            const sym = stock.symbol.toUpperCase();
+            if (!existingSymbols.has(sym)) {
+                existingSymbols.add(sym);
+                list.push({
+                    symbol: sym,
+                    companyName: stock.name,
+                    link: "",
+                    earningsDate: "Bilanço Açıklanmadı",
+                    timestamp: 0,
+                    daysLeft: -999,
+                    isEarnings: false
+                });
+            }
+        });
+
+        return list;
+    }, [halkarzEarnings]);
+
+    // Reset Earnings Page when Search or Sort changes
+    useEffect(() => {
+        setEarningsPage(1);
+    }, [allEarningsSearch, earningsSortOption]);
+
+    // Filtered & Sorted All Earnings (Bilanço Takvimi)
+    const sortedFilteredAllEarnings = useMemo(() => {
+        const query = allEarningsSearch.toLowerCase().trim();
+        
+        const filtered = combinedEarningsList.filter(item => {
+            if (!query) {
+                return item.isEarnings;
+            }
+            return item.symbol.toLowerCase().includes(query) || item.companyName.toLowerCase().includes(query);
+        });
+
+        const list = [...filtered];
+        switch (earningsSortOption) {
+            case 'date-asc':
+                return list.sort((a, b) => {
+                    if (!a.isEarnings && b.isEarnings) return 1;
+                    if (a.isEarnings && !b.isEarnings) return -1;
+                    return a.timestamp - b.timestamp;
+                });
+            case 'date-desc':
+                return list.sort((a, b) => {
+                    if (!a.isEarnings && b.isEarnings) return 1;
+                    if (a.isEarnings && !b.isEarnings) return -1;
+                    return b.timestamp - a.timestamp;
+                });
+            case 'days-asc':
+                return list.sort((a, b) => {
+                    if (!a.isEarnings && b.isEarnings) return 1;
+                    if (a.isEarnings && !b.isEarnings) return -1;
+                    return a.daysLeft - b.daysLeft;
+                });
+            case 'symbol-asc':
+                return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            case 'symbol-desc':
+                return list.sort((a, b) => b.symbol.localeCompare(a.symbol));
+            default:
+                return list;
+        }
+    }, [combinedEarningsList, allEarningsSearch, earningsSortOption]);
+
+    // Bilanço Sayfalama (10'arlı Gruplar)
+    const EARNINGS_ITEMS_PER_PAGE = 10;
+    const totalEarningsPages = Math.max(1, Math.ceil(sortedFilteredAllEarnings.length / EARNINGS_ITEMS_PER_PAGE));
+    const paginatedEarnings = useMemo(() => {
+        const start = (earningsPage - 1) * EARNINGS_ITEMS_PER_PAGE;
+        return sortedFilteredAllEarnings.slice(start, start + EARNINGS_ITEMS_PER_PAGE);
+    }, [sortedFilteredAllEarnings, earningsPage]);
 
     // Fetch Data
     const fetchPortfolioData = async () => {
@@ -300,6 +394,17 @@ export default function PortfolioPage() {
                 }
             } catch (e) {
                 console.error("HalkArz dividends fetch error:", e);
+            }
+
+            // Fetch HalkArz Earnings / Balance Sheet Calendar
+            try {
+                const earnRes = await fetch('/api/halkarz-earnings');
+                const earnJson = await earnRes.json();
+                if (earnJson.success && Array.isArray(earnJson.data)) {
+                    setHalkarzEarnings(earnJson.data);
+                }
+            } catch (e) {
+                console.error("HalkArz earnings fetch error:", e);
             }
 
             if (storedAssets.length > 0) {
@@ -686,50 +791,188 @@ export default function PortfolioPage() {
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 h-full flex flex-col justify-between">
                         <div>
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-[#00008B]" />
-                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
+                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
+                                        {isFocused ? "Tüm Piyasa Bilanço Takvimi" : "Bilanço Takvimi"}
+                                    </h3>
                                 </div>
-                            </div>
-                            <div className="space-y-3">
-                                {earningsEntries.length === 0 ? (
-                                    <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
-                                ) : (
-                                    displayedEarnings.map(([sym, time]) => {
-                                        const days = Math.ceil((time - Date.now()) / (86400000));
-                                        if (days < -30) return null;
-                                        const isReported = days <= 0;
-                                        const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
-
-                                        return (
-                                            <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
-                                                <div className="flex justify-between items-center">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-bold text-[#00008B] text-sm">{sym}</span>
-                                                        <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
-                                                    </div>
-                                                    <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
-                                                        {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
-                                                    </span>
-                                                </div>
-                                                {kapUrl && (
-                                                    <a 
-                                                        href={kapUrl} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer" 
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
-                                                    >
-                                                        <ExternalLink className="w-3 h-3" />
-                                                        Bilançoya ulaşmak için tıklayınız
-                                                    </a>
-                                                )}
-                                            </div>
-                                        );
-                                    })
+                                {isFocused && (
+                                    <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1.5 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                        <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
+                                        <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
+                                        <select
+                                            value={earningsSortOption}
+                                            onChange={(e) => setEarningsSortOption(e.target.value as any)}
+                                            className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
+                                        >
+                                            <option value="date-asc">Tarih: En Yakın → En Uzak</option>
+                                            <option value="date-desc">Tarih: En Uzak → En Yakın</option>
+                                            <option value="days-asc">Kalan Gün: En Az → En Çok</option>
+                                            <option value="symbol-asc">Hisse Kodu: A → Z</option>
+                                            <option value="symbol-desc">Hisse Kodu: Z → A</option>
+                                        </select>
+                                    </div>
                                 )}
                             </div>
+
+                            {/* ODAK MODUNDA DOĞRUDAN TÜM PİYASA BİLANÇO TAKVİMİ LİSTESİ VE AKILLI SIRALAMA */}
+                            {isFocused ? (
+                                <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
+                                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+                                        <div className="relative flex-1 w-full">
+                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Hisse Kodu (AKBNK, TUPRS) veya Şirket Adı (Akbank, Tüpraş) Ara..."
+                                                className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
+                                                value={allEarningsSearch}
+                                                onChange={(e) => setAllEarningsSearch(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* ŞIK FINANSAL BİLANÇO TABLOSU & KIRMIZI 'BİLANÇO AÇIKLANMADI' ROZETİ / SAYFALAMA */}
+                                    <div className="overflow-x-auto rounded-2xl border border-slate-100">
+                                        <table className="w-full text-left border-collapse text-xs">
+                                            <thead>
+                                                <tr className="text-[10px] text-[#00008B]/60 uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/80">
+                                                    <th className="py-3.5 px-4">Hisse</th>
+                                                    <th className="py-3.5 px-4">Şirket Adı</th>
+                                                    <th className="py-3.5 px-4">Açıklanma Tarihi</th>
+                                                    <th className="py-3.5 px-4 text-right">Kalan Durum</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-100">
+                                                {paginatedEarnings.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={4} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen şirket bulunamadı.</td>
+                                                    </tr>
+                                                ) : (
+                                                    paginatedEarnings.map((item) => {
+                                                        const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
+                                                        const isNoEarnings = !item.isEarnings || item.earningsDate === "Bilanço Açıklanmadı";
+                                                        const isPast = item.daysLeft <= 0 && item.isEarnings;
+
+                                                        return (
+                                                            <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
+                                                                <td className="py-3.5 px-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
+                                                                        {isUserAsset && (
+                                                                            <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">Portföyde</span>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="py-3.5 px-4 text-slate-700 font-semibold">{item.companyName}</td>
+                                                                <td className="py-3.5 px-4">
+                                                                    <span className={cn(
+                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs whitespace-nowrap",
+                                                                        isNoEarnings
+                                                                            ? "bg-rose-50 text-rose-700 border-rose-200/80"
+                                                                            : isPast 
+                                                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" 
+                                                                                : "bg-blue-50 text-[#00008B] border-blue-200/50"
+                                                                    )}>
+                                                                        <Calendar className="w-3 h-3" />
+                                                                        {isNoEarnings ? "Bilanço Açıklanmadı" : item.earningsDate}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="py-3.5 px-4 text-right">
+                                                                    {isNoEarnings ? (
+                                                                        <span className="text-slate-400 font-bold">-</span>
+                                                                    ) : item.daysLeft > 0 ? (
+                                                                        <span className="text-blue-700 font-black text-xs bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl">
+                                                                            {item.daysLeft} GÜN KALDI
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="text-emerald-700 font-black text-xs bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-xl">
+                                                                            AÇIKLANDI
+                                                                        </span>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* 10'ARLI GRUPLAR SAYFALAMA KONTROLLERİ (1, 2, 3, 4, 5...) */}
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50/80 border border-slate-100 rounded-2xl">
+                                        <span className="text-xs font-bold text-slate-500">
+                                            Gösterilen: {sortedFilteredAllEarnings.length > 0 ? (earningsPage - 1) * EARNINGS_ITEMS_PER_PAGE + 1 : 0} - {Math.min(earningsPage * EARNINGS_ITEMS_PER_PAGE, sortedFilteredAllEarnings.length)} / Toplam {sortedFilteredAllEarnings.length} Şirket
+                                        </span>
+
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <button
+                                                onClick={() => setEarningsPage(prev => Math.max(1, prev - 1))}
+                                                disabled={earningsPage === 1}
+                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs text-[#00008B] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 transition-all"
+                                            >
+                                                Önceki
+                                            </button>
+
+                                            {Array.from({ length: totalEarningsPages }, (_, i) => i + 1)
+                                                .filter(p => p === 1 || p === totalEarningsPages || Math.abs(p - earningsPage) <= 2)
+                                                .map((p, idx, arr) => (
+                                                    <React.Fragment key={p}>
+                                                        {idx > 0 && arr[idx - 1] !== p - 1 && (
+                                                            <span className="px-1 text-slate-400 font-bold">...</span>
+                                                        )}
+                                                        <button
+                                                            onClick={() => setEarningsPage(p)}
+                                                            className={cn(
+                                                                "w-8 h-8 rounded-xl font-black text-xs transition-all border",
+                                                                earningsPage === p 
+                                                                    ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
+                                                                    : "bg-white text-[#00008B] border-slate-200 hover:bg-blue-50"
+                                                            )}
+                                                        >
+                                                            {p}
+                                                        </button>
+                                                    </React.Fragment>
+                                                ))}
+
+                                            <button
+                                                onClick={() => setEarningsPage(prev => Math.min(totalEarningsPages, prev + 1))}
+                                                disabled={earningsPage === totalEarningsPages}
+                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-[#00008B] font-bold text-xs text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#0b2d82] transition-all shadow-sm"
+                                            >
+                                                Sonraki
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* SADECE YAKLAŞAN BİLANÇOLARA ÖZEL VARSAYILAN KISA LISTE */
+                                <div className="space-y-3">
+                                    {halkarzEarnings.length === 0 ? (
+                                        <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
+                                    ) : (
+                                        halkarzEarnings.slice(0, 5).map((item) => {
+                                            const days = item.daysLeft;
+                                            const isReported = days <= 0;
+
+                                            return (
+                                                <div key={item.symbol} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-bold text-[#00008B] text-sm">{item.symbol}</span>
+                                                            <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">{item.companyName}</span>
+                                                        </div>
+                                                        <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
+                                                            {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 );
