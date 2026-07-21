@@ -33,9 +33,19 @@ const formatDate = (dateString: string) => {
     });
 };
 
-// Helper for dividend date display
+// Robust Helper for dividend date display
 const getDividendDisplayDate = (dateStr?: string) => {
-    if (!dateStr || dateStr.trim() === "" || dateStr.toLowerCase().includes("belirtilmedi") || dateStr.toLowerCase().includes("undefined")) {
+    if (!dateStr || 
+        typeof dateStr !== "string" ||
+        dateStr.trim() === "" || 
+        dateStr.trim() === "-" || 
+        dateStr.includes("00.00") || 
+        dateStr.toLowerCase().includes("belirtilmedi") || 
+        dateStr.toLowerCase().includes("undefined") || 
+        dateStr.toLowerCase().includes("yok") ||
+        dateStr.toLowerCase().includes("null") ||
+        dateStr.includes("1970")
+    ) {
         return "Açıklanmadı";
     }
     return dateStr;
@@ -97,7 +107,7 @@ export default function PortfolioPage() {
         mass: 1.1
     }), []);
 
-    // CANLI VE ÇEŞİTLİ RENK PALETİ (Varlık Dağılım Pasta Grafiği İçin Özel)
+    // CANLI VE ÇEŞİTLİ RENK PALETİ
     const VIBRANT_CHART_COLORS = [
         "#FFB703", // Canlı Sarı
         "#E63946", // Canlı Kırmızı
@@ -423,7 +433,7 @@ export default function PortfolioPage() {
                     if (!isFocused) setFocusedWidget(id);
                 }}
                 className={cn(
-                    "w-full transition-all duration-300 rounded-3xl overflow-hidden",
+                    "w-full transition-all duration-300 rounded-3xl overflow-hidden h-full flex flex-col justify-between",
                     !isFocused && "cursor-pointer hover:border-blue-300 hover:shadow-2xl active:scale-[0.99]",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
@@ -607,57 +617,59 @@ export default function PortfolioPage() {
 
             case 'earnings':
                 return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-                            <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-[#00008B]" />
-                                <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 h-full flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-[#00008B]" />
+                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Bilanço Takvimi</h3>
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-3 overflow-hidden">
-                            {earningsEntries.length === 0 ? (
-                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
-                            ) : (
-                                displayedEarnings.map(([sym, time]) => {
-                                    const days = Math.ceil((time - Date.now()) / (86400000));
-                                    if (days < -30) return null;
-                                    const isReported = days <= 0;
-                                    const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
+                            <div className="space-y-3">
+                                {earningsEntries.length === 0 ? (
+                                    <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
+                                ) : (
+                                    displayedEarnings.map(([sym, time]) => {
+                                        const days = Math.ceil((time - Date.now()) / (86400000));
+                                        if (days < -30) return null;
+                                        const isReported = days <= 0;
+                                        const kapUrl = isReported ? `/api/kap-link?symbol=${sym}` : null;
 
-                                    return (
-                                        <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
-                                            <div className="flex justify-between items-center">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-[#00008B] text-sm">{sym}</span>
-                                                    <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
+                                        return (
+                                            <div key={sym} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-bold text-[#00008B] text-sm">{sym}</span>
+                                                        <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">Bilanço Dönemi</span>
+                                                    </div>
+                                                    <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
+                                                        {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
+                                                    </span>
                                                 </div>
-                                                <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
-                                                    {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
-                                                </span>
+                                                {kapUrl && (
+                                                    <a 
+                                                        href={kapUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        Bilançoya ulaşmak için tıklayınız
+                                                    </a>
+                                                )}
                                             </div>
-                                            {kapUrl && (
-                                                <a 
-                                                    href={kapUrl} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    className="flex items-center gap-1.5 text-[10px] text-[#00008B] font-bold hover:underline bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-200/50 w-fit mt-1"
-                                                >
-                                                    <ExternalLink className="w-3 h-3" />
-                                                    Bilançoya ulaşmak için tıklayınız
-                                                </a>
-                                            )}
-                                        </div>
-                                    );
-                                })
-                            )}
+                                        );
+                                    })
+                                )}
+                            </div>
                         </div>
                     </div>
                 );
 
             case 'dividends':
                 return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 flex flex-col justify-between h-full">
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 h-full flex flex-col justify-between">
                         <div>
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
                                 <div className="flex items-center gap-2">
@@ -704,7 +716,7 @@ export default function PortfolioPage() {
                                         </div>
                                     </div>
 
-                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & "AÇIKLANMADI" KONTROLÜ */}
+                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & "AÇIKLANMADI" GARANTİLİ KONTROL */}
                                     <div className="overflow-x-auto rounded-2xl border border-slate-100">
                                         <table className="w-full text-left border-collapse text-xs">
                                             <thead>
@@ -745,7 +757,7 @@ export default function PortfolioPage() {
                                                                     <span className={cn(
                                                                         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs",
                                                                         isUnannounced 
-                                                                            ? "bg-slate-100 text-slate-500 border-slate-200" 
+                                                                            ? "bg-amber-50 text-amber-700 border-amber-200/80" 
                                                                             : "bg-blue-50 text-[#00008B] border-blue-200/50"
                                                                     )}>
                                                                         <Calendar className="w-3 h-3" />
@@ -772,8 +784,8 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
                             ) : (
-                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE & "AÇIKLANMADI" ROZETİ */
-                                <div className="space-y-3 overflow-hidden">
+                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE & "AÇIKLANMADI" KONTROLÜ */
+                                <div className="space-y-3">
                                     {displayedUserDividends.length === 0 ? (
                                         <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
                                             <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
@@ -805,7 +817,7 @@ export default function PortfolioPage() {
                                                         <div className={cn(
                                                             "flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg border",
                                                             isUnannounced 
-                                                                ? "bg-slate-100 text-slate-500 border-slate-200" 
+                                                                ? "bg-amber-50 text-amber-700 border-amber-200/80" 
                                                                 : "bg-blue-50 text-[#00008B] border-blue-200/50"
                                                         )}>
                                                             <Calendar className="w-3 h-3" />
@@ -1081,7 +1093,8 @@ export default function PortfolioPage() {
                         <div className="xl:col-span-8 space-y-8">
                             {renderWidgetCard('table')}
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* BİLANÇO TAKVİMİ VE TEMETTÜ TAKVİMİ TAM EŞİT HİZADA (items-stretch) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                                 {renderWidgetCard('earnings')}
                                 {renderWidgetCard('dividends')}
                             </div>
@@ -1139,7 +1152,7 @@ export default function PortfolioPage() {
                                     <span className="text-[10px] text-slate-400 font-bold">Tıkla Odağa Al</span>
                                 </div>
 
-                                <div className="space-y-2 overflow-hidden">
+                                <div className="space-y-2">
                                     <AnimatePresence initial={false}>
                                         {widgetDefinitions
                                             .filter(w => w.id !== focusedWidget && w.id !== 'summary')
