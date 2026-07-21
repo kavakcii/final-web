@@ -502,8 +502,21 @@ export default function PortfolioPage() {
         return () => clearInterval(interval);
     }, []);
 
+    // Prevent search trigger when selection is made
+    useEffect(() => {
+        if (!isModalOpen) {
+            setSearchQuery("");
+            setSearchResults([]);
+            setShowDropdown(false);
+            setIsAssetSelected(false);
+        }
+    }, [isModalOpen]);
+
     // Smart Search Autocomplete (Hisse, Fon, Altın, Gümüş Çapraz Arama)
     useEffect(() => {
+        if (isAssetSelected) {
+            return;
+        }
         if (!searchQuery || searchQuery.trim().length === 0) {
             setSearchResults([]);
             setShowDropdown(false);
