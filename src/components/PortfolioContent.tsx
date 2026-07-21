@@ -10,6 +10,15 @@ import Link from "next/link";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
 
+// Altın, Gümüş & Emtia Kataloğu
+const COMMODITY_CATALOG = [
+    { symbol: "ALTIN", name: "Gram Altın", type: "Altın" },
+    { symbol: "GUMUS", name: "Gram Gümüş", type: "Altın/Emtia" },
+    { symbol: "ALTIN.S1", name: "Darphane Altın Sertifikası", type: "Altın" },
+    { symbol: "BTC", name: "Bitcoin (BTC)", type: "Kripto" },
+    { symbol: "ETH", name: "Ethereum (ETH)", type: "Kripto" }
+];
+
 // Grouped Asset Type
 interface GroupedAsset {
     symbol: string;
@@ -465,7 +474,7 @@ export default function PortfolioPage() {
         fetchPortfolioData();
     }, []);
 
-    // Search Autocomplete
+    // Smart Search Autocomplete (Hisse, Fon, Altın, Gümüş Çapraz Arama)
     useEffect(() => {
         if (!searchQuery || searchQuery.trim().length === 0) {
             setSearchResults([]);
@@ -474,11 +483,11 @@ export default function PortfolioPage() {
         }
 
         const query = searchQuery.toLowerCase().trim();
-        const ALL_ASSETS = [...BIST_CATALOG, ...TEFAS_CATALOG];
+        const ALL_ASSETS = [...BIST_CATALOG, ...TEFAS_CATALOG, ...COMMODITY_CATALOG];
         const localMatches = ALL_ASSETS.filter(asset => 
-            asset.symbol.toLowerCase().startsWith(query) || 
+            asset.symbol.toLowerCase().includes(query) || 
             asset.name.toLowerCase().includes(query)
-        ).map(asset => ({ symbol: asset.symbol, shortname: asset.name, typeDisp: asset.type })).slice(0, 5);
+        ).map(asset => ({ symbol: asset.symbol, shortname: asset.name, typeDisp: asset.type })).slice(0, 6);
 
         if (localMatches.length > 0) {
             setSearchResults(localMatches);
@@ -522,7 +531,7 @@ export default function PortfolioPage() {
                 setNewItemValues({ symbol: '', quantity: '', avgCost: '' });
                 setSearchQuery("");
                 setIsAssetSelected(false);
-                setFeedback({ message: "İşlem başarıyla kaydedildi!", type: 'success' });
+                setFeedback({ message: "Varlık başarıyla kaydedildi!", type: 'success' });
                 setTimeout(() => setFeedback(null), 3000);
                 await fetchPortfolioData();
             } catch (error) {
@@ -671,7 +680,7 @@ export default function PortfolioPage() {
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-[#00008B]/5 overflow-hidden flex flex-col justify-between h-full">
                         <div>
-                            {/* TABLO BAŞLIĞI VE SAĞ ÜSTTE YENİ İŞLEM EKLE BUTONU */}
+                            {/* TABLO BAŞLIĞI VE SAĞ ÜSTTE VARLIK EKLE BUTONU */}
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white flex-wrap gap-3">
                                 <div className="flex items-center gap-3">
                                     <h3 className="text-xl font-black text-[#00008B] tracking-tight">Portföy Tablosu</h3>
@@ -682,10 +691,10 @@ export default function PortfolioPage() {
 
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs shadow-md shadow-[#00008B]/20 transition-all active:scale-95"
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs shadow-md shadow-[#00008B]/20 transition-all active:scale-95"
                                 >
                                     <Plus className="w-4 h-4" />
-                                    Yeni İşlem Ekle
+                                    Varlık Ekle
                                 </button>
                             </div>
 
@@ -1623,77 +1632,71 @@ export default function PortfolioPage() {
                 )}
             </AnimatePresence>
 
-            {/* Add Asset Modal */}
+            {/* Add Asset Modal - BRAND THEME REVAMP (VARLIK EKLE MODALI) */}
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-md shadow-2xl text-[#00008B]">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-black text-[#00008B]">İşlem Ekle</h2>
-                                <button onClick={() => setIsModalOpen(false)} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-blue-100 rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#00008B]/20 text-[#00008B]">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B] text-white flex items-center justify-center shadow-md shadow-[#00008B]/20">
+                                        <Plus className="w-5 h-5" />
+                                    </div>
+                                    <h2 className="text-xl font-black text-[#00008B] tracking-tight">Varlık Ekle</h2>
+                                </div>
+                                <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
                             </div>
                             <form onSubmit={handleAddAsset} className="space-y-5">
-                                <div>
-                                    <label className="text-[11px] font-bold text-[#00008B]/60 uppercase tracking-wider mb-2 block">Varlık Tipi</label>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {[
-                                            { type: "STOCK", label: "Hisse" },
-                                            { type: "FUND", label: "Fon" },
-                                            { type: "GOLD", label: "Altın" },
-                                            { type: "CRYPTO", label: "Kripto" }
-                                        ].map(item => (
-                                            <button 
-                                                key={item.type} 
-                                                type="button" 
-                                                onClick={() => setNewItemType(item.type as any)} 
-                                                className={cn(
-                                                    "py-2.5 text-xs font-bold rounded-xl transition-all border",
-                                                    newItemType === item.type 
-                                                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
-                                                        : "bg-slate-50 text-[#00008B] border-slate-200 hover:bg-slate-100"
-                                                )}
-                                            >
-                                                {item.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
+                                
+                                {/* AKILLI ARAMA ALANI (HİSSE, FON, ALTIN, GÜMÜŞ ÇAPRAZ ÖNERİ) */}
                                 <div className="relative">
-                                    <label className="text-[11px] font-bold text-[#00008B]/60 uppercase tracking-wider mb-2 block">Sembol veya Varlık Adı</label>
+                                    <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-2 block">Sembol veya Varlık Adı</label>
                                     <div className="relative">
                                         <input 
                                             type="text" 
-                                            placeholder="Örn: THYAO, MAC..." 
-                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all text-sm" 
+                                            placeholder="Örn: THYAO, Altın, Gümüş, MAC..." 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 focus:border-[#00008B] transition-all text-sm" 
                                             value={searchQuery} 
                                             onChange={e => { setSearchQuery(e.target.value); setNewItemValues({...newItemValues, symbol: e.target.value.toUpperCase()}); setIsAssetSelected(false); }} 
                                             onFocus={() => setShowDropdown(true)} 
                                             required
                                         />
-                                        {isSearching && <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B] animate-spin" />}
+                                        {isSearching ? (
+                                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B] animate-spin" />
+                                        ) : (
+                                            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        )}
                                     </div>
 
                                     {/* Smart Search Dropdown */}
                                     {showDropdown && searchResults.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                                        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
                                             {searchResults.map((res, idx) => (
                                                 <div 
                                                     key={idx}
                                                     onClick={() => {
                                                         setNewItemValues({ ...newItemValues, symbol: res.symbol });
-                                                        setSearchQuery(res.symbol);
+                                                        setSearchQuery(res.shortname || res.symbol);
                                                         setShowDropdown(false);
                                                         setIsAssetSelected(true);
+
+                                                        // Otomatik Varlık Tipi Tespiti
+                                                        if (res.typeDisp) {
+                                                            const typeLower = res.typeDisp.toLowerCase();
+                                                            if (typeLower.includes("fon")) setNewItemType("FUND");
+                                                            else if (typeLower.includes("altın") || typeLower.includes("emtia")) setNewItemType("GOLD");
+                                                            else if (typeLower.includes("kripto")) setNewItemType("CRYPTO");
+                                                            else setNewItemType("STOCK");
+                                                        }
                                                     }}
-                                                    className="px-4 py-3 hover:bg-blue-50/60 cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0"
+                                                    className="px-4 py-3 hover:bg-blue-50/70 cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0 transition-colors"
                                                 >
                                                     <div className="flex flex-col">
                                                         <span className="font-black text-[#00008B] text-sm">{res.symbol}</span>
-                                                        <span className="text-[10px] text-slate-400 font-medium line-clamp-1">{res.shortname}</span>
+                                                        <span className="text-[11px] text-slate-500 font-semibold line-clamp-1">{res.shortname}</span>
                                                     </div>
-                                                    <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold border border-blue-200/50 uppercase">{res.typeDisp || newItemType}</span>
+                                                    <span className="text-[9px] px-2.5 py-1 rounded-lg bg-blue-50 text-[#00008B] font-bold border border-blue-200/50 uppercase tracking-wider">{res.typeDisp || "Varlık"}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -1702,24 +1705,24 @@ export default function PortfolioPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-[11px] font-bold text-[#00008B]/60 uppercase tracking-wider mb-2 block">Adet</label>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-2 block">Adet</label>
                                         <input 
                                             type="number" 
                                             step="any"
                                             placeholder="100" 
-                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all text-sm" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 focus:border-[#00008B] transition-all text-sm" 
                                             value={newItemValues.quantity} 
                                             onChange={e => setNewItemValues({...newItemValues, quantity: e.target.value})} 
                                             required 
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-bold text-[#00008B]/60 uppercase tracking-wider mb-2 block">Toplam Maliyet (₺)</label>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-2 block">Toplam Maliyet (₺)</label>
                                         <input 
                                             type="number" 
                                             step="any"
                                             placeholder="2500" 
-                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all text-sm" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 focus:border-[#00008B] transition-all text-sm" 
                                             value={newItemValues.avgCost} 
                                             onChange={e => setNewItemValues({...newItemValues, avgCost: e.target.value})} 
                                             required 
@@ -1730,9 +1733,9 @@ export default function PortfolioPage() {
                                 <button 
                                     type="submit" 
                                     disabled={loading}
-                                    className="w-full py-3.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl shadow-[#00008B]/20 transition-all text-sm mt-4 flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-[#00008B] hover:bg-[#0b2d82] text-white font-black rounded-2xl shadow-lg shadow-[#00008B]/25 transition-all text-sm mt-4 flex items-center justify-center gap-2 active:scale-95 tracking-wide"
                                 >
-                                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "İşlem Kaydet"}
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Varlık Ekle"}
                                 </button>
                             </form>
                         </motion.div>
