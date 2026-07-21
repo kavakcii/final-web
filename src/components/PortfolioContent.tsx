@@ -141,6 +141,24 @@ export default function PortfolioPage() {
         "#7209B7"  // Koyu Mor
     ];
 
+    // Widget Definitions
+    const widgetDefinitions = useMemo(() => [
+        { id: 'summary', name: 'Bakiye & Özet Kartlar', icon: Wallet, desc: 'Toplam Varlık ve Net Kar/Zarar' },
+        { id: 'table', name: 'Portföy Tablosu', icon: FileText, desc: 'Tüm Varlık Listesi' },
+        { id: 'earnings', name: 'Bilanço Takvimi', icon: Calendar, desc: 'Yaklaşan Şirket Bilançoları' },
+        { id: 'dividends', name: 'Temettü Takvimi', icon: Coins, desc: 'HalkArz Canlı Temettü Verileri' },
+        { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Portföy Risk & Yığılma Oranı' },
+        { id: 'extremes', name: 'Fiyat Analizi (52H)', icon: Activity, desc: '52 Haftalık Fiyat Bantları' },
+        { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
+    ], []);
+
+    // Active Focused Widget Name
+    const focusedWidgetName = useMemo(() => {
+        if (!focusedWidget) return null;
+        const def = widgetDefinitions.find(w => w.id === focusedWidget);
+        return def ? def.name : null;
+    }, [focusedWidget, widgetDefinitions]);
+
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
         const groups: Record<string, GroupedAsset> = {};
@@ -593,17 +611,6 @@ export default function PortfolioPage() {
     const isExtremesFullyShown = focusedWidget === 'extremes';
     const extremesEntries = Object.entries(priceExtremes);
     const displayedExtremes = isExtremesFullyShown ? extremesEntries : extremesEntries.slice(0, 5);
-
-    // Widget Definitions
-    const widgetDefinitions = [
-        { id: 'summary', name: 'Bakiye & Özet Kartlar', icon: Wallet, desc: 'Toplam Varlık ve Net Kar/Zarar' },
-        { id: 'table', name: 'Portföy Tablosu', icon: FileText, desc: `${groupedAssets.length} Varlık Listesi` },
-        { id: 'earnings', name: 'Bilanço Takvimi', icon: Calendar, desc: 'Yaklaşan Şirket Bilançoları' },
-        { id: 'dividends', name: 'Temettü Takvimim', icon: Coins, desc: 'HalkArz Canlı Temettü Verileri' },
-        { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Portföy Risk & Yığılma Oranı' },
-        { id: 'extremes', name: 'Fiyat Analizi (52H)', icon: Activity, desc: '52 Haftalık Fiyat Bantları' },
-        { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
-    ];
 
     // Shared Container for Main Grid Widgets
     const renderWidgetCard = (id: string, isFocused: boolean = false) => {
@@ -1222,7 +1229,7 @@ export default function PortfolioPage() {
 
                         {assets.length > 0 && totalValue > 0 ? (
                             <div className="space-y-6">
-                                {/* SVG PASTA DİLİMİ (DONUT CHART) GRAFİĞİ - CANLI & ÇEŞİTLİ RENK PALETİ */}
+                                {/* SVG PASTA DİLİMİ (DONUT CHART) GRAFİĞİ - CANLI VE ÇEŞİTLİ RENK PALETİ */}
                                 <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
                                     <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                                         {(() => {
@@ -1232,7 +1239,7 @@ export default function PortfolioPage() {
                                                 .sort((a, b) => b.marketVal - a.marketVal);
 
                                             let currentOffset = 0;
-                                            const C = 2 * Math.PI * 36; // Radius r=36, Circumference C=226.195
+                                            const C = 2 * Math.PI * 36;
 
                                             return sorted.map((group, idx) => {
                                                 const weight = (group.marketVal / totalValue);
@@ -1414,7 +1421,7 @@ export default function PortfolioPage() {
                 )}
             </AnimatePresence>
 
-            {/* Page Header Title Section */}
+            {/* Page Header Title Section (DYNAMIC FOCUSED WIDGET NAME & SLEEK BUTTONS) */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
                 <div>
                     <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50/80 border border-blue-200/50 text-[#00008B] text-xs font-bold mb-2 shadow-sm">
@@ -1424,17 +1431,17 @@ export default function PortfolioPage() {
                         </span>
                         Akıllı Portföy Yönetimi
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-black text-[#00008B] tracking-tight flex items-center gap-3">
+                    <h1 className="text-3xl md:text-4xl font-black text-[#00008B] tracking-tight flex items-center gap-3 flex-wrap">
                         Portföyüm
                         {focusedWidget && (
                             <motion.span 
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={iosSpring065Config}
-                                className="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-sm"
+                                className="text-xs font-black bg-[#00008B] text-white px-3.5 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-[#00008B]/20"
                             >
-                                <Eye className="w-3.5 h-3.5" />
-                                Odak Modu
+                                <Eye className="w-3.5 h-3.5 text-sky-400" />
+                                Odak Modu: {focusedWidgetName}
                             </motion.span>
                         )}
                     </h1>
