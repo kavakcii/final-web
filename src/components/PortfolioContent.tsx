@@ -33,6 +33,14 @@ const formatDate = (dateString: string) => {
     });
 };
 
+// Helper for dividend date display
+const getDividendDisplayDate = (dateStr?: string) => {
+    if (!dateStr || dateStr.trim() === "" || dateStr.toLowerCase().includes("belirtilmedi") || dateStr.toLowerCase().includes("undefined")) {
+        return "Açıklanmadı";
+    }
+    return dateStr;
+};
+
 export default function PortfolioPage() {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [prices, setPrices] = useState<Record<string, number>>({});
@@ -89,8 +97,19 @@ export default function PortfolioPage() {
         mass: 1.1
     }), []);
 
-    // Color Palette for Pie/Donut Chart & Cards
-    const CHART_COLORS = ["#00008B", "#00b4d8", "#4361ee", "#7209b7", "#4895ef", "#f72585", "#4cc9f0", "#3a0ca3"];
+    // CANLI VE ÇEŞİTLİ RENK PALETİ (Varlık Dağılım Pasta Grafiği İçin Özel)
+    const VIBRANT_CHART_COLORS = [
+        "#FFB703", // Canlı Sarı
+        "#E63946", // Canlı Kırmızı
+        "#2A9D8F", // Zümrüt Yeşili
+        "#F4A261", // Canlı Turuncu
+        "#9D4EDD", // Parlak Mor
+        "#00B4D8", // Turkuaz Mavi
+        "#F72585", // Canlı Pembe
+        "#4361EE", // Elektrik Mavisi
+        "#38B000", // Fıstık Yeşili
+        "#7209B7"  // Koyu Mor
+    ];
 
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
@@ -685,7 +704,7 @@ export default function PortfolioPage() {
                                         </div>
                                     </div>
 
-                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU */}
+                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & "AÇIKLANMADI" KONTROLÜ */}
                                     <div className="overflow-x-auto rounded-2xl border border-slate-100">
                                         <table className="w-full text-left border-collapse text-xs">
                                             <thead>
@@ -708,6 +727,8 @@ export default function PortfolioPage() {
                                                         const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
                                                         const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
                                                         const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
+                                                        const displayDate = getDividendDisplayDate(item.paymentDate);
+                                                        const isUnannounced = displayDate === "Açıklanmadı";
 
                                                         return (
                                                             <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
@@ -721,9 +742,14 @@ export default function PortfolioPage() {
                                                                 </td>
                                                                 <td className="py-3.5 px-4 text-slate-700 font-semibold">{item.companyName}</td>
                                                                 <td className="py-3.5 px-4">
-                                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 text-[#00008B] font-bold border border-blue-200/50">
-                                                                        <Calendar className="w-3 h-3 text-[#00008B]" />
-                                                                        {item.paymentDate}
+                                                                    <span className={cn(
+                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs",
+                                                                        isUnannounced 
+                                                                            ? "bg-slate-100 text-slate-500 border-slate-200" 
+                                                                            : "bg-blue-50 text-[#00008B] border-blue-200/50"
+                                                                    )}>
+                                                                        <Calendar className="w-3 h-3" />
+                                                                        {displayDate}
                                                                     </span>
                                                                 </td>
                                                                 <td className="py-3.5 px-4 font-black text-[#00008B]">{item.netAmountFormatted}</td>
@@ -746,7 +772,7 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
                             ) : (
-                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE */
+                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE & "AÇIKLANMADI" ROZETİ */
                                 <div className="space-y-3 overflow-hidden">
                                     {displayedUserDividends.length === 0 ? (
                                         <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
@@ -754,34 +780,44 @@ export default function PortfolioPage() {
                                             <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
                                         </div>
                                     ) : (
-                                        displayedUserDividends.map((item) => (
-                                            <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex flex-col">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
-                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                                %{item.yieldPercent} Verim
-                                                            </span>
+                                        displayedUserDividends.map((item) => {
+                                            const displayDate = getDividendDisplayDate(item.paymentDate);
+                                            const isUnannounced = displayDate === "Açıklanmadı";
+
+                                            return (
+                                                <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex flex-col">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
+                                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                                    %{item.yieldPercent} Verim
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[10px] text-slate-500 font-semibold line-clamp-1 mt-0.5">{item.companyName}</span>
                                                         </div>
-                                                        <span className="text-[10px] text-slate-500 font-semibold line-clamp-1 mt-0.5">{item.companyName}</span>
+                                                        <div className="text-right">
+                                                            <span className="text-emerald-700 font-black text-sm block">{formatCurrency(item.totalIncome)}</span>
+                                                            <span className="text-[9px] text-slate-400 font-bold uppercase">{item.userQuantity} Adet İçin Net</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <span className="text-emerald-700 font-black text-sm block">{formatCurrency(item.totalIncome)}</span>
-                                                        <span className="text-[9px] text-slate-400 font-bold uppercase">{item.userQuantity} Adet İçin Net</span>
+                                                    <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
+                                                        <div className={cn(
+                                                            "flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg border",
+                                                            isUnannounced 
+                                                                ? "bg-slate-100 text-slate-500 border-slate-200" 
+                                                                : "bg-blue-50 text-[#00008B] border-blue-200/50"
+                                                        )}>
+                                                            <Calendar className="w-3 h-3" />
+                                                            <span>Tarih: {displayDate}</span>
+                                                        </div>
+                                                        <div className="text-slate-600 font-bold">
+                                                            Net: <span className="text-[#00008B] font-black">{item.netAmountFormatted}</span> / Pay
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
-                                                    <div className="flex items-center gap-1 text-[#00008B] font-bold bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200/50">
-                                                        <Calendar className="w-3 h-3 text-[#00008B]" />
-                                                        <span>Tarih: {item.paymentDate}</span>
-                                                    </div>
-                                                    <div className="text-slate-600 font-bold">
-                                                        Net: <span className="text-[#00008B] font-black">{item.netAmountFormatted}</span> / Pay
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </div>
                             )}
@@ -801,7 +837,7 @@ export default function PortfolioPage() {
 
                         {assets.length > 0 && totalValue > 0 ? (
                             <div className="space-y-6">
-                                {/* SVG PASTA DİLİMİ (DONUT CHART) GRAFİĞİ */}
+                                {/* SVG PASTA DİLİMİ (DONUT CHART) GRAFİĞİ - CANLI & ÇEŞİTLİ RENK PALETİ */}
                                 <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
                                     <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                                         {(() => {
@@ -816,7 +852,7 @@ export default function PortfolioPage() {
                                             return sorted.map((group, idx) => {
                                                 const weight = (group.marketVal / totalValue);
                                                 const strokeLength = weight * C;
-                                                const color = CHART_COLORS[idx % CHART_COLORS.length];
+                                                const color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
                                                 const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
                                                 const strokeDashoffset = -currentOffset;
                                                 currentOffset += strokeLength;
@@ -846,7 +882,7 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
 
-                                {/* LEJANT KARTLARI (PASTA DİLİMLERİ İLE UYUMLU RENKLER) */}
+                                {/* LEJANT KARTLARI (CANLI VE ÇEŞİTLİ RENKLERLE UYUMLU) */}
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                                     {groupedAssets
                                         .map(g => ({ ...g, marketVal: (prices[g.symbol] || g.avgCost) * g.totalQuantity }))
@@ -854,11 +890,11 @@ export default function PortfolioPage() {
                                         .sort((a, b) => b.marketVal - a.marketVal)
                                         .map((group, idx) => {
                                             const weight = totalValue > 0 ? (group.marketVal / totalValue) * 100 : 0;
-                                            const color = CHART_COLORS[idx % CHART_COLORS.length];
+                                            const color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
                                             return (
-                                                <div key={group.symbol} className="flex items-center justify-between p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
+                                                <div key={group.symbol} className="flex items-center justify-between p-2.5 bg-slate-50/70 rounded-xl border border-slate-100 shadow-sm">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: color }} />
+                                                        <div className="w-3 h-3 rounded-full shrink-0 shadow-md" style={{ backgroundColor: color }} />
                                                         <span className="font-bold text-[#00008B] text-xs">{group.symbol}</span>
                                                     </div>
                                                     <span className="font-black text-slate-600 text-xs">%{weight.toFixed(1)}</span>
@@ -960,7 +996,7 @@ export default function PortfolioPage() {
     };
 
     return (
-        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-hidden font-sans">
+        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-x-hidden font-sans">
             
             {/* Ambient Soft Blue Light Leaks */}
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
@@ -1112,7 +1148,6 @@ export default function PortfolioPage() {
                                                 return (
                                                     <motion.div
                                                         key={widget.id}
-                                                        layout="position"
                                                         initial={{ opacity: 0, scale: 0.95 }}
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         exit={{ opacity: 0, scale: 0.95 }}
