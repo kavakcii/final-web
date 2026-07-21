@@ -954,7 +954,6 @@ export default function PortfolioPage() {
                                     ) : (
                                         halkarzEarnings.slice(0, 5).map((item) => {
                                             const days = item.daysLeft;
-                                            const isReported = days <= 0;
 
                                             return (
                                                 <div key={item.symbol} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
@@ -980,34 +979,36 @@ export default function PortfolioPage() {
             case 'dividends':
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 h-full flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
-                                <div className="flex items-center gap-2">
-                                    <Coins className="w-4 h-4 text-emerald-600" />
-                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
-                                        {isFocused ? "Tüm Piyasa Temettü Takvimi" : "Temettü Takvimim"}
-                                    </h3>
-                                </div>
-                                {isFocused && (
-                                    <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1.5 shadow-sm" onClick={(e) => e.stopPropagation()}>
-                                        <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
-                                        <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
-                                        <select
-                                            value={dividendSortOption}
-                                            onChange={(e) => setDividendSortOption(e.target.value as any)}
-                                            className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
-                                        >
-                                            <option value="amount-asc">Net Tutar: En Düşük → En Yüksek (₺/Pay)</option>
-                                            <option value="amount-desc">Net Tutar: En Yüksek → En Düşük (₺/Pay)</option>
-                                            <option value="yield-desc">Verim: En Yüksek → En Düşük (%)</option>
-                                            <option value="yield-asc">Verim: En Düşük → En Yüksek (%)</option>
-                                            <option value="date-asc">Tarih: En Yakın → En Uzak</option>
-                                            <option value="date-desc">Tarih: En Uzak → En Yakın</option>
-                                            <option value="symbol-asc">Hisse Kodu: A → Z</option>
-                                            <option value="symbol-desc">Hisse Kodu: Z → A</option>
-                                        </select>
+                        <div className="flex-1 flex flex-col justify-between">
+                            <div>
+                                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <Coins className="w-4 h-4 text-emerald-600" />
+                                        <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
+                                            {isFocused ? "Tüm Piyasa Temettü Takvimi" : "Temettü Takvimim"}
+                                        </h3>
                                     </div>
-                                )}
+                                    {isFocused && (
+                                        <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1.5 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                            <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
+                                            <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
+                                            <select
+                                                value={dividendSortOption}
+                                                onChange={(e) => setDividendSortOption(e.target.value as any)}
+                                                className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
+                                            >
+                                                <option value="amount-asc">Net Tutar: En Düşük → En Yüksek (₺/Pay)</option>
+                                                <option value="amount-desc">Net Tutar: En Yüksek → En Düşük (₺/Pay)</option>
+                                                <option value="yield-desc">Verim: En Yüksek → En Düşük (%)</option>
+                                                <option value="yield-asc">Verim: En Düşük → En Yüksek (%)</option>
+                                                <option value="date-asc">Tarih: En Yakın → En Uzak</option>
+                                                <option value="date-desc">Tarih: En Uzak → En Yakın</option>
+                                                <option value="symbol-asc">Hisse Kodu: A → Z</option>
+                                                <option value="symbol-desc">Hisse Kodu: Z → A</option>
+                                            </select>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* ODAK MODUNDA DOĞRUDAN TÜM PİYASA TEMETTÜ TAKVİMİ LİSTESİ VE AKILLI SIRALAMA */}
@@ -1147,10 +1148,10 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
                             ) : (
-                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE & "AÇIKLANMADI" KONTROLÜ */
-                                <div className="space-y-3">
+                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE (BİLANÇO İLE BİREBİR EŞİT DİKEY BOYUT) */
+                                <div className="flex-1 flex flex-col justify-around space-y-3 my-auto">
                                     {displayedUserDividends.length === 0 ? (
-                                        <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-2">
+                                        <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-auto">
                                             <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                                             <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
                                         </div>
@@ -1160,7 +1161,7 @@ export default function PortfolioPage() {
                                             const isUnannounced = displayDate === "Açıklanmadı" || displayDate === "Temettü Verilmiyor";
 
                                             return (
-                                                <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
+                                                <div key={item.symbol} className="flex flex-col justify-between gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all flex-1">
                                                     <div className="flex justify-between items-start">
                                                         <div className="flex flex-col">
                                                             <div className="flex items-center gap-1.5">
@@ -1371,7 +1372,14 @@ export default function PortfolioPage() {
     };
 
     return (
-        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans w-full">
+        <div 
+            onClick={(e) => {
+                if (focusedWidget && e.target === e.currentTarget) {
+                    setFocusedWidget(null);
+                }
+            }}
+            className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans w-full"
+        >
             
             {/* Ambient Soft Blue Light Leaks */}
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
@@ -1448,7 +1456,14 @@ export default function PortfolioPage() {
             </div>
 
             {/* UNIFIED DIRECT CLICK FOCUS MODE LAYOUT */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+            <div 
+                onClick={(e) => {
+                    if (focusedWidget && e.target === e.currentTarget) {
+                        setFocusedWidget(null);
+                    }
+                }}
+                className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start"
+            >
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
                     <>
