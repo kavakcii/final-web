@@ -70,8 +70,9 @@ export default function PortfolioPage() {
     // Dynamic Focus Mode State
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
 
-    // Temettü Takvimi Akıllı Sıralama State
+    // Temettü Takvimi Akıllı Sıralama & Sayfalama State
     const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'yield-desc' | 'yield-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
+    const [dividendPage, setDividendPage] = useState(1);
 
     // Smart Search Autocomplete States
     const [searchQuery, setSearchQuery] = useState("");
@@ -189,6 +190,87 @@ export default function PortfolioPage() {
                 return list;
         }
     }, [halkarzDividends, groupedAssets, dividendSortOption]);
+
+    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Temettü Vermeyen Şirketleri De İçerme)
+    const combinedDividendsList = useMemo(() => {
+        const existingMap = new Map(halkarzDividends.map(item => [item.symbol.toUpperCase(), item]));
+        const list: (HalkarzDividendItem & { isDividend: boolean })[] = halkarzDividends.map(item => ({
+            ...item,
+            isDividend: true
+        }));
+
+        BIST_CATALOG.forEach(stock => {
+            const sym = stock.symbol.toUpperCase();
+            if (!existingMap.has(sym)) {
+                list.push({
+                    symbol: sym,
+                    companyName: stock.name,
+                    paymentDate: "Temettü Verilmiyor",
+                    netAmountPerShare: 0,
+                    netAmountFormatted: "0.00 ₺",
+                    yieldPercent: 0,
+                    timestamp: 0,
+                    link: "",
+                    isDividend: false
+                });
+            }
+        });
+
+        return list;
+    }, [halkarzDividends]);
+
+    // Reset Dividend Page when Search or Sort changes
+    useEffect(() => {
+        setDividendPage(1);
+    }, [allDividendsSearch, dividendSortOption]);
+
+    // Filtered & Sorted All Dividends (Tam Donmama Garantisi)
+    const sortedFilteredAllDividends = useMemo(() => {
+        const query = allDividendsSearch.toLowerCase().trim();
+        
+        const filtered = combinedDividendsList.filter(item => {
+            if (!query) return true;
+            return item.symbol.toLowerCase().includes(query) || item.companyName.toLowerCase().includes(query);
+        });
+
+        const list = [...filtered];
+        switch (dividendSortOption) {
+            case 'amount-asc':
+                return list.sort((a, b) => a.netAmountPerShare - b.netAmountPerShare);
+            case 'amount-desc':
+                return list.sort((a, b) => b.netAmountPerShare - a.netAmountPerShare);
+            case 'yield-desc':
+                return list.sort((a, b) => b.yieldPercent - a.yieldPercent);
+            case 'yield-asc':
+                return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
+            case 'date-asc':
+                return list.sort((a, b) => {
+                    if (!a.isDividend && b.isDividend) return 1;
+                    if (a.isDividend && !b.isDividend) return -1;
+                    return a.timestamp - b.timestamp;
+                });
+            case 'date-desc':
+                return list.sort((a, b) => {
+                    if (!a.isDividend && b.isDividend) return 1;
+                    if (a.isDividend && !b.isDividend) return -1;
+                    return b.timestamp - a.timestamp;
+                });
+            case 'symbol-asc':
+                return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            case 'symbol-desc':
+                return list.sort((a, b) => b.symbol.localeCompare(a.symbol));
+            default:
+                return list;
+        }
+    }, [combinedDividendsList, allDividendsSearch, dividendSortOption]);
+
+    // Sayfalama (10'arlı Gruplar)
+    const DIVIDEND_ITEMS_PER_PAGE = 10;
+    const totalDividendPages = Math.max(1, Math.ceil(sortedFilteredAllDividends.length / DIVIDEND_ITEMS_PER_PAGE));
+    const paginatedDividends = useMemo(() => {
+        const start = (dividendPage - 1) * DIVIDEND_ITEMS_PER_PAGE;
+        return sortedFilteredAllDividends.slice(start, start + DIVIDEND_ITEMS_PER_PAGE);
+    }, [sortedFilteredAllDividends, dividendPage]);
 
     // Fetch Data
     const fetchPortfolioData = async () => {
@@ -385,36 +467,6 @@ export default function PortfolioPage() {
     const isExtremesFullyShown = focusedWidget === 'extremes';
     const extremesEntries = Object.entries(priceExtremes);
     const displayedExtremes = isExtremesFullyShown ? extremesEntries : extremesEntries.slice(0, 5);
-
-    // Filtered & Sorted All Dividends for Modal and Focus Mode
-    const sortedFilteredAllDividends = useMemo(() => {
-        const filtered = halkarzDividends.filter(item => 
-            item.symbol.toLowerCase().includes(allDividendsSearch.toLowerCase()) ||
-            item.companyName.toLowerCase().includes(allDividendsSearch.toLowerCase())
-        );
-
-        const list = [...filtered];
-        switch (dividendSortOption) {
-            case 'amount-asc':
-                return list.sort((a, b) => a.netAmountPerShare - b.netAmountPerShare);
-            case 'amount-desc':
-                return list.sort((a, b) => b.netAmountPerShare - a.netAmountPerShare);
-            case 'yield-desc':
-                return list.sort((a, b) => b.yieldPercent - a.yieldPercent);
-            case 'yield-asc':
-                return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
-            case 'date-asc':
-                return list.sort((a, b) => a.timestamp - b.timestamp);
-            case 'date-desc':
-                return list.sort((a, b) => b.timestamp - a.timestamp);
-            case 'symbol-asc':
-                return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
-            case 'symbol-desc':
-                return list.sort((a, b) => b.symbol.localeCompare(a.symbol));
-            default:
-                return list;
-        }
-    }, [halkarzDividends, allDividendsSearch, dividendSortOption]);
 
     // Widget Definitions
     const widgetDefinitions = [
@@ -711,7 +763,7 @@ export default function PortfolioPage() {
                                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <input
                                                 type="text"
-                                                placeholder="Hisse Kodu veya Şirket Adı Ara..."
+                                                placeholder="Hisse Kodu (THYAO, TAVHL) veya Şirket Adı (Türk Hava Yolları) Ara..."
                                                 className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
                                                 value={allDividendsSearch}
                                                 onChange={(e) => setAllDividendsSearch(e.target.value)}
@@ -719,7 +771,7 @@ export default function PortfolioPage() {
                                         </div>
                                     </div>
 
-                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & "AÇIKLANMADI" GARANTİLİ KONTROL */}
+                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & 'TEMETTÜ VERİLMİYOR' / SAYFALAMA */}
                                     <div className="overflow-x-auto rounded-2xl border border-slate-100">
                                         <table className="w-full text-left border-collapse text-xs">
                                             <thead>
@@ -733,17 +785,17 @@ export default function PortfolioPage() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
-                                                {sortedFilteredAllDividends.length === 0 ? (
+                                                {paginatedDividends.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={6} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen temettü verisi bulunamadı.</td>
+                                                        <td colSpan={6} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen şirket bulunamadı.</td>
                                                     </tr>
                                                 ) : (
-                                                    sortedFilteredAllDividends.map((item) => {
+                                                    paginatedDividends.map((item) => {
                                                         const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
                                                         const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
                                                         const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
                                                         const displayDate = getDividendDisplayDate(item.paymentDate);
-                                                        const isUnannounced = displayDate === "Açıklanmadı";
+                                                        const isUnannounced = displayDate === "Açıklanmadı" || displayDate === "Temettü Verilmiyor";
 
                                                         return (
                                                             <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
@@ -770,7 +822,7 @@ export default function PortfolioPage() {
                                                                 <td className="py-3.5 px-4 font-black text-[#00008B]">{item.netAmountFormatted}</td>
                                                                 <td className="py-3.5 px-4 font-black text-emerald-700">%{item.yieldPercent}</td>
                                                                 <td className="py-3.5 px-4 text-right">
-                                                                    {isUserAsset ? (
+                                                                    {isUserAsset && userTotalNet > 0 ? (
                                                                         <span className="text-emerald-800 font-black text-xs bg-emerald-100/80 border border-emerald-300 px-2.5 py-1 rounded-xl">
                                                                             {formatCurrency(userTotalNet)}
                                                                         </span>
@@ -785,6 +837,52 @@ export default function PortfolioPage() {
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    {/* 10'ARLI GRUPLAR SAYFALAMA KONTROLLERİ (1, 2, 3, 4, 5...) */}
+                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50/80 border border-slate-100 rounded-2xl">
+                                        <span className="text-xs font-bold text-slate-500">
+                                            Gösterilen: {sortedFilteredAllDividends.length > 0 ? (dividendPage - 1) * DIVIDEND_ITEMS_PER_PAGE + 1 : 0} - {Math.min(dividendPage * DIVIDEND_ITEMS_PER_PAGE, sortedFilteredAllDividends.length)} / Toplam {sortedFilteredAllDividends.length} Şirket
+                                        </span>
+
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <button
+                                                onClick={() => setDividendPage(prev => Math.max(1, prev - 1))}
+                                                disabled={dividendPage === 1}
+                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs text-[#00008B] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 transition-all"
+                                            >
+                                                Önceki
+                                            </button>
+
+                                            {Array.from({ length: totalDividendPages }, (_, i) => i + 1)
+                                                .filter(p => p === 1 || p === totalDividendPages || Math.abs(p - dividendPage) <= 2)
+                                                .map((p, idx, arr) => (
+                                                    <React.Fragment key={p}>
+                                                        {idx > 0 && arr[idx - 1] !== p - 1 && (
+                                                            <span className="px-1 text-slate-400 font-bold">...</span>
+                                                        )}
+                                                        <button
+                                                            onClick={() => setDividendPage(p)}
+                                                            className={cn(
+                                                                "w-8 h-8 rounded-xl font-black text-xs transition-all border",
+                                                                dividendPage === p 
+                                                                    ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
+                                                                    : "bg-white text-[#00008B] border-slate-200 hover:bg-blue-50"
+                                                            )}
+                                                        >
+                                                            {p}
+                                                        </button>
+                                                    </React.Fragment>
+                                                ))}
+
+                                            <button
+                                                onClick={() => setDividendPage(prev => Math.min(totalDividendPages, prev + 1))}
+                                                disabled={dividendPage === totalDividendPages}
+                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-[#00008B] font-bold text-xs text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#0b2d82] transition-all shadow-sm"
+                                            >
+                                                Sonraki
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE & "AÇIKLANMADI" KONTROLÜ */
@@ -797,7 +895,7 @@ export default function PortfolioPage() {
                                     ) : (
                                         displayedUserDividends.map((item) => {
                                             const displayDate = getDividendDisplayDate(item.paymentDate);
-                                            const isUnannounced = displayDate === "Açıklanmadı";
+                                            const isUnannounced = displayDate === "Açıklanmadı" || displayDate === "Temettü Verilmiyor";
 
                                             return (
                                                 <div key={item.symbol} className="flex flex-col gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all">
