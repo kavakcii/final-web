@@ -191,17 +191,26 @@ export default function PortfolioPage() {
         }
     }, [halkarzDividends, groupedAssets, dividendSortOption]);
 
-    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Temettü Vermeyen Şirketleri De İçerme)
+    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Şirket Bazlı Kesin Tekilleştirme)
     const combinedDividendsList = useMemo(() => {
-        const existingMap = new Map(halkarzDividends.map(item => [item.symbol.toUpperCase(), item]));
-        const list: (HalkarzDividendItem & { isDividend: boolean })[] = halkarzDividends.map(item => ({
-            ...item,
-            isDividend: true
-        }));
+        const existingSymbols = new Set<string>();
+        const list: (HalkarzDividendItem & { isDividend: boolean })[] = [];
+
+        halkarzDividends.forEach(item => {
+            const sym = item.symbol.toUpperCase();
+            if (!existingSymbols.has(sym)) {
+                existingSymbols.add(sym);
+                list.push({
+                    ...item,
+                    isDividend: true
+                });
+            }
+        });
 
         BIST_CATALOG.forEach(stock => {
             const sym = stock.symbol.toUpperCase();
-            if (!existingMap.has(sym)) {
+            if (!existingSymbols.has(sym)) {
+                existingSymbols.add(sym);
                 list.push({
                     symbol: sym,
                     companyName: stock.name,
