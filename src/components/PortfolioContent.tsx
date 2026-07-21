@@ -976,7 +976,7 @@ export default function PortfolioPage() {
 
             case 'correlation':
                 return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group">
+                    <div className="bg-[#00008B]/5 border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group">
                         <div className="flex justify-between items-start mb-4">
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#00008B] text-xs font-bold border border-blue-200/50">
                                 <Activity className="w-3.5 h-3.5" />
@@ -1011,7 +1011,7 @@ export default function PortfolioPage() {
     };
 
     return (
-        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 overflow-x-hidden font-sans">
+        <div className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans w-full">
             
             {/* Ambient Soft Blue Light Leaks */}
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
