@@ -493,6 +493,13 @@ export default function PortfolioPage() {
 
     useEffect(() => {
         fetchPortfolioData();
+
+        // 60-second (1 minute) auto-refresh for live stock & fund prices
+        const interval = setInterval(() => {
+            fetchPortfolioData();
+        }, 60000);
+
+        return () => clearInterval(interval);
     }, []);
 
     // Smart Search Autocomplete (Hisse, Fon, Altın, Gümüş Çapraz Arama)
