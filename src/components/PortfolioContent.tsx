@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -96,6 +96,9 @@ export default function PortfolioPage() {
     const [isSearching, setIsSearching] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isAssetSelected, setIsAssetSelected] = useState(false);
+
+    // Ref for Search Dropdown Outside Click
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // UI states
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -527,6 +530,17 @@ export default function PortfolioPage() {
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchQuery]);
+
+    // Close Dropdown on Click Outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const handleAddAsset = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -1639,7 +1653,7 @@ export default function PortfolioPage() {
                 )}
             </AnimatePresence>
 
-            {/* Add Asset Modal - BRAND THEME REVAMP (VARLIK EKLE MODALI) */}
+            {/* Add Asset Modal - BRAND THEME REVAMP (VARLIK EKLE MODALI & AKILLI ÖNERİ DROPDOWN KATMANI) */}
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -1656,8 +1670,8 @@ export default function PortfolioPage() {
                             </div>
                             <form onSubmit={handleAddAsset} className="space-y-5">
                                 
-                                {/* AKILLI ARAMA ALANI (HİSSE, FON, ALTIN, GÜMÜŞ ÇAPRAZ ÖNERİ) */}
-                                <div className="relative">
+                                {/* AKILLI ARAMA ALANI (HİSSE, FON, ALTIN, GÜMÜŞ ÇAPRAZ ÖNERİ - HIGH ELEVATION Z-INDEX) */}
+                                <div className="relative" ref={dropdownRef}>
                                     <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-2 block">Sembol veya Varlık Adı</label>
                                     <div className="relative">
                                         <input 
@@ -1676,15 +1690,15 @@ export default function PortfolioPage() {
                                         )}
                                     </div>
 
-                                    {/* Smart Search Dropdown */}
+                                    {/* Smart Search Dropdown (YÜKSEK Z-INDEX ELEVATION & TEMİZ TIKLAMA SEÇİMİ) */}
                                     {showDropdown && searchResults.length > 0 && (
-                                        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                                        <div className="absolute left-0 right-0 top-full mt-2 bg-white/98 backdrop-blur-xl border border-blue-200/90 rounded-2xl shadow-2xl shadow-[#00008B]/25 z-[100] overflow-hidden max-h-60 overflow-y-auto">
                                             {searchResults.map((res, idx) => (
                                                 <div 
                                                     key={idx}
                                                     onClick={() => {
                                                         setNewItemValues({ ...newItemValues, symbol: res.symbol });
-                                                        setSearchQuery(res.shortname || res.symbol);
+                                                        setSearchQuery(res.symbol);
                                                         setShowDropdown(false);
                                                         setIsAssetSelected(true);
 
@@ -1697,10 +1711,10 @@ export default function PortfolioPage() {
                                                             else setNewItemType("STOCK");
                                                         }
                                                     }}
-                                                    className="px-4 py-3 hover:bg-blue-50/70 cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0 transition-colors"
+                                                    className="px-4 py-3.5 hover:bg-blue-50/80 cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0 transition-colors group"
                                                 >
                                                     <div className="flex flex-col">
-                                                        <span className="font-black text-[#00008B] text-sm">{res.symbol}</span>
+                                                        <span className="font-black text-[#00008B] text-sm group-hover:text-blue-600 transition-colors">{res.symbol}</span>
                                                         <span className="text-[11px] text-slate-500 font-semibold line-clamp-1">{res.shortname}</span>
                                                     </div>
                                                     <span className="text-[9px] px-2.5 py-1 rounded-lg bg-blue-50 text-[#00008B] font-bold border border-blue-200/50 uppercase tracking-wider">{res.typeDisp || "Varlık"}</span>
