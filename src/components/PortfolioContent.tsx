@@ -191,7 +191,7 @@ export default function PortfolioPage() {
         }
     }, [halkarzDividends, groupedAssets, dividendSortOption]);
 
-    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Şirket Bazlı Kesin Tekilleştirme)
+    // BIST Kataloğu ve HalkArz Verisini Birleştirme (Aramada BIST Kataloğu Dahil)
     const combinedDividendsList = useMemo(() => {
         const existingSymbols = new Set<string>();
         const list: (HalkarzDividendItem & { isDividend: boolean })[] = [];
@@ -233,12 +233,15 @@ export default function PortfolioPage() {
         setDividendPage(1);
     }, [allDividendsSearch, dividendSortOption]);
 
-    // Filtered & Sorted All Dividends (Tam Donmama Garantisi)
+    // Filtered & Sorted All Dividends (Genel Listede Yalnızca Temettü Ödeyenler, Aramada Tümü)
     const sortedFilteredAllDividends = useMemo(() => {
         const query = allDividendsSearch.toLowerCase().trim();
         
+        // Arama yapılmadığında genel listeyi 500+ temettüsüz hisse ile kalabalıklaştırmama kuralı
         const filtered = combinedDividendsList.filter(item => {
-            if (!query) return true;
+            if (!query) {
+                return item.isDividend; // Sadece temettü kararı olanlar sıralanır
+            }
             return item.symbol.toLowerCase().includes(query) || item.companyName.toLowerCase().includes(query);
         });
 
@@ -780,7 +783,7 @@ export default function PortfolioPage() {
                                         </div>
                                     </div>
 
-                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & 'TEMETTÜ VERİLMİYOR' / SAYFALAMA */}
+                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & KIRMIZI 'TEMETTÜ VERİLMİYO' ROZETİ / SAYFALAMA */}
                                     <div className="overflow-x-auto rounded-2xl border border-slate-100">
                                         <table className="w-full text-left border-collapse text-xs">
                                             <thead>
@@ -804,7 +807,8 @@ export default function PortfolioPage() {
                                                         const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
                                                         const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
                                                         const displayDate = getDividendDisplayDate(item.paymentDate);
-                                                        const isUnannounced = displayDate === "Açıklanmadı" || displayDate === "Temettü Verilmiyor";
+                                                        const isNoDividend = !item.isDividend || displayDate === "Temettü Verilmiyor";
+                                                        const isUnannounced = displayDate === "Açıklanmadı";
 
                                                         return (
                                                             <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
@@ -820,16 +824,22 @@ export default function PortfolioPage() {
                                                                 <td className="py-3.5 px-4">
                                                                     <span className={cn(
                                                                         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs whitespace-nowrap",
-                                                                        isUnannounced 
-                                                                            ? "bg-amber-50 text-amber-700 border-amber-200/80" 
-                                                                            : "bg-blue-50 text-[#00008B] border-blue-200/50"
+                                                                        isNoDividend
+                                                                            ? "bg-rose-50 text-rose-700 border-rose-200/80"
+                                                                            : isUnannounced 
+                                                                                ? "bg-amber-50 text-amber-700 border-amber-200/80" 
+                                                                                : "bg-blue-50 text-[#00008B] border-blue-200/50"
                                                                     )}>
                                                                         <Calendar className="w-3 h-3" />
-                                                                        {displayDate}
+                                                                        {isNoDividend ? "Temettü Verilmiyor" : displayDate}
                                                                     </span>
                                                                 </td>
-                                                                <td className="py-3.5 px-4 font-black text-[#00008B]">{item.netAmountFormatted}</td>
-                                                                <td className="py-3.5 px-4 font-black text-emerald-700">%{item.yieldPercent}</td>
+                                                                <td className="py-3.5 px-4 font-black text-[#00008B]">
+                                                                    {isNoDividend ? <span className="text-slate-400 font-bold">-</span> : item.netAmountFormatted}
+                                                                </td>
+                                                                <td className="py-3.5 px-4 font-black text-emerald-700">
+                                                                    {isNoDividend ? <span className="text-slate-400 font-bold">-</span> : `%${item.yieldPercent}`}
+                                                                </td>
                                                                 <td className="py-3.5 px-4 text-right">
                                                                     {isUserAsset && userTotalNet > 0 ? (
                                                                         <span className="text-emerald-800 font-black text-xs bg-emerald-100/80 border border-emerald-300 px-2.5 py-1 rounded-xl">
