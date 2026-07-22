@@ -216,9 +216,33 @@ export default function PortfolioPage() {
             case 'yield-asc':
                 return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
             case 'date-asc':
-                return list.sort((a, b) => a.timestamp - b.timestamp);
+                return list.sort((a, b) => {
+                    const isUnannouncedDate = (item: any) => {
+                        if (!item.isDividend || !item.timestamp) return true;
+                        const dateStr = (item.paymentDate || "").toLowerCase();
+                        return dateStr.includes("açıklanmadı") || dateStr.includes("verilmiyor") || dateStr === "-" || dateStr === "";
+                    };
+                    const aNoDate = isUnannouncedDate(a);
+                    const bNoDate = isUnannouncedDate(b);
+                    if (aNoDate && !bNoDate) return 1;
+                    if (!aNoDate && bNoDate) return -1;
+                    if (aNoDate && bNoDate) return a.symbol.localeCompare(b.symbol);
+                    return a.timestamp - b.timestamp;
+                });
             case 'date-desc':
-                return list.sort((a, b) => b.timestamp - a.timestamp);
+                return list.sort((a, b) => {
+                    const isUnannouncedDate = (item: any) => {
+                        if (!item.isDividend || !item.timestamp) return true;
+                        const dateStr = (item.paymentDate || "").toLowerCase();
+                        return dateStr.includes("açıklanmadı") || dateStr.includes("verilmiyor") || dateStr === "-" || dateStr === "";
+                    };
+                    const aNoDate = isUnannouncedDate(a);
+                    const bNoDate = isUnannouncedDate(b);
+                    if (aNoDate && !bNoDate) return 1;
+                    if (!aNoDate && bNoDate) return -1;
+                    if (aNoDate && bNoDate) return a.symbol.localeCompare(b.symbol);
+                    return b.timestamp - a.timestamp;
+                });
             case 'symbol-asc':
                 return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
             case 'symbol-desc':
