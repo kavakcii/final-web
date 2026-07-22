@@ -293,14 +293,20 @@ export default function PortfolioPage() {
                 return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
             case 'date-asc':
                 return list.sort((a, b) => {
-                    if (!a.isDividend && b.isDividend) return 1;
-                    if (a.isDividend && !b.isDividend) return -1;
+                    const aNoDate = !a.isDividend || a.paymentDate === "Temettü Verilmiyor" || a.paymentDate === "Açıklanmadı" || !a.timestamp;
+                    const bNoDate = !b.isDividend || b.paymentDate === "Temettü Verilmiyor" || b.paymentDate === "Açıklanmadı" || !b.timestamp;
+                    if (aNoDate && !bNoDate) return 1;
+                    if (!aNoDate && bNoDate) return -1;
+                    if (aNoDate && bNoDate) return a.symbol.localeCompare(b.symbol);
                     return a.timestamp - b.timestamp;
                 });
             case 'date-desc':
                 return list.sort((a, b) => {
-                    if (!a.isDividend && b.isDividend) return 1;
-                    if (a.isDividend && !b.isDividend) return -1;
+                    const aNoDate = !a.isDividend || a.paymentDate === "Temettü Verilmiyor" || a.paymentDate === "Açıklanmadı" || !a.timestamp;
+                    const bNoDate = !b.isDividend || b.paymentDate === "Temettü Verilmiyor" || b.paymentDate === "Açıklanmadı" || !b.timestamp;
+                    if (aNoDate && !bNoDate) return 1;
+                    if (!aNoDate && bNoDate) return -1;
+                    if (aNoDate && bNoDate) return a.symbol.localeCompare(b.symbol);
                     return b.timestamp - a.timestamp;
                 });
             case 'symbol-asc':
@@ -933,7 +939,7 @@ export default function PortfolioPage() {
                                                                     {isNoEarnings ? (
                                                                         <span className="text-slate-400 font-bold">-</span>
                                                                     ) : item.daysLeft > 0 ? (
-                                                                        <span className="text-blue-700 font-black text-xs bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl">
+                                                                        <span className="text-blue-700 font-black text-xs bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl whitespace-nowrap">
                                                                             {item.daysLeft} GÜN KALDI
                                                                         </span>
                                                                     ) : (
@@ -1012,7 +1018,7 @@ export default function PortfolioPage() {
                                                             <span className="font-bold text-[#00008B] text-sm">{item.symbol}</span>
                                                             <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">{item.companyName}</span>
                                                         </div>
-                                                        <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
+                                                        <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border whitespace-nowrap", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
                                                             {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
                                                         </span>
                                                     </div>
@@ -1428,7 +1434,7 @@ export default function PortfolioPage() {
                     setFocusedWidget(null);
                 }
             }}
-            className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans w-full"
+            className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans max-w-full overflow-x-hidden"
         >
             
             {/* Ambient Soft Blue Light Leaks */}
