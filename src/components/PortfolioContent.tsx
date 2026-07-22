@@ -1448,7 +1448,7 @@ export default function PortfolioPage() {
                     setFocusedWidget(null);
                 }
             }}
-            className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans max-w-full overflow-x-hidden"
+            className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans max-w-full"
         >
             
             {/* Ambient Soft Blue Light Leaks */}
