@@ -1452,8 +1452,10 @@ export default function PortfolioPage() {
         >
             
             {/* Ambient Soft Blue Light Leaks */}
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full pointer-events-none -z-10" />
-            <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full pointer-events-none -z-10" />
+            <div className="absolute inset-0 overflow-hidden rounded-[2.5rem] pointer-events-none -z-10">
+                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full" />
+                <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full" />
+            </div>
 
             {/* Notification Feedback Toast */}
             <AnimatePresence>
