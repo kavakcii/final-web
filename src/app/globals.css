@@ -170,6 +170,37 @@ main > div > div {
   min-height: unset !important;
 }
 
+/* Hide all custom/nested scrollbars inside the main dashboard view to prevent overlapping scrollbars */
+main::-webkit-scrollbar,
+main *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+main,
+main * {
+  scrollbar-width: none !important;
+}
+
+/* Preserve scrollbar for modal dialogs and autocomplete search dropdowns */
+[role="dialog"]::-webkit-scrollbar,
+[role="dialog"] *::-webkit-scrollbar,
+.max-h-60::-webkit-scrollbar,
+.max-h-80::-webkit-scrollbar,
+.max-h-\[85vh\]::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+}
+
+[role="dialog"],
+[role="dialog"] *,
+.max-h-60,
+.max-h-80,
+.max-h-\[85vh\] {
+  scrollbar-width: thin !important;
+}
+
 @media (max-width: 767px) {
   html {
     font-size: 65%;
