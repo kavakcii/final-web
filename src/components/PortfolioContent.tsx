@@ -9,6 +9,7 @@ import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import Link from "next/link";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
+import { generateRiskAnalysisText } from "@/utils/riskAnalyzer";
 
 // Altın, Gümüş & Emtia Kataloğu
 const COMMODITY_CATALOG = [
@@ -79,8 +80,10 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
-    // Dynamic Focus Mode State
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
+    const [distributionView, setDistributionView] = useState<'donut' | 'heatmap' | 'sector'>('donut');
+    const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
+    const [showGuide, setShowGuide] = useState(false);
 
     // Temettü Takvimi Akıllı Sıralama & Sayfalama State
     const [dividendSortOption, setDividendSortOption] = useState<'date-asc' | 'date-desc' | 'amount-desc' | 'amount-asc' | 'yield-desc' | 'yield-asc' | 'symbol-asc' | 'symbol-desc'>('date-asc');
@@ -1272,88 +1275,202 @@ export default function PortfolioPage() {
                 );
 
             case 'distribution':
-                return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                                <PieChart className="w-4 h-4 text-[#00008B]" />
-                                <h3 className="font-bold text-[#00008B] text-xs uppercase tracking-wider">Varlık Dağılım Grafiği</h3>
-                            </div>
-                        </div>
-
-                        {assets.length > 0 && totalValue > 0 ? (
-                            <div className="space-y-6">
-                                {/* SVG PASTA DİLİMİ (DONUT CHART) GRAFİĞİ - CANLI VE ÇEŞİTLİ RENK PALETİ */}
-                                <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
-                                    <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                                        {(() => {
-                                            const sorted = groupedAssets
-                                                .map(g => ({ ...g, marketVal: (prices[g.symbol] || g.avgCost) * g.totalQuantity }))
-                                                .filter(g => g.marketVal > 0)
-                                                .sort((a, b) => b.marketVal - a.marketVal);
-
-                                            let currentOffset = 0;
-                                            const C = 2 * Math.PI * 36;
-
-                                            return sorted.map((group, idx) => {
-                                                const weight = (group.marketVal / totalValue);
-                                                const strokeLength = weight * C;
-                                                const color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
-                                                const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
-                                                const strokeDashoffset = -currentOffset;
-                                                currentOffset += strokeLength;
-
-                                                return (
-                                                    <circle
-                                                        key={group.symbol}
-                                                        cx="50"
-                                                        cy="50"
-                                                        r="36"
-                                                        fill="transparent"
-                                                        stroke={color}
-                                                        strokeWidth="16"
-                                                        strokeDasharray={strokeDasharray}
-                                                        strokeDashoffset={strokeDashoffset}
-                                                        className="transition-all duration-700 hover:opacity-85"
-                                                    />
-                                                );
-                                            });
-                                        })()}
-                                    </svg>
+                return (() => {
+                    const sortedAssets = groupedAssets
+                        .map(g => ({ ...g, marketVal: (prices[g.symbol] || g.avgCost) * g.totalQuantity }))
+                        .filter(g => g.marketVal > 0)
+                        .sort((a, b) => b.marketVal - a.marketVal);
+                    
+                    const riskData = generateRiskAnalysisText(sortedAssets, totalValue);
+                    
+                    // Treemap specific
+                    const renderTreemap = () => {
+                        return (
+                            <div className="w-full h-48 rounded-xl overflow-hidden flex gap-1 bg-slate-50 p-1 border border-slate-100 shadow-inner">
+                                {sortedAssets.map((asset, idx) => {
+                                    const weight = (asset.marketVal / totalValue) * 100;
+                                    const avgCost = asset.avgCost || 1;
+                                    const currentPrice = prices[asset.symbol] || avgCost;
+                                    const profitPct = ((currentPrice - avgCost) / avgCost) * 100;
+                                    const isProfit = profitPct >= 0;
+                                    const color = isProfit ? (profitPct > 5 ? 'bg-emerald-500' : 'bg-emerald-400') : (profitPct < -5 ? 'bg-rose-500' : 'bg-rose-400');
                                     
-                                    {/* PASTA GRAFİK MERKEZ YAZISI */}
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
-                                        <span className="text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
-                                    </div>
-                                </div>
+                                    return (
+                                        <div 
+                                            key={asset.symbol} 
+                                            style={{ width: `${weight}%` }}
+                                            className={cn("h-full flex flex-col items-center justify-center text-white transition-all duration-300 hover:brightness-110 relative group cursor-pointer rounded-lg", color)}
+                                        >
+                                            <span className="font-bold text-xs truncate w-full text-center px-1 drop-shadow-md">{asset.symbol}</span>
+                                            <span className="text-[10px] font-medium opacity-90 truncate w-full text-center drop-shadow-sm">{profitPct > 0 ? '+' : ''}{profitPct.toFixed(1)}%</span>
+                                            
+                                            {/* Tooltip */}
+                                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
+                                                {formatCurrency(asset.marketVal)}
+                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        );
+                    };
 
-                                {/* LEJANT KARTLARI (CANLI VE ÇEŞİTLİ RENKLERLE UYUMLU) */}
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                    {groupedAssets
-                                        .map(g => ({ ...g, marketVal: (prices[g.symbol] || g.avgCost) * g.totalQuantity }))
-                                        .filter(g => g.marketVal > 0)
-                                        .sort((a, b) => b.marketVal - a.marketVal)
-                                        .map((group, idx) => {
-                                            const weight = totalValue > 0 ? (group.marketVal / totalValue) * 100 : 0;
+                    const renderDonut = () => {
+                        let currentOffset = 0;
+                        const C = 2 * Math.PI * 36;
+                        
+                        return (
+                            <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+                                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-md">
+                                    {sortedAssets.map((group, idx) => {
+                                        const weight = (group.marketVal / totalValue);
+                                        const strokeLength = weight * C;
+                                        const color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
+                                        const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
+                                        const strokeDashoffset = -currentOffset;
+                                        currentOffset += strokeLength;
+
+                                        return (
+                                            <circle
+                                                key={group.symbol}
+                                                cx="50"
+                                                cy="50"
+                                                r="36"
+                                                fill="transparent"
+                                                stroke={color}
+                                                strokeWidth={hoveredSlice === group.symbol ? "20" : "16"}
+                                                strokeDasharray={strokeDasharray}
+                                                strokeDashoffset={strokeDashoffset}
+                                                className="transition-all duration-300 cursor-pointer"
+                                                onMouseEnter={() => setHoveredSlice(group.symbol)}
+                                                onMouseLeave={() => setHoveredSlice(null)}
+                                            />
+                                        );
+                                    })}
+                                </svg>
+                                
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all duration-300">
+                                    {hoveredSlice ? (() => {
+                                        const activeAsset = sortedAssets.find(a => a.symbol === hoveredSlice);
+                                        return activeAsset ? (
+                                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeAsset.symbol}</span>
+                                                <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(activeAsset.marketVal)}</span>
+                                            </motion.div>
+                                        ) : null;
+                                    })() : (
+                                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
+                                            <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
+                                        </motion.div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    };
+
+                    return (
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <PieChart className="w-4 h-4 text-[#00008B]" />
+                                    <h3 className="font-bold text-[#00008B] text-xs uppercase tracking-wider">Varlık Dağılımı</h3>
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-xl">
+                                    <button onClick={() => setDistributionView('donut')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'donut' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Pasta</button>
+                                    <button onClick={() => setDistributionView('heatmap')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'heatmap' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Isı</button>
+                                    <button onClick={() => setDistributionView('sector')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'sector' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Sektör</button>
+                                </div>
+                            </div>
+
+                            {assets.length > 0 && totalValue > 0 ? (
+                                <div className="space-y-6">
+                                    {distributionView === 'donut' && renderDonut()}
+                                    {distributionView === 'heatmap' && renderTreemap()}
+                                    {distributionView === 'sector' && (
+                                        <div className="h-48 flex items-center justify-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                            <p className="text-xs text-slate-400 font-medium px-4 text-center">Sektör haritalama verisi bekleniyor. (Kısa süre içinde aktif olacak)</p>
+                                        </div>
+                                    )}
+
+                                    {/* Risk ve Yoğunlaşma Skoru Paneli */}
+                                    <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 border border-slate-100 shadow-sm relative overflow-hidden">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Brain className={cn("w-4 h-4", riskData.level === 'HIGH' ? 'text-rose-500' : riskData.level === 'MEDIUM' ? 'text-amber-500' : 'text-emerald-500')} />
+                                            <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Yapay Zeka Risk Analizi</h4>
+                                            <div className="ml-auto flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">
+                                                <span className="text-[10px] font-medium text-slate-400">Çeşitlendirme:</span>
+                                                <span className={cn("text-xs font-black", riskData.level === 'HIGH' ? 'text-rose-600' : riskData.level === 'MEDIUM' ? 'text-amber-600' : 'text-emerald-600')}>{riskData.score}/10</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                            {riskData.text}
+                                        </p>
+                                    </div>
+
+                                    {/* Gelişmiş Eğitim Rehberi (Nasıl Okunur?) */}
+                                    <div className="border border-sky-100 bg-sky-50/50 rounded-2xl p-4 transition-all">
+                                        <button onClick={() => setShowGuide(!showGuide)} className="flex items-center justify-between w-full group">
+                                            <div className="flex items-center gap-2">
+                                                <Info className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
+                                                <span className="text-xs font-bold text-sky-700">Grafikler Nasıl Okunur?</span>
+                                            </div>
+                                            <ChevronDown className={cn("w-4 h-4 text-sky-500 transition-transform", showGuide && "rotate-180")} />
+                                        </button>
+                                        
+                                        <AnimatePresence>
+                                            {showGuide && (
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                                    <div className="pt-3 mt-3 border-t border-sky-100 space-y-3">
+                                                        <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
+                                                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-sky-600 mb-1">Pasta Modu</h5>
+                                                            <p className="text-[11px] text-slate-600 leading-relaxed">
+                                                                Sepetinizdeki "yumurtaların" hangi sepetlerde olduğunu gösterir. Bir dilim ne kadar büyükse, paranızın o kadarı o hisseye bağlıdır. İdeal bir portföyde tüm dilimlerin dengeli (hiçbirinin tek başına çok devasa olmadığı) bir dağılım göstermesi beklenir.
+                                                            </p>
+                                                        </div>
+                                                        <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
+                                                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-sky-600 mb-1">Isı Haritası Modu</h5>
+                                                            <p className="text-[11px] text-slate-600 leading-relaxed">
+                                                                Hem ağırlığı hem de başarıyı aynı anda gösterir. Kutunun genişliği portföydeki ağırlığını (büyüklüğünü), rengi ise (koyu yeşil yüksek kâr, koyu kırmızı yüksek zarar) mevcut kârlılık durumunu temsil eder. Büyük ve kırmızı bir kutu görüyorsanız portföyünüz ağır bir yara alıyor demektir.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* LEJANT KARTLARI */}
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                                        {sortedAssets.map((group, idx) => {
+                                            const weight = (group.marketVal / totalValue) * 100;
                                             const color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
+                                            const isHovered = hoveredSlice === group.symbol;
+                                            
                                             return (
-                                                <div key={group.symbol} className="flex items-center justify-between p-2.5 bg-slate-50/70 rounded-xl border border-slate-100 shadow-sm">
+                                                <div 
+                                                    key={group.symbol} 
+                                                    onMouseEnter={() => setHoveredSlice(group.symbol)}
+                                                    onMouseLeave={() => setHoveredSlice(null)}
+                                                    className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer", isHovered ? "bg-white shadow-md border-[#00008B]/20 scale-[1.02]" : "bg-slate-50/70 border-slate-100 shadow-sm")}
+                                                >
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full shrink-0 shadow-md" style={{ backgroundColor: color }} />
+                                                        <div className="w-3 h-3 rounded-full shrink-0 shadow-md transition-transform" style={{ backgroundColor: color, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
                                                         <span className="font-bold text-[#00008B] text-xs">{group.symbol}</span>
                                                     </div>
                                                     <span className="font-black text-slate-600 text-xs">%{weight.toFixed(1)}</span>
                                                 </div>
                                             );
                                         })}
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
-                        )}
-                    </div>
-                );
+                            ) : (
+                                <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
+                            )}
+                        </div>
+                    );
+                })();
 
             case 'extremes':
                 return (
