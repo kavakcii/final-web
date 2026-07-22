@@ -144,10 +144,16 @@ body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  height: auto;
+  overflow-y: visible;
+  overflow-x: hidden;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: auto;
 }
 
 @media (max-width: 767px) {
