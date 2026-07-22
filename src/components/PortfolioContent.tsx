@@ -1292,8 +1292,15 @@ export default function PortfolioPage() {
                                     const avgCost = asset.avgCost || 1;
                                     const currentPrice = prices[asset.symbol] || avgCost;
                                     const profitPct = ((currentPrice - avgCost) / avgCost) * 100;
-                                    const isProfit = profitPct >= 0;
-                                    const color = isProfit ? (profitPct > 5 ? 'bg-emerald-500' : 'bg-emerald-400') : (profitPct < -5 ? 'bg-rose-500' : 'bg-rose-400');
+                                    let color = '';
+                                    if (profitPct >= 20) color = 'bg-emerald-700';
+                                    else if (profitPct >= 10) color = 'bg-emerald-600';
+                                    else if (profitPct >= 5) color = 'bg-emerald-500';
+                                    else if (profitPct >= 0) color = 'bg-emerald-400';
+                                    else if (profitPct >= -5) color = 'bg-rose-400';
+                                    else if (profitPct >= -10) color = 'bg-rose-500';
+                                    else if (profitPct >= -20) color = 'bg-rose-600';
+                                    else color = 'bg-rose-700';
                                     
                                     return (
                                         <div 
@@ -1453,13 +1460,14 @@ export default function PortfolioPage() {
                                                     key={group.symbol} 
                                                     onMouseEnter={() => setHoveredSlice(group.symbol)}
                                                     onMouseLeave={() => setHoveredSlice(null)}
-                                                    className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer", isHovered ? "bg-white shadow-md border-[#00008B]/20 scale-[1.02]" : "bg-slate-50/70 border-slate-100 shadow-sm")}
+                                                    style={{ backgroundColor: isHovered ? color : '', borderColor: isHovered ? color : '' }}
+                                                    className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer", isHovered ? "shadow-lg scale-[1.05] z-10" : "bg-slate-50/70 border-slate-100 shadow-sm")}
                                                 >
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-3 h-3 rounded-full shrink-0 shadow-md transition-transform" style={{ backgroundColor: color, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
-                                                        <span className="font-bold text-[#00008B] text-xs">{group.symbol}</span>
+                                                        <div className={cn("w-3 h-3 rounded-full shrink-0 shadow-md transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : color, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
+                                                        <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
                                                     </div>
-                                                    <span className="font-black text-slate-600 text-xs">%{weight.toFixed(1)}</span>
+                                                    <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
                                                 </div>
                                             );
                                         })}
