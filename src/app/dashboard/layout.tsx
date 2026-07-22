@@ -96,7 +96,7 @@ function DashboardShell({
             <div className="absolute right-[-5%] bottom-[-5%] -z-10 h-[500px] w-[500px] rounded-full bg-slate-50 blur-[120px] pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
-            <div className="relative z-10 w-full h-full min-h-screen flex mx-auto max-w-[1920px]">
+            <div className="relative z-10 w-full flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex bg-transparent">
                     
                     {/* Sidebar (Premium Frosted Glass) */}

@@ -143,62 +143,10 @@ body {
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh !important;
-  height: auto !important;
-  overflow-y: visible !important;
-  overflow-x: hidden !important;
 }
 
 html {
   scroll-behavior: smooth;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-}
-
-/* Force layout wrappers to expand naturally without rendering inner vertical scrollbars */
-.min-h-screen,
-.relative.z-10.w-full.h-full.min-h-screen,
-.flex-1.flex.bg-transparent,
-.h-full.w-full.bg-transparent,
-main, 
-main > div,
-main > div > div {
-  overflow-y: visible !important;
-  overflow-x: hidden !important;
-  height: auto !important;
-  min-height: unset !important;
-}
-
-/* Hide all custom/nested scrollbars inside body to prevent overlapping scrollbars */
-body::-webkit-scrollbar,
-body *::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-}
-
-body,
-body * {
-  scrollbar-width: none !important;
-}
-
-/* Preserve scrollbar for modal dialogs and autocomplete search dropdowns */
-[role="dialog"]::-webkit-scrollbar,
-[role="dialog"] *::-webkit-scrollbar,
-.max-h-60::-webkit-scrollbar,
-.max-h-80::-webkit-scrollbar,
-.max-h-\[85vh\]::-webkit-scrollbar {
-  display: block !important;
-  width: 6px !important;
-}
-
-[role="dialog"],
-[role="dialog"] *,
-.max-h-60,
-.max-h-80,
-.max-h-\[85vh\] {
-  scrollbar-width: thin !important;
 }
 
 @media (max-width: 767px) {
