@@ -157,11 +157,13 @@ html {
 }
 
 /* Force layout wrappers to expand naturally without rendering inner vertical scrollbars */
-main, 
-main > div,
+.min-h-screen,
 .relative.z-10.w-full.h-full.min-h-screen,
 .flex-1.flex.bg-transparent,
-.h-full.w-full.bg-transparent {
+.h-full.w-full.bg-transparent,
+main, 
+main > div,
+main > div > div {
   overflow-y: visible !important;
   overflow-x: hidden !important;
   height: auto !important;
