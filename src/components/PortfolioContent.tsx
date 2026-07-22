@@ -293,8 +293,13 @@ export default function PortfolioPage() {
                 return list.sort((a, b) => a.yieldPercent - b.yieldPercent);
             case 'date-asc':
                 return list.sort((a, b) => {
-                    const aNoDate = !a.isDividend || a.paymentDate === "Temettü Verilmiyor" || a.paymentDate === "Açıklanmadı" || !a.timestamp;
-                    const bNoDate = !b.isDividend || b.paymentDate === "Temettü Verilmiyor" || b.paymentDate === "Açıklanmadı" || !b.timestamp;
+                    const isUnannouncedDate = (item: any) => {
+                        if (!item.isDividend || !item.timestamp) return true;
+                        const dateStr = (item.paymentDate || "").toLowerCase();
+                        return dateStr.includes("açıklanmadı") || dateStr.includes("verilmiyor") || dateStr === "-" || dateStr === "";
+                    };
+                    const aNoDate = isUnannouncedDate(a);
+                    const bNoDate = isUnannouncedDate(b);
                     if (aNoDate && !bNoDate) return 1;
                     if (!aNoDate && bNoDate) return -1;
                     if (aNoDate && bNoDate) return a.symbol.localeCompare(b.symbol);
@@ -302,8 +307,13 @@ export default function PortfolioPage() {
                 });
             case 'date-desc':
                 return list.sort((a, b) => {
-                    const aNoDate = !a.isDividend || a.paymentDate === "Temettü Verilmiyor" || a.paymentDate === "Açıklanmadı" || !a.timestamp;
-                    const bNoDate = !b.isDividend || b.paymentDate === "Temettü Verilmiyor" || b.paymentDate === "Açıklanmadı" || !b.timestamp;
+                    const isUnannouncedDate = (item: any) => {
+                        if (!item.isDividend || !item.timestamp) return true;
+                        const dateStr = (item.paymentDate || "").toLowerCase();
+                        return dateStr.includes("açıklanmadı") || dateStr.includes("verilmiyor") || dateStr === "-" || dateStr === "";
+                    };
+                    const aNoDate = isUnannouncedDate(a);
+                    const bNoDate = isUnannouncedDate(b);
                     if (aNoDate && !bNoDate) return 1;
                     if (!aNoDate && bNoDate) return -1;
                     if (aNoDate && bNoDate) return a.symbol.localeCompare(b.symbol);

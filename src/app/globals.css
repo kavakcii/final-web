@@ -170,16 +170,16 @@ main > div > div {
   min-height: unset !important;
 }
 
-/* Hide all custom/nested scrollbars inside the main dashboard view to prevent overlapping scrollbars */
-main::-webkit-scrollbar,
-main *::-webkit-scrollbar {
+/* Hide all custom/nested scrollbars inside body to prevent overlapping scrollbars */
+body::-webkit-scrollbar,
+body *::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
 }
 
-main,
-main * {
+body,
+body * {
   scrollbar-width: none !important;
 }
 
