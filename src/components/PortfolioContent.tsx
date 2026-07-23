@@ -1820,7 +1820,7 @@ export default function PortfolioPage() {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[#00008B] bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl text-xs font-black">
-                                                        Son: {formatCurrency(currentPrice)}
+                                                        Canlı Fiyat: {formatCurrency(currentPrice)}
                                                     </span>
                                                 </div>
                                             </div>
