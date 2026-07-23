@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { fetchTefasData, fetchTefasHistory } from '@/lib/tefas';
+import { fetchEkofinFunds } from '@/lib/ekofin';
 import { TEFAS_CATALOG } from '@/lib/asset-catalog';
 
 const yfModule = require('yahoo-finance2');
@@ -77,6 +78,7 @@ export async function GET(request: Request) {
     }
 
     // 2. Fetch Live & Real Prices for TEFAS Funds
+  // Also fetch live prices from ekofin.net
     if (fundSymbols.length > 0) {
         try {
             const tefasData = await fetchTefasData(new Date());
@@ -115,6 +117,25 @@ export async function GET(request: Request) {
                         currency: 'TRY'
                     });
                 }
+            }
+            // Fetch ekofin funds and merge results
+            try {
+                const ekofinFunds = await fetchEkofinFunds();
+                for (const f of ekofinFunds) {
+                    const code = f.foN_KODU || f.code || '';
+                    const name = f.foN_ADI || f.name || '';
+                    const price = Number(f.foN_FIYATI || f.price || 0);
+                    if (price > 0) {
+                        results.push({
+                            symbol: code,
+                            regularMarketPrice: price,
+                            shortName: name,
+                            currency: 'TRY'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Ekofin fetch error:', e);
             }
         } catch (e) {
             console.error('TEFAS fetch error:', e);
