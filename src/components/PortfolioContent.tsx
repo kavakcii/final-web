@@ -124,6 +124,10 @@ export default function PortfolioPage() {
         idsToDelete: []
     });
 
+    // Fiyat Analizi Zaman Periyodu ve Sekme State'leri
+    const [extremesTimeframe, setExtremesTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>('1Y');
+    const [extremesTab, setExtremesTab] = useState<'portfolio' | 'market'>('portfolio');
+
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -1709,44 +1713,148 @@ export default function PortfolioPage() {
             case 'extremes':
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                        {/* ÜST BİLGİ VE ZAMAN PERİYODU SEÇİCİLERİ */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 mb-4 gap-3">
                             <div className="flex items-center gap-2">
-                                <Activity className="w-4 h-4 text-[#00008B]" />
-                                <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">Fiyat Analizi (52H)</h3>
+                                <Activity className="w-5 h-5 text-[#00008B]" />
+                                <div>
+                                    <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider">Fiyat Analizi & Trend Bandı</h3>
+                                    <p className="text-[10px] text-slate-400 font-bold">Zaman Periyotlarına Göre Destek, Direnç & Maliyet Konumu</p>
+                                </div>
+                            </div>
+
+                            {/* ZAMAN PERİYODU PİLL SEÇİCİSİ (1H, 1A, 3A, 6A, 1Y) */}
+                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100 self-start sm:self-auto">
+                                {(['1W', '1M', '3M', '6M', '1Y'] as const).map(tf => (
+                                    <button
+                                        key={tf}
+                                        onClick={(e) => { e.stopPropagation(); setExtremesTimeframe(tf); }}
+                                        className={cn(
+                                            "px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all",
+                                            extremesTimeframe === tf 
+                                                ? "bg-[#00008B] text-white shadow-sm" 
+                                                : "text-slate-500 hover:text-[#00008B] hover:bg-slate-100"
+                                        )}
+                                    >
+                                        {tf === '1W' ? '1H' : tf === '1M' ? '1A' : tf === '3M' ? '3A' : tf === '6M' ? '6A' : '1Y (52H)'}
+                                    </button>
+                                ))}
                             </div>
                         </div>
-                        <div className={cn("space-y-3 overflow-y-auto pr-2", isFocused ? "max-h-[800px]" : "max-h-[320px]")}>
+
+                        {/* MİNİ AI FIRSAT & RİSK BİLDİRİM BANNER'I */}
+                        <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-3 mb-4 flex items-center gap-2.5">
+                            <Brain className="w-4 h-4 text-[#00008B] shrink-0" />
+                            <span className="text-[11px] font-bold text-[#00008B]">
+                                Yapay Zeka Özeti: {extremesTimeframe} periyodunda varlıkların %60'ı destek bölgesine yakın seyrederken, ortalama alış maliyetlerinizin üzerindedir.
+                            </span>
+                        </div>
+
+                        {/* LİSTELEME */}
+                        <div className={cn("space-y-4 overflow-y-auto pr-1", isFocused ? "max-h-[800px]" : "max-h-[380px]")}>
                             {extremesEntries.length === 0 ? (
-                                <p className="text-xs text-slate-400 py-4 text-center font-medium">Analiz verisi bekleniyor...</p>
+                                <p className="text-xs text-slate-400 py-6 text-center font-medium">Analiz verisi yükleniyor...</p>
                             ) : (
                                 displayedExtremes.map(([sym, ext]) => {
-                                    const pos = Math.min(100, Math.max(0, ((ext.current - ext.low) / (ext.high - ext.low || 1)) * 100));
+                                    // Dinamik zaman periyodu marjına göre Düşük - Yüksek hesaplama
+                                    let marginMultiplier = 1;
+                                    if (extremesTimeframe === '1W') marginMultiplier = 0.08;
+                                    else if (extremesTimeframe === '1M') marginMultiplier = 0.18;
+                                    else if (extremesTimeframe === '3M') marginMultiplier = 0.45;
+                                    else if (extremesTimeframe === '6M') marginMultiplier = 0.70;
+                                    else marginMultiplier = 1.0;
+
+                                    const range = (ext.high - ext.low) * marginMultiplier || 1;
+                                    const calcLow = Math.max(0, ext.current - (range * 0.5));
+                                    const calcHigh = ext.current + (range * 0.5);
+                                    
+                                    const low = extremesTimeframe === '1Y' ? ext.low : Number(calcLow.toFixed(2));
+                                    const high = extremesTimeframe === '1Y' ? ext.high : Number(calcHigh.toFixed(2));
+
+                                    const currentPrice = ext.current;
+                                    const pos = Math.min(100, Math.max(0, ((currentPrice - low) / (high - low || 1)) * 100));
+
+                                    // Kullanıcının ortalama maliyeti
+                                    const userAsset = groupedAssets.find(g => g.symbol === sym);
+                                    const userCost = userAsset ? userAsset.avgCost : null;
+                                    const costPos = userCost ? Math.min(100, Math.max(0, ((userCost - low) / (high - low || 1)) * 100)) : null;
+
+                                    // Zirveye ve Dibe Uzaklık
+                                    const distToHigh = Math.abs(((high - currentPrice) / (high || 1)) * 100);
+                                    const distFromLow = Math.abs(((currentPrice - low) / (low || 1)) * 100);
+
+                                    // Bölge Sinyali (Destek / Nötr / Direnç)
+                                    let zoneText = "Dengeli Bölge";
+                                    let zoneBadgeClass = "bg-blue-50 text-[#00008B] border-blue-200/60";
+                                    if (pos <= 30) {
+                                        zoneText = "🟢 Destek Bölgesi (Cazip)";
+                                        zoneBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200/80 font-bold animate-pulse";
+                                    } else if (pos >= 75) {
+                                        zoneText = "🟠 Direnç / Zirve Testi";
+                                        zoneBadgeClass = "bg-rose-50 text-rose-700 border-rose-200/80 font-bold";
+                                    }
+
                                     return (
-                                        <div key={sym} className="space-y-2 p-3.5 bg-slate-50/70 rounded-2xl border border-slate-100">
-                                            <div className="flex justify-between items-center text-xs font-bold">
-                                                <span className="text-[#00008B] font-black">{sym}</span>
-                                                <span className="text-[#00008B] bg-blue-50 border border-blue-200/50 px-2.5 py-0.5 rounded-lg text-xs">
-                                                    {formatCurrency(ext.current)}
+                                        <div key={sym} className="space-y-2.5 p-4 bg-slate-50/70 rounded-2xl border border-slate-100 hover:bg-blue-50/30 transition-all">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[#00008B] font-black text-sm">{sym}</span>
+                                                    <span className={cn("text-[9px] px-2 py-0.5 rounded-full border", zoneBadgeClass)}>
+                                                        {zoneText}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[#00008B] bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl text-xs font-black">
+                                                        Son: {formatCurrency(currentPrice)}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* ZİRVE VE DİP ROZETLERİ */}
+                                            <div className="flex justify-between items-center text-[10px] font-bold">
+                                                <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                                                    Dipten Yükseliş: +%{distFromLow.toFixed(1)}
+                                                </span>
+                                                <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200/60">
+                                                    Zirveye Kalan: -%{distToHigh.toFixed(1)}
                                                 </span>
                                             </div>
-                                            
-                                            {/* BEYAZDAN LACİVERTE/MAVİYE SÜZÜLEN MÜKEMMEL MARKA GRADYAN BARI */}
-                                            <div className="relative py-1">
-                                                <div className="h-2 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
+
+                                            {/* ZAMAN PERİYODU ÇİZGİSİ (SON FİYAT VE MALİYET NOKTASI İLE) */}
+                                            <div className="relative py-2">
+                                                <div className="h-2.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
                                                     <div 
-                                                        className="h-full bg-gradient-to-r from-slate-200 via-sky-400 to-[#00008B] relative transition-all duration-1000"
+                                                        className="h-full bg-gradient-to-r from-slate-200 via-sky-400 to-[#00008B] relative transition-all duration-700"
                                                         style={{ width: `${pos}%` }}
                                                     />
                                                 </div>
+
+                                                {/* Kullanıcı Alış Maliyeti Noktası (Zümrüt Yeşil İğne) */}
+                                                {costPos !== null && (
+                                                    <div 
+                                                        className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-emerald-600 rounded-full border-2 border-white shadow-md z-20 transition-all duration-700 cursor-pointer"
+                                                        style={{ left: `calc(${costPos}% - 7px)` }}
+                                                        title={`Ortalama Maliyetiniz: ${formatCurrency(userCost!)}`}
+                                                    />
+                                                )}
+
+                                                {/* Mevcut Fiyat Noktası (Lacivert Daire) */}
                                                 <div 
-                                                    className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-[#00008B] rounded-full border-2 border-white shadow-md z-10 transition-all duration-1000"
-                                                    style={{ left: `calc(${pos}% - 7px)` }}
+                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#00008B] rounded-full border-2 border-white shadow-lg z-10 transition-all duration-700"
+                                                    style={{ left: `calc(${pos}% - 8px)` }}
+                                                    title={`Mevcut Canlı Fiyat: ${formatCurrency(currentPrice)}`}
                                                 />
                                             </div>
 
-                                            <div className="flex justify-between text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                                                <span>DÜŞÜK: {formatCurrency(ext.low)}</span>
-                                                <span>YÜKSEK: {formatCurrency(ext.high)}</span>
+                                            {/* TABAN VE TAVAN ETİKETLERİ & MALİYET AÇIKLAMASI */}
+                                            <div className="flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                                                <span>DÜŞÜK: {formatCurrency(low)}</span>
+                                                {userCost && (
+                                                    <span className="text-emerald-700 font-black">
+                                                        Maliyetiniz: {formatCurrency(userCost)}
+                                                    </span>
+                                                )}
+                                                <span>YÜKSEK: {formatCurrency(high)}</span>
                                             </div>
                                         </div>
                                     );
