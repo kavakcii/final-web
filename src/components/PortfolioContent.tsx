@@ -1776,41 +1776,6 @@ export default function PortfolioPage() {
                                     const costPos = rawCostPos !== null ? Math.min(98, Math.max(2, rawCostPos)) : null;
                                     const isCostOutOfRange = rawCostPos !== null && (rawCostPos < 0 || rawCostPos > 100);
 
-                                    // Bölge Sinyali (Destek / Nötr / Direnç)
-                                    let zoneText = "Dengeli Bölge";
-                                    let zoneBadgeClass = "bg-blue-50 text-[#00008B] border-blue-200/60 font-semibold";
-                                    if (pos <= 30) {
-                                        zoneText = "🟢 Destek Bölgesi";
-                                        zoneBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200/80 font-bold animate-pulse";
-                                    } else if (pos >= 75) {
-                                        zoneText = "🟠 Direnç Bölgesi";
-                                        zoneBadgeClass = "bg-rose-50 text-rose-700 border-rose-200/80 font-bold";
-                                    }
-
-                                    // Varlığa Özel Dinamik AI Analiz Cümlesi
-                                    const tfLabel = extremesTimeframe === '1W' ? '1 haftalık' : extremesTimeframe === '1M' ? '1 aylık' : extremesTimeframe === '3M' ? '3 aylık' : extremesTimeframe === '6M' ? '6 aylık' : '1 yıllık (52H)';
-                                    let aiText = "";
-                                    let rangeStatus = "";
-                                    if (pos <= 30) {
-                                        rangeStatus = `${tfLabel} bandının dip seviyesine (${formatCurrency(low)}) yakın bir fiyattan destek arıyor.`;
-                                    } else if (pos >= 75) {
-                                        rangeStatus = `${tfLabel} bandının tepe seviyesine (${formatCurrency(high)}) yakın bir ivmeyle direnci test ediyor.`;
-                                    } else {
-                                        rangeStatus = `${formatCurrency(low)} - ${formatCurrency(high)} bant aralığında dengeli bir fiyat hareketi sürdürüyor.`;
-                                    }
-
-                                    if (userCost && userCost > 0) {
-                                        const diffP = ((currentPrice - userCost) / userCost) * 100;
-                                        const absP = Math.abs(diffP).toFixed(1);
-                                        if (diffP >= 0) {
-                                            aiText = `${sym}, ${formatCurrency(userCost)} ortalama maliyetinizin %${absP} üzerinde kârlılıkla ilerliyor. ${rangeStatus}`;
-                                        } else {
-                                            aiText = `${sym}, ${formatCurrency(userCost)} ortalama maliyetinizin %${absP} altında bulunuyor. ${rangeStatus}`;
-                                        }
-                                    } else {
-                                        aiText = `${sym}, ${formatCurrency(currentPrice)} anlık fiyatı ile ${rangeStatus}`;
-                                    }
-
                                     return (
                                         <div key={sym} className="space-y-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-100 hover:bg-blue-50/30 transition-all">
                                             {/* ÜST BAŞLIK VE SON FİYAT */}
@@ -1825,7 +1790,7 @@ export default function PortfolioPage() {
                                                 </div>
                                             </div>
 
-                                            {/* ZAMAN PERİYODU ÇİZGİSİ (SON FİYAT VE İKONİK MALİYET NOKTASI İLE) */}
+                                            {/* ZAMAN PERİYODU ÇİZGİSİ */}
                                             <div className="relative py-2">
                                                 <div className="h-2.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
                                                     <div 
@@ -1833,8 +1798,6 @@ export default function PortfolioPage() {
                                                         style={{ width: `${pos}%` }}
                                                     />
                                                 </div>
-
-                                                {/* Kullanıcı Alış Maliyeti Noktası (İkonik Elektrik Mavisi Hedef Halkası) */}
                                                 {costPos !== null && (
                                                     <div 
                                                         className="absolute top-1/2 -translate-y-1/2 w-4.5 h-4.5 bg-[#00008B] border-2 border-white rounded-full shadow-lg z-20 transition-all duration-700 cursor-pointer flex items-center justify-center ring-2 ring-[#00008B]/30"
@@ -1844,8 +1807,6 @@ export default function PortfolioPage() {
                                                         <div className="w-1.5 h-1.5 bg-sky-300 rounded-full" />
                                                     </div>
                                                 )}
-
-                                                {/* Mevcut Canlı Fiyat Noktası (Gökyüzü Mavisi Daire) */}
                                                 <div 
                                                     className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-sky-500 rounded-full border-2 border-white shadow-lg z-10 transition-all duration-700"
                                                     style={{ left: `calc(${pos}% - 8px)` }}
@@ -1866,47 +1827,30 @@ export default function PortfolioPage() {
                                                 <span>YÜKSEK: {formatCurrency(high)}</span>
                                             </div>
 
-                                            {/* MARKA RENK PALETİNDEKİ MÜKEMMEL MAVİ YAPAY ZEKA ANALİZ KUTUSU */}
+                                            {/* MARKA RENK PALETİNDEKİ YAPAY ZEKA ANALİZ KUTUSU */}
                                             <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-4 shadow-md text-white">
                                                 <p className="text-xs font-medium text-slate-100 leading-relaxed">
                                                     {(() => {
                                                         const isProfit = userCost ? currentPrice >= userCost : false;
                                                         const diffP = userCost ? Math.abs(((currentPrice - userCost) / userCost) * 100).toFixed(1) : null;
-                                                        
-                                                        // Her varlık ve her zaman dilimi için %100 benzersiz şablon indeksi (0..5)
                                                         const symHash = sym.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                                                         const tfHash = extremesTimeframe.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                                                         const variant = (symHash + tfHash) % 6;
-
                                                         const currFmt = formatCurrency(currentPrice);
                                                         const lowFmt = formatCurrency(low);
                                                         const highFmt = formatCurrency(high);
                                                         const costFmt = userCost ? formatCurrency(userCost) : '';
-
-                                                        const tfLabel = extremesTimeframe === '1W' ? '1 Haftalık' : extremesTimeframe === '1M' ? '1 Aylık' : extremesTimeframe === '3M' ? '3 Aylık (Çeyreklik)' : extremesTimeframe === '6M' ? '6 Aylık (Yarı Yıllık)' : '1 Yıllık (52H)';
+                                                        const tfLabel = extremesTimeframe === '1W' ? '1 Haftalık' : extremesTimeframe === '1M' ? '1 Aylık' : extremesTimeframe === '3M' ? '3 Aylık' : extremesTimeframe === '6M' ? '6 Aylık' : '1 Yıllık';
 
                                                         if (userCost && userCost > 0) {
                                                             if (isProfit) {
-                                                                if (variant === 0) return `Portföyünüzde yer alan ${sym}, seçilen ${tfLabel} zaman penceresinde ${currFmt} canlı fiyatı üzerinden işlem görerek ${costFmt} tutarındaki alış maliyetinizin %${diffP} üzerinde güçlü bir kârlılık marjı yakalamış durumda. ${lowFmt} dip seviyesinden belirgin şekilde uzaklaşan varlık, ${highFmt} tavanına doğru kademeli bir direnç testi sürdürüyor.`;
-                                                                if (variant === 1) return `${sym} için hesaplanan ${tfLabel} performans tablosunda, varlığın ${currFmt} değeri ortalama maliyetiniz olan ${costFmt} seviyesinin %${diffP} üzerine çıkmıştır. Fiyat hareketi ${lowFmt} taban noktası ile ${highFmt} direnç çizgisi arasındaki konsolidasyon alanında pozitif ivmesini korumaktadır.`;
-                                                                if (variant === 2) return `${costFmt} maliyetli ${sym} yatırımınız, ${tfLabel} diliminde %${diffP} değer kazanarak ${currFmt} seviyesine ulaşmıştır. ${lowFmt} ile ${highFmt} aralığındaki güncel konum değerlendirildiğinde, varlığın kârlı yapısını koruyarak yukarı yönlü bant hareketine devam ettiği gözlemleniyor.`;
-                                                                if (variant === 3) return `${tfLabel} fiyat aralığı incelendiğinde ${sym}, ${costFmt} ortalamanızın %${diffP} üzerinde primlenerek ${currFmt} güncel fiyatıyla portföy verimliliğinize katkı sağlıyor. Varlık, ${highFmt} tepe marjına yakın kalarak üst bant ivmesini sürdürmektedir.`;
-                                                                if (variant === 4) return `${sym}, ${costFmt} alış maliyetinize kıyasla %${diffP} kazançla ${currFmt} seviyesinde dengeleniyor. ${tfLabel} periyoduna ait ${lowFmt} tabanı ile ${highFmt} tavanı arasındaki hareket alanı, yatırımınızın pozitif ivmesini destekliyor.`;
-                                                                return `${currFmt} güncel fiyatı ile ${sym}, ${costFmt} olan portföy maliyetinizin %${diffP} ilerisindedir. ${tfLabel} bant sınırları (${lowFmt} - ${highFmt}) dahilinde varlığın kârlı seyrini koruduğu ve dengeli hareket ettiği takip ediliyor.`;
+                                                                return `${sym}, ${costFmt} maliyetinizin %${diffP} üzerinde ${currFmt} fiyatıyla işlem görüyor. ${tfLabel} periyodunda ${lowFmt} - ${highFmt} bandında güçlü seyrini koruyor.`;
                                                             } else {
-                                                                if (variant === 0) return `${sym}, seçilen ${tfLabel} zaman periyodunda ${currFmt} canlı fiyatı ile hareket ederken, ${costFmt} tutarındaki portföy maliyetinizin %${diffP} altında iskonto bölgesinde seyretmektedir. ${lowFmt} destek sınırı ile ${highFmt} zirve seviyesi arasındaki fiyat bandı, varlığın potansiyel toparlanma alanına işaret ediyor.`;
-                                                                if (variant === 1) return `${tfLabel} grafiği üzerinde ${sym}, ${costFmt} ortalama mali seviyenizin %${diffP} gerisinde ${currFmt} fiyatıyla işlem görmektedir. Varlık, ${lowFmt} tabanına yakın seyrederek taban oluşturma ve yeniden ivme kazanma arayışını sürdürmektedir.`;
-                                                                if (variant === 2) return `${costFmt} maliyetli ${sym} pozisyonunuz, ${tfLabel} aralığında %${diffP} farkla ${currFmt} seviyesinde bulunmaktadır. ${lowFmt} ile ${highFmt} aralığındaki bant konumu, varlığın destek bölgelerine yakın kalarak dengelenmeye çalıştığını gösteriyor.`;
-                                                                if (variant === 3) return `${tfLabel} periyodu verilerine göre ${sym}, ${costFmt} ortalamanızın %${diffP} altında ${currFmt} değerinde bulunuyor. Varlığın ${lowFmt} - ${highFmt} fiyat aralığında dip seviyelerine yakın bir konsolidasyon sürecinde olduğu izlenmektedir.`;
-                                                                if (variant === 4) return `${sym}, ${costFmt} olan ortalama maliyetinizin %${diffP} altında ${currFmt} fiyatıyla seyrediyor. ${tfLabel} zaman penceresinde ${lowFmt} destek noktasına olan yakınlık, varlığın bu bölgede taban arayışında olduğunu göstermektedir.`;
-                                                                return `${currFmt} seviyesinden işlem gören ${sym}, ${costFmt} portföy maliyetinize kıyasla %${diffP} geridedir. ${tfLabel} boyunca oluşan ${lowFmt} ve ${highFmt} marjı dahilinde varlığın mevcut fiyat seviyelerini sindirdiği değerlendirilmektedir.`;
+                                                                return `${sym}, ${costFmt} maliyetinizin %${diffP} altında ${currFmt} fiyatıyla seyrediyor. ${tfLabel} periyodunda ${lowFmt} - ${highFmt} bandında destek arayışını sürdürüyor.`;
                                                             }
                                                         } else {
-                                                            if (variant === 0) return `${sym}, seçilen ${tfLabel} periyodunda ${currFmt} canlı fiyatı üzerinden işlem görürken ${lowFmt} tabanı ile ${highFmt} zirve noktası arasındaki fiyat marjında dengeli bir seyir gösteriyor.`;
-                                                            return `${tfLabel} zaman diliminde ${sym}, ${lowFmt} destek seviyesi ve ${highFmt} direnç marjı dahilinde ${currFmt} güncel fiyatıyla piyasa hareketini sürdürmektedir.`;
+                                                            return `${sym}, ${tfLabel} periyodunda ${currFmt} fiyatıyla ${lowFmt} - ${highFmt} bandında dengeli hareket ediyor.`;
                                                         }
-                                                    })()}
-                                                </p>
                                                     })()}
                                                 </p>
                                             </div>
