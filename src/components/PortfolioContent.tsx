@@ -116,11 +116,12 @@ export default function PortfolioPage() {
     });
 
     // Delete Confirmation State
-    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assetId: string | null; assetSymbol: string; isTransaction: boolean }>({
+    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assetId: string | null; assetSymbol: string; isTransaction: boolean; idsToDelete?: string[] }>({
         isOpen: false,
         assetId: null,
         assetSymbol: "",
-        isTransaction: false
+        isTransaction: false,
+        idsToDelete: []
     });
 
     // Feedback message state
@@ -542,49 +543,32 @@ export default function PortfolioPage() {
             return;
         }
         if (!searchQuery || searchQuery.trim().length === 0) {
-            // Default smart recommendations for Yatırım Fonu when query is empty
-            if (newItemType === 'FUND') {
-                const popularFunds = [
-                    { symbol: "AFA", shortname: "AK PORTFÖY AMERİKA YABANCI HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
-                    { symbol: "TCD", shortname: "TACİRLER PORTFÖY HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
-                    { symbol: "MAC", shortname: "MARBASH PORTFÖY HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
-                    { symbol: "IPJ", shortname: "İŞ PORTFÖY ELEKTRİKLİ ARAÇLAR KARMA FON", typeDisp: "Yatırım Fonu" },
-                    { symbol: "GTA", shortname: "GARANTİ PORTFÖY ALTIN FONU", typeDisp: "Yatırım Fonu" },
-                    { symbol: "TI1", shortname: "İŞ PORTFÖY İŞ BANKASI İŞTİRAKLERİ HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
-                    { symbol: "IRT", shortname: "İSTANBUL PORTFÖY BİRİNCİ DEĞİŞKEN FON", typeDisp: "Yatırım Fonu" },
-                    { symbol: "YLE", shortname: "YAPI KREDİ PORTFÖY HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" }
-                ];
-                setSearchResults(popularFunds);
-                setShowDropdown(true);
-                return;
-            }
-            setSearchResults([]);
-            setShowDropdown(false);
+            // Popüler Varlık Önerileri (Hisse, Altın, Kripto - Fonlar hariç)
+            const popularAssets = [
+                { symbol: "THYAO", shortname: "Türk Hava Yolları", typeDisp: "Hisse" },
+                { symbol: "GARAN", shortname: "Garanti Bankası", typeDisp: "Hisse" },
+                { symbol: "KCHOL", shortname: "Koç Holding", typeDisp: "Hisse" },
+                { symbol: "EREGL", shortname: "Erdemir", typeDisp: "Hisse" },
+                { symbol: "ALTIN", shortname: "Gram Altın", typeDisp: "Emtia" },
+                { symbol: "BTC", shortname: "Bitcoin", typeDisp: "Kripto" }
+            ];
+            setSearchResults(popularAssets);
+            setShowDropdown(true);
             return;
         }
 
         const query = searchQuery.toLowerCase().trim();
-        const ALL_ASSETS = [...BIST_CATALOG, ...TEFAS_CATALOG, ...COMMODITY_CATALOG];
+        const TEFAS_CODES = new Set(TEFAS_CATALOG.map(f => f.symbol.toLowerCase()));
+        const ALL_ASSETS = [...BIST_CATALOG, ...COMMODITY_CATALOG];
         
         let filteredMatches = ALL_ASSETS.filter(asset => 
             asset.symbol.toLowerCase().includes(query) || 
             asset.name.toLowerCase().includes(query)
         );
 
-        // If selected asset type is FUND, prioritize TEFAS funds
-        if (newItemType === 'FUND') {
-            filteredMatches.sort((a, b) => {
-                const isAFund = a.type === 'Fon';
-                const isBFund = b.type === 'Fon';
-                if (isAFund && !isBFund) return -1;
-                if (!isAFund && isBFund) return 1;
-                return 0;
-            });
-        }
-
-        // Fonları arama sonuçlarından çıkar – sadece izle modunda gösterilir, eklenemez
+        // Fonları arama sonuçlarından tamamen çıkar – sadece izle modunda gösterilir, eklenemez
         const localMatches = filteredMatches
-            .filter(asset => asset.type !== 'Fon')
+            .filter(asset => asset.type !== 'Fon' && !TEFAS_CODES.has(asset.symbol.toLowerCase()))
             .map(asset => ({ 
                 symbol: asset.symbol, 
                 shortname: asset.name, 
@@ -603,7 +587,9 @@ export default function PortfolioPage() {
                 const res = await fetch(`/api/search?q=${searchQuery}`);
                 const data = await res.json();
                 if (data.results) {
-                    setSearchResults(data.results.slice(0, 6));
+                    // Search API sonuçlarından da TEFAS fonlarını filtrele
+                    const cleanResults = data.results.filter((r: any) => !TEFAS_CODES.has((r.symbol || '').toLowerCase()));
+                    setSearchResults(cleanResults.slice(0, 6));
                     setShowDropdown(true);
                 }
             } catch (e) { console.error(e); } finally { setIsSearching(false); }
@@ -625,9 +611,12 @@ export default function PortfolioPage() {
 
     const handleAddAsset = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Fonlar eklenemez – sadece izleme modunda
-        if (newItemType === 'FUND') {
-            setFeedback({ message: "Yatırım fonları şu an eklenemez. Sadece izleme modunda görüntülenir.", type: 'error' });
+        const symbolUpper = (newItemValues.symbol || '').trim().toUpperCase();
+        const TEFAS_CODES = new Set(TEFAS_CATALOG.map(f => f.symbol.toUpperCase()));
+
+        // Su geçirmez kontrol: TEFAS katalogunda veya seçilen tip FUND ise engelle!
+        if (newItemType === 'FUND' || TEFAS_CODES.has(symbolUpper)) {
+            setFeedback({ message: "Yatırım fonları şu an eklenemez. Fonlar sadece izleme modunda görüntülenir.", type: 'error' });
             setTimeout(() => setFeedback(null), 4000);
             return;
         }
@@ -662,19 +651,34 @@ export default function PortfolioPage() {
     };
 
     const confirmDelete = (assetId: string, symbol: string, isTransaction: boolean = false) => {
-        setDeleteConfirm({ isOpen: true, assetId, assetSymbol: symbol, isTransaction });
+        setDeleteConfirm({ isOpen: true, assetId, assetSymbol: symbol, isTransaction, idsToDelete: [] });
+    };
+
+    const confirmDeleteGroup = (symbol: string, txs: { id: string }[]) => {
+        const ids = txs.map(t => t.id);
+        setDeleteConfirm({
+            isOpen: true,
+            assetId: null,
+            assetSymbol: symbol,
+            isTransaction: false,
+            idsToDelete: ids
+        });
     };
 
     const handleDelete = async () => {
-        if (deleteConfirm.assetId) {
-            try {
+        try {
+            if (deleteConfirm.idsToDelete && deleteConfirm.idsToDelete.length > 0) {
+                for (const id of deleteConfirm.idsToDelete) {
+                    await PortfolioService.removeAsset(id);
+                }
+            } else if (deleteConfirm.assetId) {
                 await PortfolioService.removeAsset(deleteConfirm.assetId);
-                setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false });
-                setFeedback({ message: "Kayıt silindi.", type: 'success' });
-                setTimeout(() => setFeedback(null), 3000);
-                await fetchPortfolioData();
-            } catch (error) { console.error(error); }
-        }
+            }
+            setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false, idsToDelete: [] });
+            setFeedback({ message: `${deleteConfirm.assetSymbol} varlığı başarıyla silindi.`, type: 'success' });
+            setTimeout(() => setFeedback(null), 3000);
+            await fetchPortfolioData();
+        } catch (error) { console.error(error); }
     };
 
     const handleAnalyze = async (symbol: string, type: Asset["type"]) => {
@@ -866,11 +870,11 @@ export default function PortfolioPage() {
                                                                 <td className="py-4 px-6 text-right">
                                                                     <div className="flex items-center justify-end gap-1">
                                                                         <button 
-                                                                            onClick={(e) => { e.stopPropagation(); handleAnalyze(group.symbol, group.type); }} 
-                                                                            className="p-2 hover:bg-blue-100/60 text-[#00008B] rounded-xl transition-colors"
-                                                                            title="AI Analizi"
+                                                                            onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }} 
+                                                                            className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors"
+                                                                            title={`${group.symbol} varlığını tümüyle sil`}
                                                                         >
-                                                                            <Brain className="w-4 h-4" />
+                                                                            <Trash2 className="w-4 h-4" />
                                                                         </button>
                                                                         <ChevronRight className={cn("w-4 h-4 text-slate-400 transition-transform", isExpanded && "rotate-90 text-[#00008B]")} />
                                                                     </div>
@@ -880,12 +884,26 @@ export default function PortfolioPage() {
                                                                 <tr>
                                                                     <td colSpan={6} className="bg-slate-50/80 p-4 border-t border-b border-slate-100">
                                                                         <div className="space-y-2 max-w-2xl">
-                                                                            <div className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest mb-2">İşlem Geçmişi</div>
+                                                                            <div className="flex justify-between items-center mb-2">
+                                                                                <div className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest">İşlem Geçmişi</div>
+                                                                                <button 
+                                                                                    onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }}
+                                                                                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 hover:bg-rose-50 px-2 py-1 rounded-lg transition-all"
+                                                                                    title="Varlığa ait tüm işlemleri tek tıkla sil"
+                                                                                >
+                                                                                    <Trash2 className="w-3.5 h-3.5" /> Tüm Varlığı Sil ({group.transactions.length} işlem)
+                                                                                </button>
+                                                                            </div>
                                                                             {group.transactions.map(tx => (
-                                                                                <div key={tx.id} className="flex justify-between text-xs py-2 px-3 bg-white rounded-xl border border-slate-100 items-center">
+                                                                                <div key={tx.id} className="flex justify-between text-xs py-2 px-3 bg-white rounded-xl border border-slate-100 items-center shadow-sm">
                                                                                     <span className="text-slate-400 font-medium">{formatDate(tx.dateAdded)}</span>
-                                                                                    <span className="text-[#00008B] font-bold">{tx.quantity} adet @ {formatCurrency(tx.avgCost)}</span>
-                                                                                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(tx.id, group.symbol, true); }} className="text-slate-400 hover:text-rose-600 p-1 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <span className="text-[#00008B] font-bold">{tx.quantity} adet</span>
+                                                                                        <span className="text-[11px] px-2 py-0.5 rounded-lg bg-blue-50 text-[#00008B] font-bold border border-blue-100/80">
+                                                                                            Birim: {formatCurrency(tx.avgCost)}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(tx.id, group.symbol, true); }} className="text-slate-400 hover:text-rose-600 p-1 transition-colors" title="Bu işlemi sil"><Trash2 className="w-3.5 h-3.5" /></button>
                                                                                 </div>
                                                                             ))}
                                                                         </div>
