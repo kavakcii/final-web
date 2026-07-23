@@ -246,9 +246,9 @@ export function generateDynamicAnalysis(
             if (w > topSectorWeight) {
                 topSectorWeight = w;
                 topSector = sec;
-                topSectorName = sec;
             }
         });
+        const topSectorName = topSector;
 
         const intros = [
             "Sektörel ısı haritasına baktığımızda,",
