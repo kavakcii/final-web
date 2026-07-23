@@ -1538,18 +1538,26 @@ export default function PortfolioPage() {
             case 'correlation':
                 return (
                     <div className="bg-[#00008B]/5 border border-slate-100 rounded-3xl p-8 shadow-xl shadow-[#00008B]/5 relative overflow-hidden group">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#00008B] text-xs font-bold border border-blue-200/50">
-                                <Activity className="w-3.5 h-3.5" />
-                                Yapay Zeka Destekli Risk Dengesi
+                        {/* OVERLAY (COMING SOON) */}
+                        <div className="absolute inset-0 z-50 backdrop-blur-md bg-white/40 flex flex-col items-center justify-center rounded-3xl">
+                            <div className="bg-[#00008B] text-white px-6 py-3 rounded-2xl font-black tracking-widest uppercase shadow-xl shadow-[#00008B]/20 flex items-center gap-2">
+                                <Activity className="w-5 h-5" />
+                                YAKINDA AÇILACAKTIR
                             </div>
+                            <p className="mt-4 text-[#00008B] font-bold text-sm bg-white/80 px-4 py-2 rounded-xl shadow-sm backdrop-blur-xl">Yapay zeka portföy dengesi çok yakında hizmetinizde.</p>
                         </div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                        
+                        {/* INNER CONTENT (BLURRED BEHIND OVERLAY) */}
+                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 opacity-50 blur-[2px]">
                             <div className="space-y-2 max-w-3xl">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#00008B] text-xs font-bold border border-blue-200/50">
+                                    <Activity className="w-3.5 h-3.5" />
+                                    Yapay Zeka Destekli Risk Dengesi
+                                </div>
                                 <h3 className="text-2xl md:text-3xl font-black text-[#00008B] tracking-tight">
                                     Korelasyon Analizi
                                 </h3>
-                                <p className="text-sm font-medium text-[#00008B]/60 leading-relaxed">
+                                <p className="text-sm font-medium text-[#00008B]/60 leading-relaxed max-w-xl">
                                     Portföyünüzdeki varlıkların birbirleriyle olan etkileşimini ve risk yığılmalarını analiz edin. Yapay zeka algoritmamızla yatırımlarınız arasındaki ilişkileri inceleyerek portföy dengenizi optimize edin.
                                 </p>
                             </div>
@@ -1678,6 +1686,9 @@ export default function PortfolioPage() {
                                 {renderWidgetCard('earnings')}
                                 {renderWidgetCard('dividends')}
                             </div>
+                            
+                            {/* KORELASYON ANALİZİ MODÜLÜ (ASİMETRİK BOŞLUĞU DOLDURUR) */}
+                            {renderWidgetCard('correlation')}
                         </div>
 
                         {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
@@ -1685,11 +1696,6 @@ export default function PortfolioPage() {
                             {renderWidgetCard('summary')}
                             {renderWidgetCard('distribution')}
                             {renderWidgetCard('extremes')}
-                        </div>
-
-                        {/* ALT ALAN: KORELASYON ANALİZİ MODÜLÜ */}
-                        <div className="xl:col-span-12">
-                            {renderWidgetCard('correlation')}
                         </div>
                     </>
                 ) : (
