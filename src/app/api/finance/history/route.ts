@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { COMMODITY_SYMBOLS } from "@/lib/commodities-crypto";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
