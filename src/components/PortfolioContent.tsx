@@ -9,7 +9,8 @@ import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import Link from "next/link";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
-import { generateRiskAnalysisText } from "@/utils/riskAnalyzer";
+import { generateDynamicAnalysis } from "@/utils/riskAnalyzer";
+import { sectorMapping } from "@/data/sectorMapping";
 
 // Altın, Gümüş & Emtia Kataloğu
 const COMMODITY_CATALOG = [
@@ -1281,7 +1282,7 @@ export default function PortfolioPage() {
                         .filter(g => g.marketVal > 0)
                         .sort((a, b) => b.marketVal - a.marketVal);
                     
-                    const riskData = generateRiskAnalysisText(sortedAssets, totalValue, userPortfolioDividends);
+                    const riskData = generateDynamicAnalysis(distributionView, sortedAssets, totalValue, prices, userPortfolioDividends);
                     
                     // Treemap specific
                     const renderTreemap = () => {
@@ -1314,6 +1315,62 @@ export default function PortfolioPage() {
                                             {/* Tooltip */}
                                             <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
                                                 {formatCurrency(asset.marketVal)}
+                                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        );
+                    };
+
+                    const sectorWeights: Record<string, { value: number, profit: number }> = {};
+                    sortedAssets.forEach(asset => {
+                        const sector = sectorMapping[asset.symbol] || 'Diğer';
+                        const avgCost = asset.avgCost || 1;
+                        const currentPrice = prices[asset.symbol] || avgCost;
+                        const costTotal = avgCost * asset.totalQuantity;
+                        const currentTotal = currentPrice * asset.totalQuantity;
+                        const profitValue = currentTotal - costTotal;
+                        
+                        if (!sectorWeights[sector]) {
+                            sectorWeights[sector] = { value: 0, profit: 0 };
+                        }
+                        sectorWeights[sector].value += currentTotal;
+                        sectorWeights[sector].profit += profitValue;
+                    });
+                    
+                    const sortedSectors = Object.entries(sectorWeights)
+                        .map(([name, data]) => ({ name, ...data }))
+                        .sort((a, b) => b.value - a.value);
+
+                    const renderSectorMap = () => {
+                        if (sortedSectors.length === 0) return null;
+                        
+                        return (
+                            <div className="w-full h-48 rounded-xl overflow-hidden flex gap-1 bg-slate-50 p-1 border border-slate-100 shadow-inner">
+                                {sortedSectors.map((sector, idx) => {
+                                    const weight = (sector.value / totalValue) * 100;
+                                    if (weight < 1) return null; // Hide tiny sectors in UI
+                                    
+                                    const colors = [
+                                        'bg-blue-600', 'bg-sky-500', 'bg-indigo-500', 'bg-cyan-600', 
+                                        'bg-blue-400', 'bg-sky-400', 'bg-indigo-400', 'bg-cyan-500'
+                                    ];
+                                    const color = colors[idx % colors.length];
+
+                                    return (
+                                        <div 
+                                            key={sector.name} 
+                                            style={{ width: `${weight}%` }}
+                                            className={cn("h-full flex flex-col items-center justify-center text-white transition-all duration-300 hover:brightness-110 relative group cursor-pointer rounded-lg", color)}
+                                        >
+                                            <span className="font-bold text-[10px] sm:text-xs text-center px-1 break-words leading-tight drop-shadow-md line-clamp-3 w-full">{sector.name}</span>
+                                            <span className="text-[9px] sm:text-[10px] font-medium opacity-90 truncate w-full text-center drop-shadow-sm mt-1">%{weight.toFixed(1)}</span>
+                                            
+                                            {/* Tooltip */}
+                                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-xl">
+                                                {formatCurrency(sector.value)}
                                                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800" />
                                             </div>
                                         </div>
@@ -1395,11 +1452,7 @@ export default function PortfolioPage() {
                                 <div className="space-y-6">
                                     {distributionView === 'donut' && renderDonut()}
                                     {distributionView === 'heatmap' && renderTreemap()}
-                                    {distributionView === 'sector' && (
-                                        <div className="h-48 flex items-center justify-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                                            <p className="text-xs text-slate-400 font-medium px-4 text-center">Sektör haritalama verisi bekleniyor. (Kısa süre içinde aktif olacak)</p>
-                                        </div>
-                                    )}
+                                    {distributionView === 'sector' && renderSectorMap()}
 
                                     {/* SADECE ODAK MODUNDA GÖZÜKEN DETAYLAR */}
                                     {isFocused && (
@@ -1408,9 +1461,9 @@ export default function PortfolioPage() {
                                             <div className="bg-[#00008B] rounded-2xl p-4 shadow-lg shadow-[#00008B]/20 relative overflow-hidden">
                                                 <div className="flex items-center gap-2 mb-3">
                                                     <Brain className="w-5 h-5 text-white" />
-                                                    <h4 className="text-[12px] font-black text-white uppercase tracking-widest">FinAi Analizi</h4>
+                                                    <h4 className="text-[12px] font-black text-white uppercase tracking-widest">{riskData.title}</h4>
                                                     <div className="ml-auto flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-md border border-white/20 shadow-sm backdrop-blur-sm">
-                                                        <span className="text-[10px] font-medium text-white/80">Çeşitlendirme:</span>
+                                                        <span className="text-[10px] font-medium text-white/80">{riskData.subtitle}:</span>
                                                         <span className="text-xs font-black text-white">{riskData.score}/10</span>
                                                     </div>
                                                 </div>
