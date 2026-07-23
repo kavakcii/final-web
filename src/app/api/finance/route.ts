@@ -7,6 +7,8 @@ const yfModule = require('yahoo-finance2');
 const YahooFinanceClass = yfModule.YahooFinance || yfModule.default?.YahooFinance || yfModule.default;
 const yahooFinance = new YahooFinanceClass({ suppressNotices: ['yahooSurvey'] });
 
+import { fetchLiveCommoditiesAndCrypto } from '@/lib/commodities-crypto';
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get('symbols');
@@ -17,6 +19,21 @@ export async function GET(request: Request) {
 
     const rawSymbols = symbolsParam.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
     const results: any[] = [];
+
+    // 0. Fetch Live Commodities & Crypto (ALTIN, BTC, ETH, USDTRY)
+    try {
+        const liveMap = await fetchLiveCommoditiesAndCrypto();
+        rawSymbols.forEach(sym => {
+            const baseSym = sym.replace('.IS', '');
+            if (liveMap[baseSym]) {
+                results.push(liveMap[baseSym]);
+            } else if (liveMap[sym]) {
+                results.push(liveMap[sym]);
+            }
+        });
+    } catch (e) {
+        console.error('Live commodities/crypto error:', e);
+    }
 
     // Map of known TEFAS fund symbols for fast lookup
     const tefasCatalogMap = new Map(TEFAS_CATALOG.map(f => [f.symbol.toUpperCase(), f.name]));
