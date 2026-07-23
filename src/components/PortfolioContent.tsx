@@ -1424,11 +1424,11 @@ export default function PortfolioPage() {
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <Info className="w-4 h-4 text-sky-500" />
                                                     <span className="text-xs font-bold text-sky-700">
-                                                        {distributionView === 'pie' ? "Pasta Grafiği Nasıl Okunur?" : distributionView === 'heatmap' ? "Isı Haritası Nasıl Okunur?" : "Sektör Dağılımı Nasıl Okunur?"}
+                                                        {distributionView === 'donut' ? "Pasta Grafiği Nasıl Okunur?" : distributionView === 'heatmap' ? "Isı Haritası Nasıl Okunur?" : "Sektör Dağılımı Nasıl Okunur?"}
                                                     </span>
                                                 </div>
                                                 <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
-                                                    {distributionView === 'pie' && (
+                                                    {distributionView === 'donut' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
                                                             Sepetinizdeki yumurtaların nerede olduğunu gösterir. Olası bir dalgalanmada en büyük dilime sahip (örneğin %35 ağırlığındaki) hissenizin düşüşü, tüm portföyünüzü ciddi şekilde sarsabilir. Bu yüzden devasa tek bir dilim yerine, dengeli boyutlarda dilimlere sahip olmak riski azaltır.
                                                         </p>
