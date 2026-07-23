@@ -124,9 +124,10 @@ export default function PortfolioPage() {
         idsToDelete: []
     });
 
-    // Fiyat Analizi Zaman Periyodu ve Sekme State'leri
+    // Fiyat Analizi Zaman Periyodu, Sekme ve Sıralama State'leri
     const [extremesTimeframe, setExtremesTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>('1Y');
     const [extremesTab, setExtremesTab] = useState<'portfolio' | 'market'>('portfolio');
+    const [extremesSort, setExtremesSort] = useState<'default' | 'near-low' | 'near-high' | 'near-cost'>('default');
 
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -1742,6 +1743,37 @@ export default function PortfolioPage() {
                             </div>
                         </div>
 
+                        {/* AKILLI SIRALAMA SEÇENEKLERİ & MİNİ AI BANNER */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest mr-1">Sırala:</span>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('default'); }}
+                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'default' ? "bg-[#00008B] text-white border-[#00008B]" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50")}
+                                >
+                                    Varsayılan
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('near-low'); }}
+                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'near-low' ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : "bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100")}
+                                >
+                                    🟢 Dibe En Yakınlar (Alım)
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('near-high'); }}
+                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'near-high' ? "bg-rose-600 text-white border-rose-600 shadow-sm" : "bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-100")}
+                                >
+                                    🟠 Zirveye En Yakınlar (Satım)
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('near-cost'); }}
+                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'near-cost' ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-blue-50 text-blue-700 border-blue-200/80 hover:bg-blue-100")}
+                                >
+                                    🎯 Maliyetime En Yakınlar
+                                </button>
+                            </div>
+                        </div>
+
                         {/* MİNİ AI FIRSAT & RİSK BİLDİRİM BANNER'I */}
                         <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-3 mb-4 flex items-center gap-2.5">
                             <Brain className="w-4 h-4 text-[#00008B] shrink-0" />
@@ -1754,8 +1786,34 @@ export default function PortfolioPage() {
                         <div className={cn("space-y-4 overflow-y-auto pr-1", isFocused ? "max-h-[800px]" : "max-h-[380px]")}>
                             {extremesEntries.length === 0 ? (
                                 <p className="text-xs text-slate-400 py-6 text-center font-medium">Analiz verisi yükleniyor...</p>
-                            ) : (
-                                displayedExtremes.map(([sym, ext]) => {
+                            ) : (() => {
+                                // Sıralanmış Varlık Listesi
+                                const list = [...extremesEntries];
+                                if (extremesSort === 'near-low') {
+                                    list.sort((a, b) => {
+                                        const posA = ((a[1].current - a[1].low) / (a[1].high - a[1].low || 1));
+                                        const posB = ((b[1].current - b[1].low) / (b[1].high - b[1].low || 1));
+                                        return posA - posB;
+                                    });
+                                } else if (extremesSort === 'near-high') {
+                                    list.sort((a, b) => {
+                                        const posA = ((a[1].current - a[1].low) / (a[1].high - a[1].low || 1));
+                                        const posB = ((b[1].current - b[1].low) / (b[1].high - b[1].low || 1));
+                                        return posB - posA;
+                                    });
+                                } else if (extremesSort === 'near-cost') {
+                                    list.sort((a, b) => {
+                                        const userAssetA = groupedAssets.find(g => g.symbol === a[0]);
+                                        const userAssetB = groupedAssets.find(g => g.symbol === b[0]);
+                                        const costDiffA = userAssetA ? Math.abs(a[1].current - userAssetA.avgCost) : 999999;
+                                        const costDiffB = userAssetB ? Math.abs(b[1].current - userAssetB.avgCost) : 999999;
+                                        return costDiffA - costDiffB;
+                                    });
+                                }
+
+                                const itemsToDisplay = isFocused ? list : list.slice(0, 5);
+
+                                return itemsToDisplay.map(([sym, ext]) => {
                                     // Dinamik zaman periyodu marjına göre Düşük - Yüksek hesaplama
                                     let marginMultiplier = 1;
                                     if (extremesTimeframe === '1W') marginMultiplier = 0.08;
@@ -1777,7 +1835,9 @@ export default function PortfolioPage() {
                                     // Kullanıcının ortalama maliyeti
                                     const userAsset = groupedAssets.find(g => g.symbol === sym);
                                     const userCost = userAsset ? userAsset.avgCost : null;
-                                    const costPos = userCost ? Math.min(100, Math.max(0, ((userCost - low) / (high - low || 1)) * 100)) : null;
+                                    const rawCostPos = userCost ? ((userCost - low) / (high - low || 1)) * 100 : null;
+                                    const costPos = rawCostPos !== null ? Math.min(98, Math.max(2, rawCostPos)) : null;
+                                    const isCostOutOfRange = rawCostPos !== null && (rawCostPos < 0 || rawCostPos > 100);
 
                                     // Zirveye ve Dibe Uzaklık
                                     const distToHigh = Math.abs(((high - currentPrice) / (high || 1)) * 100);
@@ -1829,16 +1889,18 @@ export default function PortfolioPage() {
                                                     />
                                                 </div>
 
-                                                {/* Kullanıcı Alış Maliyeti Noktası (Zümrüt Yeşil İğne) */}
+                                                {/* Kullanıcı Alış Maliyeti Noktası (Zümrüt Yeşil Elmas / İğne) */}
                                                 {costPos !== null && (
                                                     <div 
-                                                        className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-emerald-600 rounded-full border-2 border-white shadow-md z-20 transition-all duration-700 cursor-pointer"
-                                                        style={{ left: `calc(${costPos}% - 7px)` }}
+                                                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-600 rotate-45 border-2 border-white shadow-md z-20 transition-all duration-700 cursor-pointer flex items-center justify-center"
+                                                        style={{ left: `calc(${costPos}% - 8px)` }}
                                                         title={`Ortalama Maliyetiniz: ${formatCurrency(userCost!)}`}
-                                                    />
+                                                    >
+                                                        <div className="w-1 h-1 bg-white rounded-full" />
+                                                    </div>
                                                 )}
 
-                                                {/* Mevcut Fiyat Noktası (Lacivert Daire) */}
+                                                {/* Mevcut Canlı Fiyat Noktası (Lacivert Daire) */}
                                                 <div 
                                                     className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#00008B] rounded-full border-2 border-white shadow-lg z-10 transition-all duration-700"
                                                     style={{ left: `calc(${pos}% - 8px)` }}
@@ -1850,16 +1912,18 @@ export default function PortfolioPage() {
                                             <div className="flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase tracking-wider">
                                                 <span>DÜŞÜK: {formatCurrency(low)}</span>
                                                 {userCost && (
-                                                    <span className="text-emerald-700 font-black">
+                                                    <span className={cn("font-black flex items-center gap-1", isCostOutOfRange ? "text-slate-500" : "text-emerald-700")}>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
                                                         Maliyetiniz: {formatCurrency(userCost)}
+                                                        {isCostOutOfRange && <span className="text-[8px] opacity-75">(Bant Dışı)</span>}
                                                     </span>
                                                 )}
                                                 <span>YÜKSEK: {formatCurrency(high)}</span>
                                             </div>
                                         </div>
                                     );
-                                })
-                            )}
+                                });
+                            })()}
                         </div>
                     </div>
                 );
