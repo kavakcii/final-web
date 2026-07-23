@@ -476,9 +476,6 @@ export const sectorMapping: Record<string, string> = {
     "LINK": "Bilişim",
     "BMEKS": "Bilişim",
     "ALCTL": "Bilişim",
-    "NIBAS": "İnşaat",
-    "GENTS": "İnşaat",
-    "ENKAI": "İnşaat",
     "ASELS": "Teknoloji",
     "BLUME": "Metal Ana"
 };
