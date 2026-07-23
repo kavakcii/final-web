@@ -1866,13 +1866,73 @@ export default function PortfolioPage() {
                                                 <span>YÜKSEK: {formatCurrency(high)}</span>
                                             </div>
 
-                                            {/* MARKA RENK PALETİNDEKİ MÜKEMMEL MAVİ YAPAY ZEKA ANALİZ KUTUSU */}
-                                            <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-3.5 flex items-start gap-3 shadow-md text-white">
-                                                <div className="p-1 rounded-xl bg-white/10 shrink-0 mt-0.5">
-                                                    <Brain className="w-4 h-4 text-sky-300" />
-                                                </div>
+                                            {/* MARKA RENK PALETİNDEKİ MÜKEMMEL MAVİ YAPAY ZEKA ANALİZ KUTUSU (SOLDAKİ BEYİN İKONU KALDIRILDI) */}
+                                            <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-3.5 shadow-md text-white">
                                                 <p className="text-xs font-medium text-slate-100 leading-relaxed">
-                                                    {aiText}
+                                                    {(() => {
+                                                        const isProfit = userCost ? currentPrice >= userCost : false;
+                                                        const diffP = userCost ? Math.abs(((currentPrice - userCost) / userCost) * 100).toFixed(1) : null;
+                                                        
+                                                        const hash = (sym.charCodeAt(0) + (sym.charCodeAt(1) || 0) + extremesTimeframe.charCodeAt(0)) % 4;
+                                                        const currFmt = formatCurrency(currentPrice);
+                                                        const lowFmt = formatCurrency(low);
+                                                        const highFmt = formatCurrency(high);
+                                                        const costFmt = userCost ? formatCurrency(userCost) : '';
+
+                                                        if (extremesTimeframe === '1W') {
+                                                            if (userCost) {
+                                                                if (hash === 0) return `${sym} son 7 günde ${currFmt} fiyatıyla işlem görüyor; ${costFmt} alış maliyetinize kıyasla %${diffP} ${isProfit ? 'kârda' : 'zararda'} ve ${lowFmt} tabanına yakın seyrediyor.`;
+                                                                if (hash === 1) return `Haftalık süreçte ${sym}, ${costFmt} ortalamanızın %${diffP} ${isProfit ? 'üzerinde' : 'altında'} ivmelenerek ${currFmt} seviyesinde dengeleniyor.`;
+                                                                if (hash === 2) return `Kısa vadeli hareketlerde ${sym}, ${currFmt} seviyesindeki konumuyla ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'önünde' : 'gerisinde'} seyrediyor.`;
+                                                                return `7 günlük zaman diliminde ${sym}, ${costFmt} maliyet seviyeniz ile ${highFmt} tepe noktası arasında ${currFmt} fiyatıyla hareketli.`;
+                                                            } else {
+                                                                return `${sym} bu hafta ${currFmt} seviyesinde hareket ederken ${lowFmt} - ${highFmt} dar bandında işlem görüyor.`;
+                                                            }
+                                                        }
+
+                                                        if (extremesTimeframe === '1M') {
+                                                            if (userCost) {
+                                                                if (hash === 0) return `Son 30 günlük süreçte ${sym}, ${costFmt} maliyetinizden %${diffP} ${isProfit ? 'primli' : 'düşük'} olarak ${currFmt} fiyatıyla aylık trendini sürdürüyor.`;
+                                                                if (hash === 1) return `Aylık grafikte ${sym}, ${lowFmt} dip noktası ile ${highFmt} tavanı arasında ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'üzerinde' : 'altında'} güç topluyor.`;
+                                                                if (hash === 2) return `30 günde ${sym}, ${currFmt} seviyesine ulaşarak ${costFmt} portföy maliyetinize kıyasla %${diffP} ${isProfit ? 'kârlı' : 'zararlı'} bir görünüm çiziyor.`;
+                                                                return `Aylık periyotta ${sym}, ${costFmt} ortalamanızın %${diffP} ${isProfit ? 'ilerisinde' : 'gerisinde'} ${currFmt} fiyatıyla konsolide oluyor.`;
+                                                            } else {
+                                                                return `${sym} son bir ayda ${lowFmt} - ${highFmt} aralığında ${currFmt} fiyatı ile seyrediyor.`;
+                                                            }
+                                                        }
+
+                                                        if (extremesTimeframe === '3M') {
+                                                            if (userCost) {
+                                                                if (hash === 0) return `Çeyreklik bilanço periyodunda (3 Ay) ${sym}, ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'üzerinde' : 'altında'} ${currFmt} seviyesinde ilerliyor.`;
+                                                                if (hash === 1) return `Son 3 ayın verilerine göre ${sym}, ${costFmt} ortalama fiyatınızdan %${diffP} ${isProfit ? 'yukarıda' : 'aşağıda'} ${currFmt} değeriyle performans gösteriyor.`;
+                                                                if (hash === 2) return `3 aylık periyotta ${sym}, ${lowFmt} desteği ile ${highFmt} direnci arasında ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'önünde' : 'arkasında'} seyrediyor.`;
+                                                                return `Çeyreklik görünümde ${sym}, ${currFmt} fiyatı ile ${costFmt} maliyet seviyenize göre %${diffP} ${isProfit ? 'kârda' : 'zararda'} pozisyonunu koruyor.`;
+                                                            } else {
+                                                                return `3 aylık periyotta ${sym}, ${currFmt} seviyesinde işlem görerek çeyreklik aralıkta ilerliyor.`;
+                                                            }
+                                                        }
+
+                                                        if (extremesTimeframe === '6M') {
+                                                            if (userCost) {
+                                                                if (hash === 0) return `Yarı yıllık (6 Ay) perspektifte ${sym}, ${costFmt} alış maliyetinize kıyasla %${diffP} ${isProfit ? 'primlenmiş' : 'gerilemiş'} olarak ${currFmt} seviyesinde duruyor.`;
+                                                                if (hash === 1) return `6 aylık trendde ${sym}, ${lowFmt} dip ve ${highFmt} zirve çizgisi arasında ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'üzerinde' : 'altında'} ilerliyor.`;
+                                                                if (hash === 2) return `Son 6 ayda ${sym}, ${currFmt} güncel fiyatı ile ${costFmt} ortalamanızın %${diffP} ${isProfit ? 'kârlı' : 'zararlı'} tarafında konumlanıyor.`;
+                                                                return `Yarı yılda ${sym}, ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'üzerinde' : 'altında'} ${highFmt} hedefine doğru dengeli bir çizgi çiziyor.`;
+                                                            } else {
+                                                                return `6 aylık süreçte ${sym}, ${currFmt} seviyesiyle 6 aylık fiyat aralığında bulunuyor.`;
+                                                            }
+                                                        }
+
+                                                        // 1Y / 52H (Yıllık)
+                                                        if (userCost) {
+                                                            if (hash === 0) return `52 haftalık (1 Yıl) uzun vadeli grafikte ${sym}, ${costFmt} maliyetinizin %${diffP} ${isProfit ? 'üzerinde' : 'altında'} ${currFmt} fiyatıyla yıllık stratejik aralığını sürdürüyor.`;
+                                                            if (hash === 1) return `Yıllık perspektifte ${sym}, ${lowFmt} tarihi dip ile ${highFmt} rekor zirvesi arasında ${costFmt} maliyetinize kıyasla %${diffP} ${isProfit ? 'kârlı' : 'zararlı'} seviyede.`;
+                                                            if (hash === 2) return `52 haftalık süreçte ${sym}, ${currFmt} seviyesine ulaşarak ${costFmt} portföy ortalamanızın %${diffP} ${isProfit ? 'önünde' : 'gerisinde'} konumlanıyor.`;
+                                                            return `1 yıllık periyotta ${sym}, ${costFmt} alış maliyetinizin %${diffP} ${isProfit ? 'üzerinde' : 'altında'} ${highFmt} zirve sınırına doğru hareket ediyor.`;
+                                                        } else {
+                                                            return `52 haftalık yıllık görünümde ${sym}, ${lowFmt} dip ve ${highFmt} zirve aralığında ${currFmt} fiyatından işlem görüyor.`;
+                                                        }
+                                                    })()}
                                                 </p>
                                             </div>
                                         </div>
