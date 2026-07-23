@@ -1405,50 +1405,45 @@ export default function PortfolioPage() {
                                     {isFocused && (
                                         <>
                                             {/* Risk ve Yoğunlaşma Skoru Paneli */}
-                                            <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-4 border border-slate-100 shadow-sm relative overflow-hidden">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <Brain className={cn("w-4 h-4", riskData.level === 'HIGH' ? 'text-rose-500' : riskData.level === 'MEDIUM' ? 'text-amber-500' : 'text-emerald-500')} />
-                                                    <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Yapay Zeka Risk Analizi</h4>
-                                                    <div className="ml-auto flex items-center gap-1.5 bg-white px-2 py-1 rounded-md border border-slate-100 shadow-sm">
-                                                        <span className="text-[10px] font-medium text-slate-400">Çeşitlendirme:</span>
-                                                        <span className={cn("text-xs font-black", riskData.level === 'HIGH' ? 'text-rose-600' : riskData.level === 'MEDIUM' ? 'text-amber-600' : 'text-emerald-600')}>{riskData.score}/10</span>
+                                            <div className="bg-[#00008B] rounded-2xl p-4 shadow-lg shadow-[#00008B]/20 relative overflow-hidden">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <Brain className="w-5 h-5 text-white" />
+                                                    <h4 className="text-[12px] font-black text-white uppercase tracking-widest">FinAi Analizi</h4>
+                                                    <div className="ml-auto flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-md border border-white/20 shadow-sm backdrop-blur-sm">
+                                                        <span className="text-[10px] font-medium text-white/80">Çeşitlendirme:</span>
+                                                        <span className={cn("text-xs font-black", riskData.level === 'HIGH' ? 'text-rose-400' : riskData.level === 'MEDIUM' ? 'text-amber-400' : 'text-emerald-400')}>{riskData.score}/10</span>
                                                     </div>
                                                 </div>
-                                                <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                                                <p className="text-xs text-white/90 leading-relaxed font-medium">
                                                     {riskData.text}
                                                 </p>
                                             </div>
 
-                                            {/* Gelişmiş Eğitim Rehberi (Nasıl Okunur?) */}
-                                            <div className="border border-sky-100 bg-sky-50/50 rounded-2xl p-4 transition-all">
-                                                <button onClick={() => setShowGuide(!showGuide)} className="flex items-center justify-between w-full group">
-                                                    <div className="flex items-center gap-2">
-                                                        <Info className="w-4 h-4 text-sky-500 group-hover:scale-110 transition-transform" />
-                                                        <span className="text-xs font-bold text-sky-700">Grafikler Nasıl Okunur?</span>
-                                                    </div>
-                                                    <ChevronDown className={cn("w-4 h-4 text-sky-500 transition-transform", showGuide && "rotate-180")} />
-                                                </button>
-                                                
-                                                <AnimatePresence>
-                                                    {showGuide && (
-                                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                                            <div className="pt-3 mt-3 border-t border-sky-100 space-y-3">
-                                                                <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
-                                                                    <h5 className="text-[10px] font-bold uppercase tracking-wider text-sky-600 mb-1">Pasta Modu</h5>
-                                                                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                                                                        Sepetinizdeki "yumurtaların" hangi sepetlerde olduğunu gösterir. Bir dilim ne kadar büyükse, paranızın o kadarı o hisseye bağlıdır. İdeal bir portföyde tüm dilimlerin dengeli (hiçbirinin tek başına çok devasa olmadığı) bir dağılım göstermesi beklenir.
-                                                                    </p>
-                                                                </div>
-                                                                <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
-                                                                    <h5 className="text-[10px] font-bold uppercase tracking-wider text-sky-600 mb-1">Isı Haritası Modu</h5>
-                                                                    <p className="text-[11px] text-slate-600 leading-relaxed">
-                                                                        Hem ağırlığı hem de başarıyı aynı anda gösterir. Kutunun genişliği portföydeki ağırlığını (büyüklüğünü), rengi ise (koyu yeşil yüksek kâr, koyu kırmızı yüksek zarar) mevcut kârlılık durumunu temsil eder. Büyük ve kırmızı bir kutu görüyorsanız portföyünüz ağır bir yara alıyor demektir.
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </motion.div>
+                                            {/* Gelişmiş Eğitim Rehberi (Nasıl Okunur?) - Bağlamsal */}
+                                            <div className="border border-sky-100 bg-sky-50/50 rounded-2xl p-4">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Info className="w-4 h-4 text-sky-500" />
+                                                    <span className="text-xs font-bold text-sky-700">
+                                                        {distributionView === 'pie' ? "Pasta Grafiği Nasıl Okunur?" : distributionView === 'heatmap' ? "Isı Haritası Nasıl Okunur?" : "Sektör Dağılımı Nasıl Okunur?"}
+                                                    </span>
+                                                </div>
+                                                <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
+                                                    {distributionView === 'pie' && (
+                                                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                                                            Sepetinizdeki yumurtaların nerede olduğunu gösterir. Olası bir dalgalanmada en büyük dilime sahip (örneğin %35 ağırlığındaki) hissenizin düşüşü, tüm portföyünüzü ciddi şekilde sarsabilir. Bu yüzden devasa tek bir dilim yerine, dengeli boyutlarda dilimlere sahip olmak riski azaltır.
+                                                        </p>
                                                     )}
-                                                </AnimatePresence>
+                                                    {distributionView === 'heatmap' && (
+                                                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                                                            Kutuların büyüklüğü paranın miktarını, renklerin koyuluğu ise kâr/zarar şiddetini temsil eder. Örneğin çok büyük ve koyu kırmızı bir kutu görüyorsanız, portföyünüzün ana damarlarından biri ciddi kan kaybediyor demektir. Koyu yeşil ise güçlü kârlılık anlamına gelir.
+                                                        </p>
+                                                    )}
+                                                    {distributionView === 'sector' && (
+                                                        <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
+                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir. Eğer tüm yatırımınız tek bir sektöre (örneğin sadece teknoloji veya sadece bankacılık) yığılmışsa, o sektörde yaşanacak olumsuz bir haber tüm portföyünüzü aşağı çekebilir. Farklı sektörler krizlere karşı kalkan görevi görür.
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
                                         </>
                                     )}
