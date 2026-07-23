@@ -2181,11 +2181,6 @@ export default function PortfolioPage() {
         }
     };
 
-            default:
-                return null;
-        }
-    };
-
     return (
         <div 
             onClick={(e) => {
