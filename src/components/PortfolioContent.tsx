@@ -1329,6 +1329,8 @@ export default function PortfolioPage() {
                         );
                     };
 
+                    const totalAssetCount = sortedAssets.length;
+
                     const sectorWeights: Record<string, { value: number, profit: number, count: number }> = {};
                     sortedAssets.forEach(asset => {
                         const sector = getAssetSector(asset.symbol);
@@ -1348,7 +1350,7 @@ export default function PortfolioPage() {
                     
                     const sortedSectors = Object.entries(sectorWeights)
                         .map(([name, data]) => ({ name, ...data }))
-                        .sort((a, b) => b.value - a.value);
+                        .sort((a, b) => b.count - a.count || b.value - a.value);
 
                     const SECTOR_COLORS_HEX: Record<string, string> = {
                         'Banka': '#2563eb', // blue-600
@@ -1370,7 +1372,7 @@ export default function PortfolioPage() {
                     const fallbackHex = ['#60a5fa', '#38bdf8', '#818cf8', '#06b6d4', '#2dd4bf'];
 
                     const renderSectorMap = () => {
-                        if (sortedSectors.length === 0) return null;
+                        if (sortedSectors.length === 0 || totalAssetCount === 0) return null;
                         let currentOffset = 0;
                         const C = 2 * Math.PI * 36;
 
@@ -1378,7 +1380,7 @@ export default function PortfolioPage() {
                             <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
                                 <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-md">
                                     {sortedSectors.map((sec, idx) => {
-                                        const weight = sec.value / totalValue;
+                                        const weight = sec.count / totalAssetCount;
                                         const strokeLength = weight * C;
                                         const hexColor = SECTOR_COLORS_HEX[sec.name] || fallbackHex[idx % fallbackHex.length];
                                         const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
@@ -1410,17 +1412,18 @@ export default function PortfolioPage() {
                                     {hoveredSlice && hoveredSlice.startsWith('sector_') ? (() => {
                                         const secName = hoveredSlice.replace('sector_', '');
                                         const activeSec = sortedSectors.find(s => s.name === secName);
+                                        const countPct = activeSec ? ((activeSec.count / totalAssetCount) * 100).toFixed(1) : "0";
                                         return activeSec ? (
                                             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeSec.name}</span>
-                                                <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(activeSec.value)}</span>
-                                                <span className="text-[9px] font-semibold text-slate-500">{activeSec.count} Hisse</span>
+                                                <span className="block text-sm font-black text-[#00008B] tracking-tight">{activeSec.count} Hisse (%{countPct})</span>
+                                                <span className="text-[9px] font-semibold text-slate-500">{formatCurrency(activeSec.value)}</span>
                                             </motion.div>
                                         ) : null;
                                     })() : (
                                         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sektörel Toplam</span>
-                                            <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sektörel Dağılım</span>
+                                            <span className="block text-sm font-black text-[#00008B] tracking-tight">{totalAssetCount} Hisse</span>
                                             <span className="text-[9px] font-semibold text-slate-500">{sortedSectors.length} Sektör</span>
                                         </motion.div>
                                     )}
@@ -1542,7 +1545,7 @@ export default function PortfolioPage() {
                                                     )}
                                                     {distributionView === 'sector' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir. Eğer tüm yatırımınız tek bir sektöre (örneğin sadece teknoloji veya sadece bankacılık) yığılmışsa, o sektörde yaşanacak olumsuz bir haber tüm portföyünüzü aşağı çekebilir. Farklı sektörler krizlere karşı kalkan görevi görür.
+                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir. Örneğin portföyünüzdeki 10 hissenin 4 tanesi (%40'ı) ulaştırma sektöründeyse, bu oran sektör dilimlerinde temsil edilir.
                                                         </p>
                                                     )}
                                                 </div>
@@ -1554,7 +1557,7 @@ export default function PortfolioPage() {
                                     {distributionView === 'sector' ? (
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                                             {sortedSectors.map((sector, idx) => {
-                                                const weight = (sector.value / totalValue) * 100;
+                                                const countWeight = totalAssetCount > 0 ? (sector.count / totalAssetCount) * 100 : 0;
                                                 const hexColor = SECTOR_COLORS_HEX[sector.name] || fallbackHex[idx % fallbackHex.length];
                                                 const isHovered = hoveredSlice === `sector_${sector.name}`;
 
@@ -1573,7 +1576,7 @@ export default function PortfolioPage() {
                                                             </div>
                                                             <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{sector.count} Hisse</span>
                                                         </div>
-                                                        <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
+                                                        <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{countWeight.toFixed(1)}</span>
                                                     </div>
                                                 );
                                             })}

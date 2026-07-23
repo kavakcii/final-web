@@ -215,12 +215,13 @@ export function generateDynamicAnalysis(
     }
 
     if (viewMode === 'sector') {
-        // --- 3. SEKTÖR ANALİZİ ---
+        // --- 3. SEKTÖR ANALİZİ (Hisse Adet Oranına Göre) ---
+        const totalCount = sorted.length;
         const sectorWeights: Record<string, number> = {};
 
         sorted.forEach(asset => {
-            const weight = (asset.marketVal / totalValue) * 100;
-            const sector = sectorMapping[asset.symbol] || 'Diğer';
+            const weight = (1 / totalCount) * 100;
+            const sector = getAssetSector(asset.symbol);
             sectorWeights[sector] = (sectorWeights[sector] || 0) + weight;
         });
 
