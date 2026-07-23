@@ -1,4 +1,4 @@
-export function generateRiskAnalysisText(groupedAssets: any[], totalValue: number): { text: string; level: 'LOW' | 'MEDIUM' | 'HIGH'; score: number } {
+export function generateRiskAnalysisText(groupedAssets: any[], totalValue: number, userDividends: any[] = []): { text: string; level: 'LOW' | 'MEDIUM' | 'HIGH'; score: number } {
     if (!groupedAssets || groupedAssets.length === 0 || totalValue === 0) {
         return { text: "Henüz portföyünüzde analiz edilecek yeterli varlık bulunmuyor.", level: 'LOW', score: 10 };
     }
@@ -15,16 +15,42 @@ export function generateRiskAnalysisText(groupedAssets: any[], totalValue: numbe
 
     const topAsset = sorted[0];
     const topWeight = (topAsset.marketVal / totalValue) * 100;
+    const assetCount = sorted.length;
 
-    // Risk Categories based on HHI and Top Asset Weight
-    let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
-    let rawScore = 10 - (hhi / 1000); // Inverse relationship: higher HHI = lower score
+    // --- NEW ALGORITHM ---
+    
+    // 1. HHI Score (Max 5 points)
+    // HHI = 10000 means 100% in one stock -> 0 points
+    // HHI < 1000 means excellent diversification -> 5 points
+    let hhiScore = 5 - (hhi / 2000); 
+    if (hhiScore < 0) hhiScore = 0;
+    if (hhiScore > 5) hhiScore = 5;
+
+    // 2. Asset Count Score (Max 4 points)
+    let countScore = 0;
+    if (assetCount <= 2) countScore = 0;
+    else if (assetCount <= 4) countScore = 2;
+    else if (assetCount <= 12) countScore = 4;
+    else countScore = 3; // > 12 is over-diversification
+
+    // 3. Dividend Shield Bonus (Max 1 point)
+    let dividendBonus = 0;
+    if (userDividends.length > 0) {
+        // If at least one asset pays dividends, give some bonus. 
+        // More dividend assets = closer to 1 point.
+        dividendBonus = Math.min(1, userDividends.length * 0.33); 
+    }
+
+    // Total Score
+    let rawScore = hhiScore + countScore + dividendBonus;
     if (rawScore < 1) rawScore = 1;
     if (rawScore > 10) rawScore = 10;
     const score = Math.round(rawScore * 10) / 10;
 
-    if (hhi > 2500 || topWeight > 50) riskLevel = 'HIGH';
-    else if (hhi > 1500 || topWeight > 30) riskLevel = 'MEDIUM';
+    // Risk Categories
+    let riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' = 'LOW';
+    if (score < 5 || hhi > 2500 || topWeight > 50) riskLevel = 'HIGH';
+    else if (score < 7.5 || hhi > 1500 || topWeight > 30) riskLevel = 'MEDIUM';
 
     // Randomize text variations to avoid repetitive, robotic responses
     const variations = {
@@ -51,5 +77,11 @@ export function generateRiskAnalysisText(groupedAssets: any[], totalValue: numbe
     const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
     const randomIndex = (seed + sorted.length) % list.length;
     
-    return { text: list[randomIndex], level: riskLevel, score };
+    // Inject dividend context into text if bonus was applied
+    let finalText = list[randomIndex];
+    if (dividendBonus > 0 && riskLevel !== 'HIGH') {
+        finalText += ` Ayrıca portföyünüzdeki temettü veren hisseler, dalgalanmalara karşı ekstra bir nakit kalkanı oluşturuyor.`;
+    }
+
+    return { text: finalText, level: riskLevel, score };
 }

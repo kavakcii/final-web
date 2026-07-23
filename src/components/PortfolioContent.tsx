@@ -1281,7 +1281,7 @@ export default function PortfolioPage() {
                         .filter(g => g.marketVal > 0)
                         .sort((a, b) => b.marketVal - a.marketVal);
                     
-                    const riskData = generateRiskAnalysisText(sortedAssets, totalValue);
+                    const riskData = generateRiskAnalysisText(sortedAssets, totalValue, userPortfolioDividends);
                     
                     // Treemap specific
                     const renderTreemap = () => {
@@ -1411,7 +1411,7 @@ export default function PortfolioPage() {
                                                     <h4 className="text-[12px] font-black text-white uppercase tracking-widest">FinAi Analizi</h4>
                                                     <div className="ml-auto flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-md border border-white/20 shadow-sm backdrop-blur-sm">
                                                         <span className="text-[10px] font-medium text-white/80">Çeşitlendirme:</span>
-                                                        <span className={cn("text-xs font-black", riskData.level === 'HIGH' ? 'text-rose-400' : riskData.level === 'MEDIUM' ? 'text-amber-400' : 'text-emerald-400')}>{riskData.score}/10</span>
+                                                        <span className="text-xs font-black text-white">{riskData.score}/10</span>
                                                     </div>
                                                 </div>
                                                 <p className="text-xs text-white/90 leading-relaxed font-medium">
