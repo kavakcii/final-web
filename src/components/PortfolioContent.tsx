@@ -2022,8 +2022,21 @@ export default function PortfolioPage() {
                     const corrScore = isCryptoOrGold ? -42 : 88;
 
                     return (
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-6">
-                            {/* ÜST BAŞLIK VE ZAMAN PERİYODU SEÇİCİLERİ */}
+                        <div className="relative rounded-3xl overflow-hidden group">
+                            {/* KİLİT BUZLU CAM OVERLAY (MÜKEMMEL BUĞULU KİLİT KATMANI) */}
+                            <div className="absolute inset-0 z-50 backdrop-blur-md bg-slate-900/40 flex flex-col items-center justify-center p-6 text-center">
+                                <div className="bg-[#00008B] border border-blue-400/30 text-white px-6 py-3.5 rounded-2xl font-black tracking-widest uppercase shadow-2xl shadow-[#00008B]/40 flex items-center gap-2.5 animate-pulse">
+                                    <Lock className="w-5 h-5 text-sky-400" />
+                                    <span>KORELASYON ANALİZİ YAKINDA AÇILACAKTIR</span>
+                                </div>
+                                <p className="mt-3 text-xs font-bold text-white/90 bg-[#00008B]/80 px-4 py-2 rounded-xl shadow-lg backdrop-blur-xl border border-white/10 max-w-md">
+                                    Yapay zeka destekli portföy risk dengesi ve çiftli varlık korelasyonu çok yakında hizmetinizde.
+                                </p>
+                            </div>
+
+                            {/* ARKADA BUĞULU GÖRÜNEN KORELASYON WİDGET İÇERİĞİ */}
+                            <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-6 opacity-60 blur-[3px] pointer-events-none select-none">
+                                {/* ÜST BAŞLIK VE ZAMAN PERİYODU SEÇİCİLERİ */}
                             <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-4">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2.5 bg-[#00008B]/5 border border-[#00008B]/10 rounded-2xl text-[#00008B]">
@@ -2281,7 +2294,8 @@ export default function PortfolioPage() {
                                 </p>
                             </div>
                         </div>
-                    );
+                    </div>
+                );
                 })();
 
             default:
