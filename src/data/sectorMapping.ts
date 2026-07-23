@@ -377,6 +377,7 @@ export const sectorMapping: Record<string, string> = {
     "MAVI": "Ticaret",
     "PSDTC": "Ticaret",
     "PAMEL": "Elektrik",
+
     "SANEL": "İnşaat",
     "YAYLA": "İnşaat",
     "TURGG": "İnşaat",
@@ -473,10 +474,21 @@ export const sectorMapping: Record<string, string> = {
     "INDES": "Bilişim",
     "ARENA": "Bilişim",
     "LINK": "Bilişim",
-    "ESCOM": "Bilişim",
-    "LOGO": "Bilişim",
-    "NETAS": "Bilişim",
-    "ASELS": "Teknoloji",
+    "BMEKS": "Bilişim",
     "ALCTL": "Bilişim",
+    "NIBAS": "İnşaat",
+    "GENTS": "İnşaat",
+    "ENKAI": "İnşaat",
+    "ASELS": "Teknoloji",
     "BLUME": "Metal Ana"
+};
+
+export const getAssetSector = (symbol: string): string => {
+    const commodities = ["ALTIN", "GUMUS", "ALTIN.S1"];
+    if (commodities.includes(symbol)) return "Emtia";
+    if (symbol === "BTC" || symbol === "ETH") return "Kripto";
+    
+    if (sectorMapping[symbol]) return sectorMapping[symbol];
+    
+    return "Yatırım Fonu";
 };

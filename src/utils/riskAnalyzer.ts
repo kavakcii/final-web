@@ -1,4 +1,4 @@
-import { sectorMapping } from '../data/sectorMapping';
+import { sectorMapping, getAssetSector } from '../data/sectorMapping';
 
 export function generateDynamicAnalysis(
     viewMode: 'donut' | 'heatmap' | 'sector', 
@@ -101,11 +101,34 @@ export function generateDynamicAnalysis(
                 "Riski bu kadar iyi dağıtmanız piyasa fırtınalarında bile ayakta kalmanızı sağlar."
             ]);
         }
+        
+        let extraContext = "";
+        const topSector = getAssetSector(topAsset.symbol);
+        const givesDividend = userDividends && userDividends.some(d => d.stock === topAsset.symbol);
+        
+        if (givesDividend) {
+            extraContext = pickRandom([
+                ` Ayrıca en büyük hisseniz olan ${topAsset.symbol}, temettü verimliliğiyle portföyünüze düzenli nakit akışı sağlayarak pasif gelirinizi destekliyor.`,
+                ` ${topAsset.symbol}'nin temettü ödeme alışkanlığı, düşüşlerde bile elinizde tutmanız için size psikolojik ve maddi bir kalkan sağlıyor.`,
+                ` Ağırlıklı hissenizin (${topAsset.symbol}) temettü veriyor olması, bu yoğunlaşmanın getirdiği riski nakit akışıyla bir nebze tolere edilebilir kılıyor.`
+            ]);
+        } else if (topSector === 'Yatırım Fonu') {
+            extraContext = pickRandom([
+                ` Ayrıca portföyünüzün aslan payının (${topAsset.symbol}) bir fon tarafından yönetiliyor olması, aslında arka planda sizin yerinize profesyonellerin riski dağıttığı anlamına gelir.`,
+                ` En büyük yatırımınız olan ${topAsset.symbol}'nin bir fon olması, tek bir şirkete değil, profesyonel bir sepete yatırım yaptığınızı gösteriyor. Bu çok sağlıklı bir yaklaşımdır.`,
+                ` Portföyünüzü sürükleyen kalemin (${topAsset.symbol}) Yatırım Fonu olması riskinizi kendi içinde optimize eden akıllıca bir defans hamlesidir.`
+            ]);
+        } else if (topSector === 'Emtia') {
+            extraContext = pickRandom([
+                ` Paranızın büyük bir kısmının güvenli liman olan emtiada (${topAsset.symbol}) olması, krizlere karşı sizi koruyacaktır.`,
+                ` Ana varlığınızın ${topAsset.symbol} gibi bir emtia olması, borsadaki sert dalgalanmalardan nispeten daha az yara almanızı sağlar.`
+            ]);
+        }
 
         return {
             title: "FinAi Ağırlık Analizi",
             subtitle: "Çeşitlendirme Skoru",
-            text: `${pickRandom(intros)} ${body} ${advice}`,
+            text: `${pickRandom(intros)} ${body} ${advice}${extraContext}`,
             level,
             score
         };
@@ -223,6 +246,7 @@ export function generateDynamicAnalysis(
             if (w > topSectorWeight) {
                 topSectorWeight = w;
                 topSector = sec;
+                topSectorName = sec;
             }
         });
 
@@ -235,38 +259,46 @@ export function generateDynamicAnalysis(
         let body = "";
         let advice = "";
 
-        if (level === 'HIGH' && topSectorWeight > 40) {
+        if (level === 'HIGH') {
             body = pickRandom([
-                `tüm yatırımlarınızın %${topSectorWeight.toFixed(1)}'inin tek başına '${topSector}' sektörüne yığıldığını görüyorum.`,
-                `portföyünüz ağırlıklı olarak '${topSector}' şirketlerinden oluşuyor ve ciddi bir sektörel yoğunlaşma var.`,
-                `farklı şirketler alsanız da paranızın çoğu '${topSector}' sektörünün kaderine bağlı.`
+                `büyük oranda tek bir sektöre (örneğin ${topSectorName} sektörüne) yığılmışsınız.`,
+                `${topSectorName} sektörü (%${topSectorWeight.toFixed(1)}) portföyünüzün ana damarı haline gelmiş durumda.`,
+                `neredeyse tüm varlıklarınızı ${topSectorName} gibi kısıtlı alanlara park etmişsiniz.`
             ]);
             advice = pickRandom([
-                "O sektörde yaşanacak yasal bir düzenleme veya kriz tüm paranızı vurabilir. Acilen farklı sektörlere yönelmeniz önerilir.",
-                "Şirketlerinizi değil, iş kollarını çeşitlendirmek gerçek defanstır. Başka endüstrilere yatırım yapmayı gözden geçirin.",
-                "Bu durum sepetinizdeki tüm yumurtaları aynı sektörel araca koymaktır. Riski bölmeniz portföy sağlığınız için kritik."
+                "O sektörde yaşanacak sektörel bir kriz tüm kârınızı silebilir. Başka iş kollarına da yatırım yaparak (örneğin teknolojiye karşı gıda) riski bölmelisiniz.",
+                "Zıt ekonomik döngülerde kazandıran sektörleri sepetinize katarak portföyünüzün 'kırılganlığını' azaltın.",
+                "Bir ülkenin ekonomisi tek sektörle dönmediği gibi, portföyünüz de dönmemeli. Farklı sektörleri araştırmaya başlayın."
             ]);
         } else if (level === 'MEDIUM') {
             body = pickRandom([
-                `birkaç farklı sektöre dağılmışsınız ancak '${topSector}' sektörü %${topSectorWeight.toFixed(1)} ile hala çok baskın.`,
-                `çeşitlendirmeniz orta seviyede. '${topSector}' alanı portföyünüzün ana gövdesini oluşturuyor.`,
-                `sektörel dağılım fena değil fakat daha pürüzsüz bir dağılım yapılabilir.`
+                `birkaç farklı sektöre dağılmışsınız ancak '${topSectorName}' sektörü %${topSectorWeight.toFixed(1)} ile hala çok baskın.`,
+                `çeşitlendirme çabanız var fakat ${topSectorName} ağırlığınız hala ortalamanın üzerinde risk teşkil ediyor.`,
+                `ana gövdeniz ${topSectorName} şirketlerinden oluşsa da yan dallarınız oluşmaya başlamış.`
             ]);
             advice = pickRandom([
-                "Farklı ekonomik döngülerde çalışan zıt sektörleri (örn. teknoloji ile gıda) portföye katmak dalgaları yumuşatır.",
-                "Gelecekteki alımlarınızı ana sektörünüz dışındaki alanlara yaparak dengeyi bulabilirsiniz.",
-                "Baskın sektördeki olası yavaşlamalara karşı diğer sektörlerdeki ağırlıklarınızı artırmanız faydalı olabilir."
+                "Farklı ekonomik döngülerde çalışan zıt sektörleri portföye katmak dalgaları yumuşatır.",
+                "Örneğin faizlerin arttığı veya azaldığı dönemlerde farklı tepki veren sektörleri bir araya getirmeyi hedefleyin.",
+                "Biraz daha 'korelasyonu düşük' (biri düşerken diğeri çıkabilen) sektörler ekleyerek dengeyi kurabilirsiniz."
             ]);
         } else {
             body = pickRandom([
-                `yatırımlarınızın çok sayıda farklı iş koluna (endüstriye) başarıyla dağıldığını görüyorum.`,
-                `portföyünüz muazzam bir sektörel dengeye sahip, hiçbir sektör tehlikeli bir ağırlık yaratmıyor.`,
-                `paranızı endüstriyel olarak son derece homojen bölmüşsünüz.`
+                `yatırımlarınızı '${topSectorName}' gibi sektörler başta olmak üzere birçok farklı alana mükemmel şekilde dağıtmışsınız.`,
+                `sanayiden hizmetlere kadar geniş bir yelpazede, birbirini dengeleyen harika bir ekosistem kurmuşsunuz.`,
+                `sektörel dağılımınız adeta küçük bir endeks gibi dengeli ve profesyonel.`
             ]);
             advice = pickRandom([
-                "Bir sektör düşerken diğerinin çıkmasını sağlayan bu strateji, sizi piyasa şoklarından çok iyi koruyacaktır.",
-                "İdeal bir fon yöneticisi gibi zıt ve çeşitli sektörleri harmanlamışsınız. Bu kalkanı korumaya devam edin.",
-                "Ekonomik krizlere veya sektörel resesyonlara karşı portföyünüz adeta zırhla kaplı durumda."
+                "Bu strateji, kriz anlarında 'kalkan' görevi görecektir. Mevcut dağılım disiplininizi korumaya devam edin.",
+                "Bu sayede bir sektör batarken diğeri portföyünüzü sırtlayabilir. Tam bir defans ustasısınız.",
+                "Hiçbir sektörün sizi tek başına aşağı çekemeyeceği kadar sağlıklı bir yapı. Aynen böyle devam."
+            ]);
+        }
+
+        let extraContext = "";
+        if (topSectorName === 'Yatırım Fonu' && topSectorWeight > 20) {
+            extraContext = pickRandom([
+                ` Portföyünüzün önemli bir kısmının Yatırım Fonlarında toplanması, sektörel çeşitlendirmeyi zaten sizin yerinize profesyonellerin yaptığının güzel bir göstergesi.`,
+                ` Ağırlığın fonlarda olması, bu analizdeki yoğunlaşma riskinizi tamamen minimize eden en büyük avantajınızdır.`
             ]);
         }
 

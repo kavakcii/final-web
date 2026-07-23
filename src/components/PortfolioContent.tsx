@@ -10,7 +10,7 @@ import Link from "next/link";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
 import { generateDynamicAnalysis } from "@/utils/riskAnalyzer";
-import { sectorMapping } from "@/data/sectorMapping";
+import { sectorMapping, getAssetSector } from "@/data/sectorMapping";
 
 // Altın, Gümüş & Emtia Kataloğu
 const COMMODITY_CATALOG = [
@@ -1326,7 +1326,7 @@ export default function PortfolioPage() {
 
                     const sectorWeights: Record<string, { value: number, profit: number }> = {};
                     sortedAssets.forEach(asset => {
-                        const sector = sectorMapping[asset.symbol] || 'Diğer';
+                        const sector = getAssetSector(asset.symbol);
                         const avgCost = asset.avgCost || 1;
                         const currentPrice = prices[asset.symbol] || avgCost;
                         const costTotal = avgCost * asset.totalQuantity;
@@ -1353,17 +1353,38 @@ export default function PortfolioPage() {
                                     const weight = (sector.value / totalValue) * 100;
                                     if (weight < 1) return null; // Hide tiny sectors in UI
                                     
-                                    const colors = [
-                                        'bg-blue-600', 'bg-sky-500', 'bg-indigo-500', 'bg-cyan-600', 
-                                        'bg-blue-400', 'bg-sky-400', 'bg-indigo-400', 'bg-cyan-500'
-                                    ];
-                                    const color = colors[idx % colors.length];
+                                    const SECTOR_COLORS: Record<string, string> = {
+                                        'Banka': 'bg-blue-600',
+                                        'Holding': 'bg-sky-500',
+                                        'Sınai': 'bg-indigo-500',
+                                        'Hizmetler': 'bg-cyan-600',
+                                        'Ulaştırma': 'bg-violet-500',
+                                        'Gıda': 'bg-teal-500',
+                                        'Emtia': 'bg-amber-500',
+                                        'Yatırım Fonu': 'bg-purple-500',
+                                        'Bilişim': 'bg-emerald-500',
+                                        'Teknoloji': 'bg-emerald-600',
+                                        'Enerji': 'bg-orange-500',
+                                        'İnşaat': 'bg-stone-500',
+                                        'Madencilik': 'bg-stone-600',
+                                        'Tekstil': 'bg-pink-500',
+                                        'Sağlık': 'bg-rose-500'
+                                    };
+                                    const fallbackColors = ['bg-blue-400', 'bg-sky-400', 'bg-indigo-400', 'bg-cyan-500'];
+                                    const colorClass = SECTOR_COLORS[sector.name] || fallbackColors[idx % fallbackColors.length];
+                                    
+                                    // Check if hovered
+                                    const isHovered = hoveredSlice === `sector_${sector.name}`;
+                                    const isAnyHovered = hoveredSlice?.startsWith('sector_');
+                                    const opacityClass = isAnyHovered ? (isHovered ? 'opacity-100 ring-2 ring-white z-10 scale-[1.02]' : 'opacity-40') : 'opacity-100 hover:brightness-110';
 
                                     return (
                                         <div 
                                             key={sector.name} 
                                             style={{ width: `${weight}%` }}
-                                            className={cn("h-full flex flex-col items-center justify-center text-white transition-all duration-300 hover:brightness-110 relative group cursor-pointer rounded-lg", color)}
+                                            onMouseEnter={() => setHoveredSlice(`sector_${sector.name}`)}
+                                            onMouseLeave={() => setHoveredSlice(null)}
+                                            className={cn("h-full flex flex-col items-center justify-center text-white transition-all duration-300 relative group cursor-pointer rounded-lg", colorClass, opacityClass)}
                                         >
                                             <span className="font-bold text-[10px] sm:text-xs text-center px-1 break-words leading-tight drop-shadow-md line-clamp-3 w-full">{sector.name}</span>
                                             <span className="text-[9px] sm:text-[10px] font-medium opacity-90 truncate w-full text-center drop-shadow-sm mt-1">%{weight.toFixed(1)}</span>
@@ -1501,24 +1522,68 @@ export default function PortfolioPage() {
                                         </>
                                     )}
 
-                                    {/* LEJANT KARTLARI */}
+                                    {/* LEJANT KARTLARI (SEKTÖRE GÖRE GRUPLU) */}
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                        {sortedAssets.map((group, idx) => {
+                                        {[...sortedAssets]
+                                            .sort((a, b) => {
+                                                const sA = getAssetSector(a.symbol);
+                                                const sB = getAssetSector(b.symbol);
+                                                if (sA < sB) return -1;
+                                                if (sA > sB) return 1;
+                                                return b.marketVal - a.marketVal;
+                                            })
+                                            .map((group, idx) => {
                                             const weight = (group.marketVal / totalValue) * 100;
-                                            const color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
-                                            const isHovered = hoveredSlice === group.symbol;
+                                            const assetSector = getAssetSector(group.symbol);
+                                            
+                                            // Renklendirme mantığı: Eğer Pie (Donut) modundaysak klasik renkler, Sektör/Heatmap modundaysak sektör renkleri
+                                            let color = VIBRANT_CHART_COLORS[idx % VIBRANT_CHART_COLORS.length];
+                                            let hexColor = color;
+                                            
+                                            if (distributionView === 'sector') {
+                                                const SECTOR_COLORS_HEX: Record<string, string> = {
+                                                    'Banka': '#2563eb', // blue-600
+                                                    'Holding': '#0ea5e9', // sky-500
+                                                    'Sınai': '#6366f1', // indigo-500
+                                                    'Hizmetler': '#0891b2', // cyan-600
+                                                    'Ulaştırma': '#8b5cf6', // violet-500
+                                                    'Gıda': '#14b8a6', // teal-500
+                                                    'Emtia': '#f59e0b', // amber-500
+                                                    'Yatırım Fonu': '#a855f7', // purple-500
+                                                    'Bilişim': '#10b981', // emerald-500
+                                                    'Teknoloji': '#059669', // emerald-600
+                                                    'Enerji': '#f97316', // orange-500
+                                                    'İnşaat': '#78716c', // stone-500
+                                                    'Madencilik': '#57534e', // stone-600
+                                                    'Tekstil': '#ec4899', // pink-500
+                                                    'Sağlık': '#f43f5e' // rose-500
+                                                };
+                                                const fallbackHex = ['#60a5fa', '#38bdf8', '#818cf8', '#06b6d4'];
+                                                hexColor = SECTOR_COLORS_HEX[assetSector] || fallbackHex[idx % fallbackHex.length];
+                                                color = hexColor;
+                                            }
+
+                                            let isHovered = false;
+                                            if (distributionView === 'sector') {
+                                                isHovered = hoveredSlice === `sector_${assetSector}` || hoveredSlice === group.symbol;
+                                            } else {
+                                                isHovered = hoveredSlice === group.symbol;
+                                            }
                                             
                                             return (
                                                 <div 
                                                     key={group.symbol} 
-                                                    onMouseEnter={() => setHoveredSlice(group.symbol)}
+                                                    onMouseEnter={() => setHoveredSlice(distributionView === 'sector' ? `sector_${assetSector}` : group.symbol)}
                                                     onMouseLeave={() => setHoveredSlice(null)}
-                                                    style={{ backgroundColor: isHovered ? color : '', borderColor: isHovered ? color : '' }}
-                                                    className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer", isHovered ? "shadow-lg scale-[1.05] z-10" : "bg-slate-50/70 border-slate-100 shadow-sm")}
+                                                    style={{ backgroundColor: isHovered ? hexColor : '', borderColor: isHovered ? hexColor : '' }}
+                                                    className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.05] z-10" : "bg-slate-50/70 border-slate-100 shadow-sm")}
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={cn("w-3 h-3 rounded-full shrink-0 shadow-md transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : color, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
-                                                        <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className={cn("w-2.5 h-2.5 rounded-full shrink-0 shadow-sm transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : hexColor, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
+                                                            <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
+                                                        </div>
+                                                        <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
                                                     </div>
                                                     <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
                                                 </div>
