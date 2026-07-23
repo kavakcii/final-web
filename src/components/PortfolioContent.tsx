@@ -64,6 +64,8 @@ const getDividendDisplayDate = (dateStr?: string) => {
         return "Açıklanmadı";
     }
     return dateStr;
+};
+
 const ASSET_NAMES: Record<string, string> = {
     // BIST Popüler Hisseleri
     TUPRS: "Tüpraş Petrol Rafinerileri A.Ş.",
