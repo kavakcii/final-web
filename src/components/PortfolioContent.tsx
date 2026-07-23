@@ -1353,23 +1353,23 @@ export default function PortfolioPage() {
                         .sort((a, b) => b.count - a.count || b.value - a.value);
 
                     const SECTOR_COLORS_HEX: Record<string, string> = {
-                        'Banka': '#2563eb', // blue-600
-                        'Holding': '#0ea5e9', // sky-500
-                        'Sınai': '#6366f1', // indigo-500
-                        'Hizmetler': '#0891b2', // cyan-600
-                        'Ulaştırma': '#8b5cf6', // violet-500
-                        'Gıda': '#14b8a6', // teal-500
-                        'Emtia': '#f59e0b', // amber-500
-                        'Yatırım Fonu': '#a855f7', // purple-500
-                        'Bilişim': '#10b981', // emerald-500
-                        'Teknoloji': '#059669', // emerald-600
-                        'Enerji': '#f97316', // orange-500
-                        'İnşaat': '#78716c', // stone-500
-                        'Madencilik': '#57534e', // stone-600
-                        'Tekstil': '#ec4899', // pink-500
-                        'Sağlık': '#f43f5e' // rose-500
+                        'Banka': '#2563eb', // Canlı Mavi
+                        'Holding': '#06b6d4', // Turkuaz
+                        'Sınai': '#f59e0b', // Kehribar Turuncu
+                        'Hizmetler': '#10b981', // Canlı Yeşil
+                        'Ulaştırma': '#8b5cf6', // Canlı Mor
+                        'Gıda': '#84cc16', // Fıstık Yeşili
+                        'Emtia': '#eab308', // Parlak Altın
+                        'Yatırım Fonu': '#ec4899', // Canlı Pembe / Fuşya
+                        'Bilişim': '#3b82f6', // Elektrik Mavisi
+                        'Teknoloji': '#14b8a6', // Su Yeşili
+                        'Enerji': '#ff5722', // Alev Turuncusu
+                        'İnşaat': '#64748b', // Koyu Mavi Gri
+                        'Madencilik': '#d97706', // Bakır
+                        'Tekstil': '#f43f5e', // Gül Kırmızı
+                        'Sağlık': '#ef4444' // Parlak Kırmızı
                     };
-                    const fallbackHex = ['#60a5fa', '#38bdf8', '#818cf8', '#06b6d4', '#2dd4bf'];
+                    const fallbackHex = ['#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6', '#ef4444', '#3b82f6', '#84cc16'];
 
                     const renderSectorMap = () => {
                         if (sortedSectors.length === 0 || totalAssetCount === 0) return null;
@@ -1387,7 +1387,7 @@ export default function PortfolioPage() {
                                         const strokeDashoffset = -currentOffset;
                                         currentOffset += strokeLength;
 
-                                        const isHovered = hoveredSlice === `sector_${sec.name}`;
+                                        const isHovered = hoveredSlice === `sector_${sec.name}` || (hoveredSlice ? sortedAssets.some(a => a.symbol === hoveredSlice && getAssetSector(a.symbol) === sec.name) : false);
 
                                         return (
                                             <circle
@@ -1409,8 +1409,14 @@ export default function PortfolioPage() {
                                 </svg>
 
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all duration-300">
-                                    {hoveredSlice && hoveredSlice.startsWith('sector_') ? (() => {
-                                        const secName = hoveredSlice.replace('sector_', '');
+                                    {hoveredSlice ? (() => {
+                                        let secName = "";
+                                        if (hoveredSlice.startsWith('sector_')) {
+                                            secName = hoveredSlice.replace('sector_', '');
+                                        } else {
+                                            const match = sortedAssets.find(a => a.symbol === hoveredSlice);
+                                            if (match) secName = getAssetSector(match.symbol);
+                                        }
                                         const activeSec = sortedSectors.find(s => s.name === secName);
                                         const countPct = activeSec ? ((activeSec.count / totalAssetCount) * 100).toFixed(1) : "0";
                                         return activeSec ? (
@@ -1553,71 +1559,49 @@ export default function PortfolioPage() {
                                         </>
                                     )}
 
-                                    {/* LEJANT KARTLARI */}
-                                    {distributionView === 'sector' ? (
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                            {sortedSectors.map((sector, idx) => {
-                                                const countWeight = totalAssetCount > 0 ? (sector.count / totalAssetCount) * 100 : 0;
-                                                const hexColor = SECTOR_COLORS_HEX[sector.name] || fallbackHex[idx % fallbackHex.length];
-                                                const isHovered = hoveredSlice === `sector_${sector.name}`;
-
+                                    {/* LEJANT KARTLARI (VARLIKLAR - SEKTÖRE GÖRE GRUPLU VE SEKTÖR RENGİNDE) */}
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                                        {[...sortedAssets]
+                                            .sort((a, b) => {
+                                                const sA = getAssetSector(a.symbol);
+                                                const sB = getAssetSector(b.symbol);
+                                                if (sA < sB) return -1;
+                                                if (sA > sB) return 1;
+                                                return b.marketVal - a.marketVal;
+                                            })
+                                            .map((group, idx) => {
+                                                const weight = (group.marketVal / totalValue) * 100;
+                                                const assetSector = getAssetSector(group.symbol);
+                                                
+                                                // Sektör modunda sektörün canlı rengi, Donut modunda varlığın kendi renk kimliği
+                                                const hexColor = distributionView === 'sector'
+                                                    ? (SECTOR_COLORS_HEX[assetSector] || fallbackHex[idx % fallbackHex.length])
+                                                    : symbolColorMap[group.symbol];
+                                                
+                                                const isHovered = distributionView === 'sector'
+                                                    ? (hoveredSlice === group.symbol || hoveredSlice === `sector_${assetSector}`)
+                                                    : (hoveredSlice === group.symbol);
+                                                
                                                 return (
                                                     <div 
-                                                        key={sector.name}
-                                                        onMouseEnter={() => setHoveredSlice(`sector_${sector.name}`)}
+                                                        key={group.symbol} 
+                                                        onMouseEnter={() => setHoveredSlice(group.symbol)}
                                                         onMouseLeave={() => setHoveredSlice(null)}
                                                         style={{ backgroundColor: isHovered ? hexColor : '', borderColor: isHovered ? hexColor : '' }}
-                                                        className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.05] z-10" : "bg-slate-50/70 border-slate-100 shadow-sm")}
+                                                        className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.05] z-10 text-white" : "bg-slate-50/70 border-slate-100 shadow-sm")}
                                                     >
                                                         <div className="flex flex-col gap-0.5">
                                                             <div className="flex items-center gap-1.5">
                                                                 <div className={cn("w-2.5 h-2.5 rounded-full shrink-0 shadow-sm transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : hexColor, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
-                                                                <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{sector.name}</span>
+                                                                <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
                                                             </div>
-                                                            <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{sector.count} Hisse</span>
+                                                            <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
                                                         </div>
-                                                        <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{countWeight.toFixed(1)}</span>
+                                                        <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
                                                     </div>
                                                 );
                                             })}
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                            {[...sortedAssets]
-                                                .sort((a, b) => {
-                                                    const sA = getAssetSector(a.symbol);
-                                                    const sB = getAssetSector(b.symbol);
-                                                    if (sA < sB) return -1;
-                                                    if (sA > sB) return 1;
-                                                    return b.marketVal - a.marketVal;
-                                                })
-                                                .map((group) => {
-                                                    const weight = (group.marketVal / totalValue) * 100;
-                                                    const assetSector = getAssetSector(group.symbol);
-                                                    const color = symbolColorMap[group.symbol];
-                                                    const isHovered = hoveredSlice === group.symbol;
-                                                    
-                                                    return (
-                                                        <div 
-                                                            key={group.symbol} 
-                                                            onMouseEnter={() => setHoveredSlice(group.symbol)}
-                                                            onMouseLeave={() => setHoveredSlice(null)}
-                                                            style={{ backgroundColor: isHovered ? color : '', borderColor: isHovered ? color : '' }}
-                                                            className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.05] z-10" : "bg-slate-50/70 border-slate-100 shadow-sm")}
-                                                        >
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <div className={cn("w-2.5 h-2.5 rounded-full shrink-0 shadow-sm transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : color, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
-                                                                    <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
-                                                                </div>
-                                                                <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
-                                                            </div>
-                                                            <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                        </div>
-                                    )}
+                                    </div>
                                 </div>
                             ) : (
                                 <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
