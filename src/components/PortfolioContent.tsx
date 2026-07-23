@@ -1813,12 +1813,10 @@ export default function PortfolioPage() {
 
                                     return (
                                         <div key={sym} className="space-y-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-100 hover:bg-blue-50/30 transition-all">
+                                            {/* ÜST BAŞLIK VE SON FİYAT */}
                                             <div className="flex justify-between items-center text-xs">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[#00008B] font-black text-sm">{sym}</span>
-                                                    <span className={cn("text-[9px] px-2 py-0.5 rounded-full border", zoneBadgeClass)}>
-                                                        {zoneText}
-                                                    </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[#00008B] bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl text-xs font-black">
@@ -1827,7 +1825,7 @@ export default function PortfolioPage() {
                                                 </div>
                                             </div>
 
-                                            {/* ZAMAN PERİYODU ÇİZGİSİ (SON FİYAT VE MALİYET NOKTASI İLE) */}
+                                            {/* ZAMAN PERİYODU ÇİZGİSİ (SON FİYAT VE İKONİK MALİYET NOKTASI İLE) */}
                                             <div className="relative py-2">
                                                 <div className="h-2.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
                                                     <div 
@@ -1836,20 +1834,20 @@ export default function PortfolioPage() {
                                                     />
                                                 </div>
 
-                                                {/* Kullanıcı Alış Maliyeti Noktası (Zümrüt Yeşil Elmas) */}
+                                                {/* Kullanıcı Alış Maliyeti Noktası (İkonik Elektrik Mavisi Hedef Halkası) */}
                                                 {costPos !== null && (
                                                     <div 
-                                                        className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-600 rotate-45 border-2 border-white shadow-md z-20 transition-all duration-700 cursor-pointer flex items-center justify-center"
-                                                        style={{ left: `calc(${costPos}% - 8px)` }}
+                                                        className="absolute top-1/2 -translate-y-1/2 w-4.5 h-4.5 bg-[#00008B] border-2 border-white rounded-full shadow-lg z-20 transition-all duration-700 cursor-pointer flex items-center justify-center ring-2 ring-[#00008B]/30"
+                                                        style={{ left: `calc(${costPos}% - 9px)` }}
                                                         title={`Ortalama Maliyetiniz: ${formatCurrency(userCost!)}`}
                                                     >
-                                                        <div className="w-1 h-1 bg-white rounded-full" />
+                                                        <div className="w-1.5 h-1.5 bg-sky-300 rounded-full" />
                                                     </div>
                                                 )}
 
-                                                {/* Mevcut Canlı Fiyat Noktası (Lacivert Daire) */}
+                                                {/* Mevcut Canlı Fiyat Noktası (Gökyüzü Mavisi Daire) */}
                                                 <div 
-                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-[#00008B] rounded-full border-2 border-white shadow-lg z-10 transition-all duration-700"
+                                                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-sky-500 rounded-full border-2 border-white shadow-lg z-10 transition-all duration-700"
                                                     style={{ left: `calc(${pos}% - 8px)` }}
                                                     title={`Mevcut Canlı Fiyat: ${formatCurrency(currentPrice)}`}
                                                 />
@@ -1859,19 +1857,21 @@ export default function PortfolioPage() {
                                             <div className="flex justify-between items-center text-[9px] text-slate-400 font-bold uppercase tracking-wider">
                                                 <span>DÜŞÜK: {formatCurrency(low)}</span>
                                                 {userCost && (
-                                                    <span className={cn("font-black flex items-center gap-1", isCostOutOfRange ? "text-slate-500" : "text-emerald-700")}>
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
+                                                    <span className={cn("font-black flex items-center gap-1.5", isCostOutOfRange ? "text-slate-500" : "text-[#00008B]")}>
+                                                        <span className="w-2 h-2 rounded-full bg-[#00008B] ring-2 ring-[#00008B]/20 inline-block" />
                                                         Maliyetiniz: {formatCurrency(userCost)}
-                                                        {isCostOutOfRange && <span className="text-[8px] opacity-75">(Bant Dışı)</span>}
+                                                        {isCostOutOfRange && <span className="text-[8px] opacity-70">(Bant Dışı)</span>}
                                                     </span>
                                                 )}
                                                 <span>YÜKSEK: {formatCurrency(high)}</span>
                                             </div>
 
-                                            {/* VARLIĞA ÖZEL DİNAMİK YAPAY ZEKA FİYAT ANALİZİ METNİ */}
-                                            <div className="bg-blue-50/50 border border-blue-100/70 rounded-xl p-2.5 flex items-start gap-2">
-                                                <Brain className="w-3.5 h-3.5 text-[#00008B] shrink-0 mt-0.5" />
-                                                <p className="text-[11px] font-semibold text-[#00008B]/90 leading-snug">
+                                            {/* MARKA RENK PALETİNDEKİ MÜKEMMEL MAVİ YAPAY ZEKA ANALİZ KUTUSU */}
+                                            <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-3.5 flex items-start gap-3 shadow-md text-white">
+                                                <div className="p-1 rounded-xl bg-white/10 shrink-0 mt-0.5">
+                                                    <Brain className="w-4 h-4 text-sky-300" />
+                                                </div>
+                                                <p className="text-xs font-medium text-slate-100 leading-relaxed">
                                                     {aiText}
                                                 </p>
                                             </div>
