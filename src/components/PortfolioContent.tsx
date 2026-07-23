@@ -1827,29 +1827,54 @@ export default function PortfolioPage() {
                                                 <span>YÜKSEK: {formatCurrency(high)}</span>
                                             </div>
 
-                                            {/* MARKA RENK PALETİNDEKİ YAPAY ZEKA ANALİZ KUTUSU */}
+                                            {/* MARKA RENK PALETİNDEKİ MÜKEMMEL MAVİ YAPAY ZEKA ANALİZ KUTUSU */}
                                             <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-4 shadow-md text-white">
                                                 <p className="text-xs font-medium text-slate-100 leading-relaxed">
                                                     {(() => {
                                                         const isProfit = userCost ? currentPrice >= userCost : false;
                                                         const diffP = userCost ? Math.abs(((currentPrice - userCost) / userCost) * 100).toFixed(1) : null;
+                                                        
+                                                        // Her gün gece 00:00'da kendiliğinden yenilenen tarih tohumu (Day Seed)
+                                                        const today = new Date();
+                                                        const daySeed = today.getFullYear() * 1000 + (today.getMonth() + 1) * 35 + today.getDate();
+                                                        
+                                                        // Her varlık, her zaman dilimi ve her gün için benzersiz şablon indeksi (0..7)
                                                         const symHash = sym.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                                                         const tfHash = extremesTimeframe.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-                                                        const variant = (symHash + tfHash) % 6;
+                                                        const variant = (symHash * 7 + tfHash * 13 + daySeed) % 8;
+
                                                         const currFmt = formatCurrency(currentPrice);
                                                         const lowFmt = formatCurrency(low);
                                                         const highFmt = formatCurrency(high);
                                                         const costFmt = userCost ? formatCurrency(userCost) : '';
-                                                        const tfLabel = extremesTimeframe === '1W' ? '1 Haftalık' : extremesTimeframe === '1M' ? '1 Aylık' : extremesTimeframe === '3M' ? '3 Aylık' : extremesTimeframe === '6M' ? '6 Aylık' : '1 Yıllık';
+
+                                                        const tfLabel = extremesTimeframe === '1W' ? '1 Haftalık' : extremesTimeframe === '1M' ? '1 Aylık' : extremesTimeframe === '3M' ? '3 Aylık' : extremesTimeframe === '6M' ? '6 Aylık' : '52 Haftalık (1 Yıl)';
 
                                                         if (userCost && userCost > 0) {
                                                             if (isProfit) {
-                                                                return `${sym}, ${costFmt} maliyetinizin %${diffP} üzerinde ${currFmt} fiyatıyla işlem görüyor. ${tfLabel} periyodunda ${lowFmt} - ${highFmt} bandında güçlü seyrini koruyor.`;
+                                                                if (variant === 0) return `Maliyet analiziniz detaylı incelendiğinde ${sym}, ${costFmt} olan alış seviyenizin %${diffP} üzerinde oldukça güçlü bir performans göstererek ${currFmt} canlı fiyatından işlem görüyor. Varlık ${tfLabel} zaman diliminde ${lowFmt} dip seviyesinden ivmeyle uzaklaşarak ${highFmt} zirvesine doğru kademeli yükselişini sürdürmektedir.`;
+                                                                if (variant === 1) return `Portföyünüzün öne çıkan başarılı varlıklarından ${sym}, ${currFmt} güncel fiyatıyla ortalama maliyetinizin %${diffP} yukarısında seyrediyor. Seçilen ${tfLabel} periyodunda ${lowFmt} dip noktasından bu yana gösterdiği istikrarlı tırmanış, varlığın üst direnç seviyelerini zorlamasını sağlıyor.`;
+                                                                if (variant === 2) return `${tfLabel} grafiğinde son derece güçlü bir duruş sergileyen ${sym}, ${costFmt} maliyetinize göre %${diffP} oranında belirgin bir kazanç sağlamış durumdadır. Varlığın ${highFmt} tavan sınırına yakın kalarak hareket etmesi, yatırımınızın kârlı yapısını ve portföy verimliliğinizi doğrudan destekliyor.`;
+                                                                if (variant === 3) return `%${diffP} oranındaki yüksek kârlılığıyla dikkat çeken ${sym}, portföyünüzde ${currFmt} canlı fiyatından alıcı bularak değerini koruyor. ${tfLabel} boyunca oluşan ${lowFmt} ve ${highFmt} fiyat aralığı, varlığın kârlı seyrini teyit ederken alım iştahının devam ettiğini gösteriyor.`;
+                                                                if (variant === 4) return `Pozitif bir yükseliş kanalında hareketini sürdüren ${sym}, ${costFmt} alış fiyatınızın %${diffP} üstüne çıkarak portföy toplam değerinizi artırıyor. Varlık ${tfLabel} zaman dilimindeki tepe noktalarına yakın durarak güçlü ve kârlı konumunu korumaya devam etmektedir.`;
+                                                                if (variant === 5) return `${currFmt} seviyesinden işlem görerek dikkat çeken ${sym}, ortalama maliyetinize kıyasla %${diffP} daha yüksek bir fiyat seviyesine ulaşmış durumda. ${tfLabel} periyodunda ${lowFmt} tabanının oldukça üzerinde kalması, yatırımlarınızdaki kârlı güvenli alanı genişletmeye devam ediyor.`;
+                                                                if (variant === 6) return `Yatırımınıza pozitif katkı sunan değerli varlıklardan ${sym}, ${costFmt} olan alış ortalamanızın %${diffP} ilerisinden anlık olarak takip ediliyor. ${tfLabel} süresince oluşan yukarı yönlü grafik hareketi, varlıktaki alım momentumunun henüz kaybolmadığını kanıtlıyor.`;
+                                                                return `${tfLabel} fiyat bandının üst sınırlarında yer alan ${sym}, alış maliyetinizden %${diffP} daha primli bir noktada ${currFmt} fiyatıyla seyrediyor. Varlığın ${highFmt} zirve çizgisine yakınlaşması, portföyünüzdeki kâr marjını daha da sağlamlaştırıyor.`;
                                                             } else {
-                                                                return `${sym}, ${costFmt} maliyetinizin %${diffP} altında ${currFmt} fiyatıyla seyrediyor. ${tfLabel} periyodunda ${lowFmt} - ${highFmt} bandında destek arayışını sürdürüyor.`;
+                                                                if (variant === 0) return `Mevcut piyasa şartlarında değerlendirildiğinde ${sym}, ${costFmt} ortalama maliyetinizin %${diffP} altında bir fiyatla iskonto bölgesinde kalmaktadır. ${tfLabel} periyodunda ${lowFmt} seviyesine yakın kalarak bu bölgede yeni bir destek ve taban arayışını sürdürmektedir.`;
+                                                                if (variant === 1) return `${currFmt} güncel fiyatından işlem gören ${sym}, portföy maliyetinizin %${diffP} gerisinde kalarak alt bantlarda bulunmaktadır. ${tfLabel} boyunca oluşan ${highFmt} zirvesinden uzakta olması, varlığın bu bölgelerden yeniden güç toplama sürecinde olduğuna işaret ediyor.`;
+                                                                if (variant === 2) return `${tfLabel} grafiği detaylıca incelendiğinde ${sym}, ${costFmt} olan alış fiyatınızın %${diffP} altında ${currFmt} fiyatıyla seyrettiği görülmektedir. Fiyatın ${lowFmt} taban hattına yakınlığı, teknik olarak tepki alımlarının oluşabileceği önemli bir noktaya vurgu yapıyor.`;
+                                                                if (variant === 3) return `%${diffP} oranında maliyetinizin altında bulunan ${sym}, portföyünüzde ${currFmt} canlı seviyesinden takip edilmektedir. ${tfLabel} aralığındaki ${lowFmt} - ${highFmt} marjı, varlığın mevcut fiyat seviyelerini sindirip dengelenme aşamasında olduğunu teyit ediyor.`;
+                                                                if (variant === 4) return `${costFmt} maliyetli ${sym} pozisyonunuz, canlı piyasa koşullarında %${diffP} indirimli bir fiyatla ${currFmt} değerine gerilemiştir. Varlığın ${tfLabel} zaman diliminde ${lowFmt} sınırına yakınlığı, bu dip seviyelerden destek bulma çabasının sürdüğünü göstermektedir.`;
+                                                                if (variant === 5) return `Geçici bir düzeltme evresinden geçen ${sym}, ortalama alış fiyatınızın %${diffP} gerisinde ${currFmt} seviyesinde duruyor. ${tfLabel} periyodundaki bant hareketi, varlığın dip bölgelerden destek alarak yeniden dengelenme çabasında olduğunu gösteriyor.`;
+                                                                if (variant === 6) return `Piyasa fiyatlaması incelendiğinde ${sym}, ${costFmt} olan portföy ortalamanızın %${diffP} altında ${currFmt} fiyatıyla işlem görüyor. Varlık ${tfLabel} sürecindeki ${lowFmt} tabanı civarında fiyat dengesini yeniden kurup üst dirençlere yönelmeyi hedefliyor.`;
+                                                                return `${tfLabel} süresince oluşan fiyat aralığında ${sym}, maliyet seviyenizin %${diffP} gerisinden fiyatlanarak ${currFmt} seviyesinde kalıyor. Fiyatın ${highFmt} zirvesinin altında bulunması, varlık için orta vadede yeni bir toparlanma alanı sunmaktadır.`;
                                                             }
                                                         } else {
-                                                            return `${sym}, ${tfLabel} periyodunda ${currFmt} fiyatıyla ${lowFmt} - ${highFmt} bandında dengeli hareket ediyor.`;
+                                                            if (variant === 0) return `Piyasa takibinizde yer alan ${sym}, ${tfLabel} zaman diliminde ${currFmt} canlı fiyatı üzerinden işlem görüyor. Varlık bu periyotta ${lowFmt} dip noktası ile ${highFmt} zirvesi arasında gayet dengeli ve kararlı bir fiyat kanalı izlemektedir.`;
+                                                            if (variant === 1) return `${tfLabel} grafik bandı detaylı incelendiğinde ${sym}, ${lowFmt} desteğinden aldığı güçle ${currFmt} seviyesine ilerliyor. Fiyatın ${highFmt} tavanına doğru kademeli hareketi, piyasa takibindeki alım iştahını teyit eder niteliktedir.`;
+                                                            if (variant === 2) return `Dengeli bir fiyat aralığında bulunan ${sym}, ${tfLabel} süresince ${currFmt} değerinden alıcı bulmaya devam ediyor. ${lowFmt} ve ${highFmt} sınırları arasındaki stabil konumu, varlıktaki kararlı piyasa seyrini doğrulamaktadır.`;
+                                                            return `Seçilen ${tfLabel} periyodu boyunca ${sym}, ${currFmt} anlık fiyatı ile piyasadaki yerini koruyor. Varlık ${lowFmt} en düşük ve ${highFmt} en yüksek seviyeleri arasında yatay ve dengeli bant hareketini sürdürmektedir.`;
                                                         }
                                                     })()}
                                                 </p>
