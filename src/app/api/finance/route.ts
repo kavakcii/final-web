@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { fetchTefasData } from '@/lib/tefas';
+import { fetchTefasData, fetchTefasHistory } from '@/lib/tefas';
+import { TEFAS_CATALOG } from '@/lib/asset-catalog';
 
 const yfModule = require('yahoo-finance2');
 const YahooFinanceClass = yfModule.YahooFinance || yfModule.default?.YahooFinance || yfModule.default;
@@ -16,9 +17,25 @@ export async function GET(request: Request) {
     const rawSymbols = symbolsParam.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
     const results: any[] = [];
 
-    // 1. Resolve symbols to fetch from Yahoo Finance (Add .IS for BIST stocks)
-    const symbolsToFetch = new Set<string>();
+    // Map of known TEFAS fund symbols for fast lookup
+    const tefasCatalogMap = new Map(TEFAS_CATALOG.map(f => [f.symbol.toUpperCase(), f.name]));
+
+    const fundSymbols: string[] = [];
+    const stockSymbols: string[] = [];
+
     rawSymbols.forEach(s => {
+        const baseSymbol = s.replace('.IS', '');
+        // If symbol is in TEFAS_CATALOG or looks like a 3-letter TEFAS fund code (and doesn't end with .IS explicitly unless registered)
+        if (tefasCatalogMap.has(baseSymbol) || tefasCatalogMap.has(s) || (s.length === 3 && !s.includes('.'))) {
+            fundSymbols.push(baseSymbol);
+        } else {
+            stockSymbols.push(s);
+        }
+    });
+
+    // 1. Fetch Stock Quotes from Yahoo Finance (Only for non-TEFAS assets)
+    const symbolsToFetch = new Set<string>();
+    stockSymbols.forEach(s => {
         if (!s.includes('.')) {
             symbolsToFetch.add(`${s}.IS`);
         }
@@ -59,23 +76,46 @@ export async function GET(request: Request) {
         }
     }
 
-    // 2. Fetch TEFAS funds fallback for any missing fund symbols
-    const missingSymbols = rawSymbols.filter(s => !results.some(r => r.symbol === s || r.symbol === `${s}.IS`));
-    if (missingSymbols.length > 0) {
+    // 2. Fetch Live & Real Prices for TEFAS Funds
+    if (fundSymbols.length > 0) {
         try {
             const tefasData = await fetchTefasData(new Date());
-            missingSymbols.forEach(code => {
+            
+            for (const code of fundSymbols) {
+                let price = 0;
+                let fundName = tefasCatalogMap.get(code) || `${code} Yatırım Fonu`;
+
                 const fund = tefasData.find((f: any) => f.FONKODU === code);
-                if (fund && fund.SONPORTFOYDEGERI && fund.SONPAYADEDI) {
-                    const price = fund.SONPORTFOYDEGERI / fund.SONPAYADEDI;
+                if (fund) {
+                    if (fund.FONUNVAN) fundName = fund.FONUNVAN;
+                    if (fund.FIYAT) {
+                        price = Number(fund.FIYAT);
+                    } else if (fund.SONPORTFOYDEGERI && fund.SONPAYADEDI) {
+                        price = fund.SONPORTFOYDEGERI / fund.SONPAYADEDI;
+                    }
+                }
+
+                // Fallback to history endpoint if bulk list didn't return price
+                if (price === 0) {
+                    try {
+                        const history = await fetchTefasHistory(code, 1);
+                        if (history && history.length > 0) {
+                            price = history[history.length - 1].price;
+                        }
+                    } catch (hErr) {
+                        // Ignore history error
+                    }
+                }
+
+                if (price > 0) {
                     results.push({
                         symbol: code,
                         regularMarketPrice: price,
-                        shortName: fund.FONUNVAN,
+                        shortName: fundName,
                         currency: 'TRY'
                     });
                 }
-            });
+            }
         } catch (e) {
             console.error('TEFAS fetch error:', e);
         }

@@ -542,6 +542,22 @@ export default function PortfolioPage() {
             return;
         }
         if (!searchQuery || searchQuery.trim().length === 0) {
+            // Default smart recommendations for Yatırım Fonu when query is empty
+            if (newItemType === 'FUND') {
+                const popularFunds = [
+                    { symbol: "AFA", shortname: "AK PORTFÖY AMERİKA YABANCI HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
+                    { symbol: "TCD", shortname: "TACİRLER PORTFÖY HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
+                    { symbol: "MAC", shortname: "MARBASH PORTFÖY HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
+                    { symbol: "IPJ", shortname: "İŞ PORTFÖY ELEKTRİKLİ ARAÇLAR KARMA FON", typeDisp: "Yatırım Fonu" },
+                    { symbol: "GTA", shortname: "GARANTİ PORTFÖY ALTIN FONU", typeDisp: "Yatırım Fonu" },
+                    { symbol: "TI1", shortname: "İŞ PORTFÖY İŞ BANKASI İŞTİRAKLERİ HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" },
+                    { symbol: "IRT", shortname: "İSTANBUL PORTFÖY BİRİNCİ DEĞİŞKEN FON", typeDisp: "Yatırım Fonu" },
+                    { symbol: "YLE", shortname: "YAPI KREDİ PORTFÖY HİSSE SENEDİ FONU", typeDisp: "Yatırım Fonu" }
+                ];
+                setSearchResults(popularFunds);
+                setShowDropdown(true);
+                return;
+            }
             setSearchResults([]);
             setShowDropdown(false);
             return;
@@ -549,10 +565,28 @@ export default function PortfolioPage() {
 
         const query = searchQuery.toLowerCase().trim();
         const ALL_ASSETS = [...BIST_CATALOG, ...TEFAS_CATALOG, ...COMMODITY_CATALOG];
-        const localMatches = ALL_ASSETS.filter(asset => 
+        
+        let filteredMatches = ALL_ASSETS.filter(asset => 
             asset.symbol.toLowerCase().includes(query) || 
             asset.name.toLowerCase().includes(query)
-        ).map(asset => ({ symbol: asset.symbol, shortname: asset.name, typeDisp: asset.type })).slice(0, 6);
+        );
+
+        // If selected asset type is FUND, prioritize TEFAS funds
+        if (newItemType === 'FUND') {
+            filteredMatches.sort((a, b) => {
+                const isAFund = a.type === 'Fon';
+                const isBFund = b.type === 'Fon';
+                if (isAFund && !isBFund) return -1;
+                if (!isAFund && isBFund) return 1;
+                return 0;
+            });
+        }
+
+        const localMatches = filteredMatches.map(asset => ({ 
+            symbol: asset.symbol, 
+            shortname: asset.name, 
+            typeDisp: asset.type === 'Fon' ? 'Yatırım Fonu' : asset.type 
+        })).slice(0, 8);
 
         if (localMatches.length > 0) {
             setSearchResults(localMatches);
@@ -566,14 +600,14 @@ export default function PortfolioPage() {
                 const res = await fetch(`/api/search?q=${searchQuery}`);
                 const data = await res.json();
                 if (data.results) {
-                    setSearchResults(data.results.slice(0, 5));
+                    setSearchResults(data.results.slice(0, 6));
                     setShowDropdown(true);
                 }
             } catch (e) { console.error(e); } finally { setIsSearching(false); }
         }, 400);
 
         return () => clearTimeout(delayDebounceFn);
-    }, [searchQuery]);
+    }, [searchQuery, newItemType, isAssetSelected]);
 
     // Close Dropdown on Click Outside
     useEffect(() => {

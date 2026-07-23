@@ -6,6 +6,7 @@ export interface TefasFundData {
     SONPORTFOYDEGERI: number;
     SONPAYADEDI: number;
     TARIH: string;
+    FIYAT?: number;
     FONTURACIKLAMA?: string;
     KURUCUKODU?: string;
 }
