@@ -582,11 +582,14 @@ export default function PortfolioPage() {
             });
         }
 
-        const localMatches = filteredMatches.map(asset => ({ 
-            symbol: asset.symbol, 
-            shortname: asset.name, 
-            typeDisp: asset.type === 'Fon' ? 'Yatırım Fonu' : asset.type 
-        })).slice(0, 8);
+        // Fonları arama sonuçlarından çıkar – sadece izle modunda gösterilir, eklenemez
+        const localMatches = filteredMatches
+            .filter(asset => asset.type !== 'Fon')
+            .map(asset => ({ 
+                symbol: asset.symbol, 
+                shortname: asset.name, 
+                typeDisp: asset.type === 'Fon' ? 'Yatırım Fonu' : asset.type 
+            })).slice(0, 8);
 
         if (localMatches.length > 0) {
             setSearchResults(localMatches);
@@ -622,6 +625,12 @@ export default function PortfolioPage() {
 
     const handleAddAsset = async (e: React.FormEvent) => {
         e.preventDefault();
+        // Fonlar eklenemez – sadece izleme modunda
+        if (newItemType === 'FUND') {
+            setFeedback({ message: "Yatırım fonları şu an eklenemez. Sadece izleme modunda görüntülenir.", type: 'error' });
+            setTimeout(() => setFeedback(null), 4000);
+            return;
+        }
         setLoading(true);
         if (newItemValues.symbol && newItemValues.quantity && newItemValues.avgCost) {
             try {
@@ -2039,11 +2048,10 @@ export default function PortfolioPage() {
                                                         setShowDropdown(false);
                                                         setIsAssetSelected(true);
 
-                                                        // Otomatik Varlık Tipi Tespiti
+                                                        // Otomatik Varlık Tipi Tespiti (Fon seçimi engellendi)
                                                         if (res.typeDisp) {
                                                             const typeLower = res.typeDisp.toLowerCase();
-                                                            if (typeLower.includes("fon")) setNewItemType("FUND");
-                                                            else if (typeLower.includes("altın") || typeLower.includes("emtia")) setNewItemType("GOLD");
+                                                            if (typeLower.includes("altın") || typeLower.includes("emtia")) setNewItemType("GOLD");
                                                             else if (typeLower.includes("kripto")) setNewItemType("CRYPTO");
                                                             else setNewItemType("STOCK");
                                                         }
