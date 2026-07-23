@@ -187,10 +187,38 @@ export default function PortfolioPage() {
     // Ref for Search Dropdown Outside Click
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Korelasyon Çift Grafik State'leri
+    // Korelasyon Çift Grafik Historical Data State'leri
     const [corrAsset1, setCorrAsset1] = useState<string>('');
     const [corrAsset2, setCorrAsset2] = useState<string>('');
     const [corrTimeframe, setCorrTimeframe] = useState<'1D' | '1W' | '1M' | '6M' | '1Y'>('1M');
+    const [corrData1, setCorrData1] = useState<{ time: string, price: number, pctChange: number }[]>([]);
+    const [corrData2, setCorrData2] = useState<{ time: string, price: number, pctChange: number }[]>([]);
+    const [isCorrLoading, setIsCorrLoading] = useState(false);
+
+    useEffect(() => {
+        if (!groupedAssets || groupedAssets.length === 0) return;
+        const sym1 = corrAsset1 || groupedAssets[0]?.symbol || 'THYAO';
+        const sym2 = corrAsset2 || (groupedAssets[1]?.symbol || groupedAssets[0]?.symbol || 'PGSUS');
+
+        let isMounted = true;
+        setIsCorrLoading(true);
+
+        const tfParam = corrTimeframe.toLowerCase();
+
+        Promise.all([
+            fetch(`/api/finance/history?symbol=${encodeURIComponent(sym1)}&range=${tfParam}`).then(r => r.ok ? r.json() : null),
+            fetch(`/api/finance/history?symbol=${encodeURIComponent(sym2)}&range=${tfParam}`).then(r => r.ok ? r.json() : null)
+        ]).then(([d1, d2]) => {
+            if (!isMounted) return;
+            if (d1?.points) setCorrData1(d1.points);
+            if (d2?.points) setCorrData2(d2.points);
+            setIsCorrLoading(false);
+        }).catch(() => {
+            if (isMounted) setIsCorrLoading(false);
+        });
+
+        return () => { isMounted = false; };
+    }, [corrAsset1, corrAsset2, corrTimeframe, groupedAssets]);
 
     // UI states
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -2115,11 +2143,51 @@ export default function PortfolioPage() {
 
                                         {/* 1. VARLIK ALANI & ÇİZGİSİ (LACİVERT / ELEKTRİK MAVİSİ) */}
                                         <path
-                                            d="M 0 140 Q 80 120 160 90 T 320 40 T 420 80 T 500 60 L 500 180 L 0 180 Z"
+                                            d={(() => {
+                                                if (corrData1.length > 0) {
+                                                    const width = 500, height = 180, padding = 20;
+                                                    const allPct = corrData1.map(p => p.pctChange);
+                                                    const minPct = Math.min(-5, ...allPct);
+                                                    const maxPct = Math.max(5, ...allPct);
+                                                    const range = (maxPct - minPct) || 1;
+                                                    const coords = corrData1.map((p, i) => ({
+                                                        x: Number(((i / (corrData1.length - 1 || 1)) * width).toFixed(1)),
+                                                        y: Number((height - padding - (((p.pctChange - minPct) / range) * (height - (padding * 2)))).toFixed(1))
+                                                    }));
+                                                    let path = `M ${coords[0].x} ${coords[0].y}`;
+                                                    for (let i = 1; i < coords.length; i++) {
+                                                        const prev = coords[i - 1], curr = coords[i];
+                                                        const cpx = prev.x + (curr.x - prev.x) / 2;
+                                                        path += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+                                                    }
+                                                    return path + ` L ${width} ${height} L 0 ${height} Z`;
+                                                }
+                                                return "M 0 140 Q 80 120 160 90 T 320 40 T 420 80 T 500 60 L 500 180 L 0 180 Z";
+                                            })()}
                                             fill="url(#gradAsset1)"
                                         />
                                         <path
-                                            d="M 0 140 Q 80 120 160 90 T 320 40 T 420 80 T 500 60"
+                                            d={(() => {
+                                                if (corrData1.length > 0) {
+                                                    const width = 500, height = 180, padding = 20;
+                                                    const allPct = corrData1.map(p => p.pctChange);
+                                                    const minPct = Math.min(-5, ...allPct);
+                                                    const maxPct = Math.max(5, ...allPct);
+                                                    const range = (maxPct - minPct) || 1;
+                                                    const coords = corrData1.map((p, i) => ({
+                                                        x: Number(((i / (corrData1.length - 1 || 1)) * width).toFixed(1)),
+                                                        y: Number((height - padding - (((p.pctChange - minPct) / range) * (height - (padding * 2)))).toFixed(1))
+                                                    }));
+                                                    let path = `M ${coords[0].x} ${coords[0].y}`;
+                                                    for (let i = 1; i < coords.length; i++) {
+                                                        const prev = coords[i - 1], curr = coords[i];
+                                                        const cpx = prev.x + (curr.x - prev.x) / 2;
+                                                        path += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+                                                    }
+                                                    return path;
+                                                }
+                                                return "M 0 140 Q 80 120 160 90 T 320 40 T 420 80 T 500 60";
+                                            })()}
                                             fill="none"
                                             stroke="#818CF8"
                                             strokeWidth="3.5"
@@ -2128,11 +2196,51 @@ export default function PortfolioPage() {
 
                                         {/* 2. VARLIK ALANI & ÇİZGİSİ (GÖKYÜZÜ MAVİSİ / CYAN) */}
                                         <path
-                                            d="M 0 150 Q 90 135 170 100 T 330 55 T 410 95 T 500 70 L 500 180 L 0 180 Z"
+                                            d={(() => {
+                                                if (corrData2.length > 0) {
+                                                    const width = 500, height = 180, padding = 20;
+                                                    const allPct = corrData2.map(p => p.pctChange);
+                                                    const minPct = Math.min(-5, ...allPct);
+                                                    const maxPct = Math.max(5, ...allPct);
+                                                    const range = (maxPct - minPct) || 1;
+                                                    const coords = corrData2.map((p, i) => ({
+                                                        x: Number(((i / (corrData2.length - 1 || 1)) * width).toFixed(1)),
+                                                        y: Number((height - padding - (((p.pctChange - minPct) / range) * (height - (padding * 2)))).toFixed(1))
+                                                    }));
+                                                    let path = `M ${coords[0].x} ${coords[0].y}`;
+                                                    for (let i = 1; i < coords.length; i++) {
+                                                        const prev = coords[i - 1], curr = coords[i];
+                                                        const cpx = prev.x + (curr.x - prev.x) / 2;
+                                                        path += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+                                                    }
+                                                    return path + ` L ${width} ${height} L 0 ${height} Z`;
+                                                }
+                                                return "M 0 150 Q 90 135 170 100 T 330 55 T 410 95 T 500 70 L 500 180 L 0 180 Z";
+                                            })()}
                                             fill="url(#gradAsset2)"
                                         />
                                         <path
-                                            d="M 0 150 Q 90 135 170 100 T 330 55 T 410 95 T 500 70"
+                                            d={(() => {
+                                                if (corrData2.length > 0) {
+                                                    const width = 500, height = 180, padding = 20;
+                                                    const allPct = corrData2.map(p => p.pctChange);
+                                                    const minPct = Math.min(-5, ...allPct);
+                                                    const maxPct = Math.max(5, ...allPct);
+                                                    const range = (maxPct - minPct) || 1;
+                                                    const coords = corrData2.map((p, i) => ({
+                                                        x: Number(((i / (corrData2.length - 1 || 1)) * width).toFixed(1)),
+                                                        y: Number((height - padding - (((p.pctChange - minPct) / range) * (height - (padding * 2)))).toFixed(1))
+                                                    }));
+                                                    let path = `M ${coords[0].x} ${coords[0].y}`;
+                                                    for (let i = 1; i < coords.length; i++) {
+                                                        const prev = coords[i - 1], curr = coords[i];
+                                                        const cpx = prev.x + (curr.x - prev.x) / 2;
+                                                        path += ` C ${cpx} ${prev.y}, ${cpx} ${curr.y}, ${curr.x} ${curr.y}`;
+                                                    }
+                                                    return path;
+                                                }
+                                                return "M 0 150 Q 90 135 170 100 T 330 55 T 410 95 T 500 70";
+                                            })()}
                                             fill="none"
                                             stroke="#38BDF8"
                                             strokeWidth="3"
