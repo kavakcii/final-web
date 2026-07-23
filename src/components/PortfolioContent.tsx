@@ -1015,6 +1015,8 @@ export default function PortfolioPage() {
                                                 {paginatedEarnings.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={4} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen şirket bulunamadı.</td>
+                                                    </tr>
+                                                ) : (
                                                     paginatedEarnings.map((item) => {
                                                         const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
                                                         const isNoEarnings = !item.isEarnings || item.earningsDate === "Bilanço Açıklanmadı";
