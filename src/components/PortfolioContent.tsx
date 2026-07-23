@@ -64,6 +64,87 @@ const getDividendDisplayDate = (dateStr?: string) => {
         return "Açıklanmadı";
     }
     return dateStr;
+const ASSET_NAMES: Record<string, string> = {
+    // BIST Popüler Hisseleri
+    TUPRS: "Tüpraş Petrol Rafinerileri A.Ş.",
+    THYAO: "Türk Hava Yolları A.O.",
+    ASELS: "Aselsan Elektronik Sanayi",
+    PETKM: "Petkim Petrokimya Holding",
+    KCHOL: "Koç Holding A.Ş.",
+    EREGL: "Ereğli Demir ve Çelik Fabrikaları",
+    SAHOL: "Hacı Ömer Sabancı Holding",
+    BIMAS: "BİM Birleşik Mağazalar",
+    AKBNK: "Akbank T.A.Ş.",
+    GARAN: "Garanti BBVA",
+    YKBNK: "Yapı ve Kredi Bankası",
+    ISCTR: "Türkiye İş Bankası",
+    SISE: "Türkiye Şişe ve Cam Fabrikaları",
+    SASA: "Sasa Polyester Sanayi",
+    HEKTS: "Hektaş Ticaret T.A.Ş.",
+    TCELL: "Turkcell İletişim Hizmetleri",
+    TTKOM: "Türk Telekomünikasyon",
+    FROTO: "Ford Otomotiv Sanayi",
+    TOASO: "Tofaş Türk Otomobil Fabrikası",
+    ARCLK: "Arçelik A.Ş.",
+    ENKAI: "Enka İnşaat ve Sanayi",
+    MIATK: "Mia Teknoloji A.Ş.",
+    KONTR: "Kontrolmatik Teknoloji",
+    ASTOR: "Astor Enerji A.Ş.",
+    REEDR: "Reeder Teknoloji A.Ş.",
+    BORSK: "Bor Şeker A.Ş.",
+    ALARK: "Alarko Holding A.Ş.",
+    ODAS: "Odaş Elektrik Üretim",
+    KOZAL: "Koza Altın İşletmeleri",
+    KOZAA: "Koza Anadolu Metal",
+    IPEKE: "İpek Doğal Enerji",
+    DOAS: "Doğuş Otomotiv",
+    PGSUS: "Pegasus Hava Taşımacılığı",
+    TAVHL: "TAV Havalimanları Holding",
+    SOKM: "Şok Marketler Ticaret",
+    MGROS: "Migros Ticaret A.Ş.",
+    GUBRF: "Gübre Fabrikaları",
+    KCAER: "Kocaer Çelik A.Ş.",
+    EUPWR: "Europower Enerji A.Ş.",
+    CWENE: "CW Enerji Mühendislik",
+    SMRTG: "Smart Güneş Enerjisi",
+    GESAN: "Girişim Elektrik Sanayi",
+    KMPUR: "Kimteks Poliüretan",
+    ALFAS: "Alfa Solar Enerji",
+    CANTE: "Çan2 Termik A.Ş.",
+    CVENT: "CVK Madencilik",
+
+    // Değerli Madenler & Emtia
+    ALTIN: "Gram Altın (24 Ayar)",
+    "GRAM-ALTIN": "Gram Altın (24 Ayar)",
+    ONS: "Ons Altın (USD)",
+    GUMUS: "Gram Gümüş",
+    XAU: "Ons Altın",
+    XAG: "Ons Gümüş",
+
+    // Kripto Paralar
+    BTC: "Bitcoin (BTC)",
+    ETH: "Ethereum (ETH)",
+    USDT: "Tether (USDT)",
+    SOL: "Solana (SOL)",
+    AVAX: "Avalanche (AVAX)",
+    XRP: "Ripple (XRP)",
+
+    // Dövizler
+    USDTRY: "Amerikan Doları (USD/TRY)",
+    USD: "Amerikan Doları (USD/TRY)",
+    EURTRY: "Euro (EUR/TRY)",
+    EUR: "Euro (EUR/TRY)",
+    GBPTRY: "İngiliz Sterlini (GBP/TRY)",
+    GBP: "İngiliz Sterlini (GBP/TRY)",
+};
+
+const getAssetName = (symbol: string): string => {
+    if (!symbol) return "";
+    const cleanSym = symbol.toUpperCase().trim();
+    if (ASSET_NAMES[cleanSym]) return ASSET_NAMES[cleanSym];
+    const withoutSuffix = cleanSym.replace(/\.IS$/, '');
+    if (ASSET_NAMES[withoutSuffix]) return ASSET_NAMES[withoutSuffix];
+    return "";
 };
 
 export default function PortfolioPage() {
@@ -873,11 +954,15 @@ export default function PortfolioPage() {
                                                                 onClick={(e) => { e.stopPropagation(); setExpandedSymbol(isExpanded ? null : group.symbol); }}
                                                             >
                                                                 <td className="py-4 px-6 font-bold text-[#00008B]">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-base font-black tracking-tight">{group.symbol}</span>
-                                                                        <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200/50 text-blue-700 font-bold uppercase tracking-wider">{group.type}</span>
-                                                                    </div>
-                                                                </td>
+                                                                     <div className="flex flex-col">
+                                                                         <span className="text-base font-black tracking-tight leading-none">{group.symbol}</span>
+                                                                         {getAssetName(group.symbol) && (
+                                                                             <span className="text-[11px] text-slate-400 font-medium leading-tight mt-1">
+                                                                                 {getAssetName(group.symbol)}
+                                                                             </span>
+                                                                         )}
+                                                                     </div>
+                                                                 </td>
                                                                 <td className="py-4 px-4">
                                                                     <div className="flex flex-col text-xs font-semibold">
                                                                         <span className="text-[#00008B]">{group.totalQuantity} adet</span>
