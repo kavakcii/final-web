@@ -1720,7 +1720,7 @@ export default function PortfolioPage() {
                                 <Activity className="w-5 h-5 text-[#00008B]" />
                                 <div>
                                     <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider">Fiyat Analizi & Trend Bandı</h3>
-                                    <p className="text-[10px] text-slate-400 font-bold">Zaman Periyotlarına Göre Destek, Direnç & Maliyet Konumu</p>
+                                    <p className="text-[10px] text-slate-400 font-bold">Zaman Periyotlarına Göre Varlığa Özel Destek, Direnç & Maliyet Analizi</p>
                                 </div>
                             </div>
 
@@ -1743,75 +1743,12 @@ export default function PortfolioPage() {
                             </div>
                         </div>
 
-                        {/* AKILLI SIRALAMA SEÇENEKLERİ & MİNİ AI BANNER */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest mr-1">Sırala:</span>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('default'); }}
-                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'default' ? "bg-[#00008B] text-white border-[#00008B]" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50")}
-                                >
-                                    Varsayılan
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('near-low'); }}
-                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'near-low' ? "bg-emerald-600 text-white border-emerald-600 shadow-sm" : "bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-100")}
-                                >
-                                    🟢 Dibe En Yakınlar (Alım)
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('near-high'); }}
-                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'near-high' ? "bg-rose-600 text-white border-rose-600 shadow-sm" : "bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-100")}
-                                >
-                                    🟠 Zirveye En Yakınlar (Satım)
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setExtremesSort('near-cost'); }}
-                                    className={cn("px-2.5 py-1 text-[10px] font-bold rounded-lg transition-all border", extremesSort === 'near-cost' ? "bg-blue-600 text-white border-blue-600 shadow-sm" : "bg-blue-50 text-blue-700 border-blue-200/80 hover:bg-blue-100")}
-                                >
-                                    🎯 Maliyetime En Yakınlar
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* MİNİ AI FIRSAT & RİSK BİLDİRİM BANNER'I */}
-                        <div className="bg-blue-50/60 border border-blue-100 rounded-2xl p-3 mb-4 flex items-center gap-2.5">
-                            <Brain className="w-4 h-4 text-[#00008B] shrink-0" />
-                            <span className="text-[11px] font-bold text-[#00008B]">
-                                Yapay Zeka Özeti: {extremesTimeframe} periyodunda varlıkların %60'ı destek bölgesine yakın seyrederken, ortalama alış maliyetlerinizin üzerindedir.
-                            </span>
-                        </div>
-
                         {/* LİSTELEME */}
-                        <div className={cn("space-y-4 overflow-y-auto pr-1", isFocused ? "max-h-[800px]" : "max-h-[380px]")}>
+                        <div className={cn("space-y-4 overflow-y-auto pr-1", isFocused ? "max-h-[800px]" : "max-h-[420px]")}>
                             {extremesEntries.length === 0 ? (
                                 <p className="text-xs text-slate-400 py-6 text-center font-medium">Analiz verisi yükleniyor...</p>
                             ) : (() => {
-                                // Sıralanmış Varlık Listesi
-                                const list = [...extremesEntries];
-                                if (extremesSort === 'near-low') {
-                                    list.sort((a, b) => {
-                                        const posA = ((a[1].current - a[1].low) / (a[1].high - a[1].low || 1));
-                                        const posB = ((b[1].current - b[1].low) / (b[1].high - b[1].low || 1));
-                                        return posA - posB;
-                                    });
-                                } else if (extremesSort === 'near-high') {
-                                    list.sort((a, b) => {
-                                        const posA = ((a[1].current - a[1].low) / (a[1].high - a[1].low || 1));
-                                        const posB = ((b[1].current - b[1].low) / (b[1].high - b[1].low || 1));
-                                        return posB - posA;
-                                    });
-                                } else if (extremesSort === 'near-cost') {
-                                    list.sort((a, b) => {
-                                        const userAssetA = groupedAssets.find(g => g.symbol === a[0]);
-                                        const userAssetB = groupedAssets.find(g => g.symbol === b[0]);
-                                        const costDiffA = userAssetA ? Math.abs(a[1].current - userAssetA.avgCost) : 999999;
-                                        const costDiffB = userAssetB ? Math.abs(b[1].current - userAssetB.avgCost) : 999999;
-                                        return costDiffA - costDiffB;
-                                    });
-                                }
-
-                                const itemsToDisplay = isFocused ? list : list.slice(0, 5);
+                                const itemsToDisplay = isFocused ? extremesEntries : extremesEntries.slice(0, 5);
 
                                 return itemsToDisplay.map(([sym, ext]) => {
                                     // Dinamik zaman periyodu marjına göre Düşük - Yüksek hesaplama
@@ -1839,23 +1776,43 @@ export default function PortfolioPage() {
                                     const costPos = rawCostPos !== null ? Math.min(98, Math.max(2, rawCostPos)) : null;
                                     const isCostOutOfRange = rawCostPos !== null && (rawCostPos < 0 || rawCostPos > 100);
 
-                                    // Zirveye ve Dibe Uzaklık
-                                    const distToHigh = Math.abs(((high - currentPrice) / (high || 1)) * 100);
-                                    const distFromLow = Math.abs(((currentPrice - low) / (low || 1)) * 100);
-
                                     // Bölge Sinyali (Destek / Nötr / Direnç)
                                     let zoneText = "Dengeli Bölge";
-                                    let zoneBadgeClass = "bg-blue-50 text-[#00008B] border-blue-200/60";
+                                    let zoneBadgeClass = "bg-blue-50 text-[#00008B] border-blue-200/60 font-semibold";
                                     if (pos <= 30) {
-                                        zoneText = "🟢 Destek Bölgesi (Cazip)";
+                                        zoneText = "🟢 Destek Bölgesi";
                                         zoneBadgeClass = "bg-emerald-50 text-emerald-700 border-emerald-200/80 font-bold animate-pulse";
                                     } else if (pos >= 75) {
-                                        zoneText = "🟠 Direnç / Zirve Testi";
+                                        zoneText = "🟠 Direnç Bölgesi";
                                         zoneBadgeClass = "bg-rose-50 text-rose-700 border-rose-200/80 font-bold";
                                     }
 
+                                    // Varlığa Özel Dinamik AI Analiz Cümlesi
+                                    const tfLabel = extremesTimeframe === '1W' ? '1 haftalık' : extremesTimeframe === '1M' ? '1 aylık' : extremesTimeframe === '3M' ? '3 aylık' : extremesTimeframe === '6M' ? '6 aylık' : '1 yıllık (52H)';
+                                    let aiText = "";
+                                    let rangeStatus = "";
+                                    if (pos <= 30) {
+                                        rangeStatus = `${tfLabel} bandının dip seviyesine (${formatCurrency(low)}) yakın bir fiyattan destek arıyor.`;
+                                    } else if (pos >= 75) {
+                                        rangeStatus = `${tfLabel} bandının tepe seviyesine (${formatCurrency(high)}) yakın bir ivmeyle direnci test ediyor.`;
+                                    } else {
+                                        rangeStatus = `${formatCurrency(low)} - ${formatCurrency(high)} bant aralığında dengeli bir fiyat hareketi sürdürüyor.`;
+                                    }
+
+                                    if (userCost && userCost > 0) {
+                                        const diffP = ((currentPrice - userCost) / userCost) * 100;
+                                        const absP = Math.abs(diffP).toFixed(1);
+                                        if (diffP >= 0) {
+                                            aiText = `${sym}, ${formatCurrency(userCost)} ortalama maliyetinizin %${absP} üzerinde kârlılıkla ilerliyor. ${rangeStatus}`;
+                                        } else {
+                                            aiText = `${sym}, ${formatCurrency(userCost)} ortalama maliyetinizin %${absP} altında bulunuyor. ${rangeStatus}`;
+                                        }
+                                    } else {
+                                        aiText = `${sym}, ${formatCurrency(currentPrice)} anlık fiyatı ile ${rangeStatus}`;
+                                    }
+
                                     return (
-                                        <div key={sym} className="space-y-2.5 p-4 bg-slate-50/70 rounded-2xl border border-slate-100 hover:bg-blue-50/30 transition-all">
+                                        <div key={sym} className="space-y-3 p-4 bg-slate-50/70 rounded-2xl border border-slate-100 hover:bg-blue-50/30 transition-all">
                                             <div className="flex justify-between items-center text-xs">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[#00008B] font-black text-sm">{sym}</span>
@@ -1870,16 +1827,6 @@ export default function PortfolioPage() {
                                                 </div>
                                             </div>
 
-                                            {/* ZİRVE VE DİP ROZETLERİ */}
-                                            <div className="flex justify-between items-center text-[10px] font-bold">
-                                                <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
-                                                    Dipten Yükseliş: +%{distFromLow.toFixed(1)}
-                                                </span>
-                                                <span className="text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200/60">
-                                                    Zirveye Kalan: -%{distToHigh.toFixed(1)}
-                                                </span>
-                                            </div>
-
                                             {/* ZAMAN PERİYODU ÇİZGİSİ (SON FİYAT VE MALİYET NOKTASI İLE) */}
                                             <div className="relative py-2">
                                                 <div className="h-2.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
@@ -1889,7 +1836,7 @@ export default function PortfolioPage() {
                                                     />
                                                 </div>
 
-                                                {/* Kullanıcı Alış Maliyeti Noktası (Zümrüt Yeşil Elmas / İğne) */}
+                                                {/* Kullanıcı Alış Maliyeti Noktası (Zümrüt Yeşil Elmas) */}
                                                 {costPos !== null && (
                                                     <div 
                                                         className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-emerald-600 rotate-45 border-2 border-white shadow-md z-20 transition-all duration-700 cursor-pointer flex items-center justify-center"
@@ -1919,6 +1866,14 @@ export default function PortfolioPage() {
                                                     </span>
                                                 )}
                                                 <span>YÜKSEK: {formatCurrency(high)}</span>
+                                            </div>
+
+                                            {/* VARLIĞA ÖZEL DİNAMİK YAPAY ZEKA FİYAT ANALİZİ METNİ */}
+                                            <div className="bg-blue-50/50 border border-blue-100/70 rounded-xl p-2.5 flex items-start gap-2">
+                                                <Brain className="w-3.5 h-3.5 text-[#00008B] shrink-0 mt-0.5" />
+                                                <p className="text-[11px] font-semibold text-[#00008B]/90 leading-snug">
+                                                    {aiText}
+                                                </p>
                                             </div>
                                         </div>
                                     );
