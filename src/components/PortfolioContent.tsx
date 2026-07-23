@@ -397,33 +397,65 @@ export default function PortfolioPage() {
         });
 
         const list = [...filtered];
+        const userSymbols = new Set(groupedAssets.map(g => g.symbol.toUpperCase()));
+
         switch (earningsSortOption) {
             case 'date-asc':
                 return list.sort((a, b) => {
+                    const isAUser = userSymbols.has(a.symbol.toUpperCase());
+                    const isBUser = userSymbols.has(b.symbol.toUpperCase());
+                    if (isAUser && !isBUser) return -1;
+                    if (!isAUser && isBUser) return 1;
                     if (!a.isEarnings && b.isEarnings) return 1;
                     if (a.isEarnings && !b.isEarnings) return -1;
                     return a.timestamp - b.timestamp;
                 });
             case 'date-desc':
                 return list.sort((a, b) => {
+                    const isAUser = userSymbols.has(a.symbol.toUpperCase());
+                    const isBUser = userSymbols.has(b.symbol.toUpperCase());
+                    if (isAUser && !isBUser) return -1;
+                    if (!isAUser && isBUser) return 1;
                     if (!a.isEarnings && b.isEarnings) return 1;
                     if (a.isEarnings && !b.isEarnings) return -1;
                     return b.timestamp - a.timestamp;
                 });
             case 'days-asc':
                 return list.sort((a, b) => {
+                    const isAUser = userSymbols.has(a.symbol.toUpperCase());
+                    const isBUser = userSymbols.has(b.symbol.toUpperCase());
+                    if (isAUser && !isBUser) return -1;
+                    if (!isAUser && isBUser) return 1;
                     if (!a.isEarnings && b.isEarnings) return 1;
                     if (a.isEarnings && !b.isEarnings) return -1;
                     return a.daysLeft - b.daysLeft;
                 });
             case 'symbol-asc':
-                return list.sort((a, b) => a.symbol.localeCompare(b.symbol));
+                return list.sort((a, b) => {
+                    const isAUser = userSymbols.has(a.symbol.toUpperCase());
+                    const isBUser = userSymbols.has(b.symbol.toUpperCase());
+                    if (isAUser && !isBUser) return -1;
+                    if (!isAUser && isBUser) return 1;
+                    return a.symbol.localeCompare(b.symbol);
+                });
             case 'symbol-desc':
-                return list.sort((a, b) => b.symbol.localeCompare(a.symbol));
+                return list.sort((a, b) => {
+                    const isAUser = userSymbols.has(a.symbol.toUpperCase());
+                    const isBUser = userSymbols.has(b.symbol.toUpperCase());
+                    if (isAUser && !isBUser) return -1;
+                    if (!isAUser && isBUser) return 1;
+                    return b.symbol.localeCompare(a.symbol);
+                });
             default:
-                return list;
+                return list.sort((a, b) => {
+                    const isAUser = userSymbols.has(a.symbol.toUpperCase());
+                    const isBUser = userSymbols.has(b.symbol.toUpperCase());
+                    if (isAUser && !isBUser) return -1;
+                    if (!isAUser && isBUser) return 1;
+                    return 0;
+                });
         }
-    }, [combinedEarningsList, allEarningsSearch, earningsSortOption]);
+    }, [combinedEarningsList, allEarningsSearch, earningsSortOption, groupedAssets]);
 
     // Bilanço Sayfalama (10'arlı Gruplar)
     const EARNINGS_ITEMS_PER_PAGE = 10;
@@ -983,8 +1015,6 @@ export default function PortfolioPage() {
                                                 {paginatedEarnings.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={4} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen şirket bulunamadı.</td>
-                                                    </tr>
-                                                ) : (
                                                     paginatedEarnings.map((item) => {
                                                         const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
                                                         const isNoEarnings = !item.isEarnings || item.earningsDate === "Bilanço Açıklanmadı";
@@ -996,7 +1026,13 @@ export default function PortfolioPage() {
                                                                     <div className="flex items-center gap-2">
                                                                         <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
                                                                         {isUserAsset && (
-                                                                            <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">Portföyde</span>
+                                                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[9px] border border-emerald-200/80 shadow-sm animate-pulse">
+                                                                                <span className="relative flex h-2 w-2">
+                                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                                                </span>
+                                                                                PORTFÖYÜNÜZDE
+                                                                            </span>
                                                                         )}
                                                                     </div>
                                                                 </td>
@@ -1195,7 +1231,13 @@ export default function PortfolioPage() {
                                                                     <div className="flex items-center gap-2">
                                                                         <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
                                                                         {isUserAsset && (
-                                                                            <span className="text-[8px] font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">Portföyde</span>
+                                                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[9px] border border-emerald-200/80 shadow-sm animate-pulse">
+                                                                                <span className="relative flex h-2 w-2">
+                                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                                                </span>
+                                                                                PORTFÖYÜNÜZDE
+                                                                            </span>
                                                                         )}
                                                                     </div>
                                                                 </td>
@@ -1561,8 +1603,8 @@ export default function PortfolioPage() {
                                     <h3 className="font-bold text-[#00008B] text-xs uppercase tracking-wider">Varlık Dağılımı</h3>
                                 </div>
                                 <div className="flex items-center gap-2 bg-slate-50 p-1 rounded-xl">
-                                    <button onClick={() => setDistributionView('donut')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'donut' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Pasta</button>
-                                    <button onClick={() => setDistributionView('heatmap')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'heatmap' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Isı</button>
+                                    <button onClick={() => setDistributionView('donut')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'donut' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Varlık</button>
+                                    <button onClick={() => setDistributionView('heatmap')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'heatmap' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Kazanç</button>
                                     <button onClick={() => setDistributionView('sector')} className={cn("px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all", distributionView === 'sector' ? "bg-white text-[#00008B] shadow-sm" : "text-slate-400 hover:text-slate-600")}>Sektör</button>
                                 </div>
                             </div>
