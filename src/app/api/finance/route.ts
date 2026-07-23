@@ -37,13 +37,18 @@ export async function GET(request: Request) {
 
     // Map of known TEFAS fund symbols for fast lookup
     const tefasCatalogMap = new Map(TEFAS_CATALOG.map(f => [f.symbol.toUpperCase(), f.name]));
+    const COMMODITY_SYMBOLS = new Set(['ALTIN', 'GUMUS', 'GA', 'BTC', 'ETH', 'BTC-TRY', 'ETH-TRY', 'BTC-USD', 'ETH-USD', 'BITCOIN', 'ETHEREUM', 'USDTRY', 'USDT', 'USD']);
 
     const fundSymbols: string[] = [];
     const stockSymbols: string[] = [];
 
     rawSymbols.forEach(s => {
         const baseSymbol = s.replace('.IS', '');
-        // If symbol is in TEFAS_CATALOG or looks like a 3-letter TEFAS fund code (and doesn't end with .IS explicitly unless registered)
+        if (COMMODITY_SYMBOLS.has(baseSymbol) || COMMODITY_SYMBOLS.has(s)) {
+            // Live commodity/crypto, already fetched from Binance/Truncgil
+            return;
+        }
+        // If symbol is in TEFAS_CATALOG or looks like a 3-letter TEFAS fund code
         if (tefasCatalogMap.has(baseSymbol) || tefasCatalogMap.has(s) || (s.length === 3 && !s.includes('.'))) {
             fundSymbols.push(baseSymbol);
         } else {

@@ -575,17 +575,8 @@ export default function PortfolioPage() {
             return;
         }
         if (!searchQuery || searchQuery.trim().length === 0) {
-            // Popüler Varlık Önerileri (Hisse, Altın, Kripto - Fonlar hariç)
-            const popularAssets = [
-                { symbol: "THYAO", shortname: "Türk Hava Yolları", typeDisp: "Hisse" },
-                { symbol: "GARAN", shortname: "Garanti Bankası", typeDisp: "Hisse" },
-                { symbol: "KCHOL", shortname: "Koç Holding", typeDisp: "Hisse" },
-                { symbol: "EREGL", shortname: "Erdemir", typeDisp: "Hisse" },
-                { symbol: "ALTIN", shortname: "Gram Altın", typeDisp: "Emtia" },
-                { symbol: "BTC", shortname: "Bitcoin", typeDisp: "Kripto" }
-            ];
-            setSearchResults(popularAssets);
-            setShowDropdown(true);
+            setSearchResults([]);
+            setShowDropdown(false);
             return;
         }
 
@@ -2088,7 +2079,11 @@ export default function PortfolioPage() {
                                             className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 focus:border-[#00008B] transition-all text-sm" 
                                             value={searchQuery} 
                                             onChange={e => { setSearchQuery(e.target.value); setNewItemValues({...newItemValues, symbol: e.target.value.toUpperCase()}); setIsAssetSelected(false); }} 
-                                            onFocus={() => setShowDropdown(true)} 
+                                            onFocus={() => {
+                                                if (searchQuery.trim().length > 0) {
+                                                    setShowDropdown(true);
+                                                }
+                                            }} 
                                             required
                                         />
                                         {isSearching ? (
