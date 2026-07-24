@@ -195,30 +195,7 @@ export default function PortfolioPage() {
     const [corrData2, setCorrData2] = useState<{ time: string, price: number, pctChange: number }[]>([]);
     const [isCorrLoading, setIsCorrLoading] = useState(false);
 
-    useEffect(() => {
-        if (!groupedAssets || groupedAssets.length === 0) return;
-        const sym1 = corrAsset1 || groupedAssets[0]?.symbol || 'THYAO';
-        const sym2 = corrAsset2 || (groupedAssets[1]?.symbol || groupedAssets[0]?.symbol || 'PGSUS');
 
-        let isMounted = true;
-        setIsCorrLoading(true);
-
-        const tfParam = corrTimeframe.toLowerCase();
-
-        Promise.all([
-            fetch(`/api/finance/history?symbol=${encodeURIComponent(sym1)}&range=${tfParam}`).then(r => r.ok ? r.json() : null),
-            fetch(`/api/finance/history?symbol=${encodeURIComponent(sym2)}&range=${tfParam}`).then(r => r.ok ? r.json() : null)
-        ]).then(([d1, d2]) => {
-            if (!isMounted) return;
-            if (d1?.points) setCorrData1(d1.points);
-            if (d2?.points) setCorrData2(d2.points);
-            setIsCorrLoading(false);
-        }).catch(() => {
-            if (isMounted) setIsCorrLoading(false);
-        });
-
-        return () => { isMounted = false; };
-    }, [corrAsset1, corrAsset2, corrTimeframe, groupedAssets]);
 
     // UI states
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
@@ -315,6 +292,31 @@ export default function PortfolioPage() {
             return group;
         });
     }, [assets]);
+
+    useEffect(() => {
+        if (!groupedAssets || groupedAssets.length === 0) return;
+        const sym1 = corrAsset1 || groupedAssets[0]?.symbol || 'THYAO';
+        const sym2 = corrAsset2 || (groupedAssets[1]?.symbol || groupedAssets[0]?.symbol || 'PGSUS');
+
+        let isMounted = true;
+        setIsCorrLoading(true);
+
+        const tfParam = corrTimeframe.toLowerCase();
+
+        Promise.all([
+            fetch(`/api/finance/history?symbol=${encodeURIComponent(sym1)}&range=${tfParam}`).then(r => r.ok ? r.json() : null),
+            fetch(`/api/finance/history?symbol=${encodeURIComponent(sym2)}&range=${tfParam}`).then(r => r.ok ? r.json() : null)
+        ]).then(([d1, d2]) => {
+            if (!isMounted) return;
+            if (d1?.points) setCorrData1(d1.points);
+            if (d2?.points) setCorrData2(d2.points);
+            setIsCorrLoading(false);
+        }).catch(() => {
+            if (isMounted) setIsCorrLoading(false);
+        });
+
+        return () => { isMounted = false; };
+    }, [corrAsset1, corrAsset2, corrTimeframe, groupedAssets]);
 
     // Kullanıcının elinde bulunan hisselere filtrelenmiş temettü verisi
     const userPortfolioDividends = useMemo(() => {
