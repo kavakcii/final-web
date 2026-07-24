@@ -57,28 +57,40 @@ interface Suggestion {
   type: "hisse" | "fon";
 }
 
-// Şirket Amblem / Logo Bileşeni (Resmi BIST Şirket Amblemleri)
+// Şirket Amblem / Logo Bileşeni (Kullanıcının 2. Resmindeki Gibi Yuvarlak Zeminli Orijinal Şirket Amblemleri)
 function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
     const [imgError, setImgError] = useState(false);
 
-    // TradingView BIST Şirket Amblemi CDN URL'si
-    const logoUrl = `https://s3-symbol-logo.tradingview.com/${clean.toLowerCase()}--big.svg`;
+    // BIST Şirket Amblem Slug Mapping
+    const logoSlugMap: Record<string, string> = {
+        "KORDS": "kordsa", "THYAO": "turk-hava-yollari", "ASELS": "aselsan",
+        "EREGL": "eregli-demir-celik", "TUPRS": "tupras", "KCHOL": "koc-holding",
+        "SAHOL": "sabanci-holding", "GARAN": "garanti-bbva", "AKBNK": "akbank",
+        "ISCTR": "is-bankasi", "YKBNK": "yapi-kredi", "BIMAS": "bim",
+        "MGROS": "migros", "SISE": "sisecam", "FROTO": "ford-otosan",
+        "TOASO": "tofas", "TCELL": "turkcell", "TTKOM": "turk-telekom",
+        "SASA": "sasa", "HEKTS": "hektas", "ASTOR": "astor-enerji",
+        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik"
+    };
+
+    const slug = logoSlugMap[clean] || clean.toLowerCase();
+    const logoUrl = `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`;
 
     if (imgError) {
         return (
-            <div className={cn("rounded-xl bg-[#00008B] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md", className)}>
+            <div className={cn("rounded-full bg-[#00008B] text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-md ring-2 ring-slate-100", className)}>
                 {clean.slice(0, 5)}
             </div>
         );
     }
 
     return (
-        <div className={cn("rounded-xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-1", className)}>
+        <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-1 ring-2 ring-slate-100", className)}>
             <img 
                 src={logoUrl} 
                 alt={clean} 
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain rounded-full"
                 onError={() => setImgError(true)}
             />
         </div>
