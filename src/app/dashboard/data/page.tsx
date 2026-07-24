@@ -57,12 +57,13 @@ interface Suggestion {
   type: "hisse" | "fon";
 }
 
-// Şirket Amblem / Logo Bileşeni (Kullanıcının 2. Resmindeki Gibi Yuvarlak Zeminli Orijinal Şirket Amblemleri)
+// Şirket Amblem / Logo Bileşeni (Tüm BIST 100 / 500 Hisselerini Kapsayan Orijinal Yuvarlak Amblem Sistemi)
 function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
-    const [imgError, setImgError] = useState(false);
+    const [imgIndex, setImgIndex] = useState(0);
+    const [isFailed, setIsFailed] = useState(false);
 
-    // BIST Şirket Amblem Slug Mapping
+    // Kapsamlı BIST Şirket Amblem Slug Kataloğu
     const logoSlugMap: Record<string, string> = {
         "KORDS": "kordsa", "THYAO": "turk-hava-yollari", "ASELS": "aselsan",
         "EREGL": "eregli-demir-celik", "TUPRS": "tupras", "KCHOL": "koc-holding",
@@ -71,15 +72,41 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
         "MGROS": "migros", "SISE": "sisecam", "FROTO": "ford-otosan",
         "TOASO": "tofas", "TCELL": "turkcell", "TTKOM": "turk-telekom",
         "SASA": "sasa", "HEKTS": "hektas", "ASTOR": "astor-enerji",
-        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik"
+        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik",
+        "SOKM": "sok-marketler", "VESTL": "vestel", "VESBE": "vestel-beyaz-esya",
+        "PETKM": "petkim", "KRDMD": "kardemir", "ALARK": "alarko-holding",
+        "TKFEN": "tekfen", "EKGYO": "emlak-konut", "HALKB": "halkbank",
+        "VAKBN": "vakifbank", "AEFES": "anadolu-efes", "CCOLA": "coca-cola-icecek",
+        "ULKER": "ulker", "ANSGR": "anadolu-sigorta", "TURSG": "turkiye-sigorta",
+        "ALTNY": "altinay-savunma", "OTKAR": "otokar", "DOAS": "dogus-otomotiv",
+        "PATEK": "pasifik-teknoloji", "ARDYZ": "ard-bilisim", "BRSAN": "borusan",
+        "SDTTR": "sdt-uzay", "TAVHL": "tav-havalimanlari", "ENJSA": "enerjisa",
+        "ODAS": "odas-elektrik", "KONTR": "kontrolmatik", "CWENE": "cw-enerji",
+        "EUPWR": "europower", "GESAN": "girisim-elektrik", "REEDR": "reeder"
     };
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
-    const logoUrl = `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`;
 
-    if (imgError) {
+    // Çok kademeli logo URL CDN zinciri (BIST resmi SVG CDN'leri)
+    const logoSources = [
+        `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
+        `https://s3-symbol-logo.tradingview.com/${slug}.svg`,
+        `https://s3-symbol-logo.tradingview.com/crypto/XTVC${clean}.svg`
+    ];
+
+    const currentSource = logoSources[imgIndex];
+
+    const handleError = () => {
+        if (imgIndex < logoSources.length - 1) {
+            setImgIndex(prev => prev + 1);
+        } else {
+            setIsFailed(true);
+        }
+    };
+
+    if (isFailed) {
         return (
-            <div className={cn("rounded-full bg-[#00008B] text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-md ring-2 ring-slate-100", className)}>
+            <div className={cn("rounded-full bg-gradient-to-br from-[#00008B] to-blue-700 text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-md ring-2 ring-slate-100", className)}>
                 {clean.slice(0, 5)}
             </div>
         );
@@ -88,10 +115,10 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
     return (
         <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-1 ring-2 ring-slate-100", className)}>
             <img 
-                src={logoUrl} 
+                src={currentSource} 
                 alt={clean} 
                 className="w-full h-full object-contain rounded-full"
-                onError={() => setImgError(true)}
+                onError={handleError}
             />
         </div>
     );
