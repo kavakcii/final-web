@@ -215,9 +215,48 @@ export default function AssetsPage() {
             } finally { 
                 setLoading(false); 
             }
-        };
-        fetchData();
     }, [selectedSector, assetType]);
+
+    // Canlı Çekilen Verilerden 1 Aylık Getirisi En Yüksek (Top 5) ve En Düşük (Bottom 5) Hisselerin Dinamik Hesaplanması
+    const { monthlyTopGainers, monthlyTopLosers } = useMemo(() => {
+        if (!data || data.length === 0) {
+            return {
+                monthlyTopGainers: MONTHLY_TOP_5_GAINERS,
+                monthlyTopLosers: MONTHLY_TOP_5_LOSERS
+            };
+        }
+
+        // Çekilen her bir varlığın 1 aylık performansını hesapla
+        const calculated = data.map(item => {
+            let mReturn = item.changePercent * 4.2; // Günlük değişimden tahmini aylık ivme
+            if (item.history && item.history.length > 1) {
+                const first = item.history[0].price;
+                const last = item.history[item.history.length - 1].price;
+                if (first > 0) {
+                    mReturn = ((last - first) / first) * 100;
+                }
+            }
+            return {
+                symbol: item.symbol,
+                name: STOCK_NAMES[item.symbol] || item.name || item.symbol,
+                price: item.price || 0,
+                monthlyReturn: Number(mReturn.toFixed(1)),
+                sector: item.category || (assetType === 'hisse' ? 'BIST Hisse' : 'Yatırım Fonu')
+            };
+        });
+
+        // Aylık getiriye göre sıralama
+        const sortedGainers = [...calculated].sort((a, b) => b.monthlyReturn - a.monthlyReturn);
+        const sortedLosers = [...calculated].sort((a, b) => a.monthlyReturn - b.monthlyReturn);
+
+        const top5 = sortedGainers.slice(0, 5).map((item, idx) => ({ rank: idx + 1, ...item }));
+        const bottom5 = sortedLosers.slice(0, 5).map((item, idx) => ({ rank: idx + 1, ...item }));
+
+        return {
+            monthlyTopGainers: top5.length > 0 ? top5 : MONTHLY_TOP_5_GAINERS,
+            monthlyTopLosers: bottom5.length > 0 ? bottom5 : MONTHLY_TOP_5_LOSERS
+        };
+    }, [data, assetType]);
 
     const processedData = useMemo(() => {
         let list = data.filter(item => 
@@ -337,7 +376,7 @@ export default function AssetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            {MONTHLY_TOP_5_GAINERS.map((item) => (
+                            {monthlyTopGainers.map((item) => (
                                 <div 
                                     key={item.symbol} 
                                     className="flex items-center justify-between p-3 bg-white border border-emerald-100/80 rounded-xl hover:shadow-md transition-all gap-3"
@@ -381,7 +420,7 @@ export default function AssetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                            {MONTHLY_TOP_5_LOSERS.map((item) => (
+                            {monthlyTopLosers.map((item) => (
                                 <div 
                                     key={item.symbol} 
                                     className="flex items-center justify-between p-3 bg-white border border-rose-100/80 rounded-xl hover:shadow-md transition-all gap-3"
