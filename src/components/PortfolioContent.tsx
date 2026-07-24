@@ -12,6 +12,34 @@ import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
 import { generateDynamicAnalysis } from "@/utils/riskAnalyzer";
 import { sectorMapping, getAssetSector } from "@/data/sectorMapping";
 
+// Şirket Amblem / Logo Bileşeni (Resmi BIST Şirket Amblemleri)
+function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; className?: string }) {
+    const clean = symbol.toUpperCase().replace('.IS', '').trim();
+    const [imgError, setImgError] = useState(false);
+
+    // TradingView BIST Şirket Amblemi CDN URL'si
+    const logoUrl = `https://s3-symbol-logo.tradingview.com/${clean.toLowerCase()}--big.svg`;
+
+    if (imgError) {
+        return (
+            <div className={cn("rounded-xl bg-[#00008B] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md", className)}>
+                {clean.slice(0, 5)}
+            </div>
+        );
+    }
+
+    return (
+        <div className={cn("rounded-xl bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-1", className)}>
+            <img 
+                src={logoUrl} 
+                alt={clean} 
+                className="w-full h-full object-contain"
+                onError={() => setImgError(true)}
+            />
+        </div>
+    );
+}
+
 // Altın, Gümüş & Emtia Kataloğu
 const COMMODITY_CATALOG = [
     { symbol: "ALTIN", name: "Gram Altın", type: "Altın" },
@@ -991,13 +1019,16 @@ export default function PortfolioPage() {
                                                                 onClick={(e) => { e.stopPropagation(); setExpandedSymbol(isExpanded ? null : group.symbol); }}
                                                             >
                                                                 <td className="py-4 px-6 font-bold text-[#00008B]">
-                                                                     <div className="flex flex-col">
-                                                                         <span className="text-base font-black tracking-tight leading-none">{group.symbol}</span>
-                                                                         {getAssetName(group.symbol) && (
-                                                                             <span className="text-[11px] text-slate-400 font-medium leading-tight mt-1">
-                                                                                 {getAssetName(group.symbol)}
-                                                                             </span>
-                                                                         )}
+                                                                     <div className="flex items-center gap-3">
+                                                                         <AssetLogo symbol={group.symbol} className="w-10 h-10" />
+                                                                         <div className="flex flex-col">
+                                                                             <span className="text-base font-black tracking-tight leading-none">{group.symbol}</span>
+                                                                             {getAssetName(group.symbol) && (
+                                                                                 <span className="text-[11px] text-slate-400 font-medium leading-tight mt-1">
+                                                                                     {getAssetName(group.symbol)}
+                                                                                 </span>
+                                                                             )}
+                                                                         </div>
                                                                      </div>
                                                                  </td>
                                                                 <td className="py-4 px-4">
