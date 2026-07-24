@@ -25,12 +25,16 @@ import {
   Check,
   Building2,
   RefreshCw,
-  ArrowUpDown
+  ArrowUpDown,
+  ArrowRightLeft,
+  Scale,
+  LineChart as LineChartIcon,
+  Maximize2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS, FUND_SECTORS } from "@/lib/constants/assets-mapping";
-import { ResponsiveContainer, AreaChart, Area, YAxis } from "recharts";
+import { ResponsiveContainer, AreaChart, Area, YAxis, LineChart, Line, XAxis, Tooltip } from "recharts";
 
 interface AssetData {
   symbol: string;
@@ -42,6 +46,8 @@ interface AssetData {
   volume?: string;
   high52?: number;
   low52?: number;
+  pe?: number; // F/K Oranı
+  pb?: number; // PD/DD Oranı
 }
 
 interface Suggestion {
@@ -50,7 +56,7 @@ interface Suggestion {
   type: "hisse" | "fon";
 }
 
-// BIST Şirket Tam Adları & Sektör Tanımları
+// BIST Şirket Tam Adları Kataloğu
 const STOCK_NAMES: Record<string, string> = {
     "THYAO": "Türk Hava Yolları A.O.", 
     "ASELS": "Aselsan Elektronik Sanayi A.Ş.", 
@@ -108,29 +114,32 @@ const STOCK_NAMES: Record<string, string> = {
     "SDTTR": "SDT Uzay ve Savunma Teknolojileri"
 };
 
-// Sektörel Yapay Zeka Analiz Şablonları
-const SECTOR_AI_INSIGHTS: Record<string, string> = {
-    "Havacılık": "Yaz sezonu kapasite kullanımı ve uluslararası yolcu verileri %14 artış trendinde. Jet yakıtı marjlarındaki dengelenme sektör şirketlerinin marjlarını olumlu etkiliyor.",
-    "Savunma": "İhracat sözleşmeleri ve yerli savunma projelerinin büyümesiyle sektörde ciro büyüme ivmesi güçlü seyrediyor. Ar-Ge yatırımları uzun vadeli çarpanları destekliyor.",
-    "Bankacılık": "Net faiz marjlarındaki toparlanma ve özkaynak kârlılığı ivme kazanıyor. Yabancı kurumsal yatırımcı ilgisinin en yüksek olduğu ana sektör konumunu koruyor.",
-    "Holding": "Net aktif değer (NAD) iskontosu tarihsel ortalamaların altında seyrediyor. İştirak çeşitliliği portföy risklerini dengeliyor.",
-    "Enerji": "Yenilenebilir enerji yatırımları ve kapasite artışları orta vadeli nakit akışını güçlendiriyor. Yeşil dönüşüm teşvikleri ivmeyi artırmaktadır.",
-    "Teknoloji": "Yazılım ve sistem entegrasyonu tarafındaki sipariş büyümesi yüksek özkaynak kârlılığını beraberinde getiriyor.",
-    "Perakende": "Enflasyonist ortamda yüksek nakit akışı yaratma kabiliyeti ve güçlü mağaza açılış ivmesiyle defansif yapısını koruyor.",
-    "Otomotiv": "İhracat pazarlarındaki elektrikli araç dönüşümü ve yerli satış hacimleri sektör dinamizmini korumaktadır."
-};
+// Sektörel Büyüme Şablon Verisi (Gelecekte dinamik veri bağlamaya hazır)
+const SECTOR_GROWTH_TEMPLATES = [
+    { name: "Havacılık & Ulaştırma", annualGrowth: 34.8, marketCap: "450 Ml TL", momentum: "Güçlü Yükseliş", leader: "THYAO", score: 92 },
+    { name: "Savunma Sanayii", annualGrowth: 42.1, marketCap: "380 Ml TL", momentum: "Yüksek İvme", leader: "ASELS", score: 95 },
+    { name: "Bankacılık & Finans", annualGrowth: 28.5, marketCap: "620 Ml TL", momentum: "Dengeli", leader: "GARAN", score: 86 },
+    { name: "Enerji & Yenilenebilir", annualGrowth: 39.4, marketCap: "290 Ml TL", momentum: "Yükseliş", leader: "ASTOR", score: 89 },
+    { name: "Teknoloji & Yazılım", annualGrowth: 48.2, marketCap: "180 Ml TL", momentum: "Çok Yüksek", leader: "MIATK", score: 94 },
+    { name: "Holdingler & Yatırım", annualGrowth: 22.6, marketCap: "550 Ml TL", momentum: "Stabil", leader: "KCHOL", score: 82 }
+];
 
 export default function AssetsPage() {
     const [assetType, setAssetType] = useState<"hisse" | "fon">("hisse");
     const [selectedSector, setSelectedSector] = useState(Object.keys(STOCK_SECTORS)[0]);
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const [sortBy, setSortBy] = useState<"price-desc" | "price-asc" | "change-desc" | "change-asc">("change-desc");
+    const [sortBy, setSortBy] = useState<"change-desc" | "change-asc" | "price-desc" | "price-asc">("change-desc");
     const [data, setData] = useState<AssetData[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [allFunds, setAllFunds] = useState<{code: string, title: string}[]>([]);
     const [addedSymbols, setAddedSymbols] = useState<Record<string, boolean>>({});
+
+    // KARŞILAŞTIRMA WIDGET'I STATE'LERİ
+    const [compAsset1, setCompAsset1] = useState<string>("THYAO");
+    const [compAsset2, setCompAsset2] = useState<string>("PGSUS");
+    const [compTimeframe, setCompTimeframe] = useState<"1A" | "6A" | "1Y">("1A");
 
     const sectors = assetType === "hisse" ? Object.keys(STOCK_SECTORS) : Object.keys(FUND_SECTORS);
 
@@ -208,20 +217,38 @@ export default function AssetsPage() {
         });
     }, [data, searchTerm, sortBy]);
 
-    // Sektör Genel Özet İstatistikleri
-    const sectorStats = useMemo(() => {
-        if (!data || data.length === 0) return { avgChange: 0, gainers: 0, losers: 0, topGainer: null };
-        const totalChange = data.reduce((acc, curr) => acc + (curr.changePercent || 0), 0);
-        const gainers = data.filter(d => (d.changePercent || 0) > 0).length;
-        const losers = data.filter(d => (d.changePercent || 0) < 0).length;
-        const sorted = [...data].sort((a, b) => (b.changePercent || 0) - (a.changePercent || 0));
+    // Karşılaştırılacak Varlıkların Mock/Canlı Verisi
+    const compData1 = useMemo(() => {
+        const found = data.find(d => d.symbol === compAsset1);
         return {
-            avgChange: Number((totalChange / data.length).toFixed(2)),
-            gainers,
-            losers,
-            topGainer: sorted[0] || null
+            symbol: compAsset1,
+            name: STOCK_NAMES[compAsset1] || compAsset1,
+            price: found?.price || 315.25,
+            changePercent: found?.changePercent || 2.45,
+            pe: 6.8, // F/K Oranı
+            pb: 1.45, // PD/DD Oranı
+            annualYield: 44.5,
+            volume: "4.8 Mr TL"
         };
-    }, [data]);
+    }, [compAsset1, data]);
+
+    const compData2 = useMemo(() => {
+        const found = data.find(d => d.symbol === compAsset2);
+        return {
+            symbol: compAsset2,
+            name: STOCK_NAMES[compAsset2] || compAsset2,
+            price: found?.price || 234.10,
+            changePercent: found?.changePercent || -1.12,
+            pe: 8.2,
+            pb: 2.10,
+            annualYield: 38.2,
+            volume: "2.1 Mr TL"
+        };
+    }, [compAsset2, data]);
+
+    const availableSymbols = useMemo(() => {
+        return Object.keys(STOCK_NAMES);
+    }, []);
 
     const handleQuickAdd = (symbol: string) => {
         setAddedSymbols(prev => ({ ...prev, [symbol]: true }));
@@ -231,195 +258,259 @@ export default function AssetsPage() {
     };
 
     return (
-        <div className="p-4 md:p-8 min-h-screen bg-[#F8FAFC] space-y-8">
-            {/* HER BAŞLIK & METRİK ÖZET PANELİ */}
+        <div className="p-4 md:p-8 min-h-screen bg-[#F8FAFC] space-y-10">
+            {/* HERO BAŞLIK & VARTALIK ARAŞTIRMA TERMİNALİ */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-white border border-slate-200/80 rounded-[36px] p-6 md:p-8 shadow-xl shadow-slate-200/50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-[450px] h-[450px] bg-gradient-to-br from-[#00008B]/5 to-sky-400/10 rounded-full blur-[90px] -z-0 pointer-events-none" />
                 
-                <div className="relative z-10 space-y-4 max-w-2xl">
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2 px-3 py-1 bg-[#00008B]/5 border border-[#00008B]/10 rounded-full">
-                            <Activity className="w-3.5 h-3.5 text-[#00008B] animate-pulse" />
-                            <span className="text-[10px] font-black text-[#00008B] uppercase tracking-widest">FinAi Canlı Piyasa Terminalı v2.0</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200/60 rounded-full text-emerald-700 text-[10px] font-black uppercase tracking-wider">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                            Canlı Veri Akışı
-                        </div>
+                <div className="relative z-10 space-y-3 max-w-2xl">
+                    <div className="flex items-center gap-2 px-3.5 py-1 bg-[#00008B]/5 border border-[#00008B]/10 rounded-full w-fit">
+                        <Activity className="w-3.5 h-3.5 text-[#00008B] animate-pulse" />
+                        <span className="text-[10px] font-black text-[#00008B] uppercase tracking-widest">FinAi Varlık & Piyasa Araştırma Terminali</span>
                     </div>
 
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-                            Varlık <span className="text-[#00008B]">Merkezi</span>
-                        </h1>
-                        <p className="text-xs md:text-sm font-semibold text-slate-500 mt-2 leading-relaxed">
-                            Borsa İstanbul hisse senetleri, TEFAS yatırım fonları ve piyasa enstrümanlarını canlı veriler, teknik ivme ve sektörel analizlerle keşfedin.
-                        </p>
-                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                        Varlık <span className="text-[#00008B]">Merkezi</span>
+                    </h1>
+                    <p className="text-xs md:text-sm font-semibold text-slate-500 leading-relaxed">
+                        Tüm BIST hisselerini ve TEFAS fonlarını inceleyin, varlıkları baş başa karşılaştırın ve sektörel büyüme ivmelerini keşfedin.
+                    </p>
                 </div>
 
-                {/* SAĞ TARAF CANLI METRİK KARTLARI */}
-                <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-4 flex flex-col justify-between">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Sektör Ort.</span>
-                        <div className="flex items-baseline gap-1 mt-2">
-                            <span className={cn("text-xl font-black", sectorStats.avgChange >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                {sectorStats.avgChange >= 0 ? `+` : ``}%{sectorStats.avgChange}
-                            </span>
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-400 mt-1">Son 24 Saatlik İvme</span>
+                {/* HIZLI GEÇİŞ / SEÇENEK İSTATİSTİK ROZETLERİ */}
+                <div className="relative z-10 flex flex-wrap items-center gap-3">
+                    <div className="bg-blue-50/80 border border-blue-200/60 rounded-2xl px-5 py-3.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Takip Edilen Varlık</span>
+                        <span className="text-xl font-black text-[#00008B] tracking-tight">50+ BIST & TEFAS</span>
                     </div>
-
-                    <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-4 flex flex-col justify-between">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Yükselen / Düşen</span>
-                        <div className="flex items-baseline gap-2 mt-2">
-                            <span className="text-xl font-black text-emerald-600">{sectorStats.gainers}</span>
-                            <span className="text-xs font-bold text-slate-400">/</span>
-                            <span className="text-xl font-black text-rose-600">{sectorStats.losers}</span>
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-400 mt-1">Denge Oranı</span>
-                    </div>
-
-                    <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-4 text-white col-span-2 sm:col-span-1 flex flex-col justify-between shadow-lg shadow-[#00008B]/20">
-                        <span className="text-[10px] font-black text-sky-200 uppercase tracking-wider">Sektör Lideri</span>
-                        <div className="mt-2">
-                            <div className="text-base font-black truncate">{sectorStats.topGainer?.symbol || '---'}</div>
-                            <div className="text-xs font-bold text-emerald-300">
-                                {sectorStats.topGainer ? `+%${(sectorStats.topGainer.changePercent || 0).toFixed(2)}` : '---'}
-                            </div>
-                        </div>
-                        <span className="text-[9px] font-bold text-slate-300 mt-1">En Yüksek Prim</span>
+                    <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-2xl px-5 py-3.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Sektörel Kapsam</span>
+                        <span className="text-xl font-black text-emerald-700 tracking-tight">8 Ana Sektör</span>
                     </div>
                 </div>
             </div>
 
-            {/* AKILLI ARAMA, SEKTÖR PİLLERİ VE FİLTRELEME ÇUBUĞU */}
-            <div className="space-y-4">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    {/* ARAMA ÇUBUĞU VE DİNAMİK AUTOCOMPLETE */}
-                    <div className="relative flex-1 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#00008B] transition-colors" />
-                        <input 
-                            type="text"
-                            placeholder="Sembol veya şirket adı ile arayın (Örn: THYAO, Tüpraş, TCD)..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 pr-10 py-4 bg-white border border-slate-200 rounded-3xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all shadow-lg shadow-slate-200/40"
-                        />
-                        {searchTerm && (
-                            <button onClick={() => setSearchTerm("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold bg-slate-100 p-1 rounded-full">
-                                ✕
-                            </button>
-                        )}
-                        
-                        {/* AUTOCOMPLETE POPUP */}
-                        <AnimatePresence>
-                            {suggestions.length > 0 && (
-                                <motion.div 
-                                    initial={{ opacity: 0, y: 10 }} 
-                                    animate={{ opacity: 1, y: 0 }} 
-                                    exit={{ opacity: 0, y: 10 }} 
-                                    className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden"
-                                >
-                                    {suggestions.map((s, i) => (
-                                        <div 
-                                            key={i} 
-                                            onClick={() => { setSearchTerm(s.symbol); setAssetType(s.type); setSuggestions([]); }} 
-                                            className="flex items-center justify-between px-6 py-3.5 hover:bg-blue-50/60 cursor-pointer transition-colors border-b border-slate-50 last:border-0"
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-2xl bg-[#00008B] text-white flex items-center justify-center font-black text-xs shadow-md shadow-[#00008B]/20">
-                                                    {s.symbol}
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-slate-900">{s.name}</p>
-                                                    <span className={cn("text-[9px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider", s.type === 'hisse' ? "bg-blue-100 text-[#00008B]" : "bg-purple-100 text-purple-700")}>
-                                                        {s.type === 'hisse' ? 'BIST Hisse' : 'TEFAS Fon'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <ArrowUpRight className="w-4 h-4 text-[#00008B]" />
-                                        </div>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+            {/* WIDGET 1: VARLIK KARŞILAŞTIRMA TERMİNALİ (ASSET COMPARISON WIDGET) */}
+            <div className="bg-white border border-slate-200/90 rounded-[36px] p-6 md:p-8 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-5 gap-4">
+                    <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-lg shadow-[#00008B]/20">
+                            <Scale className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight">Varlık Karşılaştırma Terminali</h2>
+                            <p className="text-xs font-bold text-slate-400 mt-0.5">İki Varlığın Fiyat, Çarpan ve Getiri Göstergelerini Yan Yana Kıyaslayın</p>
+                        </div>
                     </div>
 
-                    {/* FİLTRELEME & GÖRÜNÜM KONTROLLERİ */}
-                    <div className="flex items-center gap-3 self-end lg:self-auto">
-                        {/* SIRALAMA SEÇİCİ */}
-                        <div className="flex items-center gap-2 bg-white border border-slate-200 px-3.5 py-3 rounded-2xl shadow-sm">
-                            <ArrowUpDown className="w-4 h-4 text-[#00008B]" />
-                            <select 
-                                value={sortBy} 
-                                onChange={(e: any) => setSortBy(e.target.value)}
-                                className="bg-transparent text-xs font-black text-slate-700 focus:outline-none cursor-pointer"
+                    {/* ZAMAN PERİYODU PİLLERİ */}
+                    <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/70 self-start md:self-auto">
+                        {(['1A', '6A', '1Y'] as const).map((tf) => (
+                            <button
+                                key={tf}
+                                onClick={() => setCompTimeframe(tf)}
+                                className={cn(
+                                    "px-4 py-1.5 text-xs font-black rounded-xl transition-all uppercase tracking-wider",
+                                    compTimeframe === tf
+                                        ? "bg-[#00008B] text-white shadow-md shadow-[#00008B]/20 scale-105"
+                                        : "text-slate-500 hover:text-[#00008B]"
+                                )}
                             >
-                                <option value="change-desc">En Çok Yükselenler</option>
-                                <option value="change-asc">En Çok Düşenler</option>
-                                <option value="price-desc">Fiyat: Yüksekten Düşüğe</option>
-                                <option value="price-asc">Fiyat: Düşükten Yüksek</option>
+                                {tf === '1A' ? '1 Aylık' : tf === '6A' ? '6 Aylık' : '1 Yıllık'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* İKİ VARLIK SEÇİM MENÜLERİ VE BAŞ BAŞA KARŞILAŞTIRMA KARTLARI */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    {/* 1. VARLIK KARTI */}
+                    <div className="lg:col-span-5 bg-slate-50 border border-slate-200/80 rounded-3xl p-6 space-y-5 hover:border-[#00008B]/30 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-2xl bg-[#00008B] text-white flex items-center justify-center font-black text-sm shadow-md">
+                                    {compAsset1}
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">1. Varlık</span>
+                                    <h3 className="text-base font-black text-slate-900">{compData1.name}</h3>
+                                </div>
+                            </div>
+
+                            <select
+                                value={compAsset1}
+                                onChange={(e) => setCompAsset1(e.target.value)}
+                                className="bg-white border border-slate-200 text-xs font-black text-[#00008B] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#00008B]"
+                            >
+                                {availableSymbols.map(sym => (
+                                    <option key={sym} value={sym}>{sym}</option>
+                                ))}
                             </select>
                         </div>
 
-                        {/* GÖRÜNÜM MODU SWITCH (GRID vs LIST) */}
-                        <div className="flex items-center p-1 bg-slate-200/70 rounded-2xl border border-slate-300/40">
-                            <button 
-                                onClick={() => setViewMode("grid")}
-                                className={cn("p-2 rounded-xl transition-all", viewMode === "grid" ? "bg-white text-[#00008B] shadow-md scale-105" : "text-slate-500 hover:text-slate-800")}
-                                title="Izgara Görünümü"
+                        {/* GÖSTERGELER */}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Canlı Fiyat</span>
+                                <span className="text-lg font-black text-slate-900">{compData1.price} ₺</span>
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Günlük Değişim</span>
+                                <span className={cn("text-lg font-black", compData1.changePercent >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                    %{compData1.changePercent}
+                                </span>
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">F/K Oranı</span>
+                                <span className="text-sm font-black text-slate-800">{compData1.pe}</span>
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">1Y Getiri</span>
+                                <span className="text-sm font-black text-emerald-600">+{compData1.annualYield}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ORTA KARŞILAŞTIRMA İKONU (VS) */}
+                    <div className="lg:col-span-2 flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-[#00008B] text-white font-black text-base flex items-center justify-center shadow-xl shadow-[#00008B]/30 ring-8 ring-blue-50">
+                            VS
+                        </div>
+                    </div>
+
+                    {/* 2. VARLIK KARTI */}
+                    <div className="lg:col-span-5 bg-slate-50 border border-slate-200/80 rounded-3xl p-6 space-y-5 hover:border-sky-400/40 transition-all">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center font-black text-sm shadow-md">
+                                    {compAsset2}
+                                </div>
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">2. Varlık</span>
+                                    <h3 className="text-base font-black text-slate-900">{compData2.name}</h3>
+                                </div>
+                            </div>
+
+                            <select
+                                value={compAsset2}
+                                onChange={(e) => setCompAsset2(e.target.value)}
+                                className="bg-white border border-slate-200 text-xs font-black text-sky-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
                             >
-                                <Grid className="w-4 h-4" />
-                            </button>
-                            <button 
-                                onClick={() => setViewMode("list")}
-                                className={cn("p-2 rounded-xl transition-all", viewMode === "list" ? "bg-white text-[#00008B] shadow-md scale-105" : "text-slate-500 hover:text-slate-800")}
-                                title="Liste Görünümü"
-                            >
-                                <List className="w-4 h-4" />
-                            </button>
+                                {availableSymbols.map(sym => (
+                                    <option key={sym} value={sym}>{sym}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* GÖSTERGELER */}
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Canlı Fiyat</span>
+                                <span className="text-lg font-black text-slate-900">{compData2.price} ₺</span>
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Günlük Değişim</span>
+                                <span className={cn("text-lg font-black", compData2.changePercent >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                                    %{compData2.changePercent}
+                                </span>
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">F/K Oranı</span>
+                                <span className="text-sm font-black text-slate-800">{compData2.pe}</span>
+                            </div>
+                            <div className="bg-white p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">1Y Getiri</span>
+                                <span className="text-sm font-black text-emerald-600">+{compData2.annualYield}%</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* SEKTÖR SEÇİM PİLLERİ */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    {sectors.map((sector) => (
-                        <button 
-                            key={sector} 
-                            onClick={() => setSelectedSector(sector)} 
-                            className={cn(
-                                "px-5 py-3 rounded-2xl text-[11px] font-black whitespace-nowrap transition-all border shrink-0 uppercase tracking-wider", 
-                                selectedSector === sector 
-                                    ? "bg-[#00008B] border-[#00008B] text-white shadow-xl shadow-[#00008B]/20 scale-105" 
-                                    : "bg-white border-slate-200 text-slate-600 hover:border-[#00008B]/40 hover:bg-slate-50"
-                            )}
+                {/* YAPAY ZEKA KARŞILAŞTIRMA ÖNGÖRÜ KUTUSU */}
+                <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-4 text-white shadow-md">
+                    <p className="text-xs font-medium text-slate-100 leading-relaxed">
+                        <span className="font-black text-sky-300 uppercase tracking-wider mr-2">FinAi Karşılaştırma Analizi:</span>
+                        {compAsset1} ve {compAsset2} varlıkları kıyaslandığında, {compAsset1} daha düşük F/K çarpanı ({compData1.pe}) ve %{compData1.annualYield} yıllık getirisiyle öne çıkarken; {compAsset2} dengeli volatilite sergilemektedir. Portföy hedeflerinize göre ağırlıklandırmayı değerlendirebilirsiniz.
+                    </p>
+                </div>
+            </div>
+
+            {/* WIDGET 2: SEKTÖREL BÜYÜME & TREND TERMİNALİ (SECTORAL GROWTH WIDGET) */}
+            <div className="bg-white border border-slate-200/90 rounded-[36px] p-6 md:p-8 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-5 gap-4">
+                    <div className="flex items-center gap-3.5">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-600/20">
+                            <TrendingUp className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight">Sektörel Büyüme & Trend Terminalı</h2>
+                            <p className="text-xs font-bold text-slate-400 mt-0.5">Sektörlerin Yıllık Büyüme Oranları, Piyasa Değerleri ve İvme Puanları</p>
+                        </div>
+                    </div>
+
+                    <span className="px-3.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-black rounded-full uppercase tracking-wider self-start md:self-auto">
+                        Sektörel Trend İvmesi
+                    </span>
+                </div>
+
+                {/* SEKTÖREL BÜYÜME ŞABLON KARTLARI GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {SECTOR_GROWTH_TEMPLATES.map((sector, idx) => (
+                        <div 
+                            key={idx} 
+                            className="bg-slate-50 border border-slate-200/80 rounded-3xl p-5 space-y-4 hover:border-[#00008B]/30 hover:shadow-xl transition-all"
                         >
-                            {sector}
-                        </button>
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-black text-slate-900">{sector.name}</h3>
+                                <span className="px-2.5 py-1 rounded-xl text-xs font-black bg-blue-100 text-[#00008B]">
+                                    Skor: {sector.score}/100
+                                </span>
+                            </div>
+
+                            {/* BÜYÜME İLERLEME ÇUBUĞU */}
+                            <div className="space-y-1.5">
+                                <div className="flex justify-between text-xs font-bold">
+                                    <span className="text-slate-400">Yıllık Büyüme</span>
+                                    <span className="text-emerald-600 font-black">+{sector.annualGrowth}%</span>
+                                </div>
+                                <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-gradient-to-r from-[#00008B] to-emerald-500 rounded-full transition-all duration-1000"
+                                        style={{ width: `${Math.min(sector.annualGrowth * 1.8, 100)}%` }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Piyasa Değeri</span>
+                                    <span className="font-black text-slate-800">{sector.marketCap}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Sektör Lideri</span>
+                                    <span className="font-black text-[#00008B]">{sector.leader}</span>
+                                </div>
+                            </div>
+                        </div>
                     ))}
                 </div>
             </div>
 
-            {/* ANA İÇERİK KONTROLÜ VE VARLIK GRİD / LİSTE KARTLARI */}
-            <div className="bg-white border border-slate-200/80 rounded-[36px] p-6 md:p-8 shadow-2xl shadow-slate-200/50 min-h-[600px] relative overflow-hidden space-y-8">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50/20 rounded-full blur-[100px] -z-0 pointer-events-none" />
-
-                {/* SEKTÖR BAŞLIĞI VE TÜR GEÇİŞ BUTONLARI */}
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-6">
+            {/* WIDGET 3: KAPSAMLI HİSSE & VARLIK ARAŞTIRMA TERMINALİ (STOCK RESEARCH & DISCOVERY) */}
+            <div className="bg-white border border-slate-200/90 rounded-[36px] p-6 md:p-8 shadow-2xl shadow-slate-200/50 space-y-8 relative overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-[#00008B] flex items-center justify-center shadow-lg shadow-[#00008B]/20">
-                            <Building2 className="w-6 h-6 text-white" />
+                        <div className="w-12 h-12 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-lg shadow-[#00008B]/20">
+                            <Building2 className="w-6 h-6" />
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">{selectedSector} Kriter Analizi</h2>
-                            <p className="text-xs font-bold text-slate-400 mt-0.5">Toplu Piyasa Performansı ve Trend Çizgileri</p>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Hisse & Varlık Araştırma Terminalı</h2>
+                            <p className="text-xs font-bold text-slate-400 mt-0.5">Tüm BIST Şirketlerini ve TEFAS Fonlarını Detaylıca İnceleyin</p>
                         </div>
                     </div>
 
-                    {/* HİSSE SENEDİ VS YATIRIM FONLARI ANAHTARI */}
-                    <div className="flex p-1.5 bg-slate-100 rounded-2xl border border-slate-200/80 self-start md:self-auto shadow-inner">
+                    {/* HİSSE VS FON ANAHTARI */}
+                    <div className="flex p-1.5 bg-slate-100 rounded-2xl border border-slate-200/80 self-start md:self-auto">
                         {[
                             { id: "hisse", label: "Hisse Senetleri", icon: TrendingUp }, 
                             { id: "fon", label: "Yatırım Fonları", icon: Layers }
@@ -440,50 +531,85 @@ export default function AssetsPage() {
                     </div>
                 </div>
 
-                {/* WIDGET: MARKA RENK PALETİNDEKİ SEKTÖREL YAPAY ZEKA ANALİZİ KUTUSU */}
-                <div className="bg-[#00008B] border border-[#00008B]/20 rounded-3xl p-5 shadow-xl text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                        <div className="p-3 bg-white/10 rounded-2xl backdrop-blur-md shrink-0">
-                            <Sparkles className="w-6 h-6 text-sky-300" />
+                {/* AKILLI ARAMA, SEKTÖR PİLLERİ VE GÖRÜNÜM MODLARI */}
+                <div className="space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="relative flex-1 group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#00008B] transition-colors" />
+                            <input 
+                                type="text"
+                                placeholder="Hisse sembolü veya şirket adı ile arayın..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-12 pr-10 py-4 bg-slate-50 border border-slate-200 rounded-3xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
+                            />
                         </div>
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-black uppercase tracking-widest text-sky-200">FinAi Yapay Zeka Sektör Analizi</h3>
-                                <span className="px-2 py-0.5 bg-sky-400/20 text-sky-200 rounded-full text-[9px] font-bold uppercase">Canlı Rapor</span>
+
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-3 rounded-2xl">
+                                <ArrowUpDown className="w-4 h-4 text-[#00008B]" />
+                                <select 
+                                    value={sortBy} 
+                                    onChange={(e: any) => setSortBy(e.target.value)}
+                                    className="bg-transparent text-xs font-black text-slate-700 focus:outline-none cursor-pointer"
+                                >
+                                    <option value="change-desc">En Çok Yükselenler</option>
+                                    <option value="change-asc">En Çok Düşenler</option>
+                                    <option value="price-desc">Fiyat: Yüksekten Düşüğe</option>
+                                    <option value="price-asc">Fiyat: Düşükten Yüksek</option>
+                                </select>
                             </div>
-                            <p className="text-xs font-medium text-slate-100 leading-relaxed mt-1 max-w-4xl">
-                                {SECTOR_AI_INSIGHTS[selectedSector] || `${selectedSector} sektöründe piyasa hacimleri ve fiyat hareketleri yükseliş ivmesini koruyor. Portföy çeşitlendirmesi açısından dengeli takip önerilmektedir.`}
-                            </p>
+
+                            <div className="flex items-center p-1 bg-slate-200/70 rounded-2xl">
+                                <button 
+                                    onClick={() => setViewMode("grid")}
+                                    className={cn("p-2 rounded-xl transition-all", viewMode === "grid" ? "bg-white text-[#00008B] shadow-md" : "text-slate-500")}
+                                >
+                                    <Grid className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={() => setViewMode("list")}
+                                    className={cn("p-2 rounded-xl transition-all", viewMode === "list" ? "bg-white text-[#00008B] shadow-md" : "text-slate-500")}
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
+                    </div>
+
+                    {/* SEKTÖR SEÇİM PİLLERİ */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        {sectors.map((sector) => (
+                            <button 
+                                key={sector} 
+                                onClick={() => setSelectedSector(sector)} 
+                                className={cn(
+                                    "px-5 py-3 rounded-2xl text-[11px] font-black whitespace-nowrap transition-all border shrink-0 uppercase tracking-wider", 
+                                    selectedSector === sector 
+                                        ? "bg-[#00008B] border-[#00008B] text-white shadow-xl shadow-[#00008B]/20 scale-105" 
+                                        : "bg-slate-50 border-slate-200 text-slate-600 hover:border-[#00008B]/40"
+                                )}
+                            >
+                                {sector}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                {/* YÜKLENİYOR / KART GRID İÇERİĞİ */}
+                {/* KART GRİD İÇERİĞİ */}
                 <AnimatePresence mode="wait">
                     {loading ? (
-                        <motion.div 
-                            key="loading" 
-                            initial={{ opacity: 0 }} 
-                            animate={{ opacity: 1 }} 
-                            className="flex flex-col items-center justify-center py-28 space-y-4"
-                        >
+                        <div className="flex flex-col items-center justify-center py-24 space-y-4">
                             <div className="w-16 h-16 border-4 border-slate-100 border-t-[#00008B] rounded-full animate-spin" />
-                            <p className="text-xs font-black text-[#00008B] uppercase tracking-widest">Canlı Varlık Verileri Yükleniyor...</p>
-                        </motion.div>
+                            <p className="text-xs font-black text-[#00008B] uppercase tracking-widest">Varlıklar Yükleniyor...</p>
+                        </div>
                     ) : processedData.length === 0 ? (
                         <div className="text-center py-20 space-y-3">
                             <Info className="w-12 h-12 text-slate-300 mx-auto" />
                             <h3 className="text-lg font-black text-slate-700">Aramanıza Uygun Varlık Bulunamadı</h3>
-                            <p className="text-xs text-slate-400 font-bold">Lütfen arama teriminizi veya seçili sektörü değiştirerek tekrar deneyin.</p>
                         </div>
                     ) : viewMode === "grid" ? (
-                        /* IZGARA (GRID) GÖRÜNÜMÜ */
-                        <motion.div 
-                            key="grid" 
-                            initial={{ opacity: 0, y: 20 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative z-10"
-                        >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {processedData.map((item) => {
                                 const fullName = STOCK_NAMES[item.symbol] || item.name || item.symbol;
                                 const isPositive = item.changePercent >= 0;
@@ -491,9 +617,8 @@ export default function AssetsPage() {
                                 return (
                                     <div 
                                         key={item.symbol} 
-                                        className="group bg-white border border-slate-200/90 hover:border-[#00008B]/30 rounded-3xl p-5 shadow-lg shadow-slate-200/30 hover:shadow-2xl hover:shadow-[#00008B]/10 transition-all duration-300 flex flex-col justify-between relative overflow-hidden"
+                                        className="group bg-white border border-slate-200/90 hover:border-[#00008B]/30 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between"
                                     >
-                                        {/* KART ÜST KISMI */}
                                         <div className="space-y-4">
                                             <div className="flex items-start justify-between gap-3">
                                                 <div className="flex items-center gap-3">
@@ -521,9 +646,9 @@ export default function AssetsPage() {
                                                 </span>
                                             </div>
 
-                                            {/* MİNİ SPARKLINE TREND GRAFİĞİ (SVG RECHARTS) */}
+                                            {/* SPARKLINE CHART */}
                                             <div className="h-16 w-full pt-2">
-                                                {item.history && item.history.length > 0 ? (
+                                                {item.history && item.history.length > 0 && (
                                                     <ResponsiveContainer width="100%" height="100%">
                                                         <AreaChart data={item.history}>
                                                             <defs>
@@ -542,19 +667,14 @@ export default function AssetsPage() {
                                                             />
                                                         </AreaChart>
                                                     </ResponsiveContainer>
-                                                ) : (
-                                                    <div className="h-full flex items-center justify-center text-[10px] text-slate-300 font-bold">
-                                                        Trend verisi yükleniyor...
-                                                    </div>
                                                 )}
                                             </div>
                                         </div>
 
-                                        {/* KART ALT KISMI (FİYAT VE HIZLI EYLEM) */}
                                         <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
                                             <div>
                                                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Canlı Fiyat</span>
-                                                <span className="text-lg font-black text-slate-900 tracking-tight">
+                                                <span className="text-lg font-black text-slate-900">
                                                     {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(item.price || 0)}
                                                 </span>
                                             </div>
@@ -564,7 +684,7 @@ export default function AssetsPage() {
                                                 className={cn(
                                                     "p-2.5 rounded-xl border transition-all flex items-center justify-center",
                                                     addedSymbols[item.symbol] 
-                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-md scale-105" 
+                                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-md" 
                                                         : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-[#00008B] hover:border-[#00008B] hover:text-white"
                                                 )}
                                                 title="Portföyüme Ekle"
@@ -575,15 +695,10 @@ export default function AssetsPage() {
                                     </div>
                                 );
                             })}
-                        </motion.div>
+                        </div>
                     ) : (
-                        /* LİSTE (TABLE) GÖRÜNÜMÜ */
-                        <motion.div 
-                            key="list" 
-                            initial={{ opacity: 0, y: 20 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            className="overflow-x-auto rounded-3xl border border-slate-200 shadow-lg"
-                        >
+                        /* TABLO (LISTE) GÖRÜNÜMÜ */
+                        <div className="overflow-x-auto rounded-3xl border border-slate-200 shadow-lg">
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
@@ -661,7 +776,7 @@ export default function AssetsPage() {
                                     })}
                                 </tbody>
                             </table>
-                        </motion.div>
+                        </div>
                     )}
                 </AnimatePresence>
             </div>
