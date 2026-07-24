@@ -57,7 +57,7 @@ interface Suggestion {
   type: "hisse" | "fon";
 }
 
-// Şirket Amblem / Logo Bileşeni (Tüm BIST 100 / 500 Hisselerini Kapsayan Orijinal Yuvarlak Amblem Sistemi)
+// Şirket Amblem / Logo Bileşeni (Kendi Depomuzda Saklanan Yerel Resmi Şirket Amblemleri)
 function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
     const [imgIndex, setImgIndex] = useState(0);
@@ -72,26 +72,17 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
         "MGROS": "migros", "SISE": "sisecam", "FROTO": "ford-otosan",
         "TOASO": "tofas", "TCELL": "turkcell", "TTKOM": "turk-telekom",
         "SASA": "sasa", "HEKTS": "hektas", "ASTOR": "astor-enerji",
-        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik",
-        "SOKM": "sok-marketler", "VESTL": "vestel", "VESBE": "vestel-beyaz-esya",
-        "PETKM": "petkim", "KRDMD": "kardemir", "ALARK": "alarko-holding",
-        "TKFEN": "tekfen", "EKGYO": "emlak-konut", "HALKB": "halkbank",
-        "VAKBN": "vakifbank", "AEFES": "anadolu-efes", "CCOLA": "coca-cola-icecek",
-        "ULKER": "ulker", "ANSGR": "anadolu-sigorta", "TURSG": "turkiye-sigorta",
-        "ALTNY": "altinay-savunma", "OTKAR": "otokar", "DOAS": "dogus-otomotiv",
-        "PATEK": "pasifik-teknoloji", "ARDYZ": "ard-bilisim", "BRSAN": "borusan",
-        "SDTTR": "sdt-uzay", "TAVHL": "tav-havalimanlari", "ENJSA": "enerjisa",
-        "ODAS": "odas-elektrik", "KONTR": "kontrolmatik", "CWENE": "cw-enerji",
-        "EUPWR": "europower", "GESAN": "girisim-elektrik", "REEDR": "reeder"
+        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik"
     };
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
 
-    // Çok kademeli logo URL CDN zinciri (BIST resmi SVG CDN'leri)
+    // 1. Öncelik: Kendi Sitemizin Deposu (/logos/{SYMBOL}.svg)
+    // 2. Öncelik: Harici TradingView SVG CDN
     const logoSources = [
+        `/logos/${clean}.svg`,
         `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
-        `https://s3-symbol-logo.tradingview.com/${slug}.svg`,
-        `https://s3-symbol-logo.tradingview.com/crypto/XTVC${clean}.svg`
+        `https://s3-symbol-logo.tradingview.com/${slug}.svg`
     ];
 
     const currentSource = logoSources[imgIndex];
@@ -113,7 +104,7 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
     }
 
     return (
-        <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-1 ring-2 ring-slate-100", className)}>
+        <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-0.5 ring-2 ring-slate-100", className)}>
             <img 
                 src={currentSource} 
                 alt={clean} 
