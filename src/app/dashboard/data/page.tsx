@@ -26,7 +26,11 @@ import {
   Building2,
   RefreshCw,
   ArrowUpDown,
-  Scale
+  Scale,
+  Trophy,
+  Award,
+  Flame,
+  ArrowDownRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -110,6 +114,23 @@ const STOCK_NAMES: Record<string, string> = {
     "BRSAN": "Borusan Birleşik Boru Fabrikaları", 
     "SDTTR": "SDT Uzay ve Savunma Teknolojileri"
 };
+
+// AYIN ENLERİ MOCK ŞABLON VERİSİ (Veri bağlantısı için hazır)
+const MONTHLY_TOP_5_GAINERS = [
+    { rank: 1, symbol: "MIATK", name: "Mia Teknoloji A.Ş.", monthlyReturn: 38.4, price: 78.50, sector: "Teknoloji" },
+    { rank: 2, symbol: "ASTOR", name: "Astor Enerji A.Ş.", monthlyReturn: 31.2, price: 118.20, sector: "Enerji" },
+    { rank: 3, symbol: "THYAO", name: "Türk Hava Yolları", monthlyReturn: 24.6, price: 315.25, sector: "Havacılık" },
+    { rank: 4, symbol: "ASELS", name: "Aselsan Elektronik", monthlyReturn: 21.8, price: 64.10, sector: "Savunma" },
+    { rank: 5, symbol: "GARAN", name: "Garanti BBVA", monthlyReturn: 19.5, price: 112.40, sector: "Bankacılık" }
+];
+
+const MONTHLY_TOP_5_LOSERS = [
+    { rank: 1, symbol: "HEKTS", name: "Hektaş Ticaret T.A.Ş.", monthlyReturn: -18.6, price: 14.20, sector: "Kimya" },
+    { rank: 2, symbol: "SASA", name: "Sasa Polyester", monthlyReturn: -15.4, price: 38.90, sector: "Tekstil" },
+    { rank: 3, symbol: "ODAS", name: "Odaş Elektrik", monthlyReturn: -12.8, price: 8.45, sector: "Enerji" },
+    { rank: 4, symbol: "VESTL", name: "Vestel Elektronik", monthlyReturn: -10.5, price: 72.30, sector: "Dayanıklı Tüketim" },
+    { rank: 5, symbol: "PETKM", name: "Petkim Petrokimya", monthlyReturn: -9.2, price: 18.60, sector: "Petrokimya" }
+];
 
 // Sektörel Büyüme Şablon Verisi
 const SECTOR_GROWTH_TEMPLATES = [
@@ -268,7 +289,7 @@ export default function AssetsPage() {
                         Varlık <span className="text-[#00008B]">Merkezi</span>
                     </h1>
                     <p className="text-xs font-semibold text-slate-500 leading-relaxed">
-                        Tüm BIST hisselerini ve TEFAS fonlarını inceleyin, varlıkları baş başa karşılaştırın ve sektörel büyüme ivmelerini keşfedin.
+                        Tüm BIST hisselerini ve TEFAS fonlarını inceleyin, ayın enlerini takip edin, varlıkları baş başa karşılaştırın ve sektörel büyüme ivmelerini keşfedin.
                     </p>
                 </div>
 
@@ -280,6 +301,112 @@ export default function AssetsPage() {
                     <div className="bg-emerald-50/80 border border-emerald-200/60 rounded-2xl px-4 py-3">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Sektörel Kapsam</span>
                         <span className="text-lg font-black text-emerald-700">8 Ana Sektör</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* WIDGET: AYIN ENLERİ TERMİNALİ (TOP & BOTTOM 5 PERFORMERS WIDGET) */}
+            <div className="w-full bg-white border border-slate-200/90 rounded-[32px] p-5 md:p-7 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-md shadow-[#00008B]/20 shrink-0">
+                            <Trophy className="w-5 h-5 text-amber-300" />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-black text-slate-900 tracking-tight">Ayın Enleri Terminalı</h2>
+                            <p className="text-[11px] font-bold text-slate-400">Bu Ayın En Çok Kazandıran ve En Çok Kaybettiren İlk 5 Hissesi</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-200/80 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-wider self-start sm:self-auto">
+                        <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce" />
+                        Aylık Performans Sıralaması
+                    </div>
+                </div>
+
+                {/* İKİ KOLONLU AYIN ENLERİ GRID (KAZANDIRANLAR & KAYBETTİRENLER) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+                    {/* AYIN EN ÇOK KAZANDIRAN İLK 5 HİSSESİ (TOP 5 GAINERS) */}
+                    <div className="bg-emerald-50/40 border border-emerald-200/70 rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center justify-between border-b border-emerald-100 pb-2.5">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                <h3 className="text-xs font-black text-emerald-900 uppercase tracking-wider">🟢 Ayın En Çok Kazandıranları (Top 5)</h3>
+                            </div>
+                            <span className="text-[10px] font-bold text-emerald-700 uppercase">Aylık Getiri</span>
+                        </div>
+
+                        <div className="space-y-2">
+                            {MONTHLY_TOP_5_GAINERS.map((item) => (
+                                <div 
+                                    key={item.symbol} 
+                                    className="flex items-center justify-between p-3 bg-white border border-emerald-100/80 rounded-xl hover:shadow-md transition-all gap-3"
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <span className={cn(
+                                            "w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0",
+                                            item.rank === 1 ? "bg-amber-400 text-slate-900 shadow-sm" :
+                                            item.rank === 2 ? "bg-slate-300 text-slate-900" :
+                                            item.rank === 3 ? "bg-amber-700 text-white" : "bg-emerald-100 text-emerald-800"
+                                        )}>
+                                            #{item.rank}
+                                        </span>
+
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-xs font-black text-slate-900">{item.symbol}</h4>
+                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">{item.sector}</span>
+                                            </div>
+                                            <p className="text-[10px] font-medium text-slate-400 truncate">{item.name}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right shrink-0">
+                                        <span className="text-xs font-black text-emerald-600 block">+{item.monthlyReturn}%</span>
+                                        <span className="text-[10px] font-bold text-slate-500">{item.price.toFixed(2)} ₺</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* AYIN EN ÇOK KAYBETTİREN İLK 5 HİSSESİ (TOP 5 LOSERS) */}
+                    <div className="bg-rose-50/40 border border-rose-200/70 rounded-2xl p-5 space-y-3">
+                        <div className="flex items-center justify-between border-b border-rose-100 pb-2.5">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                                <h3 className="text-xs font-black text-rose-900 uppercase tracking-wider">🔴 Ayın En Çok Kaybettirenleri (Top 5)</h3>
+                            </div>
+                            <span className="text-[10px] font-bold text-rose-700 uppercase">Aylık Kayıp</span>
+                        </div>
+
+                        <div className="space-y-2">
+                            {MONTHLY_TOP_5_LOSERS.map((item) => (
+                                <div 
+                                    key={item.symbol} 
+                                    className="flex items-center justify-between p-3 bg-white border border-rose-100/80 rounded-xl hover:shadow-md transition-all gap-3"
+                                >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <span className="w-6 h-6 rounded-lg text-xs font-black bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+                                            #{item.rank}
+                                        </span>
+
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-xs font-black text-slate-900">{item.symbol}</h4>
+                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">{item.sector}</span>
+                                            </div>
+                                            <p className="text-[10px] font-medium text-slate-400 truncate">{item.name}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right shrink-0">
+                                        <span className="text-xs font-black text-rose-600 block">{item.monthlyReturn}%</span>
+                                        <span className="text-[10px] font-bold text-slate-500">{item.price.toFixed(2)} ₺</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -442,7 +569,6 @@ export default function AssetsPage() {
                     </span>
                 </div>
 
-                {/* SEKTÖREL BÜYÜME ŞABLON KARTLARI - SIĞAN EKRAN GRID */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                     {SECTOR_GROWTH_TEMPLATES.map((sector, idx) => (
                         <div key={idx} className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-3">
@@ -481,7 +607,7 @@ export default function AssetsPage() {
                 </div>
             </div>
 
-            {/* WIDGET 3: HİSSE & VARLIK ARAŞTIRMA TERMINALİ (ZERO HORIZONTAL SCROLL) */}
+            {/* WIDGET 3: HİSSE & VARLIK ARAŞTIRMA TERMINALİ */}
             <div className="w-full bg-white border border-slate-200/90 rounded-[32px] p-5 md:p-7 shadow-2xl shadow-slate-200/50 space-y-6 relative overflow-hidden">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                     <div className="flex items-center gap-3">
@@ -515,7 +641,6 @@ export default function AssetsPage() {
                     </div>
                 </div>
 
-                {/* ARAMA VE ESNEK (WRAP) SEKTÖR BUTONLARI - HİÇBİR YATAY SCROLL YOK */}
                 <div className="space-y-4 w-full">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
                         <div className="relative flex-1 group">
@@ -561,7 +686,6 @@ export default function AssetsPage() {
                         </div>
                     </div>
 
-                    {/* SEKTÖR SEÇİM PİLLERİ (FLEX WRAP - YATAY KAYDIRMA BARSIZ EKRA S IĞAN PİLLER) */}
                     <div className="flex flex-wrap items-center gap-2 w-full pt-1">
                         {sectors.map((sector) => (
                             <button 
@@ -580,7 +704,6 @@ export default function AssetsPage() {
                     </div>
                 </div>
 
-                {/* VARTALIK KARTLARI - TAM EKRAN GRID */}
                 <AnimatePresence mode="wait">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 space-y-3">
@@ -679,7 +802,6 @@ export default function AssetsPage() {
                             })}
                         </div>
                     ) : (
-                        /* ESNEK LİSTE GÖRÜNÜMÜ - HİÇBİR TAŞMA VEYA SCROLLBAR OLMADAN */
                         <div className="space-y-2 w-full">
                             {processedData.map((item) => {
                                 const fullName = STOCK_NAMES[item.symbol] || item.name || item.symbol;
