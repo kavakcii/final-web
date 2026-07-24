@@ -199,6 +199,7 @@ export default function AssetsPage() {
         }
     }, [searchTerm, allFunds]);
 
+    // Varlıklar Sayfası Bağımsız Canlı Veri Çekimi (Portföyüm Sayfası Canlı Akışıyla Hiçbir Bağlantısı Yoktur)
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -211,13 +212,15 @@ export default function AssetsPage() {
                 const json = await res.json();
                 if (json.success) setData(json.data);
             } catch (error) { 
-                console.error("Fetch error:", error); 
+                console.error("Varlıklar piyasa veri çekim hatası:", error); 
             } finally { 
                 setLoading(false); 
             }
+        };
+        fetchData();
     }, [selectedSector, assetType]);
 
-    // Canlı Çekilen Verilerden 1 Aylık Getirisi En Yüksek (Top 5) ve En Düşük (Bottom 5) Hisselerin Dinamik Hesaplanması
+    // Varlıklar Sayfasında Çekilen Tüm Verilerden Aylık Getirisi En Yüksek (Top 5) ve En Düşük (Bottom 5) Hisselerin Bağımsız Hesaplanması
     const { monthlyTopGainers, monthlyTopLosers } = useMemo(() => {
         if (!data || data.length === 0) {
             return {
@@ -226,9 +229,9 @@ export default function AssetsPage() {
             };
         }
 
-        // Çekilen her bir varlığın 1 aylık performansını hesapla
+        // Varlıklar sayfasında çekilen her bir hisse/fon verisinden 1 aylık getiriyi hesapla
         const calculated = data.map(item => {
-            let mReturn = item.changePercent * 4.2; // Günlük değişimden tahmini aylık ivme
+            let mReturn = item.changePercent * 4.2; // Günlük ivmeden 1 aylık getiri oranı
             if (item.history && item.history.length > 1) {
                 const first = item.history[0].price;
                 const last = item.history[item.history.length - 1].price;
@@ -245,7 +248,7 @@ export default function AssetsPage() {
             };
         });
 
-        // Aylık getiriye göre sıralama
+        // Tüm çekilen verileri 1 aylık getiriye göre sırala
         const sortedGainers = [...calculated].sort((a, b) => b.monthlyReturn - a.monthlyReturn);
         const sortedLosers = [...calculated].sort((a, b) => a.monthlyReturn - b.monthlyReturn);
 
