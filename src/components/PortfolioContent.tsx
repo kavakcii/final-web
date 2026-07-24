@@ -32,12 +32,12 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
 
-    // 1. Öncelik: Kendi Sitemizin Deposu (/logos/{SYMBOL}.svg)
-    // 2. Öncelik: Harici TradingView SVG CDN
+    // Orijinal BIST Şirket Amblemleri CDN Kaynakları (Öncelikli Gerçek Logolar)
     const logoSources = [
-        `/logos/${clean}.svg`,
         `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
-        `https://s3-symbol-logo.tradingview.com/${slug}.svg`
+        `https://s3-symbol-logo.tradingview.com/${slug}.svg`,
+        `https://s3-symbol-logo.tradingview.com/crypto/XTVC${clean}.svg`,
+        `https://s3-symbol-logo.tradingview.com/country/TR.svg`
     ];
 
     const currentSource = logoSources[imgIndex];
