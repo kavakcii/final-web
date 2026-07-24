@@ -63,6 +63,8 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
             <img 
                 src={currentSource} 
                 alt={clean} 
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
                 className="w-full h-full object-contain rounded-full"
                 onError={handleError}
             />
