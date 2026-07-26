@@ -142,18 +142,18 @@ const STOCK_NAMES: Record<string, string> = {
     "PGSUS": "Pegasus Hava Taşımacılığı A.Ş."
 };
 
-// SEKTÖRLER YILLIK GETİRİLERİ TÜM SEKTÖR VERİSİ (MARKA PALETİNE UYGUN TEK TİP BEYAZDAN MAVİYE GRADYAN)
+// SEKTÖRLER YILLIK GETİRİLERİ TÜM SEKTÖR VERİSİ (BEYAZDAN YUKARI DOĞRU KOYULAŞAN MARKA MAVİSİ GRADYANI)
 const ALL_SECTORS_DATA = [
-    { name: "Teknoloji & Yazılım", annualReturn: 48.2, marketCap: "180 Mr TL", leader: "MIATK", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Savunma Sanayii", annualReturn: 42.1, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Enerji & Yenilenebilir", annualReturn: 39.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Havacılık & Ulaştırma", annualReturn: 34.8, marketCap: "450 Mr TL", leader: "THYAO", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Bankacılık & Finans", annualReturn: 28.5, marketCap: "620 Mr TL", leader: "GARAN", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Holdingler & Yatırım", annualReturn: 22.6, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Otomotiv Sanayi", annualReturn: 19.8, marketCap: "360 Mr TL", leader: "FROTO", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Perakende & Gıda", annualReturn: 16.4, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Demir Çelik & Sanayi", annualReturn: 14.2, marketCap: "170 Mr TL", leader: "EREGL", color: "from-[#00008B] via-blue-600 to-sky-100" },
-    { name: "Gayrimenkul (GYO)", annualReturn: 11.5, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-[#00008B] via-blue-600 to-sky-100" }
+    { name: "Teknoloji & Yazılım", annualReturn: 48.2, marketCap: "180 Mr TL", leader: "MIATK", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Savunma Sanayii", annualReturn: 42.1, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Enerji & Yenilenebilir", annualReturn: 39.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Havacılık & Ulaştırma", annualReturn: 34.8, marketCap: "450 Mr TL", leader: "THYAO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Bankacılık & Finans", annualReturn: 28.5, marketCap: "620 Mr TL", leader: "GARAN", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Holdingler & Yatırım", annualReturn: 22.6, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Otomotiv Sanayi", annualReturn: 19.8, marketCap: "360 Mr TL", leader: "FROTO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Perakende & Gıda", annualReturn: 16.4, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Demir Çelik & Sanayi", annualReturn: 14.2, marketCap: "170 Mr TL", leader: "EREGL", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Gayrimenkul (GYO)", annualReturn: 11.5, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" }
 ];
 
 // AYIN ENLERİ MOCK ŞABLON VERİSİ
@@ -290,7 +290,7 @@ export default function AssetsPage() {
 
                         {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (SAYFAYLA UZARKEN SIRAYLA GELEN SÜTUNLAR) */}
                         {!isSectorChartExpanded ? (
-                            /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ - BEYAZDAN MAVİYE TEK TİP GRADYAN */
+                            /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ - BEYAZDAN MAVİYE KOYULAŞAN TEK TİP GRADYAN */
                             <div className="h-72 w-full flex items-end justify-around pt-6 px-4 pb-2 gap-4">
                                 {top4Sectors.map((sector, idx) => {
                                     const maxVal = 55;
@@ -302,15 +302,15 @@ export default function AssetsPage() {
                                                 +{sector.annualReturn}%
                                             </span>
                                             
-                                            {/* Dikey Sütun Barı - Beyazdan Maviye Marka Gradyanı */}
+                                            {/* Dikey Sütun Barı - Beyazdan Maviye Koyulaşan Gradyan */}
                                             <div 
                                                 className={cn(
-                                                    "w-full max-w-[72px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-200/50",
+                                                    "w-full max-w-[72px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-300/40",
                                                     sector.color
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
                                             >
-                                                <span className="text-[10px] font-black text-[#00008B] bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm">
+                                                <span className="text-[10px] font-black text-white bg-[#00008B]/60 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm">
                                                     #{idx + 1}
                                                 </span>
                                             </div>
@@ -327,7 +327,7 @@ export default function AssetsPage() {
                                 })}
                             </div>
                         ) : (
-                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS - BEYAZDAN MAVİYE TEK TİP GRADYAN */
+                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS - BEYAZDAN MAVİYE KOYULAŞAN TEK TİP GRADYAN */
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -354,15 +354,15 @@ export default function AssetsPage() {
                                                 +{sector.annualReturn}%
                                             </span>
                                             
-                                            {/* Dikey Sütun Barı - Beyazdan Maviye Marka Gradyanı */}
+                                            {/* Dikey Sütun Barı - Beyazdan Maviye Koyulaşan Gradyan */}
                                             <div 
                                                 className={cn(
-                                                    "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-200/50",
+                                                    "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-300/40",
                                                     sector.color
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
                                             >
-                                                <span className="text-[9px] font-black text-[#00008B] bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm">
+                                                <span className="text-[9px] font-black text-white bg-[#00008B]/60 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm">
                                                     #{idx + 1}
                                                 </span>
                                             </div>
@@ -381,16 +381,17 @@ export default function AssetsPage() {
                         )}
                     </motion.div>
 
-                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (SOLDAN SAĞA YAN YANA SİLİNEREK DARALAN KUTU) */}
+                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (KAPANIŞTA SIRIFDAN GELİYORMUŞ GİBİ YAVAŞÇA AYDINLANAN ANIMASYON) */}
                     <AnimatePresence mode="popLayout">
                         {!isSectorChartExpanded && (
                             <motion.div 
-                                initial={{ opacity: 1, scaleX: 1, width: "50%" }}
-                                animate={{ opacity: 1, scaleX: 1, width: "50%" }}
+                                initial={{ opacity: 0, scaleX: 0, width: "0%", filter: "blur(8px)" }}
+                                animate={{ opacity: 1, scaleX: 1, width: "50%", filter: "blur(0px)" }}
                                 exit={{ 
                                     opacity: 0, 
                                     scaleX: 0, 
                                     width: "0%", 
+                                    filter: "blur(8px)",
                                     transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] } 
                                 }}
                                 transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
@@ -414,8 +415,13 @@ export default function AssetsPage() {
                                     </div>
                                 </div>
 
-                                {/* YAN YANA (SAĞ VE SOL) İKİ KOLONLU AYIN ENLERİ DÜZENİ */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* YAN YANA (SAĞ VE SOL) İKİ KOLONLU AYIN ENLERİ DÜZENİ - AYDINLANARAK GELEN İÇERİK */}
+                                <motion.div 
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                                    className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                                >
                                     {/* SOL KOLON */}
                                     <div className="space-y-2 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/80">
                                         <h3 className="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
@@ -459,7 +465,7 @@ export default function AssetsPage() {
                                             ))}
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </motion.div>
                         )}
                     </AnimatePresence>
