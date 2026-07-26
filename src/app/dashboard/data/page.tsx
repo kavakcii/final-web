@@ -1527,10 +1527,10 @@ export default function AssetsPage() {
                                     transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                                     className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                                 >
-                                    {/* SOL KOLON: EN İYİ GETİRİLİ 5 HİSSE (LOGOSUZ, SADE YAZI & TIKLANABİLİR LINK) */}
-                                    <div className="space-y-2 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/80">
-                                        <h3 className="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                    {/* SOL KOLON: EN İYİ GETİRİLİ 5 HİSSE (BELİRGİN CANLI YEŞİL ZEMİN & LOGOSUZ YAZI) */}
+                                    <div className="space-y-2 bg-emerald-100/90 p-3.5 rounded-2xl border border-emerald-300 shadow-sm">
+                                        <h3 className="text-[10px] font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm" />
                                             En İyi Getirili 5 Hisse
                                         </h3>
                                         <div className="space-y-1.5">
@@ -1540,17 +1540,17 @@ export default function AssetsPage() {
                                                     href={`/varlik/${item.symbol}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center justify-between p-2 bg-white border border-emerald-100 rounded-xl hover:border-emerald-400 hover:shadow-md transition-all text-xs group cursor-pointer"
+                                                    className="flex items-center justify-between p-2.5 bg-[#E6F4EA] border border-emerald-300/90 rounded-xl hover:bg-emerald-200/90 hover:border-emerald-500 hover:shadow-md transition-all text-xs group cursor-pointer"
                                                 >
                                                     <div className="min-w-0">
-                                                        <span className="font-black text-slate-900 text-xs block leading-tight group-hover:text-emerald-600 transition-colors">
+                                                        <span className="font-black text-emerald-950 text-xs block leading-tight group-hover:text-emerald-700 transition-colors">
                                                             {item.symbol}
                                                         </span>
-                                                        <span className="text-[8px] font-semibold text-slate-400 block truncate max-w-[120px]">
+                                                        <span className="text-[8px] font-bold text-emerald-800/80 block truncate max-w-[120px]">
                                                             {item.name}
                                                         </span>
                                                     </div>
-                                                    <span className="font-black text-emerald-600 text-xs shrink-0 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60">
+                                                    <span className="font-black text-emerald-800 text-xs shrink-0 bg-emerald-200/90 px-2 py-0.5 rounded-lg border border-emerald-300 shadow-xs">
                                                         +{item.monthlyReturn}%
                                                     </span>
                                                 </a>
@@ -1558,10 +1558,10 @@ export default function AssetsPage() {
                                         </div>
                                     </div>
 
-                                    {/* SAĞ KOLON: EN KÖTÜ GETİRİLİ 5 HİSSE (LOGOSUZ, SADE YAZI & TIKLANABİLİR LINK) */}
-                                    <div className="space-y-2 bg-rose-50/40 p-3 rounded-2xl border border-rose-100/80">
-                                        <h3 className="text-[10px] font-black text-rose-900 uppercase tracking-wider flex items-center gap-1">
-                                            <span className="w-2 h-2 rounded-full bg-rose-500" />
+                                    {/* SAĞ KOLON: EN KÖTÜ GETİRİLİ 5 HİSSE (BELİRGİN CANLI KIRMIZI ZEMİN & LOGOSUZ YAZI) */}
+                                    <div className="space-y-2 bg-rose-100/90 p-3.5 rounded-2xl border border-rose-300 shadow-sm">
+                                        <h3 className="text-[10px] font-black text-rose-950 uppercase tracking-wider flex items-center gap-1.5">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-sm" />
                                             En Kötü Getirili 5 Hisse
                                         </h3>
                                         <div className="space-y-1.5">
@@ -1571,17 +1571,17 @@ export default function AssetsPage() {
                                                     href={`/varlik/${item.symbol}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center justify-between p-2 bg-white border border-rose-100 rounded-xl hover:border-rose-400 hover:shadow-md transition-all text-xs group cursor-pointer"
+                                                    className="flex items-center justify-between p-2.5 bg-[#FCE8E6] border border-rose-300/90 rounded-xl hover:bg-rose-200/90 hover:border-rose-500 hover:shadow-md transition-all text-xs group cursor-pointer"
                                                 >
                                                     <div className="min-w-0">
-                                                        <span className="font-black text-slate-900 text-xs block leading-tight group-hover:text-rose-600 transition-colors">
+                                                        <span className="font-black text-rose-950 text-xs block leading-tight group-hover:text-rose-700 transition-colors">
                                                             {item.symbol}
                                                         </span>
-                                                        <span className="text-[8px] font-semibold text-slate-400 block truncate max-w-[120px]">
+                                                        <span className="text-[8px] font-bold text-rose-800/80 block truncate max-w-[120px]">
                                                             {item.name}
                                                         </span>
                                                     </div>
-                                                    <span className="font-black text-rose-600 text-xs shrink-0 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200/60">
+                                                    <span className="font-black text-rose-800 text-xs shrink-0 bg-rose-200/90 px-2 py-0.5 rounded-lg border border-rose-300 shadow-xs">
                                                         {item.monthlyReturn}%
                                                     </span>
                                                 </a>
@@ -1596,7 +1596,7 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. BÖLÜM: ALT YARI (620 BIST ŞİRKETLİ TABLO, SEKTÖR FİLTRE KUTUSU & AKILLI SAYFALAMA) */}
+            {/* 2. BÖLÜM: ALT YARI (VARLIK MERKEZİ - SEKTÖR FİLTRE KUTUSU & AKILLI SAYFALAMA) */}
             {/* ========================================================================= */}
             <div 
                 ref={stockSectionRef}
@@ -1604,19 +1604,14 @@ export default function AssetsPage() {
             >
                 <div className="space-y-4">
                     
-                    {/* ÜST BAŞLIK & TOPLAM 620 ŞİRKET GÖSTERGESİ */}
+                    {/* ÜST BAŞLIK: VARLIK MERKEZİ */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
                         <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                                    {selectedSector ? `${selectedSector} Hisseleri` : "BIST Finansal Veri Tablosu"}
-                                </h2>
-                                <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-[#00008B]/10 text-[#00008B] border border-[#00008B]/20">
-                                    Toplam {filteredStocks.length} Kayıt (BIST Master Kataloğu)
-                                </span>
-                            </div>
+                            <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                                {selectedSector ? `${selectedSector} - Varlık Merkezi` : "Varlık Merkezi"}
+                            </h2>
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                                Tüm BIST şirketleri listelenmiştir. Tablo başlıklarına tıklayarak sıralama yapabilir veya sektör filtre kutusundan süzebilirsiniz.
+                                Tüm BIST şirketlerini inceleyebilir, tablo başlıklarına tıklayarak sıralama yapabilir veya sektör filtresinden süzebilirsiniz.
                             </p>
                         </div>
 
@@ -1632,38 +1627,6 @@ export default function AssetsPage() {
                                 Tüm Sektörleri Göster
                             </button>
                         )}
-                    </div>
-
-                    {/* CANLI VERİ VE HER 60sn OTOMATİK GÜNCELLEME İNDİKATÖRÜ BANNER'I */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3 text-xs">
-                        <div className="flex items-center gap-2">
-                            <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                            </span>
-                            <span className="font-black text-emerald-900">CANLI BİST FİYAT VERİSİ</span>
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
-                                Her 60 saniyede bir otomatik güncellenir
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            {lastUpdatedTime && (
-                                <span className="text-[10px] font-bold text-slate-500">
-                                    Son Güncelleme: <span className="font-black text-slate-800">{lastUpdatedTime}</span>
-                                </span>
-                            )}
-
-                            <button
-                                onClick={fetchLivePrices}
-                                disabled={isRefreshing}
-                                className="px-2.5 py-1 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                                title="Canlı BIST fiyatlarını anında tazele"
-                            >
-                                <RefreshCw className={cn("w-3.5 h-3.5 text-emerald-600", isRefreshing && "animate-spin")} />
-                                {isRefreshing ? "Yenileniyor..." : "Yenile"}
-                            </button>
-                        </div>
                     </div>
 
                     {/* ARAMA VE SEKTÖR FİLTRE KUTUSU (DROPDOWN SELECT BOX) */}
