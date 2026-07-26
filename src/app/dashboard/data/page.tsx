@@ -64,9 +64,12 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
 
-    // 1. Yerel Proje Klasörü (public/logos/{symbol}.png) -> 2. Ekofin CDN -> 3. TradingView CDN
+    // 1. Yerel Proje Klasörü (public/logos/{symbol}) -> 2. Ekofin CDN -> 3. TradingView CDN
     const logoSources = [
         `/logos/${clean}.png`,
+        `/logos/${clean}.jpeg`,
+        `/logos/${clean}.jpg`,
+        `/logos/${clean}.webp`,
         `/logos/${clean}.svg`,
         `https://cdn.ekofin.net/Logos/${clean}.png`,
         `https://cdn.ekofin.net/Front/${clean}.png`,
