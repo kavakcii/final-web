@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, use } from "react";
+import { useState, useEffect, useMemo, use, useRef } from "react";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -8,17 +8,20 @@ import {
   RefreshCw, 
   Clock, 
   Sparkles, 
-  Bell, 
   Plus, 
-  Share2, 
   Building2, 
   BarChart3, 
   Zap, 
   ShieldCheck, 
   ChevronRight,
-  Bookmark,
   Newspaper,
-  X
+  X,
+  FileText,
+  PieChart,
+  Coins,
+  Activity,
+  Sliders,
+  ListFilter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -53,22 +56,6 @@ const STOCK_NAMES: Record<string, string> = {
     "BIGEN": "Birleşim Grup Enerji Yatırımları A.Ş."
 };
 
-// SOL TARAFTAKİ DAİMA AÇIK HİSSE KISAYOL BAŞLIKLARI
-const SHORTCUT_STOCKS = [
-  { symbol: "THYAO", name: "Türk Hava Yolları" },
-  { symbol: "ASELS", name: "Aselsan" },
-  { symbol: "MIATK", name: "Mia Teknoloji" },
-  { symbol: "ASTOR", name: "Astor Enerji" },
-  { symbol: "GARAN", name: "Garanti BBVA" },
-  { symbol: "EREGL", name: "Ereğli Demir Çelik" },
-  { symbol: "TUPRS", name: "Tüpraş" },
-  { symbol: "KCHOL", name: "Koç Holding" },
-  { symbol: "SASA", name: "Sasa Polyester" },
-  { symbol: "BIMAS", name: "BİM Mağazaları" },
-  { symbol: "BIGEN", name: "Birleşim Enerji" },
-  { symbol: "OTKAR", name: "Otokar" }
-];
-
 const TIMEFRAMES = [
   { id: "1D", label: "1 Gün" },
   { id: "1W", label: "1 Hafta" },
@@ -85,6 +72,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const symbol = rawSymbol.toUpperCase().replace('.IS', '').trim();
 
   const [activeTimeframe, setActiveTimeframe] = useState("1D");
+  const [activeNavTab, setActiveNavTab] = useState("genel");
   const [loading, setLoading] = useState(true);
   const [stockData, setStockData] = useState<any>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
@@ -93,6 +81,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [newsList, setNewsList] = useState<any[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
+
+  // SECTION REFS FOR SMOOTH SCROLLING
+  const genelRef = useRef<HTMLDivElement>(null);
+  const grafikRef = useRef<HTMLDivElement>(null);
+  const ozelliklerRef = useRef<HTMLDivElement>(null);
+  const haberlerRef = useRef<HTMLDivElement>(null);
+  const temettulerRef = useRef<HTMLDivElement>(null);
 
   const fullName = STOCK_NAMES[symbol] || `${symbol} Sanayi ve Ticaret A.Ş.`;
 
@@ -132,6 +127,20 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     fetchStockData(activeTimeframe);
     fetchNews();
   }, [symbol, activeTimeframe]);
+
+  const scrollToSection = (tabId: string) => {
+    setActiveNavTab(tabId);
+    let targetRef: React.RefObject<HTMLDivElement | null> | null = null;
+    if (tabId === "genel") targetRef = genelRef;
+    else if (tabId === "grafik") targetRef = grafikRef;
+    else if (tabId === "ozellikler") targetRef = ozelliklerRef;
+    else if (tabId === "haberler") targetRef = haberlerRef;
+    else if (tabId === "temettuler") targetRef = temettulerRef;
+
+    if (targetRef && targetRef.current) {
+      targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
 
   // SVG Path Calculation for Smooth Blue Line & Darkening Blue Gradient Area
   const svgPathData = useMemo(() => {
@@ -188,61 +197,49 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     <div className="flex min-h-screen bg-[#F8FAFC] w-full overflow-x-hidden relative">
       
       {/* ========================================================================= */}
-      {/* 1. SOL DÜZEN: LACİVERT DAİMA AÇIK KISAYOL MENÜSÜ (BRAND BLUE #00008B) */}
+      {/* 1. SOL DÜZEN: LACİVERT SOL MENÜ (#00008B) - TIKLANAN VARLIĞIN ADI VE SEKMELER */}
       {/* ========================================================================= */}
       <aside className="w-64 shrink-0 min-h-screen bg-[#00008B] text-white p-5 space-y-6 flex flex-col justify-between shadow-2xl z-20">
         <div className="space-y-6">
           
-          {/* MARKA BAŞLIĞI */}
-          <div className="flex items-center gap-3 border-b border-blue-800/80 pb-4">
-            <div className="w-10 h-10 rounded-2xl bg-white text-[#00008B] flex items-center justify-center font-black text-xl shadow-md">
-              F
+          {/* TIKLANAN HİSSENİN BAŞLIĞI VE LOGOSU */}
+          <div className="flex items-center gap-3 border-b border-blue-800/80 pb-5">
+            <div className="w-11 h-11 rounded-2xl bg-white text-[#00008B] flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              {symbol.slice(0, 1)}
             </div>
-            <div>
-              <h1 className="text-lg font-black text-white tracking-tight">FinAl Varlık</h1>
-              <p className="text-[10px] font-bold text-blue-200/80">Canlı Piyasa & Analiz</p>
+            <div className="min-w-0">
+              <h1 className="text-xl font-black text-white tracking-tight truncate">{symbol}</h1>
+              <p className="text-[10px] font-bold text-blue-200/80 truncate max-w-[150px]">{fullName}</p>
             </div>
           </div>
 
-          {/* MENÜ GEZİNTİSİ */}
-          <div className="space-y-1">
-            <span className="text-[10px] font-black text-blue-300/70 uppercase tracking-widest px-2">Gezinti</span>
-            <Link 
-              href="/dashboard/data" 
-              className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-black bg-blue-900/60 text-white border border-blue-700/60 hover:bg-blue-800 transition-all"
-            >
-              <BarChart3 className="w-4 h-4 text-sky-300" />
-              Varlık Merkezi
-            </Link>
-          </div>
-
-          {/* DAİMA AÇIK HİSSE KISAYOL BAŞLIKLARI */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between px-2">
-              <span className="text-[10px] font-black text-blue-300/80 uppercase tracking-widest">Hisse Kısayolları</span>
-              <Bookmark className="w-3.5 h-3.5 text-blue-300/80" />
-            </div>
-
-            <div className="space-y-1 max-h-[50vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-blue-700">
-              {SHORTCUT_STOCKS.map((st) => {
-                const isActive = st.symbol === symbol;
-                return (
-                  <Link
-                    key={st.symbol}
-                    href={`/varlik/${st.symbol}`}
-                    className={cn(
-                      "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all border",
-                      isActive
-                        ? "bg-white text-[#00008B] border-white font-black shadow-md scale-[1.02]"
-                        : "bg-blue-950/40 text-blue-100 border-blue-800/40 hover:bg-blue-800/70 hover:text-white"
-                    )}
-                  >
-                    <span className="font-black">{st.symbol}</span>
-                    <span className={cn("text-[9px] truncate max-w-[100px]", isActive ? "text-[#00008B]/80 font-bold" : "text-blue-300/70")}>{st.name}</span>
-                  </Link>
-                );
-              })}
-            </div>
+          {/* MENÜ BAŞLIKLARI (Genel Bilgi, Haberler, Grafik, Hisse Özellikleri, Temettüler) */}
+          <div className="space-y-1.5 pt-2">
+            {[
+              { id: "genel", label: "Genel Bilgi", icon: FileText },
+              { id: "haberler", label: "Haberler", icon: Newspaper },
+              { id: "grafik", label: "Grafik", icon: BarChart3 },
+              { id: "ozellikler", label: "Hisse Özellikleri", icon: Activity },
+              { id: "temettuler", label: "Temettüler", icon: Coins }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeNavTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => scrollToSection(tab.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-black transition-all border text-left",
+                    isActive
+                      ? "bg-white text-[#00008B] border-white shadow-lg scale-[1.02]"
+                      : "bg-blue-950/40 text-blue-100 border-blue-800/40 hover:bg-blue-800/70 hover:text-white"
+                  )}
+                >
+                  <Icon className={cn("w-4 h-4", isActive ? "text-[#00008B]" : "text-blue-300")} />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -283,57 +280,72 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* ANA GRAFİK KARTI (BEYAZ TEMA, MAVİ ÇİZGİ & KOYULAŞAN MAVİ GRADIENT) */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-6 relative overflow-hidden">
-          
-          {/* ŞİRKET BİLGİSİ & FİYAT ÇUBUĞU */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-black text-slate-900 tracking-tight">{symbol} Grafiği <span className="text-xs font-bold text-[#00008B] italic">Canlı</span></h1>
-                <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200">
-                  BIST 100
-                </span>
+        {/* 1. SEKSİYON: GENEL BİLGİ & BAŞLIK */}
+        <div ref={genelRef} className="scroll-mt-6">
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">{symbol} Genel Bilgi</h1>
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200">
+                    BIST 100
+                  </span>
+                </div>
+                <p className="text-xs font-bold text-slate-400 mt-1">{fullName}</p>
               </div>
-              <p className="text-xs font-bold text-slate-400 mt-1">{fullName}</p>
+
+              <div className="flex items-baseline gap-3">
+                <div className="text-3xl font-black text-[#00008B] tracking-tight">
+                  {hoveredPoint ? hoveredPoint.price.toFixed(2) : (stockData?.currentPrice || "---")} <span className="text-2xl font-bold">₺</span>
+                </div>
+                <div className={cn(
+                  "px-3 py-1 rounded-xl text-xs font-black flex items-center gap-1 border",
+                  isPositive 
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                )}>
+                  {isPositive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
+                  {isPositive ? `+${stockData?.priceChange || 0}` : stockData?.priceChange} ₺ ({isPositive ? `+${stockData?.priceChangePercent || 0}` : stockData?.priceChangePercent}%)
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-baseline gap-3">
-              <div className="text-3xl font-black text-[#00008B] tracking-tight">
-                {hoveredPoint ? hoveredPoint.price.toFixed(2) : (stockData?.currentPrice || "---")} <span className="text-2xl font-bold">₺</span>
-              </div>
-              <div className={cn(
-                "px-3 py-1 rounded-xl text-xs font-black flex items-center gap-1 border",
-                isPositive 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                  : "bg-rose-50 text-rose-700 border-rose-200"
-              )}>
-                {isPositive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
-                {isPositive ? `+${stockData?.priceChange || 0}` : stockData?.priceChange} ₺ ({isPositive ? `+${stockData?.priceChangePercent || 0}` : stockData?.priceChangePercent}%)
-              </div>
-            </div>
+            <p className="text-xs font-semibold text-slate-600 leading-relaxed">
+              {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında işlem gören lider şirketler arasında yer almaktadır. Şirket özkaynakları, sektör hacmi ve yatırım değerleri düzenli olarak takip edilmektedir.
+            </p>
           </div>
+        </div>
 
-          {/* ZAMAN ARALIĞI BUTONLARI (1 Gün, 1 Hafta, 1 Ay, 3 Ay, 6 Ay, 1 Yıl, TÜMÜ) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-100">
-            {TIMEFRAMES.map((tf) => (
-              <button
-                key={tf.id}
-                onClick={() => setActiveTimeframe(tf.id)}
-                className={cn(
-                  "px-3.5 py-1.5 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
-                  activeTimeframe === tf.id
-                    ? "bg-[#00008B] text-white border-[#00008B] shadow-md"
-                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-                )}
-              >
-                {tf.label}
-              </button>
-            ))}
+        {/* 2. SEKSİYON: GRAFİK KARTI (BEYAZ TEMA, MAVİ ÇİZGİ & KOYULAŞAN MAVİ GRADIENT) */}
+        <div ref={grafikRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-6 relative overflow-hidden">
+          
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-[#00008B]" />
+              {symbol} Canlı Grafik
+            </h2>
+
+            {/* ZAMAN ARALIĞI BUTONLARI (1 Gün, 1 Hafta, 1 Ay, 3 Ay, 6 Ay, 1 Yıl, TÜMÜ) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              {TIMEFRAMES.map((tf) => (
+                <button
+                  key={tf.id}
+                  onClick={() => setActiveTimeframe(tf.id)}
+                  className={cn(
+                    "px-3 py-1 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
+                    activeTimeframe === tf.id
+                      ? "bg-[#00008B] text-white border-[#00008B] shadow-md"
+                      : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                  )}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* MAVİ ÇİZGİLİ VE AŞAĞIDAN YUKARIYA KOYULAŞAN MAVİ GRADIENTLI SVG GRAFİK ALANI */}
-          <div className="relative h-80 w-full pt-4">
+          <div className="relative h-80 w-full pt-2">
             {loading && (
               <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
                 <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
@@ -447,38 +459,43 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* ŞİRKET FİNANSAL VERİ VE İSTATİSTİK KARTLARI */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Yüksek</span>
-            <p className="text-lg font-black text-[#00008B]">₺{stockData?.high52 || "---"}</p>
-          </div>
-          <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Düşük</span>
-            <p className="text-lg font-black text-[#00008B]">₺{stockData?.low52 || "---"}</p>
-          </div>
-          <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">İşlem Hacmi</span>
-            <p className="text-lg font-black text-[#00008B]">{stockData?.volume || "1.4M"}</p>
-          </div>
-          <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Önceki Kapanış</span>
-            <p className="text-lg font-black text-[#00008B]">₺{stockData?.previousClose || "---"}</p>
+        {/* 3. SEKSİYON: HİSSE ÖZELLİKLERİ VE FİNANSAL İSTATİSTİKLER */}
+        <div ref={ozelliklerRef} className="scroll-mt-6 space-y-4">
+          <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-[#00008B]" />
+            {symbol} Hisse Özellikleri & İstatistikler
+          </h2>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Yüksek</span>
+              <p className="text-lg font-black text-[#00008B]">₺{stockData?.high52 || "---"}</p>
+            </div>
+            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Düşük</span>
+              <p className="text-lg font-black text-[#00008B]">₺{stockData?.low52 || "---"}</p>
+            </div>
+            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">İşlem Hacmi</span>
+              <p className="text-lg font-black text-[#00008B]">{stockData?.volume || "1.4M"}</p>
+            </div>
+            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Önceki Kapanış</span>
+              <p className="text-lg font-black text-[#00008B]">₺{stockData?.previousClose || "---"}</p>
+            </div>
           </div>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 3. CANLI HISSE HABERLERİ BÖLÜMÜ */}
-        {/* ========================================================================= */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
+        {/* 4. SEKSİYON: CANLI HABERLER */}
+        <div ref={haberlerRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#00008B] border border-blue-200 flex items-center justify-center shadow-sm">
                 <Newspaper className="w-5 h-5 text-[#00008B]" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Canlı Haberler & Bildirimler</h2>
-                <p className="text-xs font-bold text-slate-400">Tüm Güncel Finansal Haber ve Açıklamalar</p>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Haberler & Bildirimler</h2>
+                <p className="text-xs font-bold text-slate-400">Tüm Güncel Finansal Haberler</p>
               </div>
             </div>
 
@@ -545,11 +562,56 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             </div>
           )}
         </div>
+
+        {/* 5. SEKSİYON: TEMETTÜLER VE KÂR PAYI GEÇMİŞİ */}
+        <div ref={temettulerRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Coins className="w-5 h-5 text-[#00008B]" />
+              {symbol} Temettü Dağıtım Geçmişi
+            </h2>
+            <span className="text-[10px] font-black px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+              Düzenli Temettü Ödeyen
+            </span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                  <th className="py-3 px-3">Hak Kullanım Tarihi</th>
+                  <th className="py-3 px-3">Pay Başına Brüt Temettü</th>
+                  <th className="py-3 px-3">Temettü Verimi</th>
+                  <th className="py-3 px-3 text-right">Dağıtma Oranı</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700">
+                <tr className="hover:bg-slate-50 transition-colors">
+                  <td className="py-3 px-3 font-black text-slate-900">28 Mayıs 2024</td>
+                  <td className="py-3 px-3 text-[#00008B] font-black">₺2.85</td>
+                  <td className="py-3 px-3 text-emerald-700">%3.85</td>
+                  <td className="py-3 px-3 text-right text-slate-500">%45.2</td>
+                </tr>
+                <tr className="hover:bg-slate-50 transition-colors">
+                  <td className="py-3 px-3 font-black text-slate-900">15 Haziran 2023</td>
+                  <td className="py-3 px-3 text-[#00008B] font-black">₺1.95</td>
+                  <td className="py-3 px-3 text-emerald-700">%4.10</td>
+                  <td className="py-3 px-3 text-right text-slate-500">%42.0</td>
+                </tr>
+                <tr className="hover:bg-slate-50 transition-colors">
+                  <td className="py-3 px-3 font-black text-slate-900">22 Nisan 2022</td>
+                  <td className="py-3 px-3 text-[#00008B] font-black">₺1.40</td>
+                  <td className="py-3 px-3 text-emerald-700">%3.45</td>
+                  <td className="py-3 px-3 text-right text-slate-500">%38.5</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </main>
 
-      {/* ========================================================================= */}
-      {/* 4. SADE HABER OKUMA MODALI (KAYNAK VE KOPYALAMA BUTONU YOK) */}
-      {/* ========================================================================= */}
+      {/* SADE HABER OKUMA MODALI */}
       <AnimatePresence>
         {selectedArticle && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -559,7 +621,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto"
             >
-              {/* KAPAT BUTONU */}
               <button 
                 onClick={() => setSelectedArticle(null)}
                 className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
@@ -567,7 +628,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <X className="w-5 h-5" />
               </button>
 
-              {/* ÜST BİLGİ */}
               <div className="space-y-3 border-b border-slate-100 pb-4 pr-10">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black px-2.5 py-0.5 rounded-md bg-blue-50 text-[#00008B] border border-blue-200 uppercase">
@@ -581,14 +641,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 </h2>
               </div>
 
-              {/* TÜM HABER METNİ İÇERİĞİ */}
               <div className="space-y-4 text-slate-800 text-sm font-semibold leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
                 {selectedArticle.content?.split('\n\n').map((paragraph: string, idx: number) => (
                   <p key={idx}>{paragraph}</p>
                 )) || <p>{selectedArticle.summary}</p>}
               </div>
 
-              {/* SADE KAPAT AKSİYONU */}
               <div className="flex items-center justify-end pt-2">
                 <button 
                   onClick={() => setSelectedArticle(null)}
