@@ -1500,7 +1500,7 @@ export default function AssetsPage() {
                         )}
                     </motion.div>
 
-                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ (PARANTEZSİZ & TIKLANABİLİR LİSTE) */}
+                    {/* SAĞ ÜST MODÜL: GÜNÜN ENLERİ (CANLI GÜNLÜK KAZANAN VE KAYBEDENLER) */}
                     <AnimatePresence mode="popLayout">
                         {!isSectorChartExpanded && (
                             <motion.div 
@@ -1523,8 +1523,8 @@ export default function AssetsPage() {
                                             <Trophy className="w-5 h-5 text-amber-100" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-black text-slate-900 tracking-tight whitespace-nowrap">Ayın Enleri</h2>
-                                            <p className="text-[11px] font-bold text-slate-400 whitespace-nowrap">En Çok Kazandıran & Kaybettiren Hisseler (İncelemek için Tıklayın)</p>
+                                            <h2 className="text-lg font-black text-slate-900 tracking-tight whitespace-nowrap">Günün Enleri</h2>
+                                            <p className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Günün En Çok Kazandıran & Kaybettiren Hisseleri (İncelemek için Tıklayın)</p>
                                         </div>
                                     </div>
 
