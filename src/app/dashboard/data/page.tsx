@@ -1118,6 +1118,40 @@ export default function AssetsPage() {
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
     const itemsPerPage = 10;
 
+    // CANLI BİST FİYATLARI STATE & 60 SANİYE OTOMATİK YENİLEME
+    const [livePrices, setLivePrices] = useState<Record<string, { price: number; change: number; volume: string; pe: number }>>({});
+    const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("");
+    const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+    const fetchLivePrices = async () => {
+        setIsRefreshing(true);
+        try {
+            const res = await fetch("/api/bist/prices");
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.prices) {
+                    setLivePrices(data.prices);
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+                    setLastUpdatedTime(timeStr);
+                }
+            }
+        } catch (e) {
+            console.error("Live prices fetch failed:", e);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    // İlk yüklemede canlı veriyi çek ve HER 60 SANİYEDE BİR otomatik tazele
+    useEffect(() => {
+        fetchLivePrices();
+        const interval = setInterval(() => {
+            fetchLivePrices();
+        }, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     // GRAFİK GENİŞLEME & DIŞARI TIKLAMA STATE & REF
     const [isSectorChartExpanded, setIsSectorChartExpanded] = useState(false);
     const sectorChartRef = useRef<HTMLDivElement>(null);
@@ -1141,7 +1175,7 @@ export default function AssetsPage() {
     // Dinamik En Çok Getirisi Olan İlk 4 Sektör
     const top4Sectors = useMemo(() => ALL_SECTORS_DATA.slice(0, 4), []);
 
-    // TÜM 620 BIST HİSSESİNİ ÜRETME
+    // TÜM BIST HİSSELERİNİ ÜRETME VE CANLI FİYATLARLA BİRLEŞTİRME
     const allStocksList = useMemo(() => {
         const result: StockItem[] = [];
         const addedSymbols = new Set<string>();
@@ -1199,8 +1233,21 @@ export default function AssetsPage() {
             }
         });
 
-        return result;
-    }, []);
+        // CANLI VERİ ENTEGRASYONU: TradingView Canlı Fiyatları Varsa Anında Güncelle
+        return result.map(item => {
+            const live = livePrices[item.symbol];
+            if (live) {
+                return {
+                    ...item,
+                    price: live.price,
+                    change: live.change,
+                    volume: live.volume || item.volume,
+                    pe: live.pe || item.pe
+                };
+            }
+            return item;
+        });
+    }, [livePrices]);
 
     // SEKTÖR, ARAMA VE SIRALAMA UYGULANMIŞ HİSSE LİSTESİ
     const filteredStocks = useMemo(() => {
@@ -1585,6 +1632,38 @@ export default function AssetsPage() {
                                 Tüm Sektörleri Göster
                             </button>
                         )}
+                    </div>
+
+                    {/* CANLI VERİ VE HER 60sn OTOMATİK GÜNCELLEME İNDİKATÖRÜ BANNER'I */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3 text-xs">
+                        <div className="flex items-center gap-2">
+                            <span className="relative flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                            </span>
+                            <span className="font-black text-emerald-900">CANLI BİST FİYAT VERİSİ</span>
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                                Her 60 saniyede bir otomatik güncellenir
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {lastUpdatedTime && (
+                                <span className="text-[10px] font-bold text-slate-500">
+                                    Son Güncelleme: <span className="font-black text-slate-800">{lastUpdatedTime}</span>
+                                </span>
+                            )}
+
+                            <button
+                                onClick={fetchLivePrices}
+                                disabled={isRefreshing}
+                                className="px-2.5 py-1 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-black flex items-center gap-1.5 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                                title="Canlı BIST fiyatlarını anında tazele"
+                            >
+                                <RefreshCw className={cn("w-3.5 h-3.5 text-emerald-600", isRefreshing && "animate-spin")} />
+                                {isRefreshing ? "Yenileniyor..." : "Yenile"}
+                            </button>
+                        </div>
                     </div>
 
                     {/* ARAMA VE SEKTÖR FİLTRE KUTUSU (DROPDOWN SELECT BOX) */}
