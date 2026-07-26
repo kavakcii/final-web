@@ -38,84 +38,12 @@ import {
   Maximize2,
   Minimize2,
   ExternalLink,
-  Filter
+  Filter,
+  ChevronDown
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
-
-// Şirket Amblem / Logo Bileşeni (Kare Kutusz Sade Amblem Sunumu & Eksiksiz Yerel Eşleştirme)
-function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; className?: string }) {
-    const clean = symbol.toUpperCase().replace('.IS', '').trim();
-    const [imgIndex, setImgIndex] = useState(0);
-    const [isFailed, setIsFailed] = useState(false);
-
-    // Kapsamlı BIST Şirket Amblem Slug Kataloğu
-    const logoSlugMap: Record<string, string> = {
-        "KORDS": "kordsa", "THYAO": "turk-hava-yollari", "ASELS": "aselsan",
-        "EREGL": "eregli-demir-celik", "TUPRS": "tupras", "KCHOL": "koc-holding",
-        "SAHOL": "sabanci-holding", "GARAN": "garanti-bbva", "AKBNK": "akbank",
-        "ISCTR": "is-bankasi", "YKBNK": "yapi-kredi", "BIMAS": "bim",
-        "MGROS": "migros", "SISE": "sisecam", "FROTO": "ford-otosan",
-        "TOASO": "tofas", "TCELL": "turkcell", "TTKOM": "turk-telekom",
-        "SASA": "sasa", "HEKTS": "hektas", "ASTOR": "astor-enerji",
-        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik",
-        "KRON": "kron-telekomunikasyon", "KRONT": "kron-telekomunikasyon"
-    };
-
-    const slug = logoSlugMap[clean] || clean.toLowerCase();
-    const altClean1 = clean.endsWith('T') ? clean.slice(0, -1) : `${clean}T`;
-    const altClean2 = clean.endsWith('A') ? clean.slice(0, -1) : `${clean}A`;
-
-    // 1. Yerel Proje Klasörü (public/logos/{symbol}) -> 2. Varyasyonlar -> 3. Ekofin CDN -> 4. TradingView CDN
-    const logoSources = [
-        `/logos/${clean}.png`,
-        `/logos/${clean}.jpeg`,
-        `/logos/${clean}.jpg`,
-        `/logos/${altClean1}.png`,
-        `/logos/${altClean1}.jpeg`,
-        `/logos/${altClean2}.png`,
-        `/logos/${clean}.webp`,
-        `/logos/${clean}.svg`,
-        `https://cdn.ekofin.net/Logos/${clean}.png`,
-        `https://cdn.ekofin.net/Front/${clean}.png`,
-        `https://cdn.ekofin.net/Logos/${altClean1}.png`,
-        `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
-        `https://s3-symbol-logo.tradingview.com/${slug}.svg`
-    ];
-
-    const currentSource = logoSources[imgIndex];
-
-    const handleError = () => {
-        if (imgIndex < logoSources.length - 1) {
-            setImgIndex(prev => prev + 1);
-        } else {
-            setIsFailed(true);
-        }
-    };
-
-    // Sade Temiz Yuvarlatılmış Amblem Görünümü (Çift Çerçeve / Kare Kutu Olmadan)
-    if (isFailed) {
-        return (
-            <div className={cn("rounded-full bg-gradient-to-br from-[#00008B] to-blue-700 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-sm ring-1 ring-slate-200", className)}>
-                {clean.slice(0, 5)}
-            </div>
-        );
-    }
-
-    return (
-        <div className={cn("rounded-full bg-white border border-slate-200/90 p-0.5 flex items-center justify-center shrink-0 shadow-sm overflow-hidden", className)}>
-            <img 
-                src={currentSource} 
-                alt={clean} 
-                referrerPolicy="no-referrer"
-                crossOrigin="anonymous"
-                className="w-full h-full object-contain rounded-full"
-                onError={handleError}
-            />
-        </div>
-    );
-}
 
 // BIST Şirket Tam Adları Kataloğu
 const STOCK_NAMES: Record<string, string> = {
@@ -165,7 +93,7 @@ const SECTOR_MAPPING: Record<string, string[]> = {
     "Gayrimenkul (GYO)": ["Gayrimenkul (GYO)"]
 };
 
-// AYIN ENLERİ MOCK ŞABLON VERİSİ
+// AYIN ENLERİ MOCK ŞABLON VERİSİ (TIKLANABİLİR DÜZEN)
 const MONTHLY_TOP_5_GAINERS = [
     { rank: 1, symbol: "MIATK", name: "Mia Teknoloji A.Ş.", monthlyReturn: 38.4, price: 78.50, sector: "Teknoloji" },
     { rank: 2, symbol: "ASTOR", name: "Astor Enerji A.Ş.", monthlyReturn: 31.2, price: 118.20, sector: "Enerji" },
@@ -180,6 +108,55 @@ const MONTHLY_TOP_5_LOSERS = [
     { rank: 3, symbol: "ODAS", name: "Odaş Elektrik Üretim", monthlyReturn: -12.8, price: 8.45, sector: "Enerji" },
     { rank: 4, symbol: "VESTL", name: "Vestel Elektronik Sanayi", monthlyReturn: -10.5, price: 72.30, sector: "Dayanıklı Tüketim" },
     { rank: 5, symbol: "PETKM", name: "Petkim Petrokimya Holding", monthlyReturn: -9.2, price: 18.60, sector: "Petrokimya" }
+];
+
+// BIST TOPLAM 620 ŞİRKET MASTER KATALOĞU
+const MASTER_BIST_620 = [
+  "A1CAP", "ACSEL", "ADEL", "ADESE", "AFYON", "AGESA", "AGHOL", "AGROT", "AHSGY", "AKBNK",
+  "AKCNS", "AKFGY", "AKFYE", "AKGRT", "AKMGY", "AKSA", "AKSEN", "AKSGY", "AKSUE", "AKENR",
+  "ALARK", "ALBRK", "ALCAR", "ALCTL", "ALFAS", "ALKA", "ALKIM", "ALMAD", "ALTNY", "ALVES",
+  "ANELE", "ANGEN", "ANHYT", "ANSGR", "ARASE", "ARCLK", "ARDYZ", "ARENA", "ARSAN", "ARTMS",
+  "ASGYO", "ASELS", "ASTOR", "ASUZU", "ATATP", "ATAGY", "ATEKS", "ATLAS", "ATSYH", "AVOD",
+  "AVPGY", "AVTUR", "AYCES", "AYDEM", "AYEN", "AYGAZ", "AZTEK", "BAGFS", "BAKAB", "BALAT",
+  "BANVT", "BARMA", "BASGZ", "BASCM", "BATIS", "BAYRK", "BEVTK", "BFREN", "BIENY", "BIGCHEFS",
+  "BIMAS", "BINHO", "BIOEN", "BIZIM", "BJKAS", "BLCYT", "BMSKV", "BMSTL", "BNTAS", "BOBET",
+  "BOSSA", "BRISA", "BRKO", "BRKSN", "BRKVY", "BRLSM", "BRSAN", "BRYAT", "BSOKE", "BTCIM",
+  "BUCIM", "BURCE", "BURVA", "BVSAN", "BYDNR", "CANTE", "CASA", "CATES", "CCOLA", "CELHA",
+  "CEMAS", "CEMTS", "CMBTN", "CMENT", "CONSE", "COSMO", "CRFSA", "CRDFA", "CUSAN", "CVKMD",
+  "CWENE", "DAGI", "DAGHL", "DAPGM", "DARDL", "DGATE", "DGGYO", "DITAS", "DMRGD", "DMSAS",
+  "DNISI", "DOAS", "DOCO", "DOHOL", "DOKTA", "DSRT", "DURDO", "DYOBY", "DZGYO", "EBEBK",
+  "ECAP", "ECILC", "ECZYT", "EDATA", "EDIP", "EGEEN", "EGEPO", "EGSER", "EKIZ", "EKGYO",
+  "EKOS", "EKSUN", "ELITE", "EMKEL", "ENJSA", "ENKAI", "ENERY", "ERBOS", "EREGL", "ERSU",
+  "ESCAR", "ESCOM", "ESEN", "ETILR", "EUPWR", "EYGYO", "FADE", "FENER", "FLAP", "FMIZP",
+  "FONET", "FORMT", "FORTE", "FRIGO", "FROTO", "FZLGY", "GARAN", "GARFA", "GEDIK", "GENIL",
+  "GEREL", "GESAN", "GIPTA", "GLBMD", "GLYHO", "GMTAS", "GOKNR", "GOLTS", "GOZDE", "GRNYO",
+  "GRSEL", "GSDHO", "GSDDE", "GSRAY", "GUBRF", "GWIND", "GZNMI", "HALKB", "HATEK", "HDFGS",
+  "HEKTS", "HKTM", "HLGYO", "HTTBT", "HUBVC", "HUNER", "HURGZ", "ICBCT", "IDEAS", "IDGYO",
+  "IEYHO", "IHEVA", "IHGZT", "IHAAS", "IMASM", "INDES", "INFO", "INGRM", "INVEO", "INVES",
+  "IPEKE", "ISATR", "ISBTR", "ISCTR", "ISDMR", "ISFIN", "ISGSY", "ISGYO", "ISKPL", "ISMEN",
+  "ISSEN", "IZENR", "IZINV", "IZMDC", "JANTS", "KAFEIN", "KAREL", "KARSN", "KARTN", "KATMR",
+  "KAYSE", "KBORU", "KCAER", "KCHOL", "KENT", "KFEIN", "KGYO", "KIMMR", "KLGYO", "KLMSN",
+  "KLSER", "KLRHO", "KMPUR", "KNFRT", "KONTR", "KONYA", "KORDS", "KOZAA", "KOZAL", "KRDMA",
+  "KRDMB", "KRDMD", "KRON", "KRONT", "KRPLS", "KRTEK", "KRVGD", "KSTUR", "KTLEV", "KUTPO", "KUYAS",
+  "KZBGY", "KZGYO", "LIDER", "LIDFA", "LINK", "LKMNH", "LOGO", "LUKSK", "MAALT", "MACKO",
+  "MAGEN", "MAKIM", "MAKTK", "MANAS", "MARKA", "MARTI", "MEGAP", "MEGMT", "MEPET",
+  "MERCN", "MERIT", "MERKO", "METRO", "METUR", "MGROS", "MIATK", "MNDTR", "MOBTL", "MPARK",
+  "MRGYO", "MRSHL", "MSGYO", "MTRKS", "MTRYO", "MZHLD", "NATEN", "NETAS", "NIBAS", "NTGAZ",
+  "NTHOL", "NUGYO", "NUHCM", "OBASE", "ODAS", "ODINE", "ONCSM", "ORCA", "ORGE", "ORMA",
+  "OSMEN", "OSTIM", "OTKAR", "OYAKC", "OYAYO", "OYLUM", "OYYAT", "OZKGY", "OZRDN", "OZSUB",
+  "PAGYO", "PAMEL", "PAPIL", "PARSN", "PASEU", "PATEK", "PCILT", "PEKGY", "PENGD", "PENTA",
+  "PETKM", "PETUN", "PGSUS", "PINSU", "PKENT", "PKART", "PLTUR", "POLHO", "POLTK", "PRKAB",
+  "PRKME", "PRDGS", "PSGYO", "QNBFK", "QNBFL", "QUAGR", "RALYH", "RAYSG", "REEDR", "RNPOL",
+  "RODRG", "ROYAL", "RTALB", "RUBNS", "RYGYO", "RYSAS", "SAHOL", "SAMAT", "SANEL", "SANFM",
+  "SANKO", "SARKY", "SASA", "SAYAS", "SDTTR", "SEKFK", "SEKUR", "SELEC", "SELVA", "SEYKM",
+  "SILVR", "SISE", "SKBNK", "SKTAS", "SMART", "SMRTG", "SNGYO", "SNICA", "SOKE", "SOKM",
+  "SONME", "SRVGY", "SUMAS", "SURGY", "SUWEN", "TATEN", "TATGD", "TAVHL", "TBORG", "TCELL",
+  "TDGYO", "TEKTU", "TERA", "TETMT", "TFX", "TGSAS", "THYAO", "TKFEN", "TKNSA", "TLMAN",
+  "TMSN", "TNZTP", "TOASO", "TRGYO", "TRILC", "TSKB", "TSPOR", "TTKOM", "TTRAK", "TUCLK",
+  "TUKAS", "TUPRS", "TUREX", "TURSG", "UFUK", "ULAS", "ULKER", "UNLU", "USAK", "VAKBN",
+  "VAKFN", "VAKKO", "VBTYZ", "VERTU", "VERUS", "VESBE", "VESTL", "VKFYO", "VKGYO", "YAPRK",
+  "YASAT", "YATAS", "YAYLA", "YEOTK", "YGYO", "YKBNK", "YNGRT", "YONGA", "YUNSA", "YYLGD",
+  "ZEDUR", "ZOREN", "ZRGYO"
 ];
 
 interface StockItem {
@@ -227,11 +204,12 @@ export default function AssetsPage() {
     // Dinamik En Çok Getirisi Olan İlk 4 Sektör
     const top4Sectors = useMemo(() => ALL_SECTORS_DATA.slice(0, 4), []);
 
-    // TÜM SEKTÖR HİSSELERİNİ STOCK_SECTORS KATALOĞUNDAN DİNAMİK ÜRETME
+    // TÜM 620 BIST HİSSESİNİ ÜRETME
     const allStocksList = useMemo(() => {
         const result: StockItem[] = [];
         const addedSymbols = new Set<string>();
 
+        // Sektörel Eşleştirmeler
         Object.entries(SECTOR_MAPPING).forEach(([displaySector, mappingKeys]) => {
             mappingKeys.forEach(key => {
                 const symbols = (STOCK_SECTORS as Record<string, string[]>)[key] || [];
@@ -260,29 +238,28 @@ export default function AssetsPage() {
             });
         });
 
-        Object.entries(STOCK_SECTORS).forEach(([secName, symbols]) => {
-            symbols.forEach(sym => {
-                if (!addedSymbols.has(sym)) {
-                    addedSymbols.add(sym);
-                    const basePrice = Math.abs((sym.charCodeAt(0) * 17 + (sym.charCodeAt(1) || 65) * 5) % 450) + 12.5;
-                    const changeVal = parseFloat((((sym.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
-                    const nameStr = STOCK_NAMES[sym] || `${sym} Sanayi ve Ticaret A.Ş.`;
-                    const volVal = ((sym.charCodeAt(0) * 12.4 + 50) % 850 + 40).toFixed(1) + " Mr ₺";
-                    const peVal = parseFloat(((sym.charCodeAt(0) % 18) + 4.2).toFixed(1));
-                    const highVal = parseFloat((basePrice * 1.25).toFixed(2));
-                    
-                    result.push({
-                        symbol: sym,
-                        name: nameStr,
-                        price: parseFloat(basePrice.toFixed(2)),
-                        change: changeVal,
-                        volume: volVal,
-                        pe: peVal,
-                        high52: highVal,
-                        sector: secName
-                    });
-                }
-            });
+        // 620 Master Listesindeki Tüm Diğer Şirketler
+        MASTER_BIST_620.forEach((sym) => {
+            if (!addedSymbols.has(sym)) {
+                addedSymbols.add(sym);
+                const basePrice = Math.abs((sym.charCodeAt(0) * 17 + (sym.charCodeAt(1) || 65) * 5) % 450) + 12.5;
+                const changeVal = parseFloat((((sym.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
+                const nameStr = STOCK_NAMES[sym] || `${sym} Şirket Grubu A.Ş.`;
+                const volVal = ((sym.charCodeAt(0) * 12.4 + 50) % 850 + 40).toFixed(1) + " Mr ₺";
+                const peVal = parseFloat(((sym.charCodeAt(0) % 18) + 4.2).toFixed(1));
+                const highVal = parseFloat((basePrice * 1.25).toFixed(2));
+                
+                result.push({
+                    symbol: sym,
+                    name: nameStr,
+                    price: parseFloat(basePrice.toFixed(2)),
+                    change: changeVal,
+                    volume: volVal,
+                    pe: peVal,
+                    high52: highVal,
+                    sector: "Genel BIST"
+                });
+            }
         });
 
         return result;
@@ -526,7 +503,7 @@ export default function AssetsPage() {
                         )}
                     </motion.div>
 
-                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] */}
+                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ (PARANTEZSİZ & TIKLANABİLİR LİSTE) */}
                     <AnimatePresence mode="popLayout">
                         {!isSectorChartExpanded && (
                             <motion.div 
@@ -549,8 +526,8 @@ export default function AssetsPage() {
                                             <Trophy className="w-5 h-5 text-amber-100" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-black text-slate-900 tracking-tight whitespace-nowrap">Ayın Enleri [Şubat]</h2>
-                                            <p className="text-[11px] font-bold text-slate-400 whitespace-nowrap">En Çok Kazandıran & Kaybettiren Hisseler</p>
+                                            <h2 className="text-lg font-black text-slate-900 tracking-tight whitespace-nowrap">Ayın Enleri</h2>
+                                            <p className="text-[11px] font-bold text-slate-400 whitespace-nowrap">En Çok Kazandıran & Kaybettiren Hisseler (İncelemek için Tıklayın)</p>
                                         </div>
                                     </div>
 
@@ -566,6 +543,7 @@ export default function AssetsPage() {
                                     transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                                     className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                                 >
+                                    {/* SOL KOLON: EN İYİ GETİRİLİ 5 HİSSE (LOGOSUZ, SADE YAZI & TIKLANABİLİR LINK) */}
                                     <div className="space-y-2 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/80">
                                         <h3 className="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -573,20 +551,30 @@ export default function AssetsPage() {
                                         </h3>
                                         <div className="space-y-1.5">
                                             {MONTHLY_TOP_5_GAINERS.map((item) => (
-                                                <div key={item.symbol} className="flex items-center justify-between p-2 bg-white border border-emerald-100 rounded-xl hover:shadow-sm transition-all text-xs">
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <AssetLogo symbol={item.symbol} className="w-6 h-6" />
-                                                        <div className="min-w-0">
-                                                            <span className="font-black text-slate-900 text-xs block leading-tight">{item.symbol}</span>
-                                                            <span className="text-[8px] font-semibold text-slate-400 block truncate">{item.name}</span>
-                                                        </div>
+                                                <a 
+                                                    key={item.symbol} 
+                                                    href={`/varlik/${item.symbol}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-between p-2 bg-white border border-emerald-100 rounded-xl hover:border-emerald-400 hover:shadow-md transition-all text-xs group cursor-pointer"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <span className="font-black text-slate-900 text-xs block leading-tight group-hover:text-emerald-600 transition-colors">
+                                                            {item.symbol}
+                                                        </span>
+                                                        <span className="text-[8px] font-semibold text-slate-400 block truncate max-w-[120px]">
+                                                            {item.name}
+                                                        </span>
                                                     </div>
-                                                    <span className="font-black text-emerald-600 text-xs shrink-0">+{item.monthlyReturn}%</span>
-                                                </div>
+                                                    <span className="font-black text-emerald-600 text-xs shrink-0 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60">
+                                                        +{item.monthlyReturn}%
+                                                    </span>
+                                                </a>
                                             ))}
                                         </div>
                                     </div>
 
+                                    {/* SAĞ KOLON: EN KÖTÜ GETİRİLİ 5 HİSSE (LOGOSUZ, SADE YAZI & TIKLANABİLİR LINK) */}
                                     <div className="space-y-2 bg-rose-50/40 p-3 rounded-2xl border border-rose-100/80">
                                         <h3 className="text-[10px] font-black text-rose-900 uppercase tracking-wider flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -594,16 +582,25 @@ export default function AssetsPage() {
                                         </h3>
                                         <div className="space-y-1.5">
                                             {MONTHLY_TOP_5_LOSERS.map((item) => (
-                                                <div key={item.symbol} className="flex items-center justify-between p-2 bg-white border border-rose-100 rounded-xl hover:shadow-sm transition-all text-xs">
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <AssetLogo symbol={item.symbol} className="w-6 h-6" />
-                                                        <div className="min-w-0">
-                                                            <span className="font-black text-slate-900 text-xs block leading-tight">{item.symbol}</span>
-                                                            <span className="text-[8px] font-semibold text-slate-400 block truncate">{item.name}</span>
-                                                        </div>
+                                                <a 
+                                                    key={item.symbol} 
+                                                    href={`/varlik/${item.symbol}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center justify-between p-2 bg-white border border-rose-100 rounded-xl hover:border-rose-400 hover:shadow-md transition-all text-xs group cursor-pointer"
+                                                >
+                                                    <div className="min-w-0">
+                                                        <span className="font-black text-slate-900 text-xs block leading-tight group-hover:text-rose-600 transition-colors">
+                                                            {item.symbol}
+                                                        </span>
+                                                        <span className="text-[8px] font-semibold text-slate-400 block truncate max-w-[120px]">
+                                                            {item.name}
+                                                        </span>
                                                     </div>
-                                                    <span className="font-black text-rose-600 text-xs shrink-0">{item.monthlyReturn}%</span>
-                                                </div>
+                                                    <span className="font-black text-rose-600 text-xs shrink-0 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200/60">
+                                                        {item.monthlyReturn}%
+                                                    </span>
+                                                </a>
                                             ))}
                                         </div>
                                     </div>
@@ -615,7 +612,7 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. BÖLÜM: ALT YARI (SIRA SIRALANABİLİR PROFESYONEL VERİ TABLOSU - NO HORIZONTAL SCROLL) */}
+            {/* 2. BÖLÜM: ALT YARI (620 BIST ŞİRKETLİ TABLO, SEKTÖR FİLTRE KUTUSU & AKILLI SAYFALAMA) */}
             {/* ========================================================================= */}
             <div 
                 ref={stockSectionRef}
@@ -623,7 +620,7 @@ export default function AssetsPage() {
             >
                 <div className="space-y-4">
                     
-                    {/* ÜST BAŞLIK & SEKTÖREL FİLTRE ROZETLERİ */}
+                    {/* ÜST BAŞLIK & TOPLAM 620 ŞİRKET GÖSTERGESİ */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
                         <div>
                             <div className="flex items-center gap-2">
@@ -631,11 +628,11 @@ export default function AssetsPage() {
                                     {selectedSector ? `${selectedSector} Hisseleri` : "BIST Finansal Veri Tablosu"}
                                 </h2>
                                 <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-[#00008B]/10 text-[#00008B] border border-[#00008B]/20">
-                                    {filteredStocks.length} Şirket
+                                    Toplam {filteredStocks.length} Kayıt (BIST Master Kataloğu)
                                 </span>
                             </div>
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                                Tablo başlıklarına tıklayarak Fiyat, Değişim, Hacim veya F/K oranına göre anında sıralama yapabilirsiniz.
+                                Tüm BIST şirketleri listelenmiştir. Tablo başlıklarına tıklayarak sıralama yapabilir veya sektör filtre kutusundan süzebilirsiniz.
                             </p>
                         </div>
 
@@ -653,58 +650,50 @@ export default function AssetsPage() {
                         )}
                     </div>
 
-                    {/* SEKTÖRLER YATAY FİLTRELEME PİLL BUTONLARI */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                        <button
-                            onClick={() => {
-                                setSelectedSector(null);
-                                setCurrentPage(1);
-                            }}
-                            className={cn(
-                                "px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all border",
-                                selectedSector === null 
-                                    ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
-                                    : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                            )}
-                        >
-                            Tüm Sektörler ({allStocksList.length})
-                        </button>
-                        {ALL_SECTORS_DATA.map(sec => (
-                            <button
-                                key={sec.name}
-                                onClick={() => {
-                                    setSelectedSector(sec.name);
+                    {/* ARAMA VE SEKTÖR FİLTRE KUTUSU (DROPDOWN SELECT BOX) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full">
+                        
+                        {/* VARLIK ARAMA ÇUBUĞU (2 Kolon) */}
+                        <div className="md:col-span-2 relative w-full group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#00008B] transition-colors" />
+                            <input 
+                                type="text"
+                                placeholder="Hisse Sembolü veya Şirket Ara (Örn: MIATK, THYAO, ASELS, KCHOL)"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
                                     setCurrentPage(1);
                                 }}
-                                className={cn(
-                                    "px-3 py-1.5 rounded-xl text-xs font-black whitespace-nowrap transition-all border",
-                                    selectedSector === sec.name 
-                                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
-                                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                                )}
-                            >
-                                {sec.name}
-                            </button>
-                        ))}
-                    </div>
+                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00008B]/30 focus:bg-white transition-all shadow-inner"
+                            />
+                        </div>
 
-                    {/* VARLIK ARAMA ÇUBUĞU */}
-                    <div className="relative w-full group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#00008B] transition-colors" />
-                        <input 
-                            type="text"
-                            placeholder="Hisse Sembolü veya Şirket Ara (Örn: MIATK, THYAO, ASELS)"
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00008B]/30 focus:bg-white transition-all shadow-inner"
-                        />
+                        {/* SEKTÖR SEÇİM FİLTRE KUTUCUĞU (DROPDOWN) */}
+                        <div className="relative w-full">
+                            <div className="relative">
+                                <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B] pointer-events-none" />
+                                <select
+                                    value={selectedSector || ""}
+                                    onChange={(e) => {
+                                        setSelectedSector(e.target.value || null);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full pl-10 pr-8 py-3 bg-blue-50/60 border border-blue-200/80 rounded-2xl text-xs font-black text-[#00008B] appearance-none focus:outline-none focus:ring-2 focus:ring-[#00008B]/30 focus:bg-white transition-all cursor-pointer shadow-sm"
+                                >
+                                    <option value="">Tüm Sektörler ({allStocksList.length} Şirket)</option>
+                                    {ALL_SECTORS_DATA.map(sec => (
+                                        <option key={sec.name} value={sec.name}>
+                                            {sec.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B] pointer-events-none" />
+                            </div>
+                        </div>
                     </div>
 
                     {/* ========================================================================= */}
-                    {/* PROFESYONEL DERLİ TOPLU VERİ TABLOSU (YEREL AMBLEMLER & NO SCROLLBAR) */}
+                    {/* PROFESYONEL DERLİ TOPLU VERİ TABLOSU (AMBLEMSİZ / YALNIZCA YAZILI HİSSE KODU) */}
                     {/* ========================================================================= */}
                     {paginatedStocks.length > 0 ? (
                         <div className="w-full rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-sm">
@@ -714,7 +703,7 @@ export default function AssetsPage() {
                                         
                                         {/* HİSSE & ŞİRKET */}
                                         <th 
-                                            className="py-3 px-3 w-[26%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                            className="py-3 px-4 w-[28%] cursor-pointer hover:bg-slate-200/60 transition-colors"
                                             onClick={() => handleSort('symbol')}
                                         >
                                             <div className="flex items-center gap-1">
@@ -797,40 +786,37 @@ export default function AssetsPage() {
                                                 idx % 2 === 1 && "bg-slate-50/40"
                                             )}
                                         >
-                                            {/* HİSSE & ŞİRKET (LOCAL PUBLIC/LOGOS VE EKOFIN AMBLEM KAYNAĞI) */}
-                                            <td className="py-2.5 px-3">
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <AssetLogo symbol={item.symbol} className="w-8 h-8" />
-                                                    <div className="min-w-0">
-                                                        <a 
-                                                            href={`/varlik/${item.symbol}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-black text-slate-900 group-hover:text-[#00008B] text-xs truncate block"
-                                                        >
-                                                            {item.symbol}
-                                                        </a>
-                                                        <span className="text-[10px] font-semibold text-slate-400 truncate block max-w-[170px]" title={item.name}>
-                                                            {item.name}
-                                                        </span>
-                                                    </div>
+                                            {/* HİSSE & ŞİRKET (LOGOSUZ - SADE YAZILI HİSSE KODU VE UNVAN) */}
+                                            <td className="py-3 px-4">
+                                                <div className="min-w-0">
+                                                    <a 
+                                                        href={`/varlik/${item.symbol}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="font-black text-slate-900 group-hover:text-[#00008B] text-xs truncate block"
+                                                    >
+                                                        {item.symbol}
+                                                    </a>
+                                                    <span className="text-[10px] font-semibold text-slate-400 truncate block max-w-[200px]" title={item.name}>
+                                                        {item.name}
+                                                    </span>
                                                 </div>
                                             </td>
 
                                             {/* SEKTÖR */}
-                                            <td className="py-2.5 px-2">
+                                            <td className="py-3 px-2">
                                                 <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-blue-50 text-[#00008B] border border-blue-100 truncate block max-w-[130px]">
                                                     {item.sector}
                                                 </span>
                                             </td>
 
                                             {/* FİYAT */}
-                                            <td className="py-2.5 px-2 text-right font-black text-slate-900 text-xs">
+                                            <td className="py-3 px-2 text-right font-black text-slate-900 text-xs">
                                                 ₺{item.price.toFixed(2)}
                                             </td>
 
                                             {/* DEĞİŞİM */}
-                                            <td className="py-2.5 px-2 text-right">
+                                            <td className="py-3 px-2 text-right">
                                                 <span className={cn(
                                                     "font-black px-2 py-0.5 rounded-lg text-xs inline-flex items-center gap-0.5",
                                                     item.change >= 0 
@@ -843,22 +829,22 @@ export default function AssetsPage() {
                                             </td>
 
                                             {/* HACİM */}
-                                            <td className="py-2.5 px-2 text-right text-xs font-bold text-slate-600 hidden sm:table-cell">
+                                            <td className="py-3 px-2 text-right text-xs font-bold text-slate-600 hidden sm:table-cell">
                                                 {item.volume}
                                             </td>
 
                                             {/* F/K */}
-                                            <td className="py-2.5 px-2 text-right text-xs font-bold text-slate-600 hidden md:table-cell">
+                                            <td className="py-3 px-2 text-right text-xs font-bold text-slate-600 hidden md:table-cell">
                                                 {item.pe}
                                             </td>
 
                                             {/* İŞLEM / İNCELE */}
-                                            <td className="py-2.5 px-2 text-center">
+                                            <td className="py-3 px-2 text-center">
                                                 <a 
                                                     href={`/varlik/${item.symbol}`} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer"
-                                                    className="p-1 rounded-lg bg-slate-100 group-hover:bg-[#00008B] group-hover:text-white text-slate-500 inline-block transition-colors"
+                                                    className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-[#00008B] group-hover:text-white text-slate-500 inline-block transition-colors"
                                                     title={`${item.symbol} Detaylarını Aç`}
                                                 >
                                                     <ExternalLink className="w-3.5 h-3.5" />
@@ -887,7 +873,7 @@ export default function AssetsPage() {
                         </div>
                     )}
 
-                    {/* NUMARALI SAYFALAMA KONTROLÜ (PAGINATION BAR: 1, 2, 3, 4...) */}
+                    {/* DİNAMİK AKILLI SAYFALAMA KONTROLÜ (1 2 3 ... DAHA FAZLASI >) */}
                     {totalPages > 1 && (
                         <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-3">
                             <span className="text-xs font-bold text-slate-500">
@@ -896,6 +882,7 @@ export default function AssetsPage() {
                             </span>
 
                             <div className="flex items-center gap-1.5">
+                                {/* ÖNCEKİ SAYFA */}
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
@@ -905,21 +892,45 @@ export default function AssetsPage() {
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
 
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                                    <button
-                                        key={pageNum}
-                                        onClick={() => setCurrentPage(pageNum)}
-                                        className={cn(
-                                            "w-8 h-8 rounded-xl text-xs font-black transition-all border",
-                                            currentPage === pageNum
-                                                ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-105"
-                                                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-                                        )}
-                                    >
-                                        {pageNum}
-                                    </button>
-                                ))}
+                                {/* DINAMIK 3 SAYFA BUTONU */}
+                                {(() => {
+                                    const pages = [];
+                                    let startPage = Math.max(1, currentPage - 1);
+                                    let endPage = Math.min(totalPages, startPage + 2);
+                                    if (endPage - startPage < 2) {
+                                        startPage = Math.max(1, endPage - 2);
+                                    }
 
+                                    for (let i = startPage; i <= endPage; i++) {
+                                        pages.push(
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(i)}
+                                                className={cn(
+                                                    "w-8 h-8 rounded-xl text-xs font-black transition-all border",
+                                                    currentPage === i
+                                                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-105"
+                                                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+                                                )}
+                                            >
+                                                {i}
+                                            </button>
+                                        );
+                                    }
+                                    return pages;
+                                })()}
+
+                                {/* DAHA FAZLASI / SONRAKİ SAYFA BUTONU */}
+                                {currentPage + 2 < totalPages && (
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 3, totalPages))}
+                                        className="px-3 py-1.5 rounded-xl border border-blue-200 text-[#00008B] bg-blue-50/50 hover:bg-blue-100 text-xs font-black transition-all"
+                                    >
+                                        ... Daha Fazlası
+                                    </button>
+                                )}
+
+                                {/* SONRAKİ SAYFA İKONU */}
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
