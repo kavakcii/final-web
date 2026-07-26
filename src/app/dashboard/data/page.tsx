@@ -1814,7 +1814,7 @@ export default function AssetsPage() {
 
                                             {/* F/K */}
                                             <td className="py-3 px-2 text-right text-xs font-bold text-slate-600 hidden md:table-cell">
-                                                {item.pe}
+                                                {item.pe > 0 ? item.pe.toFixed(2) : "A.A."}
                                             </td>
 
                                             {/* İŞLEM / İNCELE */}

@@ -43,7 +43,10 @@ export async function GET() {
             volStr = `${rawVol} ₺`;
           }
 
-          const pe = item.d[4] ? parseFloat(Number(item.d[4]).toFixed(1)) : 8.5;
+          const rawPe = item.d[4];
+          const pe = (rawPe !== null && rawPe !== undefined && rawPe > 0)
+            ? parseFloat(Number(rawPe).toFixed(2))
+            : 0;
 
           pricesMap[sym] = {
             price,
