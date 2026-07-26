@@ -96,18 +96,33 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   // SVG Path Calculation for Smooth Line & Gradient Area
   const svgPathData = useMemo(() => {
     if (!stockData || !stockData.chartPoints || stockData.chartPoints.length < 2) {
-      return { linePath: "", areaPath: "", minPrice: 0, maxPrice: 0, prices: [] };
+      return { linePath: "", areaPath: "", minPrice: 0, maxPrice: 0, coords: [] };
     }
 
     const points = stockData.chartPoints;
     const prices = points.map((p: any) => p.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    
+    let rawMin = Math.min(...prices);
+    let rawMax = Math.max(...prices);
+
+    // Guaranteed vertical spread so the line is nicely proportioned vertically
+    let minPrice = rawMin;
+    let maxPrice = rawMax;
+    if (maxPrice - minPrice < 0.2) {
+      const center = (rawMin + rawMax) / 2 || stockData.currentPrice || 100;
+      minPrice = center * 0.95;
+      maxPrice = center * 1.05;
+    } else {
+      const buffer = (maxPrice - minPrice) * 0.1;
+      minPrice = minPrice - buffer;
+      maxPrice = maxPrice + buffer;
+    }
+
     const range = maxPrice - minPrice || 1;
 
     const width = 800;
-    const height = 340;
-    const paddingY = 20;
+    const height = 320;
+    const paddingY = 30;
 
     const coords = points.map((pt: any, i: number) => {
       const x = (i / (points.length - 1)) * width;
@@ -152,7 +167,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           >
             <RefreshCw className={cn("w-4 h-4 text-emerald-400", loading && "animate-spin")} />
           </button>
-          <button className="px-3 py-2 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-1.5 shadow-md">
+          <button className="px-3.5 py-2 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-1.5 shadow-md">
             <Plus className="w-4 h-4" />
             Portföye Ekle
           </button>
@@ -221,17 +236,21 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
           {svgPathData.coords && svgPathData.coords.length > 1 ? (
             <div className="w-full h-full relative">
-              <svg viewBox="0 0 800 340" className="w-full h-full overflow-visible preserve-3d">
+              <svg 
+                viewBox="0 0 800 320" 
+                className="w-full h-full overflow-visible preserve-3d"
+                onMouseLeave={() => setHoveredPoint(null)}
+              >
                 <defs>
                   <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
+                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.30" />
                     <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
 
-                {/* Y-Axis Grid Lines */}
+                {/* Y-Axis Grid Lines & Price Labels on the Right */}
                 {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                  const y = 320 - ratio * 280;
+                  const y = 290 - ratio * 240;
                   const priceVal = svgPathData.minPrice + ratio * (svgPathData.maxPrice - svgPathData.minPrice);
                   return (
                     <g key={i}>
@@ -251,28 +270,54 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   d={svgPathData.linePath} 
                   fill="none" 
                   stroke="#10B981" 
-                  strokeWidth="3" 
+                  strokeWidth="2.8" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
                 />
 
-                {/* Interactive Points on Hover */}
+                {/* Live Pulse Circle at the Current/Latest Point */}
+                {(() => {
+                  const lastCoord = svgPathData.coords[svgPathData.coords.length - 1];
+                  if (!lastCoord) return null;
+                  return (
+                    <g>
+                      <circle cx={lastCoord.x} cy={lastCoord.y} r="8" className="fill-emerald-500 opacity-40 animate-ping" />
+                      <circle cx={lastCoord.x} cy={lastCoord.y} r="5" className="fill-emerald-400 stroke-[#121826] stroke-2" />
+                    </g>
+                  );
+                })()}
+
+                {/* Interactive Invisible Touch Areas for Smooth Hover */}
                 {svgPathData.coords.map((pt: any, i: number) => (
-                  <circle
+                  <rect
                     key={i}
-                    cx={pt.x}
-                    cy={pt.y}
-                    r="6"
-                    className="fill-emerald-400 stroke-[#121826] stroke-2 cursor-pointer hover:r-8 transition-all"
+                    x={pt.x - 8}
+                    y={0}
+                    width={16}
+                    height={320}
+                    fill="transparent"
+                    className="cursor-pointer"
                     onMouseEnter={() => setHoveredPoint(pt)}
-                    onMouseLeave={() => setHoveredPoint(null)}
                   />
                 ))}
+
+                {/* Hover Indicator Circle */}
+                {hoveredPoint && (
+                  <circle
+                    cx={hoveredPoint.x}
+                    cy={hoveredPoint.y}
+                    r="6"
+                    className="fill-emerald-300 stroke-white stroke-2 shadow-lg"
+                  />
+                )}
               </svg>
 
               {/* Hover Tooltip Box */}
               {hoveredPoint && (
-                <div className="absolute top-2 left-4 bg-slate-900 border border-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-xl shadow-xl z-20 pointer-events-none">
+                <div 
+                  className="absolute bg-slate-900 border border-slate-700 text-slate-200 text-xs px-3 py-1.5 rounded-xl shadow-2xl z-20 pointer-events-none -translate-x-1/2 -translate-y-12 transition-all"
+                  style={{ left: `${(hoveredPoint.x / 800) * 100}%`, top: `${(hoveredPoint.y / 320) * 100}%` }}
+                >
                   <span className="text-slate-400 font-medium block text-[10px]">{hoveredPoint.time}</span>
                   <span className="font-black text-emerald-400 text-sm">₺{hoveredPoint.price.toFixed(2)}</span>
                 </div>
@@ -305,7 +350,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
         </div>
         <div className="bg-[#121826] border border-slate-800 p-4 rounded-2xl space-y-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">İşlem Hacmi</span>
-          <p className="text-lg font-black text-white">{stockData?.volume || "14.2M"}</p>
+          <p className="text-lg font-black text-white">{stockData?.volume || "1.4M"}</p>
         </div>
         <div className="bg-[#121826] border border-slate-800 p-4 rounded-2xl space-y-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Önceki Kapanış</span>
