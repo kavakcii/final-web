@@ -27,6 +27,8 @@ import {
   Building2,
   RefreshCw,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Scale,
   Trophy,
   Award,
@@ -36,17 +38,14 @@ import {
   Maximize2,
   Minimize2,
   ExternalLink,
-  Filter,
-  Palette,
-  Table,
-  Sliders
+  Filter
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
 
 // Şirket Amblem / Logo Bileşeni (Kendi Depomuzda Saklanan Yerel Resmi Şirket Amblemleri)
-function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; className?: string }) {
+function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
     const [imgIndex, setImgIndex] = useState(0);
     const [isFailed, setIsFailed] = useState(false);
@@ -85,14 +84,14 @@ function AssetLogo({ symbol, className = "w-10 h-10" }: { symbol: string; classN
 
     if (isFailed) {
         return (
-            <div className={cn("rounded-full bg-gradient-to-br from-[#00008B] to-blue-700 text-white flex items-center justify-center font-black text-[10px] shrink-0 shadow-md ring-2 ring-slate-100", className)}>
+            <div className={cn("rounded-full bg-gradient-to-br from-[#00008B] to-blue-700 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-sm ring-1 ring-slate-200", className)}>
                 {clean.slice(0, 5)}
             </div>
         );
     }
 
     return (
-        <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-0.5 ring-2 ring-slate-100", className)}>
+        <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-0.5 ring-1 ring-slate-200", className)}>
             <img 
                 src={currentSource} 
                 alt={clean} 
@@ -175,14 +174,21 @@ interface StockItem {
     name: string;
     price: number;
     change: number;
+    volume: string;
+    pe: number;
+    high52: number;
     sector: string;
 }
+
+type SortField = 'symbol' | 'price' | 'change' | 'volume' | 'pe' | 'high52';
+type SortOrder = 'asc' | 'desc';
 
 export default function AssetsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSector, setSelectedSector] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [designTemplate, setDesignTemplate] = useState<number>(1); // 1-10 arası şablon seçici
+    const [sortField, setSortField] = useState<SortField>('change');
+    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
     const itemsPerPage = 10;
 
     // GRAFİK GENİŞLEME & DIŞARI TIKLAMA STATE & REF
@@ -222,12 +228,18 @@ export default function AssetsPage() {
                         const basePrice = Math.abs((sym.charCodeAt(0) * 17 + (sym.charCodeAt(1) || 65) * 5) % 450) + 12.5;
                         const changeVal = parseFloat((((sym.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
                         const nameStr = STOCK_NAMES[sym] || `${sym} Sanayi ve Ticaret A.Ş.`;
+                        const volVal = ((sym.charCodeAt(0) * 12.4 + 50) % 850 + 40).toFixed(1) + " Mr ₺";
+                        const peVal = parseFloat(((sym.charCodeAt(0) % 18) + 4.2).toFixed(1));
+                        const highVal = parseFloat((basePrice * 1.25).toFixed(2));
                         
                         result.push({
                             symbol: sym,
                             name: nameStr,
                             price: parseFloat(basePrice.toFixed(2)),
                             change: changeVal,
+                            volume: volVal,
+                            pe: peVal,
+                            high52: highVal,
                             sector: displaySector
                         });
                     }
@@ -242,12 +254,18 @@ export default function AssetsPage() {
                     const basePrice = Math.abs((sym.charCodeAt(0) * 17 + (sym.charCodeAt(1) || 65) * 5) % 450) + 12.5;
                     const changeVal = parseFloat((((sym.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
                     const nameStr = STOCK_NAMES[sym] || `${sym} Sanayi ve Ticaret A.Ş.`;
+                    const volVal = ((sym.charCodeAt(0) * 12.4 + 50) % 850 + 40).toFixed(1) + " Mr ₺";
+                    const peVal = parseFloat(((sym.charCodeAt(0) % 18) + 4.2).toFixed(1));
+                    const highVal = parseFloat((basePrice * 1.25).toFixed(2));
                     
                     result.push({
                         symbol: sym,
                         name: nameStr,
                         price: parseFloat(basePrice.toFixed(2)),
                         change: changeVal,
+                        volume: volVal,
+                        pe: peVal,
+                        high52: highVal,
                         sector: secName
                     });
                 }
@@ -257,9 +275,9 @@ export default function AssetsPage() {
         return result;
     }, []);
 
-    // SEKTÖR VE ARAMA FİLTRESİ UYGULANMIŞ HİSSE LİSTESİ
+    // SEKTÖR, ARAMA VE SIRALAMA UYGULANMIŞ HİSSE LİSTESİ
     const filteredStocks = useMemo(() => {
-        let list = allStocksList;
+        let list = [...allStocksList];
 
         if (selectedSector) {
             list = list.filter(item => item.sector === selectedSector);
@@ -274,8 +292,24 @@ export default function AssetsPage() {
             );
         }
 
+        // Dinamik Sıralama
+        list.sort((a, b) => {
+            let valA = a[sortField];
+            let valB = b[sortField];
+
+            if (typeof valA === 'string') {
+                return sortOrder === 'asc' 
+                    ? (valA as string).localeCompare(valB as string)
+                    : (valB as string).localeCompare(valA as string);
+            }
+
+            return sortOrder === 'asc' 
+                ? (valA as number) - (valB as number)
+                : (valB as number) - (valA as number);
+        });
+
         return list;
-    }, [allStocksList, selectedSector, searchTerm]);
+    }, [allStocksList, selectedSector, searchTerm, sortField, sortOrder]);
 
     // SAYFALAMA HESAPLAMALARI
     const totalPages = Math.max(1, Math.ceil(filteredStocks.length / itemsPerPage));
@@ -291,6 +325,16 @@ export default function AssetsPage() {
         setTimeout(() => {
             stockSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
+    };
+
+    // Sıralama Değiştirme
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(field);
+            setSortOrder('desc');
+        }
     };
 
     return (
@@ -334,7 +378,7 @@ export default function AssetsPage() {
                                     </div>
                                     <p className="text-[11px] font-bold text-slate-400">
                                         {isSectorChartExpanded 
-                                            ? "İstediğiniz sektör sütununa tıklayarak o sektördeki tüm hisseleri alt listede görüntüleyin" 
+                                            ? "İstediğiniz sektör sütununa tıklayarak o sektördeki tüm hisseleri alt tabloda görüntüleyin" 
                                             : "Genişletmek için kutuya, hisselerini süzmek için sektör sütununa tıklayın"}
                                     </p>
                                 </div>
@@ -558,71 +602,27 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. BÖLÜM: ALT YARI (10 FARKLI TASARIM ŞABLONU İLE CANLI SEÇİCİ WİDGET) */}
+            {/* 2. BÖLÜM: ALT YARI (SIRA SIRALANABİLİR PROFESYONEL VERİ TABLOSU - NO HORIZONTAL SCROLL) */}
             {/* ========================================================================= */}
             <div 
                 ref={stockSectionRef}
-                className="w-full bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-6 relative overflow-hidden"
+                className="w-full bg-white border border-slate-200/90 rounded-[32px] p-5 md:p-6 shadow-xl space-y-5 relative"
             >
-                <div className="space-y-5">
+                <div className="space-y-4">
                     
-                    {/* 🎨 10 FARKLI TASARIM ŞABLONU SEÇİCİ BARI */}
-                    <div className="bg-gradient-to-r from-blue-900 via-[#00008B] to-slate-900 p-4 rounded-2xl text-white shadow-lg space-y-3">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Palette className="w-5 h-5 text-amber-400" />
-                                <h3 className="text-sm font-black tracking-tight">Tasarım Şablonu Seçici (10 Farklı Canlı Fikir)</h3>
-                            </div>
-                            <span className="text-[10px] font-bold text-amber-300 bg-amber-400/20 px-2.5 py-1 rounded-full border border-amber-400/30">
-                                Aktif: Tasarım #{designTemplate}
-                            </span>
-                        </div>
-                        
-                        {/* 10 ADET ŞABLON DÜĞMESİ */}
-                        <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-1.5 pt-1">
-                            {[
-                                { id: 1, label: "1. Kompakt Şerit" },
-                                { id: 2, label: "2. Veri Tablosu" },
-                                { id: 3, label: "3. Glass Frost" },
-                                { id: 4, label: "4. Düz Satır" },
-                                { id: 5, label: "5. Ticker Matris" },
-                                { id: 6, label: "6. Split Banner" },
-                                { id: 7, label: "7. Yan Çizgili" },
-                                { id: 8, label: "8. Dashboard Pill" },
-                                { id: 9, label: "9. Terminal" },
-                                { id: 10, label: "10. Rozetli Çip" }
-                            ].map(t => (
-                                <button
-                                    key={t.id}
-                                    onClick={() => setDesignTemplate(t.id)}
-                                    className={cn(
-                                        "px-2 py-2 rounded-xl text-[10px] font-black transition-all text-center truncate border",
-                                        designTemplate === t.id
-                                            ? "bg-amber-400 text-slate-950 border-amber-300 shadow-md scale-105 font-black"
-                                            : "bg-white/10 hover:bg-white/20 text-white/90 border-white/10"
-                                    )}
-                                >
-                                    {t.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
                     {/* ÜST BAŞLIK & SEKTÖREL FİLTRE ROZETLERİ */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                                    {selectedSector ? `${selectedSector} Hisseleri` : "Tüm BIST Hisseleri"}
+                                    {selectedSector ? `${selectedSector} Hisseleri` : "BIST Finansal Veri Tablosu"}
                                 </h2>
                                 <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-[#00008B]/10 text-[#00008B] border border-[#00008B]/20">
-                                    {filteredStocks.length} Hisse Bulundu
+                                    {filteredStocks.length} Şirket
                                 </span>
                             </div>
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                                {selectedSector 
-                                    ? `Sadece "${selectedSector}" sektörüne ait şirketler gösterilmektedir` 
-                                    : "BIST şirketlerini arayabilir veya yukarıdaki sektör grafiğinden filtreleyebilirsiniz"}
+                                Tablo başlıklarına tıklayarak Fiyat, Değişim, Hacim veya F/K oranına göre anında sıralama yapabilirsiniz.
                             </p>
                         </div>
 
@@ -675,335 +675,186 @@ export default function AssetsPage() {
                         ))}
                     </div>
 
-                    {/* VARLIK ARAMA ÇUBUĞU (FULL-WIDTH INPUT) */}
+                    {/* VARLIK ARAMA ÇUBUĞU */}
                     <div className="relative w-full group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#00008B] transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#00008B] transition-colors" />
                         <input 
                             type="text"
-                            placeholder="Hisse Sembolü, Şirket Adı veya Sektör Ara (Örn: MIATK, THYAO, Teknoloji)"
+                            placeholder="Hisse Sembolü veya Şirket Ara (Örn: MIATK, THYAO, ASELS)"
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
                                 setCurrentPage(1);
                             }}
-                            className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00008B]/30 focus:bg-white transition-all shadow-inner"
+                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00008B]/30 focus:bg-white transition-all shadow-inner"
                         />
                     </div>
 
                     {/* ========================================================================= */}
-                    {/* 10 FARKLI TASARIM GÖRÜNÜM WİDGET RENDERER */}
+                    {/* PROFESYONEL DERLİ TOPLU VERİ TABLOSU (SARI SIRALANABİLİR BAŞLIKLAR & NO SCROLLBAR) */}
                     {/* ========================================================================= */}
                     {paginatedStocks.length > 0 ? (
-                        <div className="w-full">
-                            
-                            {/* TASARIM 1: KOMPAKT ŞERİT KARTLAR (Ultra Az Yükseklik) */}
-                            {designTemplate === 1 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group p-3 bg-slate-50 hover:bg-white border border-slate-200/80 hover:border-[#00008B]/40 rounded-2xl hover:shadow-md transition-all flex items-center justify-between gap-2 cursor-pointer"
+                        <div className="w-full rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-sm">
+                            <table className="w-full text-left border-collapse table-fixed">
+                                <thead>
+                                    <tr className="bg-slate-100/80 border-b border-slate-200 text-[10px] font-black text-slate-600 uppercase tracking-wider select-none">
+                                        
+                                        {/* HİSSE & ŞİRKET */}
+                                        <th 
+                                            className="py-3 px-3 w-[26%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                            onClick={() => handleSort('symbol')}
                                         >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <AssetLogo symbol={item.symbol} className="w-7 h-7" />
-                                                <div className="min-w-0">
-                                                    <span className="text-xs font-black text-slate-900 group-hover:text-[#00008B] block truncate">{item.symbol}</span>
-                                                    <span className="text-[9px] font-bold text-slate-400 block truncate">{item.sector}</span>
-                                                </div>
+                                            <div className="flex items-center gap-1">
+                                                <span>Hisse & Şirket</span>
+                                                {sortField === 'symbol' ? (
+                                                    sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00008B]" /> : <ArrowDown className="w-3 h-3 text-[#00008B]" />
+                                                ) : <ArrowUpDown className="w-2.5 h-2.5 text-slate-400" />}
                                             </div>
-                                            <div className="text-right shrink-0">
-                                                <span className="text-xs font-black text-slate-900 block">₺{item.price.toFixed(2)}</span>
-                                                <span className={cn("text-[10px] font-black px-1.5 py-0.2 rounded-md inline-block", item.change >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600")}>
-                                                    %{item.change > 0 ? `+${item.change}` : item.change}
-                                                </span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                        </th>
 
-                            {/* TASARIM 2: PROFESYONEL FİNANSAL VERİ TABLOSU */}
-                            {designTemplate === 2 && (
-                                <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-200/80 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                                                <th className="py-3 px-4">Hisse & Şirket</th>
-                                                <th className="py-3 px-4">Sektör</th>
-                                                <th className="py-3 px-4 text-right">Fiyat</th>
-                                                <th className="py-3 px-4 text-right">Günlük Değişim</th>
-                                                <th className="py-3 px-4 text-center">Detay</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100 text-xs">
-                                            {paginatedStocks.map((item) => (
-                                                <tr key={item.symbol} className="hover:bg-blue-50/40 transition-colors group">
-                                                    <td className="py-3 px-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <AssetLogo symbol={item.symbol} className="w-8 h-8" />
-                                                            <div>
-                                                                <span className="font-black text-slate-900 group-hover:text-[#00008B] block text-xs">{item.symbol}</span>
-                                                                <span className="text-[10px] font-semibold text-slate-400 block truncate max-w-[200px]">{item.name}</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-3 px-4">
-                                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                                                            {item.sector}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right font-black text-slate-900 text-xs">
-                                                        ₺{item.price.toFixed(2)}
-                                                    </td>
-                                                    <td className="py-3 px-4 text-right">
-                                                        <span className={cn("font-black px-2 py-0.5 rounded-lg text-xs inline-block", item.change >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600")}>
-                                                            %{item.change > 0 ? `+${item.change}` : item.change}
-                                                        </span>
-                                                    </td>
-                                                    <td className="py-3 px-4 text-center">
-                                                        <a 
-                                                            href={`/varlik/${item.symbol}`} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer"
-                                                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-[#00008B] hover:text-white text-slate-600 inline-block transition-colors"
-                                                        >
-                                                            <ExternalLink className="w-3.5 h-3.5" />
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                                        {/* SEKTÖR */}
+                                        <th className="py-3 px-2 w-[18%]">
+                                            <span>Sektör</span>
+                                        </th>
 
-                            {/* TASARIM 3: GLASSMORPHISM FROST KARTLAR */}
-                            {designTemplate === 3 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group p-3.5 bg-gradient-to-br from-white/90 to-blue-50/30 border border-blue-100/80 hover:border-[#00008B]/40 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-2 cursor-pointer"
+                                        {/* FİYAT */}
+                                        <th 
+                                            className="py-3 px-2 text-right w-[14%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                            onClick={() => handleSort('price')}
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <AssetLogo symbol={item.symbol} className="w-7 h-7" />
-                                                    <span className="text-xs font-black text-slate-900 group-hover:text-[#00008B]">{item.symbol}</span>
-                                                </div>
-                                                <span className={cn("text-[9px] font-black px-2 py-0.5 rounded-full", item.change >= 0 ? "bg-emerald-500 text-white" : "bg-rose-500 text-white")}>
-                                                    %{item.change > 0 ? `+${item.change}` : item.change}
-                                                </span>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <span>Fiyat</span>
+                                                {sortField === 'price' ? (
+                                                    sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00008B]" /> : <ArrowDown className="w-3 h-3 text-[#00008B]" />
+                                                ) : <ArrowUpDown className="w-2.5 h-2.5 text-slate-400" />}
                                             </div>
-                                            <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
-                                                <span className="text-[9px] font-bold text-slate-400 truncate max-w-[90px]">{item.sector}</span>
-                                                <span className="font-black text-slate-900">₺{item.price.toFixed(2)}</span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                        </th>
 
-                            {/* TASARIM 4: MINIMALIST DÜZ SATIR LİSTESİ */}
-                            {designTemplate === 4 && (
-                                <div className="bg-slate-50/60 rounded-2xl border border-slate-200/80 divide-y divide-slate-200/60">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="p-3 hover:bg-white flex items-center justify-between gap-3 transition-colors group cursor-pointer"
+                                        {/* GÜNLÜK DEĞİŞİM */}
+                                        <th 
+                                            className="py-3 px-2 text-right w-[15%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                            onClick={() => handleSort('change')}
                                         >
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <AssetLogo symbol={item.symbol} className="w-7 h-7" />
-                                                <span className="text-xs font-black text-slate-900 group-hover:text-[#00008B] w-16">{item.symbol}</span>
-                                                <span className="text-xs font-semibold text-slate-500 truncate hidden md:inline">{item.name}</span>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <span>Değişim (%)</span>
+                                                {sortField === 'change' ? (
+                                                    sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00008B]" /> : <ArrowDown className="w-3 h-3 text-[#00008B]" />
+                                                ) : <ArrowUpDown className="w-2.5 h-2.5 text-slate-400" />}
                                             </div>
-                                            <div className="flex items-center gap-4 shrink-0">
-                                                <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-md border border-slate-200">{item.sector}</span>
-                                                <span className="text-xs font-black text-slate-900 w-20 text-right">₺{item.price.toFixed(2)}</span>
-                                                <span className={cn("text-xs font-black px-2 py-0.5 rounded-lg w-16 text-center", item.change >= 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
-                                                    %{item.change > 0 ? `+${item.change}` : item.change}
-                                                </span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                        </th>
 
-                            {/* TASARIM 5: BIST TICKER MATRİS (5 Kolon Sıkışık Matris) */}
-                            {designTemplate === 5 && (
-                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group p-2.5 bg-slate-900 text-white rounded-2xl hover:bg-[#00008B] transition-all flex flex-col justify-between space-y-2 cursor-pointer shadow-md"
+                                        {/* HACİM (İŞE YARAR EF EKTİF FİLTRE) */}
+                                        <th 
+                                            className="py-3 px-2 text-right w-[14%] cursor-pointer hover:bg-slate-200/60 transition-colors hidden sm:table-cell"
+                                            onClick={() => handleSort('volume')}
                                         >
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-black tracking-wider">{item.symbol}</span>
-                                                <span className={cn("text-[9px] font-black px-1.5 py-0.2 rounded", item.change >= 0 ? "bg-emerald-500/30 text-emerald-400" : "bg-rose-500/30 text-rose-400")}>
-                                                    %{item.change > 0 ? `+${item.change}` : item.change}
-                                                </span>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <span>Hacim</span>
+                                                {sortField === 'volume' ? (
+                                                    sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00008B]" /> : <ArrowDown className="w-3 h-3 text-[#00008B]" />
+                                                ) : <ArrowUpDown className="w-2.5 h-2.5 text-slate-400" />}
                                             </div>
-                                            <div className="flex items-center justify-between border-t border-white/10 pt-1.5 text-[11px]">
-                                                <span className="text-[9px] font-semibold text-slate-400 truncate">{item.sector}</span>
-                                                <span className="font-black text-amber-400">₺{item.price.toFixed(2)}</span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                        </th>
 
-                            {/* TASARIM 6: SPLIT HEADER GRADIENT KARTLAR */}
-                            {designTemplate === 6 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group rounded-2xl border border-slate-200 overflow-hidden bg-white hover:shadow-md transition-all flex flex-col justify-between cursor-pointer"
+                                        {/* F/K ORANI */}
+                                        <th 
+                                            className="py-3 px-2 text-right w-[8%] cursor-pointer hover:bg-slate-200/60 transition-colors hidden md:table-cell"
+                                            onClick={() => handleSort('pe')}
                                         >
-                                            <div className="bg-gradient-to-r from-[#00008B] to-blue-700 p-2 text-white flex items-center justify-between">
-                                                <span className="text-xs font-black">{item.symbol}</span>
-                                                <span className="text-[8px] font-bold opacity-80 uppercase tracking-widest">{item.sector}</span>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <span>F/K</span>
+                                                {sortField === 'pe' ? (
+                                                    sortOrder === 'asc' ? <ArrowUp className="w-3 h-3 text-[#00008B]" /> : <ArrowDown className="w-3 h-3 text-[#00008B]" />
+                                                ) : <ArrowUpDown className="w-2.5 h-2.5 text-slate-400" />}
                                             </div>
-                                            <div className="p-3 flex items-center justify-between">
-                                                <AssetLogo symbol={item.symbol} className="w-7 h-7" />
-                                                <div className="text-right">
-                                                    <span className="text-xs font-black text-slate-900 block">₺{item.price.toFixed(2)}</span>
-                                                    <span className={cn("text-[10px] font-bold", item.change >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                                        %{item.change > 0 ? `+${item.change}` : item.change}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                        </th>
 
-                            {/* TASARIM 7: YAN VURGU ÇİZGİLİ KARTLAR */}
-                            {designTemplate === 7 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                        {/* İŞLEM / İNCELE */}
+                                        <th className="py-3 px-2 text-center w-[5%]">
+                                            <span>İncele</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 text-xs">
+                                    {paginatedStocks.map((item, idx) => (
+                                        <tr 
+                                            key={item.symbol} 
                                             className={cn(
-                                                "group p-3 bg-white border border-slate-200 rounded-2xl hover:shadow-md transition-all flex items-center justify-between gap-2 cursor-pointer border-l-4",
-                                                item.change >= 0 ? "border-l-emerald-500" : "border-l-rose-500"
+                                                "hover:bg-blue-50/60 transition-colors group cursor-pointer",
+                                                idx % 2 === 1 && "bg-slate-50/40"
                                             )}
                                         >
-                                            <div className="flex items-center gap-2.5 min-w-0">
-                                                <AssetLogo symbol={item.symbol} className="w-7 h-7" />
-                                                <div className="min-w-0">
-                                                    <span className="text-xs font-black text-slate-900 group-hover:text-[#00008B] block truncate">{item.symbol}</span>
-                                                    <span className="text-[8px] font-bold text-slate-400 block truncate">{item.sector}</span>
+                                            {/* HİSSE & ŞİRKET */}
+                                            <td className="py-2.5 px-3">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <AssetLogo symbol={item.symbol} className="w-7 h-7" />
+                                                    <div className="min-w-0">
+                                                        <a 
+                                                            href={`/varlik/${item.symbol}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="font-black text-slate-900 group-hover:text-[#00008B] text-xs truncate block"
+                                                        >
+                                                            {item.symbol}
+                                                        </a>
+                                                        <span className="text-[10px] font-semibold text-slate-400 truncate block max-w-[170px]" title={item.name}>
+                                                            {item.name}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="text-right shrink-0">
-                                                <span className="text-xs font-black text-slate-900 block">₺{item.price.toFixed(2)}</span>
-                                                <span className={cn("text-[9px] font-black", item.change >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                                    %{item.change > 0 ? `+${item.change}` : item.change}
-                                                </span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                            </td>
 
-                            {/* TASARIM 8: DASHBOARD PILL KARTLAR */}
-                            {designTemplate === 8 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group p-2.5 bg-slate-100/80 hover:bg-white border border-slate-200 rounded-3xl hover:shadow-md transition-all flex items-center justify-between cursor-pointer"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <AssetLogo symbol={item.symbol} className="w-8 h-8" />
-                                                <div>
-                                                    <span className="text-xs font-black text-slate-900 block leading-tight">{item.symbol}</span>
-                                                    <span className={cn("text-[9px] font-black", item.change >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                                        %{item.change > 0 ? `+${item.change}` : item.change}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <span className="text-xs font-black bg-slate-900 text-white px-2.5 py-1 rounded-2xl shadow-sm">
+                                            {/* SEKTÖR */}
+                                            <td className="py-2.5 px-2">
+                                                <span className="text-[9px] font-black px-2 py-0.5 rounded-md bg-blue-50 text-[#00008B] border border-blue-100 truncate block max-w-[130px]">
+                                                    {item.sector}
+                                                </span>
+                                            </td>
+
+                                            {/* FİYAT */}
+                                            <td className="py-2.5 px-2 text-right font-black text-slate-900 text-xs">
                                                 ₺{item.price.toFixed(2)}
-                                            </span>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                            </td>
 
-                            {/* TASARIM 9: BLOOMBERG TERMINAL STİLİ */}
-                            {designTemplate === 9 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full font-mono">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group p-3 bg-slate-950 text-slate-100 border border-slate-800 rounded-2xl hover:border-amber-400 transition-all flex flex-col justify-between space-y-2 cursor-pointer shadow-lg"
-                                        >
-                                            <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                                                <span className="text-xs font-black text-amber-400">{item.symbol}</span>
-                                                <span className="text-[9px] text-slate-500 truncate max-w-[80px]">{item.sector}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between pt-1">
-                                                <span className="text-xs font-bold">₺{item.price.toFixed(2)}</span>
-                                                <span className={cn("text-xs font-bold px-1.5 py-0.5 rounded", item.change >= 0 ? "bg-emerald-950 text-emerald-400 border border-emerald-800" : "bg-rose-950 text-rose-400 border border-rose-800")}>
+                                            {/* DEĞİŞİM */}
+                                            <td className="py-2.5 px-2 text-right">
+                                                <span className={cn(
+                                                    "font-black px-2 py-0.5 rounded-lg text-xs inline-flex items-center gap-0.5",
+                                                    item.change >= 0 
+                                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60" 
+                                                        : "bg-rose-50 text-rose-700 border border-rose-200/60"
+                                                )}>
+                                                    {item.change >= 0 ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />}
                                                     %{item.change > 0 ? `+${item.change}` : item.change}
                                                 </span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                            </td>
 
-                            {/* TASARIM 10: ROZETLİ MİNİMAL ÇİP LİSTESİ */}
-                            {designTemplate === 10 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 w-full">
-                                    {paginatedStocks.map((item) => (
-                                        <a
-                                            key={item.symbol}
-                                            href={`/varlik/${item.symbol}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="group p-3 bg-white border border-slate-200/90 rounded-2xl hover:border-[#00008B] hover:shadow-md transition-all flex flex-col justify-between space-y-2 cursor-pointer"
-                                        >
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-xs font-black text-[#00008B] bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">{item.symbol}</span>
-                                                <span className={cn("text-[10px] font-black", item.change >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                                    %{item.change > 0 ? `+${item.change}` : item.change}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                                                <span className="text-[9px] font-bold text-slate-400 truncate">{item.name}</span>
-                                                <span className="text-xs font-black text-slate-900">₺{item.price.toFixed(2)}</span>
-                                            </div>
-                                        </a>
-                                    ))}
-                                </div>
-                            )}
+                                            {/* HACİM */}
+                                            <td className="py-2.5 px-2 text-right text-xs font-bold text-slate-600 hidden sm:table-cell">
+                                                {item.volume}
+                                            </td>
 
+                                            {/* F/K */}
+                                            <td className="py-2.5 px-2 text-right text-xs font-bold text-slate-600 hidden md:table-cell">
+                                                {item.pe}
+                                            </td>
+
+                                            {/* İŞLEM / İNCELE */}
+                                            <td className="py-2.5 px-2 text-center">
+                                                <a 
+                                                    href={`/varlik/${item.symbol}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="p-1 rounded-lg bg-slate-100 group-hover:bg-[#00008B] group-hover:text-white text-slate-500 inline-block transition-colors"
+                                                    title={`${item.symbol} Detaylarını Aç`}
+                                                >
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     ) : (
                         <div className="py-12 text-center space-y-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
@@ -1025,9 +876,9 @@ export default function AssetsPage() {
 
                     {/* NUMARALI SAYFALAMA KONTROLÜ (PAGINATION BAR: 1, 2, 3, 4...) */}
                     {totalPages > 1 && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-5 gap-3">
+                        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 pt-4 gap-3">
                             <span className="text-xs font-bold text-slate-500">
-                                Toplam <span className="font-black text-slate-900">{filteredStocks.length}</span> Hisseden{" "}
+                                Toplam <span className="font-black text-slate-900">{filteredStocks.length}</span> Şirketten{" "}
                                 <span className="font-black text-slate-900">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredStocks.length)}</span> Arası Gösteriliyor
                             </span>
 
@@ -1046,7 +897,7 @@ export default function AssetsPage() {
                                         key={pageNum}
                                         onClick={() => setCurrentPage(pageNum)}
                                         className={cn(
-                                            "w-9 h-9 rounded-xl text-xs font-black transition-all border",
+                                            "w-8 h-8 rounded-xl text-xs font-black transition-all border",
                                             currentPage === pageNum
                                                 ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-105"
                                                 : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
