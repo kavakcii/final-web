@@ -14,6 +14,7 @@ import {
   Zap, 
   ShieldCheck, 
   ChevronRight,
+  ChevronUp,
   Newspaper,
   X,
   FileText,
@@ -77,9 +78,10 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [stockData, setStockData] = useState<any>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
-  // HALKARZ ŞİRKET HAKKINDA METNİ
+  // HALKARZ ŞİRKET HAKKINDA METNİ & AKORDİYON DURUMU
   const [aboutText, setAboutText] = useState<string>("");
   const [aboutLoading, setAboutLoading] = useState(true);
+  const [isAboutOpen, setIsAboutOpen] = useState(true);
 
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
   const [newsList, setNewsList] = useState<any[]>([]);
@@ -301,9 +303,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 1. SEKSİYON: GENEL BİLGİ & HALKARZ EKSİKSİZ ŞİRKET HAKKINDA METNİ */}
+        {/* 1. SEKSİYON: SADECE SİRKET HAKKINDA AKORDİYON KART BÖLÜMÜ (GÖRSELİNİZLE BİREBİR UYUMLU) */}
         <div ref={genelRef} className="scroll-mt-6 space-y-4">
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
+            
+            {/* ÜST BİLGİ & FİYAT ÇUBUĞU */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-3">
@@ -331,30 +335,47 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               </div>
             </div>
 
-            {/* HALKARZ ŞİRKET HAKKINDA BAŞLIĞI VE EKSİKSİZ METNİ */}
-            <div className="space-y-3 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
-              <h2 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-[#00008B]" />
-                Şirket Hakkında
-              </h2>
+            {/* SADECE SİRKET HAKKINDA KART / AKORDİYON BÖLÜMÜ (GÖRSELDEKİ KOYU TEMA DOKUSU) */}
+            <div className="bg-[#121826] text-slate-200 rounded-2xl p-5 md:p-6 space-y-4 shadow-lg border border-slate-800">
+              <button 
+                onClick={() => setIsAboutOpen(!isAboutOpen)}
+                className="w-full flex items-center justify-between text-left font-black text-lg text-white hover:text-blue-300 transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  Şirket Hakkında
+                </span>
+                <ChevronUp className={cn("w-5 h-5 text-slate-400 transition-transform duration-300", !isAboutOpen && "rotate-180")} />
+              </button>
 
-              {aboutLoading ? (
-                <div className="py-4 flex items-center gap-2 text-slate-400 font-bold text-xs">
-                  <RefreshCw className="w-4 h-4 animate-spin text-[#00008B]" />
-                  {symbol} Şirket Hakkında bilgisi Halkarz kataloğundan çekiliyor...
-                </div>
-              ) : aboutText ? (
-                <div className="space-y-3 text-slate-700 text-xs font-semibold leading-relaxed">
-                  {aboutText.split('\n\n').map((para, i) => (
-                    <p key={i}>{para}</p>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs font-semibold text-slate-600">
-                  {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında işlem gören lider şirketler arasında yer almaktadır.
-                </p>
+              {isAboutOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4 pt-2 border-t border-slate-800/80"
+                >
+                  <h3 className="font-black text-white text-sm tracking-tight">{fullName}</h3>
+
+                  {aboutLoading ? (
+                    <div className="py-4 flex items-center gap-2 text-slate-400 font-bold text-xs">
+                      <RefreshCw className="w-4 h-4 animate-spin text-blue-400" />
+                      {symbol} Şirket Hakkında bilgisi Halkarz kataloğundan yükleniyor...
+                    </div>
+                  ) : aboutText ? (
+                    <div className="space-y-3.5 text-slate-300 text-xs font-medium leading-relaxed">
+                      {aboutText.split('\n\n').map((para, i) => (
+                        <p key={i}>{para}</p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs font-medium text-slate-400">
+                      {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
+                    </p>
+                  )}
+                </motion.div>
               )}
             </div>
+
           </div>
         </div>
 
