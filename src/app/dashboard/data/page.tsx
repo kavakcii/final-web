@@ -1249,6 +1249,19 @@ export default function AssetsPage() {
         });
     }, [livePrices]);
 
+    // DİNAMİK CANLI AYIN ENLERİ (EN ÇOK KAZANDIRAN VE KAYBETTİREN HİSSELER)
+    const dynamicTop5Gainers = useMemo(() => {
+        return [...allStocksList]
+            .sort((a, b) => b.change - a.change)
+            .slice(0, 5);
+    }, [allStocksList]);
+
+    const dynamicTop5Losers = useMemo(() => {
+        return [...allStocksList]
+            .sort((a, b) => a.change - b.change)
+            .slice(0, 5);
+    }, [allStocksList]);
+
     // SEKTÖR, ARAMA VE SIRALAMA UYGULANMIŞ HİSSE LİSTESİ
     const filteredStocks = useMemo(() => {
         let list = [...allStocksList];
@@ -1527,62 +1540,62 @@ export default function AssetsPage() {
                                     transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                                     className="grid grid-cols-1 sm:grid-cols-2 gap-4"
                                 >
-                                    {/* SOL KOLON: EN İYİ GETİRİLİ 5 HİSSE (BELİRGİN CANLI YEŞİL ZEMİN & LOGOSUZ YAZI) */}
+                                    {/* SOL KOLON: EN İYİ GETİRİLİ 5 HİSSE (DIŞ ZEMİN CANLI YEŞİL, HİSSE ELEMANLARI SADE BEYAZ ZEMİN) */}
                                     <div className="space-y-2 bg-emerald-100/90 p-3.5 rounded-2xl border border-emerald-300 shadow-sm">
                                         <h3 className="text-[10px] font-black text-emerald-950 uppercase tracking-wider flex items-center gap-1.5">
                                             <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 shadow-sm" />
                                             En İyi Getirili 5 Hisse
                                         </h3>
                                         <div className="space-y-1.5">
-                                            {MONTHLY_TOP_5_GAINERS.map((item) => (
+                                            {dynamicTop5Gainers.map((item) => (
                                                 <a 
                                                     key={item.symbol} 
                                                     href={`/varlik/${item.symbol}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center justify-between p-2.5 bg-[#E6F4EA] border border-emerald-300/90 rounded-xl hover:bg-emerald-200/90 hover:border-emerald-500 hover:shadow-md transition-all text-xs group cursor-pointer"
+                                                    className="flex items-center justify-between p-2.5 bg-white border border-slate-200/90 rounded-xl hover:border-[#00008B] hover:shadow-md transition-all text-xs group cursor-pointer"
                                                 >
                                                     <div className="min-w-0">
-                                                        <span className="font-black text-emerald-950 text-xs block leading-tight group-hover:text-emerald-700 transition-colors">
+                                                        <span className="font-black text-slate-900 text-xs block leading-tight group-hover:text-[#00008B] transition-colors">
                                                             {item.symbol}
                                                         </span>
-                                                        <span className="text-[8px] font-bold text-emerald-800/80 block truncate max-w-[120px]">
+                                                        <span className="text-[8px] font-bold text-slate-400 block truncate max-w-[120px]">
                                                             {item.name}
                                                         </span>
                                                     </div>
-                                                    <span className="font-black text-emerald-800 text-xs shrink-0 bg-emerald-200/90 px-2 py-0.5 rounded-lg border border-emerald-300 shadow-xs">
-                                                        +{item.monthlyReturn}%
+                                                    <span className="font-black text-emerald-700 text-xs shrink-0 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/80 shadow-xs">
+                                                        +{item.change}%
                                                     </span>
                                                 </a>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* SAĞ KOLON: EN KÖTÜ GETİRİLİ 5 HİSSE (BELİRGİN CANLI KIRMIZI ZEMİN & LOGOSUZ YAZI) */}
+                                    {/* SAĞ KOLON: EN KÖTÜ GETİRİLİ 5 HİSSE (DIŞ ZEMİN CANLI KIRMIZI, HİSSE ELEMANLARI SADE BEYAZ ZEMİN) */}
                                     <div className="space-y-2 bg-rose-100/90 p-3.5 rounded-2xl border border-rose-300 shadow-sm">
                                         <h3 className="text-[10px] font-black text-rose-950 uppercase tracking-wider flex items-center gap-1.5">
                                             <span className="w-2.5 h-2.5 rounded-full bg-rose-600 shadow-sm" />
                                             En Kötü Getirili 5 Hisse
                                         </h3>
                                         <div className="space-y-1.5">
-                                            {MONTHLY_TOP_5_LOSERS.map((item) => (
+                                            {dynamicTop5Losers.map((item) => (
                                                 <a 
                                                     key={item.symbol} 
                                                     href={`/varlik/${item.symbol}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center justify-between p-2.5 bg-[#FCE8E6] border border-rose-300/90 rounded-xl hover:bg-rose-200/90 hover:border-rose-500 hover:shadow-md transition-all text-xs group cursor-pointer"
+                                                    className="flex items-center justify-between p-2.5 bg-white border border-slate-200/90 rounded-xl hover:border-[#00008B] hover:shadow-md transition-all text-xs group cursor-pointer"
                                                 >
                                                     <div className="min-w-0">
-                                                        <span className="font-black text-rose-950 text-xs block leading-tight group-hover:text-rose-700 transition-colors">
+                                                        <span className="font-black text-slate-900 text-xs block leading-tight group-hover:text-[#00008B] transition-colors">
                                                             {item.symbol}
                                                         </span>
-                                                        <span className="text-[8px] font-bold text-rose-800/80 block truncate max-w-[120px]">
+                                                        <span className="text-[8px] font-bold text-slate-400 block truncate max-w-[120px]">
                                                             {item.name}
                                                         </span>
                                                     </div>
-                                                    <span className="font-black text-rose-800 text-xs shrink-0 bg-rose-200/90 px-2 py-0.5 rounded-lg border border-rose-300 shadow-xs">
-                                                        {item.monthlyReturn}%
+                                                    <span className="font-black text-rose-700 text-xs shrink-0 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200/80 shadow-xs">
+                                                        {item.change}%
                                                     </span>
                                                 </a>
                                             ))}
