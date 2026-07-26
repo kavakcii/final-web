@@ -26,6 +26,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import halkarzAboutDb from "@/data/halkarz_about_db.json";
 
 // BIST Şirket Adları Kataloğu
 const STOCK_NAMES: Record<string, string> = {
@@ -78,10 +79,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [stockData, setStockData] = useState<any>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
-  // HALKARZ ŞİRKET HAKKINDA METNİ
-  const [aboutText, setAboutText] = useState<string>("");
-  const [aboutLoading, setAboutLoading] = useState(true);
-
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
   const [newsList, setNewsList] = useState<any[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
@@ -96,6 +93,15 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
   const fullName = STOCK_NAMES[symbol] || `${symbol} Sanayi ve Ticaret A.Ş.`;
 
+  // INSTANT 0MS LOCAL HALKARZ ABOUT TEXT (Sıfır bekleme, yerel veritabanından anında okuma)
+  const aboutText = useMemo(() => {
+    const cached = (halkarzAboutDb as Record<string, string>)[symbol];
+    if (cached && cached.length > 30) {
+      return cached;
+    }
+    return `${symbol} (${fullName}), Borsa İstanbul (BIST) piyasasında sürdürülebilir büyüme odaklı faaliyet gösteren, yüksek üretim kapasitesine ve geniş hizmet ağına sahip Türkiye’nin önde gelen kuruluşları arasında yer almaktadır. Şirket, inovatif çözümleri, AR-GE yatırımları ve nitelikli insan kaynağı ile ulusal ve uluslararası pazarlarda stratejik konumunu korumakta ve yatırımcılarına katma değer sunmayı sürdürmektedir.`;
+  }, [symbol, fullName]);
+
   // Fetch stock detail & chart data
   const fetchStockData = async (tf: string) => {
     setLoading(true);
@@ -109,22 +115,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
       console.error("Failed to fetch stock data:", e);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Fetch Halkarz 'Şirket Hakkında' text
-  const fetchAboutText = async () => {
-    setAboutLoading(true);
-    try {
-      const res = await fetch(`/api/bist/about?symbol=${symbol}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAboutText(data.about || "");
-      }
-    } catch (e) {
-      console.error("Failed to fetch stock about text:", e);
-    } finally {
-      setAboutLoading(false);
     }
   };
 
@@ -146,7 +136,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
   useEffect(() => {
     fetchStockData(activeTimeframe);
-    fetchAboutText();
     fetchNews();
   }, [symbol, activeTimeframe]);
 
@@ -293,12 +282,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => { fetchStockData(activeTimeframe); fetchAboutText(); fetchNews(); }}
-              disabled={loading || newsLoading || aboutLoading}
+              onClick={() => { fetchStockData(activeTimeframe); fetchNews(); }}
+              disabled={loading || newsLoading}
               className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 transition-all border border-slate-200 disabled:opacity-50 shadow-sm"
               title="Verileri ve Haberleri Yenile"
             >
-              <RefreshCw className={cn("w-4 h-4 text-[#00008B]", (loading || newsLoading || aboutLoading) && "animate-spin")} />
+              <RefreshCw className={cn("w-4 h-4 text-[#00008B]", (loading || newsLoading) && "animate-spin")} />
             </button>
             <button className="px-4 py-2 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-1.5 shadow-md">
               <Plus className="w-4 h-4" />
@@ -307,7 +296,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 1. SEKSİYON: ŞİRKET HAKKINDA (SABİT BAŞLIK, BÖLÜNMEDEN DOĞAL PARAGRAF AKIŞI) */}
+        {/* 1. SEKSİYON: ANINDA 0MS ŞİRKET HAKKINDA (SABİT BAŞLIK, SIFIR BEKLEME) */}
         <div ref={genelRef} className="scroll-mt-6">
           <div className="bg-[#00008B] text-white rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl border border-blue-900">
             
@@ -320,24 +309,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             <div className="space-y-4 pt-1">
               <h3 className="font-black text-white text-base tracking-tight">{fullName}</h3>
 
-              {aboutLoading ? (
-                <div className="py-6 flex items-center gap-2.5 text-blue-200 font-bold text-xs">
-                  <RefreshCw className="w-5 h-5 animate-spin text-white" />
-                  {symbol} Şirket Hakkında detayları yükleniyor...
-                </div>
-              ) : aboutText ? (
-                <div className="space-y-4 text-white text-xs md:text-sm font-medium leading-relaxed tracking-wide">
-                  {aboutText.split('\n\n').map((paragraph, idx) => (
-                    <p key={idx}>
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs font-semibold text-blue-100">
-                  {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında sürdürülebilir büyüme odaklı faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
-                </p>
-              )}
+              <div className="space-y-4 text-white text-xs md:text-sm font-medium leading-relaxed tracking-wide">
+                {aboutText.split('\n\n').map((paragraph, idx) => (
+                  <p key={idx}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </div>
 
           </div>
