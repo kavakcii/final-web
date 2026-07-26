@@ -77,6 +77,10 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [stockData, setStockData] = useState<any>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
+  // HALKARZ ŞİRKET HAKKINDA METNİ
+  const [aboutText, setAboutText] = useState<string>("");
+  const [aboutLoading, setAboutLoading] = useState(true);
+
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
   const [newsList, setNewsList] = useState<any[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
@@ -107,6 +111,22 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     }
   };
 
+  // Fetch Halkarz 'Şirket Hakkında' text
+  const fetchAboutText = async () => {
+    setAboutLoading(true);
+    try {
+      const res = await fetch(`/api/bist/about?symbol=${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAboutText(data.about || "");
+      }
+    } catch (e) {
+      console.error("Failed to fetch stock about text:", e);
+    } finally {
+      setAboutLoading(false);
+    }
+  };
+
   // Fetch live news feeds for symbol
   const fetchNews = async () => {
     setNewsLoading(true);
@@ -125,6 +145,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
   useEffect(() => {
     fetchStockData(activeTimeframe);
+    fetchAboutText();
     fetchNews();
   }, [symbol, activeTimeframe]);
 
@@ -266,12 +287,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => { fetchStockData(activeTimeframe); fetchNews(); }}
-              disabled={loading || newsLoading}
+              onClick={() => { fetchStockData(activeTimeframe); fetchAboutText(); fetchNews(); }}
+              disabled={loading || newsLoading || aboutLoading}
               className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 transition-all border border-slate-200 disabled:opacity-50 shadow-sm"
               title="Verileri ve Haberleri Yenile"
             >
-              <RefreshCw className={cn("w-4 h-4 text-[#00008B]", (loading || newsLoading) && "animate-spin")} />
+              <RefreshCw className={cn("w-4 h-4 text-[#00008B]", (loading || newsLoading || aboutLoading) && "animate-spin")} />
             </button>
             <button className="px-4 py-2 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-1.5 shadow-md">
               <Plus className="w-4 h-4" />
@@ -280,15 +301,15 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 1. SEKSİYON: GENEL BİLGİ & BAŞLIK */}
-        <div ref={genelRef} className="scroll-mt-6">
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-4">
+        {/* 1. SEKSİYON: GENEL BİLGİ & HALKARZ EKSİKSİZ ŞİRKET HAKKINDA METNİ */}
+        <div ref={genelRef} className="scroll-mt-6 space-y-4">
+          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-2xl font-black text-slate-900 tracking-tight">{symbol} Genel Bilgi</h1>
                   <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200">
-                    BIST 100
+                    BIST 500
                   </span>
                 </div>
                 <p className="text-xs font-bold text-slate-400 mt-1">{fullName}</p>
@@ -310,9 +331,30 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               </div>
             </div>
 
-            <p className="text-xs font-semibold text-slate-600 leading-relaxed">
-              {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında işlem gören lider şirketler arasında yer almaktadır. Şirket özkaynakları, sektör hacmi ve yatırım değerleri düzenli olarak takip edilmektedir.
-            </p>
+            {/* HALKARZ ŞİRKET HAKKINDA BAŞLIĞI VE EKSİKSİZ METNİ */}
+            <div className="space-y-3 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80">
+              <h2 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-[#00008B]" />
+                Şirket Hakkında
+              </h2>
+
+              {aboutLoading ? (
+                <div className="py-4 flex items-center gap-2 text-slate-400 font-bold text-xs">
+                  <RefreshCw className="w-4 h-4 animate-spin text-[#00008B]" />
+                  {symbol} Şirket Hakkında bilgisi Halkarz kataloğundan çekiliyor...
+                </div>
+              ) : aboutText ? (
+                <div className="space-y-3 text-slate-700 text-xs font-semibold leading-relaxed">
+                  {aboutText.split('\n\n').map((para, i) => (
+                    <p key={i}>{para}</p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs font-semibold text-slate-600">
+                  {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında işlem gören lider şirketler arasında yer almaktadır.
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
