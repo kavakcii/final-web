@@ -18,6 +18,51 @@ function fetchUrl(url: string): Promise<{ html: string; finalUrl: string }> {
   });
 }
 
+function sanitizeCompanyAboutText(text: string): string {
+  if (!text) return "";
+  let clean = text
+    .replace(/&#8217;/g, "'")
+    .replace(/&#8216;/g, "'")
+    .replace(/&#8220;/g, '"')
+    .replace(/&#8221;/g, '"')
+    .replace(/&#8211;/g, "-")
+    .replace(/&#8212;/g, "—")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ");
+
+  // Remove any KAP notification paragraphs or Halka Arz announcement headers
+  const lines = clean.split('\n\n');
+  const validParagraphs: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (
+      trimmed.length > 35 &&
+      !trimmed.includes('KAP bildirimi') &&
+      !trimmed.includes('Gönderim Tarihi:') &&
+      !trimmed.includes('Kaynak: kap.org.tr') &&
+      !trimmed.includes('Halka Arz Süreci Hakkında') &&
+      !trimmed.includes('Yönetim Kurulu Kararı uyarınca bağlı ortaklarımızdan') &&
+      !trimmed.includes('SPK\'ya yapacağı başvuru') &&
+      !trimmed.includes('SPK&#8217;ya yapacağı başvuru')
+    ) {
+      validParagraphs.push(trimmed);
+    }
+  }
+
+  if (validParagraphs.length > 0) {
+    return validParagraphs.join('\n\n');
+  }
+
+  // Fallback to cleaned original if filtering removed everything
+  return clean
+    .replace(/.*?KAP bildirimi Gönderim Tarihi:[\s\S]*?kap\.org\.tr/gi, '')
+    .trim();
+}
+
 function extractAboutFromPageHtml(html: string): string {
   if (!html) return "";
   const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi;
@@ -37,7 +82,7 @@ function extractAboutFromPageHtml(html: string): string {
       paragraphs.push(text);
     }
   }
-  return paragraphs.join('\n\n');
+  return sanitizeCompanyAboutText(paragraphs.join('\n\n'));
 }
 
 export async function GET(request: Request) {
@@ -55,7 +100,7 @@ export async function GET(request: Request) {
           success: true,
           symbol,
           source: "Halkarz XU500",
-          about: aboutMap[symbol]
+          about: sanitizeCompanyAboutText(aboutMap[symbol])
         });
       }
     }
@@ -83,12 +128,12 @@ export async function GET(request: Request) {
           success: true,
           symbol,
           source: "Halkarz XU500 (Live)",
-          about: aboutText
+          about: sanitizeCompanyAboutText(aboutText)
         });
       }
     }
 
-    // Fallback structured description if Halkarz page is unreachable
+    // Fallback clean structured description if Halkarz page is unreachable
     return NextResponse.json({
       success: true,
       symbol,

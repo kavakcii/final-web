@@ -54,7 +54,8 @@ const STOCK_NAMES: Record<string, string> = {
     "ASTOR": "Astor Enerji A.Ş.",
     "MIATK": "Mia Teknoloji A.Ş.",
     "PGSUS": "Pegasus Hava Taşımacılığı A.Ş.",
-    "BIGEN": "Birleşim Grup Enerji Yatırımları A.Ş."
+    "BIGEN": "Birleşim Grup Enerji Yatırımları A.Ş.",
+    "TKFEN": "Tekfen Holding A.Ş."
 };
 
 const TIMEFRAMES = [
@@ -303,7 +304,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 1. SEKSİYON: SADECE SİRKET HAKKINDA AKORDİYON KART BÖLÜMÜ (GÖRSELİNİZLE BİREBİR UYUMLU) */}
+        {/* 1. SEKSİYON: ŞİRKET HAKKINDA (RENK PALETİNDEKİ MAVİ BÖLGEDE BEYAZ YAZILAR İLE) */}
         <div ref={genelRef} className="scroll-mt-6 space-y-4">
           <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
             
@@ -335,16 +336,16 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               </div>
             </div>
 
-            {/* SADECE SİRKET HAKKINDA KART / AKORDİYON BÖLÜMÜ (GÖRSELDEKİ KOYU TEMA DOKUSU) */}
-            <div className="bg-[#121826] text-slate-200 rounded-2xl p-5 md:p-6 space-y-4 shadow-lg border border-slate-800">
+            {/* RENK PALETİNDEKİ MAVİ BÖLGEDE BEYAZ YAZILAR İLE Sadece ŞİRKET HAKKINDA METNİ */}
+            <div className="bg-[#00008B] text-white rounded-2xl p-5 md:p-6 space-y-4 shadow-xl border border-blue-900">
               <button 
                 onClick={() => setIsAboutOpen(!isAboutOpen)}
-                className="w-full flex items-center justify-between text-left font-black text-lg text-white hover:text-blue-300 transition-colors"
+                className="w-full flex items-center justify-between text-left font-black text-lg text-white hover:text-blue-200 transition-colors"
               >
                 <span className="flex items-center gap-2">
                   Şirket Hakkında
                 </span>
-                <ChevronUp className={cn("w-5 h-5 text-slate-400 transition-transform duration-300", !isAboutOpen && "rotate-180")} />
+                <ChevronUp className={cn("w-5 h-5 text-blue-200 transition-transform duration-300", !isAboutOpen && "rotate-180")} />
               </button>
 
               {isAboutOpen && (
@@ -352,23 +353,23 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4 pt-2 border-t border-slate-800/80"
+                  className="space-y-4 pt-2 border-t border-blue-800/80"
                 >
-                  <h3 className="font-black text-white text-sm tracking-tight">{fullName}</h3>
+                  <h3 className="font-black text-white text-base tracking-tight">{fullName}</h3>
 
                   {aboutLoading ? (
-                    <div className="py-4 flex items-center gap-2 text-slate-400 font-bold text-xs">
-                      <RefreshCw className="w-4 h-4 animate-spin text-blue-400" />
-                      {symbol} Şirket Hakkında bilgisi Halkarz kataloğundan yükleniyor...
+                    <div className="py-4 flex items-center gap-2 text-blue-200 font-bold text-xs">
+                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      {symbol} Şirket Hakkında bilgisi yükleniyor...
                     </div>
                   ) : aboutText ? (
-                    <div className="space-y-3.5 text-slate-300 text-xs font-medium leading-relaxed">
+                    <div className="space-y-3.5 text-white text-xs font-semibold leading-relaxed">
                       {aboutText.split('\n\n').map((para, i) => (
                         <p key={i}>{para}</p>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-semibold text-blue-100">
                       {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
                     </p>
                   )}
