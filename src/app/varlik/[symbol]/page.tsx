@@ -21,7 +21,12 @@ import {
   Layers,
   PieChart,
   Activity,
-  Bookmark
+  Bookmark,
+  Newspaper,
+  Copy,
+  Check,
+  X,
+  FileText
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -92,6 +97,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [stockData, setStockData] = useState<any>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
+  // HABERLERİ CANLI ÇEKME & OKUMA MODALI
+  const [newsList, setNewsList] = useState<any[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+  const [copiedToast, setCopiedToast] = useState(false);
+
   const fullName = STOCK_NAMES[symbol] || `${symbol} Sanayi ve Ticaret A.Ş.`;
 
   // Fetch stock detail & chart data
@@ -110,9 +121,34 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     }
   };
 
+  // Fetch live news feeds for symbol
+  const fetchNews = async () => {
+    setNewsLoading(true);
+    try {
+      const res = await fetch(`/api/bist/news?symbol=${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNewsList(data.articles || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch stock news:", e);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStockData(activeTimeframe);
+    fetchNews();
   }, [symbol, activeTimeframe]);
+
+  // Copy news content to clipboard
+  const handleCopyNewsContent = (article: any) => {
+    const textToCopy = `${article.title}\nKaynak: ${article.source} (${article.pubDate})\n\n${article.content || article.summary}`;
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 2500);
+  };
 
   // SVG Path Calculation for Smooth Blue Line & Darkening Blue Gradient Area
   const svgPathData = useMemo(() => {
@@ -166,7 +202,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const isPositive = (stockData?.priceChange || 0) >= 0;
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] w-full overflow-x-hidden">
+    <div className="flex min-h-screen bg-[#F8FAFC] w-full overflow-x-hidden relative">
       
       {/* ========================================================================= */}
       {/* 1. SOL DÜZEN: LACİVERT DAİMA AÇIK KISAYOL MENÜSÜ (BRAND BLUE #00008B) */}
@@ -250,12 +286,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
           <div className="flex items-center gap-2">
             <button 
-              onClick={() => fetchStockData(activeTimeframe)}
-              disabled={loading}
+              onClick={() => { fetchStockData(activeTimeframe); fetchNews(); }}
+              disabled={loading || newsLoading}
               className="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 transition-all border border-slate-200 disabled:opacity-50 shadow-sm"
-              title="Verileri Yenile"
+              title="Verileri ve Haberleri Yenile"
             >
-              <RefreshCw className={cn("w-4 h-4 text-[#00008B]", loading && "animate-spin")} />
+              <RefreshCw className={cn("w-4 h-4 text-[#00008B]", (loading || newsLoading) && "animate-spin")} />
             </button>
             <button className="px-4 py-2 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-1.5 shadow-md">
               <Plus className="w-4 h-4" />
@@ -332,7 +368,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   onMouseLeave={() => setHoveredPoint(null)}
                 >
                   <defs>
-                    {/* AŞAĞIDAN YUKARIYA KOYULAŞAN LACİVERT MAVİ GRADIENT */}
                     <linearGradient id="blueChartGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
                       <stop offset="100%" stopColor="#00008B" stopOpacity="0.05" />
@@ -429,7 +464,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* ŞİRKET FİNANSAL VERİ VE İSTATİSTİK KARTLARI (BEYAZ TEMA & LACİVERT RAKAMLAR) */}
+        {/* ŞİRKET FİNANSAL VERİ VE İSTATİSTİK KARTLARI */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Yüksek</span>
@@ -448,7 +483,172 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             <p className="text-lg font-black text-[#00008B]">₺{stockData?.previousClose || "---"}</p>
           </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* 3. CANLI HISSE HABERLERİ & KAP BİLDİRİMLERİ BÖLÜMÜ (CANLI HABER AKIŞI) */}
+        {/* ========================================================================= */}
+        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#00008B] border border-blue-200 flex items-center justify-center shadow-sm">
+                <Newspaper className="w-5 h-5 text-[#00008B]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Canlı Haberler & KAP Bildirimleri</h2>
+                <p className="text-xs font-bold text-slate-400">Geçmiş ve Anlık Gelen Tüm Finansal Haberler & Açıklamalar</p>
+              </div>
+            </div>
+
+            <button 
+              onClick={fetchNews}
+              disabled={newsLoading}
+              className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#00008B] text-xs font-black border border-blue-200 flex items-center gap-1.5 transition-all"
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", newsLoading && "animate-spin")} />
+              Haberleri Yenile
+            </button>
+          </div>
+
+          {/* HABER LİSTESİ Grid */}
+          {newsLoading ? (
+            <div className="py-12 flex items-center justify-center text-slate-400 font-bold text-xs gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-[#00008B]" />
+              {symbol} için canlı haberler ve KAP duyuruları çekiliyor...
+            </div>
+          ) : newsList.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {newsList.map((article) => (
+                <div 
+                  key={article.id}
+                  className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 space-y-3 hover:border-[#00008B] hover:shadow-md transition-all flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn(
+                        "text-[9px] font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider border",
+                        article.category === "KAP Bildirimi"
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : article.category === "Finansal Analiz"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : "bg-blue-50 text-[#00008B] border-blue-200"
+                      )}>
+                        {article.category}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">{article.pubDate}</span>
+                    </div>
+
+                    <h3 
+                      onClick={() => setSelectedArticle(article)}
+                      className="font-black text-slate-900 text-sm leading-snug hover:text-[#00008B] cursor-pointer transition-colors line-clamp-2"
+                    >
+                      {article.title}
+                    </h3>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-500 truncate max-w-[150px]">
+                      {article.source}
+                    </span>
+
+                    <button 
+                      onClick={() => setSelectedArticle(article)}
+                      className="inline-flex items-center gap-1 text-xs font-black text-[#00008B] hover:underline"
+                    >
+                      Haber İçeriğini Oku <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-slate-400 font-bold text-xs">
+              Bu hisse senedi için henüz yayınlanmış yeni haber bulunamadı.
+            </div>
+          )}
+        </div>
       </main>
+
+      {/* ========================================================================= */}
+      {/* 4. HABER OKUMA & METİN KOPYALAMA MODALI (POP-UP DETAY OKUYUCU) */}
+      {/* ========================================================================= */}
+      <AnimatePresence>
+        {selectedArticle && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto"
+            >
+              {/* KAPAT BUTONU */}
+              <button 
+                onClick={() => setSelectedArticle(null)}
+                className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* ÜST BİLGİ */}
+              <div className="space-y-3 border-b border-slate-100 pb-4 pr-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-md bg-blue-50 text-[#00008B] border border-blue-200 uppercase">
+                    {selectedArticle.category}
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">• {selectedArticle.pubDate}</span>
+                </div>
+
+                <h2 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
+                  {selectedArticle.title}
+                </h2>
+
+                <p className="text-xs font-bold text-slate-500">
+                  Kaynak: <span className="text-slate-800">{selectedArticle.source}</span>
+                </p>
+              </div>
+
+              {/* METİN İÇERİĞİ */}
+              <div className="space-y-4 text-slate-700 text-sm font-medium leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
+                {selectedArticle.content?.split('\n\n').map((paragraph: string, idx: number) => (
+                  <p key={idx}>{paragraph}</p>
+                )) || <p>{selectedArticle.summary}</p>}
+              </div>
+
+              {/* AKSİYON BUTONLARI */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <button 
+                  onClick={() => handleCopyNewsContent(selectedArticle)}
+                  className="px-4 py-2.5 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-2 shadow-md transition-all"
+                >
+                  {copiedToast ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
+                  {copiedToast ? "Metin Kopyalandı!" : "Haber Metnini Kopyala"}
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {selectedArticle.link && (
+                    <a 
+                      href={selectedArticle.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black flex items-center gap-1.5 transition-all border border-slate-200"
+                    >
+                      <ExternalLink className="w-4 h-4 text-[#00008B]" />
+                      Orijinal Kaynak
+                    </a>
+                  )}
+
+                  <button 
+                    onClick={() => setSelectedArticle(null)}
+                    className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-black transition-all"
+                  >
+                    Kapat
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
