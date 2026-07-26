@@ -381,23 +381,23 @@ export default function AssetsPage() {
         <div className="p-4 md:p-6 min-h-screen bg-[#F8FAFC] space-y-8 w-full max-w-full overflow-x-hidden">
             
             {/* ========================================================================= */}
-            {/* 1. BÖLÜM: ÜST YARI (ANALYTICS & INSIGHTS - SOL %55, SAĞ %45) */}
+            {/* 1. BÖLÜM: ÜST YARI (ANALYTICS & INSIGHTS - SOL %50, SAĞ %50 EQUAL WIDTH) */}
             {/* ========================================================================= */}
             <div className="w-full relative space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
                     
-                    {/* SOL ÜST MODÜL: SEKTÖRLER YILLIK GETİRİLERİ (%55 -> %100 ANIMATED REFLOW) */}
+                    {/* SOL ÜST MODÜL: SEKTÖRLER YILLIK GETİRİLERİ (%50 -> %100 ANIMATED REFLOW) */}
                     <div 
                         ref={sectorChartRef}
                         className={cn(
-                            "bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden cursor-pointer group",
+                            "bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden cursor-pointer group flex flex-col justify-between",
                             isSectorChartExpanded 
                                 ? "lg:col-span-12 ring-4 ring-[#00008B]/20 shadow-2xl bg-gradient-to-br from-white via-blue-50/20 to-white" 
-                                : "lg:col-span-7 hover:border-[#00008B]/40 hover:shadow-2xl"
+                                : "lg:col-span-6 hover:border-[#00008B]/40 hover:shadow-2xl"
                         )}
                         onClick={() => !isSectorChartExpanded && setIsSectorChartExpanded(true)}
                     >
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-md shadow-[#00008B]/20 shrink-0">
                                     <BarChart3 className="w-5 h-5 text-sky-300" />
@@ -406,13 +406,13 @@ export default function AssetsPage() {
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg font-black text-slate-900 tracking-tight">Sektörler Yıllık Getirileri</h2>
                                         <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200/60 uppercase tracking-widest">
-                                            {isSectorChartExpanded ? "Tüm Sektörler (Detaylı)" : "En Yüksek 4 Sektör"}
+                                            {isSectorChartExpanded ? "Tüm Sektörler Dikey Grafiği" : "En Yüksek 4 Sektör"}
                                         </span>
                                     </div>
                                     <p className="text-[11px] font-bold text-slate-400">
                                         {isSectorChartExpanded 
-                                            ? "Yıllık getirisine göre sıralanmış tüm ana sektörlerin detaylı yatay grafik görünümü" 
-                                            : "Genişletmek ve tüm sektör detaylarını görmek için grafiğe tıklayın"}
+                                            ? "Yıllık getirisine göre sıralanmış tüm ana sektörlerin dikey sütun grafiği" 
+                                            : "Genişletmek ve tüm dikey sektör sütunlarını görmek için tıklayın"}
                                     </p>
                                 </div>
                             </div>
@@ -424,7 +424,7 @@ export default function AssetsPage() {
                                         e.stopPropagation();
                                         setIsSectorChartExpanded(false);
                                     }}
-                                    className="p-2 rounded-xl bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-600 transition-all duration-300 shadow-sm flex items-center gap-1 text-xs font-bold"
+                                    className="p-2.5 rounded-xl bg-slate-100 hover:bg-rose-500 hover:text-white text-slate-600 transition-all duration-300 shadow-sm flex items-center gap-1.5 text-xs font-black"
                                     title="Orijinal Düzenine Dön (Kapat)"
                                 >
                                     <X className="w-4 h-4" />
@@ -437,12 +437,12 @@ export default function AssetsPage() {
                             )}
                         </div>
 
-                        {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (TÜM YATAY ÇUBUKLAR) */}
+                        {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (TÜM DİKEY SÜTUNLAR) */}
                         {!isSectorChartExpanded ? (
                             /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ */
-                            <div className="h-64 w-full flex items-end justify-around pt-6 px-4 pb-2 gap-4">
+                            <div className="h-72 w-full flex items-end justify-around pt-6 px-4 pb-2 gap-4">
                                 {top4Sectors.map((sector, idx) => {
-                                    const maxVal = 50;
+                                    const maxVal = 55;
                                     const heightPercent = (sector.annualReturn / maxVal) * 100;
                                     return (
                                         <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group/col">
@@ -454,14 +454,62 @@ export default function AssetsPage() {
                                             {/* Dikey Sütun Barı */}
                                             <div 
                                                 className={cn(
-                                                    "w-full max-w-[64px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110",
+                                                    "w-full max-w-[72px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2",
                                                     sector.color
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
-                                            />
+                                            >
+                                                <span className="text-[10px] font-black text-white/90 bg-black/20 px-1.5 py-0.5 rounded-full">
+                                                    #{idx + 1}
+                                                </span>
+                                            </div>
                                             
                                             {/* Sektör Adı */}
                                             <span className="text-[11px] font-black text-slate-700 mt-3 text-center truncate w-full">
+                                                {sector.name}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-slate-400">
+                                                Lider: {sector.leader}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS CHART (TÜM SEKTÖRLER DİKEY SÜTUN GRAFİĞİ) */
+                            <motion.div 
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                                className="h-80 w-full flex items-end justify-between pt-8 px-2 md:px-6 pb-2 gap-2 md:gap-4 overflow-x-auto scrollbar-none"
+                            >
+                                {ALL_SECTORS_DATA.map((sector, idx) => {
+                                    const maxVal = 55;
+                                    const heightPercent = (sector.annualReturn / maxVal) * 100;
+                                    return (
+                                        <div key={idx} className="flex-1 min-w-[70px] md:min-w-[85px] flex flex-col items-center h-full justify-end group/col">
+                                            {/* Getiri Yüzdesi */}
+                                            <span className="text-[11px] md:text-xs font-black text-[#00008B] mb-2 group-hover/col:scale-110 transition-transform">
+                                                +{sector.annualReturn}%
+                                            </span>
+                                            
+                                            {/* Dikey Sütun Barı */}
+                                            <motion.div 
+                                                initial={{ height: 0 }}
+                                                animate={{ height: `${heightPercent}%` }}
+                                                transition={{ duration: 0.7, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                                                className={cn(
+                                                    "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2",
+                                                    sector.color
+                                                )}
+                                            >
+                                                <span className="text-[9px] font-black text-white/90 bg-black/20 px-1.5 py-0.5 rounded-full">
+                                                    #{idx + 1}
+                                                </span>
+                                            </motion.div>
+                                            
+                                            {/* Sektör Adı & Lideri */}
+                                            <span className="text-[10px] md:text-xs font-black text-slate-800 mt-2.5 text-center truncate w-full" title={sector.name}>
                                                 {sector.name}
                                             </span>
                                             <span className="text-[9px] font-bold text-slate-400">
@@ -470,61 +518,19 @@ export default function AssetsPage() {
                                         </div>
                                     );
                                 })}
-                            </div>
-                        ) : (
-                            /* EXPANDED ALL SECTORS HORIZONTAL BARS */
-                            <motion.div 
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                                className="space-y-4 py-2"
-                            >
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {ALL_SECTORS_DATA.map((sector, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2 hover:bg-white hover:shadow-md transition-all"
-                                        >
-                                            <div className="flex items-center justify-between text-xs">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="w-5 h-5 rounded-lg bg-[#00008B] text-white font-black text-[10px] flex items-center justify-center">
-                                                        #{idx + 1}
-                                                    </span>
-                                                    <span className="font-black text-slate-900">{sector.name}</span>
-                                                </div>
-                                                <span className="font-black text-emerald-600">+{sector.annualReturn}%</span>
-                                            </div>
-
-                                            {/* Yatay Çubuk (Horizontal Bar) */}
-                                            <div className="w-full h-3 bg-slate-200/80 rounded-full overflow-hidden">
-                                                <motion.div 
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${(sector.annualReturn / 50) * 100}%` }}
-                                                    transition={{ duration: 0.7, delay: idx * 0.05, ease: "easeOut" }}
-                                                    className={cn("h-full rounded-full bg-gradient-to-r", sector.color)}
-                                                />
-                                            </div>
-
-                                            <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 pt-0.5">
-                                                <span>Piyasa Değeri: {sector.marketCap}</span>
-                                                <span>Sektör Lideri: <strong className="text-[#00008B]">{sector.leader}</strong></span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
                             </motion.div>
                         )}
                     </div>
 
-                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (%45 - FADE OUT ON EXPAND) */}
+                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (%50 - INWARD FADE & SHRINK ON EXPAND) */}
                     <AnimatePresence>
                         {!isSectorChartExpanded && (
                             <motion.div 
-                                initial={{ opacity: 1, scale: 1 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
+                                initial={{ opacity: 1, scale: 1, y: 0 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 15, filter: "blur(4px)" }}
                                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                                className="lg:col-span-5 bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-5"
+                                className="lg:col-span-6 bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-5 flex flex-col justify-between"
                             >
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                     <div className="flex items-center gap-3">
@@ -533,7 +539,7 @@ export default function AssetsPage() {
                                         </div>
                                         <div>
                                             <h2 className="text-lg font-black text-slate-900 tracking-tight">Ayın Enleri [Şubat]</h2>
-                                            <p className="text-[11px] font-bold text-slate-400">Performans Performans Özeti</p>
+                                            <p className="text-[11px] font-bold text-slate-400">En Çok Kazandıran & Kaybettiren Hisseler</p>
                                         </div>
                                     </div>
 
@@ -543,46 +549,47 @@ export default function AssetsPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
-                                    {/* LISTE 1: OCAK AYININ EN İYİ GETİRİLİ 5 HİSSESİ */}
-                                    <div className="space-y-2">
-                                        <h3 className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                                {/* YAN YANA (SAĞ VE SOL) İKİ KOLONLU AYIN ENLERİ DÜZENİ */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    {/* SOL KOLON: OCAK AYININ EN İYİ GETİRİLİ 5 HİSSESİ */}
+                                    <div className="space-y-2 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/80">
+                                        <h3 className="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                            Ocak Ayının En İyi Getirili 5 Hissesi
+                                            En İyi Getirili 5 Hisse
                                         </h3>
                                         <div className="space-y-1.5">
                                             {MONTHLY_TOP_5_GAINERS.map((item) => (
-                                                <div key={item.symbol} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/60 rounded-xl hover:bg-emerald-50/30 transition-colors text-xs">
-                                                    <div className="flex items-center gap-2.5 min-w-0">
-                                                        <AssetLogo symbol={item.symbol} className="w-7 h-7" />
+                                                <div key={item.symbol} className="flex items-center justify-between p-2 bg-white border border-emerald-100 rounded-xl hover:shadow-sm transition-all text-xs">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <AssetLogo symbol={item.symbol} className="w-6 h-6" />
                                                         <div className="min-w-0">
-                                                            <span className="font-black text-slate-900">{item.symbol}</span>
-                                                            <span className="text-[9px] font-semibold text-slate-400 block truncate">{item.name}</span>
+                                                            <span className="font-black text-slate-900 text-xs block leading-tight">{item.symbol}</span>
+                                                            <span className="text-[8px] font-semibold text-slate-400 block truncate">{item.name}</span>
                                                         </div>
                                                     </div>
-                                                    <span className="font-black text-emerald-600 shrink-0">+{item.monthlyReturn}%</span>
+                                                    <span className="font-black text-emerald-600 text-xs shrink-0">+{item.monthlyReturn}%</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    {/* LISTE 2: OCAK AYININ EN KÖTÜ GETİRİLİ 5 HİSSESİ */}
-                                    <div className="space-y-2 pt-2 border-t border-slate-100">
-                                        <h3 className="text-[11px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-1.5">
+                                    {/* SAĞ KOLON: OCAK AYININ EN KÖTÜ GETİRİLİ 5 HİSSESİ */}
+                                    <div className="space-y-2 bg-rose-50/40 p-3 rounded-2xl border border-rose-100/80">
+                                        <h3 className="text-[10px] font-black text-rose-900 uppercase tracking-wider flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-rose-500" />
-                                            Ocak Ayının En Kötü Getirili 5 Hissesi
+                                            En Kötü Getirili 5 Hisse
                                         </h3>
                                         <div className="space-y-1.5">
                                             {MONTHLY_TOP_5_LOSERS.map((item) => (
-                                                <div key={item.symbol} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/60 rounded-xl hover:bg-rose-50/30 transition-colors text-xs">
-                                                    <div className="flex items-center gap-2.5 min-w-0">
-                                                        <AssetLogo symbol={item.symbol} className="w-7 h-7" />
+                                                <div key={item.symbol} className="flex items-center justify-between p-2 bg-white border border-rose-100 rounded-xl hover:shadow-sm transition-all text-xs">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <AssetLogo symbol={item.symbol} className="w-6 h-6" />
                                                         <div className="min-w-0">
-                                                            <span className="font-black text-slate-900">{item.symbol}</span>
-                                                            <span className="text-[9px] font-semibold text-slate-400 block truncate">{item.name}</span>
+                                                            <span className="font-black text-slate-900 text-xs block leading-tight">{item.symbol}</span>
+                                                            <span className="text-[8px] font-semibold text-slate-400 block truncate">{item.name}</span>
                                                         </div>
                                                     </div>
-                                                    <span className="font-black text-rose-600 shrink-0">{item.monthlyReturn}%</span>
+                                                    <span className="font-black text-rose-600 text-xs shrink-0">{item.monthlyReturn}%</span>
                                                 </div>
                                             ))}
                                         </div>
