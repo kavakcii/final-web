@@ -142,18 +142,18 @@ const STOCK_NAMES: Record<string, string> = {
     "PGSUS": "Pegasus Hava Taşımacılığı A.Ş."
 };
 
-// SEKTÖRLER YILLIK GETİRİLERİ TÜM SEKTÖR VERİSİ (Yıllık Getirisine Göre Sıralı)
+// SEKTÖRLER YILLIK GETİRİLERİ TÜM SEKTÖR VERİSİ (MARKA PALETİNE UYGUN TEK TİP BEYAZDAN MAVİYE GRADYAN)
 const ALL_SECTORS_DATA = [
-    { name: "Teknoloji & Yazılım", annualReturn: 48.2, marketCap: "180 Mr TL", leader: "MIATK", color: "from-blue-600 to-indigo-600" },
-    { name: "Savunma Sanayii", annualReturn: 42.1, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#00008B] to-blue-800" },
-    { name: "Enerji & Yenilenebilir", annualReturn: 39.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-amber-500 to-emerald-600" },
-    { name: "Havacılık & Ulaştırma", annualReturn: 34.8, marketCap: "450 Mr TL", leader: "THYAO", color: "from-sky-500 to-blue-600" },
-    { name: "Bankacılık & Finans", annualReturn: 28.5, marketCap: "620 Mr TL", leader: "GARAN", color: "from-emerald-600 to-teal-700" },
-    { name: "Holdingler & Yatırım", annualReturn: 22.6, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-indigo-600 to-purple-600" },
-    { name: "Otomotiv Sanayi", annualReturn: 19.8, marketCap: "360 Mr TL", leader: "FROTO", color: "from-cyan-600 to-blue-700" },
-    { name: "Perakende & Gıda", annualReturn: 16.4, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-rose-500 to-pink-600" },
-    { name: "Demir Çelik & Sanayi", annualReturn: 14.2, marketCap: "170 Mr TL", leader: "EREGL", color: "from-[#00008B] to-sky-700" },
-    { name: "Gayrimenkul (GYO)", annualReturn: 11.5, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-violet-600 to-purple-700" }
+    { name: "Teknoloji & Yazılım", annualReturn: 48.2, marketCap: "180 Mr TL", leader: "MIATK", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Savunma Sanayii", annualReturn: 42.1, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Enerji & Yenilenebilir", annualReturn: 39.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Havacılık & Ulaştırma", annualReturn: 34.8, marketCap: "450 Mr TL", leader: "THYAO", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Bankacılık & Finans", annualReturn: 28.5, marketCap: "620 Mr TL", leader: "GARAN", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Holdingler & Yatırım", annualReturn: 22.6, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Otomotiv Sanayi", annualReturn: 19.8, marketCap: "360 Mr TL", leader: "FROTO", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Perakende & Gıda", annualReturn: 16.4, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Demir Çelik & Sanayi", annualReturn: 14.2, marketCap: "170 Mr TL", leader: "EREGL", color: "from-[#00008B] via-blue-600 to-sky-100" },
+    { name: "Gayrimenkul (GYO)", annualReturn: 11.5, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-[#00008B] via-blue-600 to-sky-100" }
 ];
 
 // AYIN ENLERİ MOCK ŞABLON VERİSİ
@@ -225,7 +225,7 @@ export default function AssetsPage() {
         <div className="p-4 md:p-6 min-h-screen bg-[#F8FAFC] space-y-8 w-full max-w-full overflow-x-hidden">
             
             {/* ========================================================================= */}
-            {/* 1. BÖLÜM: ÜST YARI (ANALYTICS & INSIGHTS - EŞ ZAMANLI SOLDAN SAĞA GENİŞLEME) */}
+            {/* 1. BÖLÜM: ÜST YARI (ANALYTICS & INSIGHTS - SOL %50, SAĞ %50 EQUAL WIDTH) */}
             {/* ========================================================================= */}
             <div className="w-full relative space-y-6">
                 <div className="flex flex-col lg:flex-row items-stretch gap-6 w-full overflow-hidden">
@@ -262,7 +262,7 @@ export default function AssetsPage() {
                                     </div>
                                     <p className="text-[11px] font-bold text-slate-400">
                                         {isSectorChartExpanded 
-                                            ? "Yıllık getirisine göre sırayla tek tek beliren tüm dikey sektör sütunları" 
+                                            ? "Yıllık getirisine göre sırayla tek tek beliren tüm ana sektörler" 
                                             : "Genişletmek ve tüm dikey sektör sütunlarını canlı izlemek için tıklayın"}
                                     </p>
                                 </div>
@@ -290,7 +290,7 @@ export default function AssetsPage() {
 
                         {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (SAYFAYLA UZARKEN SIRAYLA GELEN SÜTUNLAR) */}
                         {!isSectorChartExpanded ? (
-                            /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ */
+                            /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ - BEYAZDAN MAVİYE TEK TİP GRADYAN */
                             <div className="h-72 w-full flex items-end justify-around pt-6 px-4 pb-2 gap-4">
                                 {top4Sectors.map((sector, idx) => {
                                     const maxVal = 55;
@@ -302,15 +302,15 @@ export default function AssetsPage() {
                                                 +{sector.annualReturn}%
                                             </span>
                                             
-                                            {/* Dikey Sütun Barı */}
+                                            {/* Dikey Sütun Barı - Beyazdan Maviye Marka Gradyanı */}
                                             <div 
                                                 className={cn(
-                                                    "w-full max-w-[72px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2",
+                                                    "w-full max-w-[72px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-200/50",
                                                     sector.color
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
                                             >
-                                                <span className="text-[10px] font-black text-white/90 bg-black/20 px-1.5 py-0.5 rounded-full">
+                                                <span className="text-[10px] font-black text-[#00008B] bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm">
                                                     #{idx + 1}
                                                 </span>
                                             </div>
@@ -327,7 +327,7 @@ export default function AssetsPage() {
                                 })}
                             </div>
                         ) : (
-                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS (UZARKEN SIRAYLA TEKER TEKER BELİREN DİKEY SÜTUNLAR) */
+                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS - BEYAZDAN MAVİYE TEK TİP GRADYAN */
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -354,15 +354,15 @@ export default function AssetsPage() {
                                                 +{sector.annualReturn}%
                                             </span>
                                             
-                                            {/* Dikey Sütun Barı */}
+                                            {/* Dikey Sütun Barı - Beyazdan Maviye Marka Gradyanı */}
                                             <div 
                                                 className={cn(
-                                                    "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2",
+                                                    "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-200/50",
                                                     sector.color
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
                                             >
-                                                <span className="text-[9px] font-black text-white/90 bg-black/20 px-1.5 py-0.5 rounded-full">
+                                                <span className="text-[9px] font-black text-[#00008B] bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded-full shadow-sm">
                                                     #{idx + 1}
                                                 </span>
                                             </div>
