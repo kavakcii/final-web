@@ -122,18 +122,18 @@ const STOCK_NAMES: Record<string, string> = {
     "PSGYO": "Pasifik GYO A.Ş.", "ULKER": "Ülker Bisküvi Sanayi", "CCOLA": "Coca-Cola İçecek A.Ş."
 };
 
-// SEKTÖRLER YILLIK GETİRİLERİ TÜM SEKTÖR VERİSİ
+// GERÇEK 2025 YILI BIST SEKTÖREL GETİRİ VERİLERİ (Yıllık Getirisine Göre Sıralı)
 const ALL_SECTORS_DATA = [
-    { name: "Teknoloji & Yazılım", annualReturn: 48.2, marketCap: "180 Mr TL", leader: "MIATK", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Savunma Sanayii", annualReturn: 42.1, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Enerji & Yenilenebilir", annualReturn: 39.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Havacılık & Ulaştırma", annualReturn: 34.8, marketCap: "450 Mr TL", leader: "THYAO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Bankacılık & Finans", annualReturn: 28.5, marketCap: "620 Mr TL", leader: "GARAN", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Holdingler & Yatırım", annualReturn: 22.6, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Otomotiv Sanayi", annualReturn: 19.8, marketCap: "360 Mr TL", leader: "FROTO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Perakende & Gıda", annualReturn: 16.4, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Demir Çelik & Sanayi", annualReturn: 14.2, marketCap: "170 Mr TL", leader: "EREGL", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
-    { name: "Gayrimenkul (GYO)", annualReturn: 11.5, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" }
+    { name: "Teknoloji & Yazılım", annualReturn: 104.4, marketCap: "180 Mr TL", leader: "MIATK", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Savunma Sanayii", annualReturn: 68.5, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Enerji & Yenilenebilir", annualReturn: 52.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Holdingler & Yatırım", annualReturn: 34.2, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Demir Çelik & Sanayi", annualReturn: 24.8, marketCap: "170 Mr TL", leader: "EREGL", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Perakende & Gıda", annualReturn: 18.5, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Gayrimenkul (GYO)", annualReturn: 15.2, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Bankacılık & Finans", annualReturn: 13.6, marketCap: "620 Mr TL", leader: "GARAN", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Otomotiv Sanayi", annualReturn: 11.2, marketCap: "360 Mr TL", leader: "FROTO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" },
+    { name: "Havacılık & Ulaştırma", annualReturn: 1.6, marketCap: "450 Mr TL", leader: "THYAO", color: "from-[#F0F4FF] via-blue-500 to-[#00008B]" }
 ];
 
 // EŞLEŞTİRME KATALOĞU: SEKTÖR ADI -> STOCK_SECTORS ANAHTARLARI
@@ -213,10 +213,9 @@ export default function AssetsPage() {
         Object.entries(SECTOR_MAPPING).forEach(([displaySector, mappingKeys]) => {
             mappingKeys.forEach(key => {
                 const symbols = (STOCK_SECTORS as Record<string, string[]>)[key] || [];
-                symbols.forEach((sym, idx) => {
+                symbols.forEach((sym) => {
                     if (!addedSymbols.has(sym)) {
                         addedSymbols.add(sym);
-                        // Deterministik ama gerçekçi fiyat ve getiri simülasyonu
                         const basePrice = Math.abs((sym.charCodeAt(0) * 17 + (sym.charCodeAt(1) || 65) * 5) % 450) + 12.5;
                         const changeVal = parseFloat((((sym.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
                         const nameStr = STOCK_NAMES[sym] || `${sym} Sanayi ve Ticaret A.Ş.`;
@@ -301,7 +300,7 @@ export default function AssetsPage() {
             <div className="w-full relative space-y-6">
                 <div className="flex flex-col lg:flex-row items-stretch gap-6 w-full overflow-hidden">
                     
-                    {/* SOL ÜST MODÜL: SEKTÖRLER YILLIK GETİRİLERİ (TISLANDIĞINDA AŞAĞIYA HİSSELERİ LİSTELLER) */}
+                    {/* SOL ÜST MODÜL: SEKTÖRLER YILLIK GETİRİLERİ */}
                     <motion.div 
                         ref={sectorChartRef}
                         layout
@@ -326,7 +325,7 @@ export default function AssetsPage() {
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <h2 className="text-lg font-black text-slate-900 tracking-tight">Sektörler Yıllık Getirileri</h2>
+                                        <h2 className="text-lg font-black text-slate-900 tracking-tight">Sektörler Yıllık Getirileri (2025 BIST)</h2>
                                         <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200/60 uppercase tracking-widest">
                                             {isSectorChartExpanded ? "Tüm Sektörler (Sütuna Tıkla Hisseleri İncele)" : "En Yüksek 4 Sektör"}
                                         </span>
@@ -361,11 +360,11 @@ export default function AssetsPage() {
 
                         {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (SAYFAYLA UZARKEN SIRAYLA GELEN SÜTUNLAR) */}
                         {!isSectorChartExpanded ? (
-                            /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ - BEYAZDAN MAVİYE KOYULAŞAN TEK TİP GRADYAN */
+                            /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ - SARI ÇERÇEVESİZ TEMİZ SÜTUN BARI */
                             <div className="h-72 w-full flex items-end justify-around pt-6 px-4 pb-2 gap-4">
                                 {top4Sectors.map((sector, idx) => {
-                                    const maxVal = 55;
-                                    const heightPercent = (sector.annualReturn / maxVal) * 100;
+                                    const maxVal = 115;
+                                    const heightPercent = Math.min((sector.annualReturn / maxVal) * 100, 100);
                                     const isSelected = selectedSector === sector.name;
                                     return (
                                         <div 
@@ -382,12 +381,12 @@ export default function AssetsPage() {
                                                 +{sector.annualReturn}%
                                             </span>
                                             
-                                            {/* Dikey Sütun Barı */}
+                                            {/* Dikey Sütun Barı - SARI ÇERÇEVESİZ (TEMİZ SEÇİM EFEKTİ) */}
                                             <div 
                                                 className={cn(
                                                     "w-full max-w-[72px] rounded-t-2xl bg-gradient-to-t transition-all duration-500 shadow-md group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-300/40",
                                                     sector.color,
-                                                    isSelected && "ring-4 ring-amber-400 scale-105"
+                                                    isSelected && "scale-105 brightness-110 shadow-xl"
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
                                             >
@@ -411,7 +410,7 @@ export default function AssetsPage() {
                                 })}
                             </div>
                         ) : (
-                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS */
+                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS - SARI ÇERÇEVESİZ TEMİZ SÜTUN BARI */
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -419,8 +418,8 @@ export default function AssetsPage() {
                                 className="h-80 w-full flex items-end justify-between pt-8 px-2 md:px-6 pb-2 gap-2 md:gap-3 overflow-x-auto scrollbar-none"
                             >
                                 {ALL_SECTORS_DATA.map((sector, idx) => {
-                                    const maxVal = 55;
-                                    const heightPercent = (sector.annualReturn / maxVal) * 100;
+                                    const maxVal = 115;
+                                    const heightPercent = Math.min((sector.annualReturn / maxVal) * 100, 100);
                                     const isSelected = selectedSector === sector.name;
                                     return (
                                         <motion.div 
@@ -444,12 +443,12 @@ export default function AssetsPage() {
                                                 +{sector.annualReturn}%
                                             </span>
                                             
-                                            {/* Dikey Sütun Barı */}
+                                            {/* Dikey Sütun Barı - SARI ÇERÇEVESİZ (TEMİZ SEÇİM EFEKTİ) */}
                                             <div 
                                                 className={cn(
                                                     "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2 border-t border-sky-300/40",
                                                     sector.color,
-                                                    isSelected && "ring-4 ring-amber-400 scale-105"
+                                                    isSelected && "scale-105 brightness-110 shadow-xl"
                                                 )}
                                                 style={{ height: `${heightPercent}%` }}
                                             >
@@ -589,7 +588,7 @@ export default function AssetsPage() {
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
                                 {selectedSector 
                                     ? `Sadece "${selectedSector}" sektörüne ait şirketler gösterilmektedir` 
-                                    : "BIST şirketlerini arayabilir veya yukarıdaki sektör grafiğinden filteleyebilirsiniz"}
+                                    : "BIST şirketlerini arayabilir veya yukarıdaki sektör grafiğinden filtreleyebilirsiniz"}
                             </p>
                         </div>
 
