@@ -14,7 +14,6 @@ import {
   Zap, 
   ShieldCheck, 
   ChevronRight,
-  ChevronUp,
   Newspaper,
   X,
   FileText,
@@ -79,10 +78,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [stockData, setStockData] = useState<any>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
-  // HALKARZ ŞİRKET HAKKINDA METNİ & AKORDİYON DURUMU
+  // HALKARZ ŞİRKET HAKKINDA METNİ
   const [aboutText, setAboutText] = useState<string>("");
   const [aboutLoading, setAboutLoading] = useState(true);
-  const [isAboutOpen, setIsAboutOpen] = useState(true);
 
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
   const [newsList, setNewsList] = useState<any[]>([]);
@@ -226,7 +224,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
       <aside className="w-64 shrink-0 min-h-screen bg-[#00008B] text-white p-5 space-y-6 flex flex-col justify-between shadow-2xl z-20">
         <div className="space-y-6">
           
-          {/* TIKLANAN HİSSENİN BAŞLIĞI, LOGOSU VE FİYATI (GÖRSEL 2 UYUMLU) */}
+          {/* TIKLANAN HİSSENİN BAŞLIĞI, LOGOSU VE FİYATI */}
           <div className="flex items-center gap-3 border-b border-blue-800/80 pb-5">
             <div className="w-11 h-11 rounded-2xl bg-white text-[#00008B] flex items-center justify-center font-black text-xl shadow-md shrink-0">
               {symbol.slice(0, 1)}
@@ -309,49 +307,39 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 1. SEKSİYON: DİREKT ŞİRKET HAKKINDA (ÜST ÜSTELİK VE FİYAT YAZISI OLMADAN, PARAGRAFLARA AYRILMIŞ) */}
+        {/* 1. SEKSİYON: ŞİRKET HAKKINDA (SABİT BAŞLIK, BÖLÜNMEDEN DOĞAL PARAGRAF AKIŞI) */}
         <div ref={genelRef} className="scroll-mt-6">
           <div className="bg-[#00008B] text-white rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl border border-blue-900">
             
-            <button 
-              onClick={() => setIsAboutOpen(!isAboutOpen)}
-              className="w-full flex items-center justify-between text-left font-black text-xl text-white hover:text-blue-200 transition-colors"
-            >
-              <span className="flex items-center gap-2 tracking-tight">
+            <div className="border-b border-blue-800/80 pb-4">
+              <h2 className="font-black text-xl text-white tracking-tight">
                 Şirket Hakkında
-              </span>
-              <ChevronUp className={cn("w-6 h-6 text-blue-200 transition-transform duration-300", !isAboutOpen && "rotate-180")} />
-            </button>
+              </h2>
+            </div>
 
-            {isAboutOpen && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-5 pt-3 border-t border-blue-800/80"
-              >
-                <h3 className="font-black text-white text-lg tracking-tight">{fullName}</h3>
+            <div className="space-y-4 pt-1">
+              <h3 className="font-black text-white text-base tracking-tight">{fullName}</h3>
 
-                {aboutLoading ? (
-                  <div className="py-6 flex items-center gap-2.5 text-blue-200 font-bold text-xs">
-                    <RefreshCw className="w-5 h-5 animate-spin text-white" />
-                    {symbol} Şirket Hakkında detayları yükleniyor...
-                  </div>
-                ) : aboutText ? (
-                  <div className="space-y-4 text-white text-xs md:text-sm font-medium leading-relaxed tracking-wide">
-                    {aboutText.split('\n\n').map((paragraph, idx) => (
-                      <p key={idx} className="bg-blue-950/40 p-4 rounded-2xl border border-blue-800/50 shadow-inner">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs font-semibold text-blue-100 bg-blue-950/40 p-4 rounded-2xl border border-blue-800/50">
-                    {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında sürdürülebilir büyüme odaklı faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
-                  </p>
-                )}
-              </motion.div>
-            )}
+              {aboutLoading ? (
+                <div className="py-6 flex items-center gap-2.5 text-blue-200 font-bold text-xs">
+                  <RefreshCw className="w-5 h-5 animate-spin text-white" />
+                  {symbol} Şirket Hakkında detayları yükleniyor...
+                </div>
+              ) : aboutText ? (
+                <div className="space-y-4 text-white text-xs md:text-sm font-medium leading-relaxed tracking-wide">
+                  {aboutText.split('\n\n').map((paragraph, idx) => (
+                    <p key={idx}>
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs font-semibold text-blue-100">
+                  {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında sürdürülebilir büyüme odaklı faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
+                </p>
+              )}
+            </div>
+
           </div>
         </div>
 

@@ -18,10 +18,9 @@ function fetchUrl(url: string): Promise<{ html: string; finalUrl: string }> {
   });
 }
 
-function splitIntoReadableParagraphs(text: string): string {
+function sanitizeCompanyAboutText(text: string): string {
   if (!text) return "";
-  
-  let cleanText = text
+  let clean = text
     .replace(/&#8217;/g, "'")
     .replace(/&#8216;/g, "'")
     .replace(/&#8220;/g, '"')
@@ -34,55 +33,24 @@ function splitIntoReadableParagraphs(text: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ");
 
-  const rawBlocks = cleanText.split('\n\n').map(b => b.trim()).filter(Boolean);
-  const result: string[] = [];
+  const lines = clean.split('\n\n');
+  const validParagraphs: string[] = [];
 
-  for (const block of rawBlocks) {
+  for (const line of lines) {
+    const trimmed = line.trim();
     if (
-      block.includes('KAP bildirimi') ||
-      block.includes('Gönderim Tarihi:') ||
-      block.includes('Kaynak: kap.org.tr') ||
-      block.includes('Halka Arz Süreci Hakkında') ||
-      block.includes('Yönetim Kurulu Kararı uyarınca bağlı ortaklarımızdan')
+      trimmed.length > 35 &&
+      !trimmed.includes('KAP bildirimi') &&
+      !trimmed.includes('Gönderim Tarihi:') &&
+      !trimmed.includes('Kaynak: kap.org.tr') &&
+      !trimmed.includes('Halka Arz Süreci Hakkında') &&
+      !trimmed.includes('Yönetim Kurulu Kararı uyarınca bağlı ortaklarımızdan')
     ) {
-      continue;
-    }
-
-    if (block.length > 450) {
-      // split long block by sentence boundaries
-      const sentences = block.match(/[^.!?]+[.!?]+/g) || [block];
-      let currentChunk = "";
-      for (const s of sentences) {
-        currentChunk += s.trim() + " ";
-        if (currentChunk.length > 250) {
-          result.push(currentChunk.trim());
-          currentChunk = "";
-        }
-      }
-      if (currentChunk.trim()) {
-        result.push(currentChunk.trim());
-      }
-    } else if (block.length > 30) {
-      result.push(block);
+      validParagraphs.push(trimmed);
     }
   }
 
-  if (result.length > 0) {
-    return result.join('\n\n');
-  }
-
-  // Fallback: sentence-based paragraph splitting
-  const sentences = cleanText.match(/[^.!?]+[.!?]+/g) || [cleanText];
-  const paragraphs: string[] = [];
-  let chunk = "";
-  for (let i = 0; i < sentences.length; i++) {
-    chunk += sentences[i].trim() + " ";
-    if (chunk.length > 220 || i === sentences.length - 1) {
-      paragraphs.push(chunk.trim());
-      chunk = "";
-    }
-  }
-  return paragraphs.join('\n\n');
+  return validParagraphs.join('\n\n') || clean;
 }
 
 function extractAboutFromPageHtml(html: string): string {
@@ -104,7 +72,7 @@ function extractAboutFromPageHtml(html: string): string {
       paragraphs.push(text);
     }
   }
-  return splitIntoReadableParagraphs(paragraphs.join('\n\n'));
+  return sanitizeCompanyAboutText(paragraphs.join('\n\n'));
 }
 
 export async function GET(request: Request) {
@@ -122,7 +90,7 @@ export async function GET(request: Request) {
           success: true,
           symbol,
           source: "Halkarz XU500",
-          about: splitIntoReadableParagraphs(aboutMap[symbol])
+          about: sanitizeCompanyAboutText(aboutMap[symbol])
         });
       }
     }
@@ -150,7 +118,7 @@ export async function GET(request: Request) {
           success: true,
           symbol,
           source: "Halkarz XU500 (Live)",
-          about: splitIntoReadableParagraphs(aboutText)
+          about: sanitizeCompanyAboutText(aboutText)
         });
       }
     }
