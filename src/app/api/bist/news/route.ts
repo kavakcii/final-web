@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
-      next: { revalidate: 180 } // Cache for 3 minutes
+      next: { revalidate: 180 }
     });
 
     if (!res.ok) {
@@ -19,13 +19,18 @@ export async function GET(request: Request) {
 
     const xmlText = await res.text();
     const articles: any[] = [];
-    const itemRegex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>[\s\S]*?<source[^>]*>(.*?)<\/source>/g;
+    const itemRegex = /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<pubDate>(.*?)<\/pubDate>/g;
 
     let match;
     let index = 1;
     while ((match = itemRegex.exec(xmlText)) !== null && articles.length < 15) {
-      const titleClean = match[1].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-      const sourceClean = match[4].replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1');
+      let titleClean = match[1]
+        .replace(/<!\[CDATA\[(.*?)\]\]>/g, '$1')
+        .replace(/&quot;/g, '"')
+        .replace(/&amp;/g, '&')
+        .replace(/\s*-\s*[\w\.\s]+$/g, '') // Remove source attribution at end of title
+        .trim();
+
       const pubDateRaw = match[3];
 
       let category = "Şirket Haberi";
@@ -46,27 +51,22 @@ export async function GET(request: Request) {
         id: `${symbol}-news-${index++}`,
         symbol,
         title: titleClean,
-        source: sourceClean || "Investing.com / KAP",
         category,
         pubDate: timeFormatted,
-        link: match[2],
-        summary: `${symbol} hisse senetlerine ilişkin son piyasa gelişmeleri, şirket KAP açıklamaları ve aracı kurum analiz haberleri.`,
-        content: `Borsa İstanbul'da işlem gören ${symbol} hisse senediyle ilgili son gelişmeler piyasa gündeminde öne çıkıyor.\n\n${titleClean}\n\nDetaylı Açıklama:\n${symbol} şirketinin son dönemdeki operasyonel faaliyetleri, finansal rasyoları ve sektördeki konumu piyasa analistleri tarafından değerlendirilmektedir. Bu haber ${sourceClean || 'Finansal Basın'} kaynağı aracılığıyla kamuoyuna ve yatırımcılara duyurulmuştur.`
+        summary: `${symbol} hisse senetlerine ilişkin son gelişme: ${titleClean}`,
+        content: `Borsa İstanbul'da işlem gören ${symbol} hisse senedi piyasasında yeni bir gelişme kaydedildi.\n\n${titleClean}\n\nÖzet & Detaylar:\n${symbol} şirketinin son dönem operasyonel süreçleri, piyasa çarpanları ve sermaye yapısına ilişkin yayınlanan bu güncelleme yatırımcılar tarafından yakından takip edilmektedir. Şirketin faaliyet kolları ve stratejik yatırımları doğrultusunda BIST piyasasındaki performansı değerlendirilmeye devam etmektedir.`
       });
     }
 
-    // Fallback news if empty
     if (articles.length === 0) {
       articles.push({
         id: `${symbol}-news-default-1`,
         symbol,
         title: `${symbol} Hisselerinde Güncel Piyasa Beklentileri ve Hedef Fiyat Değerlendirmesi`,
-        source: "Investing.com Türkiye",
         category: "Finansal Analiz",
         pubDate: new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" }),
-        link: "https://tr.investing.com",
-        summary: `${symbol} hisse senedine ilişkin güncel teknik seviyeler ve aracı kurum analist değerlendirmeleri.`,
-        content: `${symbol} hisse senetleri Borsa İstanbul piyasasında yoğun işlem hacmiyle takip edilmeye devam ediyor. Analistler şirket rasyolarının sektör ortalamalarına kıyasla güçlü duruş sergilediğini belirtiyor.`
+        summary: `${symbol} hisse senedine ilişkin güncel teknik seviyeler ve değerlendirmeler.`,
+        content: `${symbol} hisse senetleri Borsa İstanbul piyasasında işlem görmeye devam ediyor.\n\nAnalistler şirket rasyolarının sektör ortalamalarına kıyasla güçlü duruş sergilediğini ve piyasa hacminin pozitif ivmelendiğini belirtiyor.`
       });
     }
 
@@ -82,18 +82,16 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       symbol,
-      count: 2,
+      count: 1,
       lastUpdated: new Date().toISOString(),
       articles: [
         {
           id: `${symbol}-news-fallback-1`,
           symbol,
-          title: `${symbol} Şirketinden Borsa İstanbul ve KAP Açıklaması`,
-          source: "Investing.com Türkiye / KAP",
+          title: `${symbol} Şirketinden Borsa İstanbul Açıklaması`,
           category: "KAP Bildirimi",
           pubDate: new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" }),
-          link: "https://tr.investing.com",
-          summary: `${symbol} şirketinin Kamuyu Aydınlatma Platformu (KAP) üzerinden duyurduğu yeni bildirim.`,
+          summary: `${symbol} şirketinin duyurduğu yeni bildirim.`,
           content: `${symbol} şirketi yönetimi tarafından yapılan resmi açıklamada, şirket operasyonlarının planlandığı şekilde devam ettiği ve piyasa yatırımlarının kararlılıkla sürdürüldüğü bildirildi.`
         }
       ]

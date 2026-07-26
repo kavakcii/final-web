@@ -15,18 +15,10 @@ import {
   BarChart3, 
   Zap, 
   ShieldCheck, 
-  ExternalLink,
   ChevronRight,
-  Info,
-  Layers,
-  PieChart,
-  Activity,
   Bookmark,
   Newspaper,
-  Copy,
-  Check,
-  X,
-  FileText
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -101,7 +93,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [newsList, setNewsList] = useState<any[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
-  const [copiedToast, setCopiedToast] = useState(false);
 
   const fullName = STOCK_NAMES[symbol] || `${symbol} Sanayi ve Ticaret A.Ş.`;
 
@@ -141,14 +132,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     fetchStockData(activeTimeframe);
     fetchNews();
   }, [symbol, activeTimeframe]);
-
-  // Copy news content to clipboard
-  const handleCopyNewsContent = (article: any) => {
-    const textToCopy = `${article.title}\nKaynak: ${article.source} (${article.pubDate})\n\n${article.content || article.summary}`;
-    navigator.clipboard.writeText(textToCopy);
-    setCopiedToast(true);
-    setTimeout(() => setCopiedToast(false), 2500);
-  };
 
   // SVG Path Calculation for Smooth Blue Line & Darkening Blue Gradient Area
   const svgPathData = useMemo(() => {
@@ -485,7 +468,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
         </div>
 
         {/* ========================================================================= */}
-        {/* 3. CANLI HISSE HABERLERİ & KAP BİLDİRİMLERİ BÖLÜMÜ (CANLI HABER AKIŞI) */}
+        {/* 3. CANLI HISSE HABERLERİ BÖLÜMÜ */}
         {/* ========================================================================= */}
         <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -494,8 +477,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <Newspaper className="w-5 h-5 text-[#00008B]" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Canlı Haberler & KAP Bildirimleri</h2>
-                <p className="text-xs font-bold text-slate-400">Geçmiş ve Anlık Gelen Tüm Finansal Haberler & Açıklamalar</p>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Canlı Haberler & Bildirimler</h2>
+                <p className="text-xs font-bold text-slate-400">Tüm Güncel Finansal Haber ve Açıklamalar</p>
               </div>
             </div>
 
@@ -505,7 +488,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#00008B] text-xs font-black border border-blue-200 flex items-center gap-1.5 transition-all"
             >
               <RefreshCw className={cn("w-3.5 h-3.5", newsLoading && "animate-spin")} />
-              Haberleri Yenile
+              Yenile
             </button>
           </div>
 
@@ -513,7 +496,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           {newsLoading ? (
             <div className="py-12 flex items-center justify-center text-slate-400 font-bold text-xs gap-2">
               <RefreshCw className="w-5 h-5 animate-spin text-[#00008B]" />
-              {symbol} için canlı haberler ve KAP duyuruları çekiliyor...
+              {symbol} haberleri yükleniyor...
             </div>
           ) : newsList.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -545,11 +528,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                     </h3>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-slate-500 truncate max-w-[150px]">
-                      {article.source}
-                    </span>
-
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-end">
                     <button 
                       onClick={() => setSelectedArticle(article)}
                       className="inline-flex items-center gap-1 text-xs font-black text-[#00008B] hover:underline"
@@ -562,14 +541,14 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             </div>
           ) : (
             <div className="py-8 text-center text-slate-400 font-bold text-xs">
-              Bu hisse senedi için henüz yayınlanmış yeni haber bulunamadı.
+              Bu hisse senedi için henüz haber bulunamadı.
             </div>
           )}
         </div>
       </main>
 
       {/* ========================================================================= */}
-      {/* 4. HABER OKUMA & METİN KOPYALAMA MODALI (POP-UP DETAY OKUYUCU) */}
+      {/* 4. SADE HABER OKUMA MODALI (KAYNAK VE KOPYALAMA BUTONU YOK) */}
       {/* ========================================================================= */}
       <AnimatePresence>
         {selectedArticle && (
@@ -600,49 +579,23 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <h2 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
                   {selectedArticle.title}
                 </h2>
-
-                <p className="text-xs font-bold text-slate-500">
-                  Kaynak: <span className="text-slate-800">{selectedArticle.source}</span>
-                </p>
               </div>
 
-              {/* METİN İÇERİĞİ */}
-              <div className="space-y-4 text-slate-700 text-sm font-medium leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
+              {/* TÜM HABER METNİ İÇERİĞİ */}
+              <div className="space-y-4 text-slate-800 text-sm font-semibold leading-relaxed bg-slate-50 p-5 rounded-2xl border border-slate-200/80">
                 {selectedArticle.content?.split('\n\n').map((paragraph: string, idx: number) => (
                   <p key={idx}>{paragraph}</p>
                 )) || <p>{selectedArticle.summary}</p>}
               </div>
 
-              {/* AKSİYON BUTONLARI */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+              {/* SADE KAPAT AKSİYONU */}
+              <div className="flex items-center justify-end pt-2">
                 <button 
-                  onClick={() => handleCopyNewsContent(selectedArticle)}
-                  className="px-4 py-2.5 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black flex items-center gap-2 shadow-md transition-all"
+                  onClick={() => setSelectedArticle(null)}
+                  className="px-6 py-2.5 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black transition-all shadow-md"
                 >
-                  {copiedToast ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
-                  {copiedToast ? "Metin Kopyalandı!" : "Haber Metnini Kopyala"}
+                  Kapat
                 </button>
-
-                <div className="flex items-center gap-2">
-                  {selectedArticle.link && (
-                    <a 
-                      href={selectedArticle.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black flex items-center gap-1.5 transition-all border border-slate-200"
-                    >
-                      <ExternalLink className="w-4 h-4 text-[#00008B]" />
-                      Orijinal Kaynak
-                    </a>
-                  )}
-
-                  <button 
-                    onClick={() => setSelectedArticle(null)}
-                    className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-black transition-all"
-                  >
-                    Kapat
-                  </button>
-                </div>
               </div>
             </motion.div>
           </div>
