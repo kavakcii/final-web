@@ -321,7 +321,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 2. SEKSİYON: GRAFİK KARTI (BEYAZ TEMA, MAVİ ÇİZGİ & KOYULAŞAN MAVİ GRADIENT) */}
+        {/* 2. SEKSİYON: GRAFİK KARTI (GENİŞLİK 100% UYUMLU, PRESERVEASPECTRATIO NONE) */}
         <div ref={grafikRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 pb-8 shadow-xl space-y-6 relative overflow-hidden">
           
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -349,7 +349,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             </div>
           </div>
 
-          {/* MAVİ ÇİZGİLİ VE AŞAĞIDAN YUKARIYA KOYULAŞAN MAVİ GRADIENTLI SVG GRAFİK ALANI */}
+          {/* MAVİ ÇİZGİLİ VE UÇTAN UCA %100 UZANAN KOYULAŞAN MAVİ GRADIENTLI SVG GRAFİK ALANI */}
           <div className="relative min-h-[340px] w-full pt-2 pb-4">
             {loading && (
               <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -365,6 +365,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <div className="h-72 w-full relative">
                   <svg 
                     viewBox="0 0 800 320" 
+                    preserveAspectRatio="none"
                     className="w-full h-full overflow-visible preserve-3d"
                     onMouseLeave={() => setHoveredPoint(null)}
                   >
@@ -451,7 +452,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   )}
                 </div>
 
-                {/* X-Axis Time Labels (Fully Visible & Perfectly Padded) */}
+                {/* X-Axis Time Labels (Fully Visible & Perfectly Edge-to-Edge Aligned) */}
                 <div className="flex justify-between items-center text-xs font-bold text-slate-500 pt-3 border-t border-slate-200/80 px-2">
                   <span>{svgPathData.coords[0]?.time}</span>
                   <span>{svgPathData.coords[Math.floor(svgPathData.coords.length / 2)]?.time}</span>
