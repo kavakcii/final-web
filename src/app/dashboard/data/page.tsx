@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
 
-// Şirket Amblem / Logo Bileşeni (Kendi Depomuzda Saklanan Yerel Resmi Şirket Amblemleri)
+// Şirket Amblem / Logo Bileşeni (Ekofin & Resmi BIST Şirket Amblemleri Kataloğu)
 function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
     const [imgIndex, setImgIndex] = useState(0);
@@ -64,12 +64,13 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
 
-    // Orijinal BIST Şirket Amblemleri CDN Kaynakları
+    // Ekofin CDN ve Orijinal BIST Şirket Amblemleri CDN Kaynakları (Resmi Görsel Amblemler)
     const logoSources = [
+        `https://cdn.ekofin.net/Logos/${clean}.png`,
+        `https://cdn.ekofin.net/Front/${clean}.png`,
         `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
         `https://s3-symbol-logo.tradingview.com/${slug}.svg`,
-        `https://s3-symbol-logo.tradingview.com/crypto/XTVC${clean}.svg`,
-        `https://s3-symbol-logo.tradingview.com/country/TR.svg`
+        `https://s3-symbol-logo.tradingview.com/crypto/XTVC${clean}.svg`
     ];
 
     const currentSource = logoSources[imgIndex];
@@ -82,22 +83,23 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
         }
     };
 
+    // Ekran görüntüsündeki gibi siyah/koyu yuvarlatılmış kare kutu amblem tasarımı (Ekofin / BIST stili)
     if (isFailed) {
         return (
-            <div className={cn("rounded-full bg-gradient-to-br from-[#00008B] to-blue-700 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-sm ring-1 ring-slate-200", className)}>
+            <div className={cn("rounded-xl bg-[#121826] border border-slate-800 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-md", className)}>
                 {clean.slice(0, 5)}
             </div>
         );
     }
 
     return (
-        <div className={cn("rounded-full bg-white border border-slate-200 overflow-hidden flex items-center justify-center shrink-0 shadow-sm p-0.5 ring-1 ring-slate-200", className)}>
+        <div className={cn("rounded-xl bg-[#121826] border border-slate-800 p-1 flex items-center justify-center shrink-0 shadow-md overflow-hidden", className)}>
             <img 
                 src={currentSource} 
                 alt={clean} 
                 referrerPolicy="no-referrer"
                 crossOrigin="anonymous"
-                className="w-full h-full object-contain rounded-full"
+                className="w-full h-full object-contain rounded-lg"
                 onError={handleError}
             />
         </div>
@@ -743,7 +745,7 @@ export default function AssetsPage() {
                                             </div>
                                         </th>
 
-                                        {/* HACİM (İŞE YARAR EF EKTİF FİLTRE) */}
+                                        {/* HACİM */}
                                         <th 
                                             className="py-3 px-2 text-right w-[14%] cursor-pointer hover:bg-slate-200/60 transition-colors hidden sm:table-cell"
                                             onClick={() => handleSort('volume')}
@@ -784,10 +786,10 @@ export default function AssetsPage() {
                                                 idx % 2 === 1 && "bg-slate-50/40"
                                             )}
                                         >
-                                            {/* HİSSE & ŞİRKET */}
+                                            {/* HİSSE & ŞİRKET (EKOFİN / BIST KOYU AMBLEM TASARIMI) */}
                                             <td className="py-2.5 px-3">
                                                 <div className="flex items-center gap-2.5 min-w-0">
-                                                    <AssetLogo symbol={item.symbol} className="w-7 h-7" />
+                                                    <AssetLogo symbol={item.symbol} className="w-8 h-8" />
                                                     <div className="min-w-0">
                                                         <a 
                                                             href={`/varlik/${item.symbol}`}
