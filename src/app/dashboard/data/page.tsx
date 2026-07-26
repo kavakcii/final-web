@@ -225,19 +225,26 @@ export default function AssetsPage() {
         <div className="p-4 md:p-6 min-h-screen bg-[#F8FAFC] space-y-8 w-full max-w-full overflow-x-hidden">
             
             {/* ========================================================================= */}
-            {/* 1. BÖLÜM: ÜST YARI (ANALYTICS & INSIGHTS - SOL %50, SAĞ %50 EQUAL WIDTH) */}
+            {/* 1. BÖLÜM: ÜST YARI (ANALYTICS & INSIGHTS - EŞ ZAMANLI SOLDAN SAĞA GENİŞLEME) */}
             {/* ========================================================================= */}
             <div className="w-full relative space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]">
+                <div className="flex flex-col lg:flex-row items-stretch gap-6 w-full overflow-hidden">
                     
-                    {/* SOL ÜST MODÜL: SEKTÖRLER YILLIK GETİRİLERİ (%50 -> %100 ANIMATED REFLOW) */}
-                    <div 
+                    {/* SOL ÜST MODÜL: SEKTÖRLER YILLIK GETİRİLERİ (SOLDAN SAĞA PÜRÜZSÜZ UZAMA) */}
+                    <motion.div 
                         ref={sectorChartRef}
+                        layout
+                        initial={false}
+                        animate={{ 
+                            width: isSectorChartExpanded ? "100%" : "50%",
+                            flex: isSectorChartExpanded ? "1 1 100%" : "1 1 50%"
+                        }}
+                        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
                         className={cn(
-                            "bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden cursor-pointer group flex flex-col justify-between",
+                            "bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl relative overflow-hidden cursor-pointer group flex flex-col justify-between shrink-0 min-w-0",
                             isSectorChartExpanded 
-                                ? "lg:col-span-12 ring-4 ring-[#00008B]/20 shadow-2xl bg-gradient-to-br from-white via-blue-50/30 to-white" 
-                                : "lg:col-span-6 hover:border-[#00008B]/40 hover:shadow-2xl"
+                                ? "ring-4 ring-[#00008B]/20 shadow-2xl bg-gradient-to-br from-white via-blue-50/30 to-white" 
+                                : "hover:border-[#00008B]/40 hover:shadow-2xl"
                         )}
                         onClick={() => !isSectorChartExpanded && setIsSectorChartExpanded(true)}
                     >
@@ -250,13 +257,13 @@ export default function AssetsPage() {
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg font-black text-slate-900 tracking-tight">Sektörler Yıllık Getirileri</h2>
                                         <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200/60 uppercase tracking-widest">
-                                            {isSectorChartExpanded ? "Tüm Sektörler Dikey Grafiği (Canlı Animasyon)" : "En Yüksek 4 Sektör"}
+                                            {isSectorChartExpanded ? "Tüm Sektörler (Canlı Sütun Geçişi)" : "En Yüksek 4 Sektör"}
                                         </span>
                                     </div>
                                     <p className="text-[11px] font-bold text-slate-400">
                                         {isSectorChartExpanded 
-                                            ? "Yıllık getirisine göre dikey sütunlar halinde sırayla yüklenen tüm ana sektörler" 
-                                            : "Genişletmek ve tüm dikey sektör sütunlarını canlı görmek için tıklayın"}
+                                            ? "Yıllık getirisine göre sırayla tek tek beliren tüm dikey sektör sütunları" 
+                                            : "Genişletmek ve tüm dikey sektör sütunlarını canlı izlemek için tıklayın"}
                                     </p>
                                 </div>
                             </div>
@@ -281,7 +288,7 @@ export default function AssetsPage() {
                             )}
                         </div>
 
-                        {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (TÜM DİKEY SÜTUNLAR) */}
+                        {/* GRAFİK GÖRÜNÜMÜ: VARSAYILAN (4 DİKEY SÜTUN) vs GENİŞLETİLMİŞ (SAYFAYLA UZARKEN SIRAYLA GELEN SÜTUNLAR) */}
                         {!isSectorChartExpanded ? (
                             /* DEFAULT 4 DİKEY SÜTUN GRAFİĞİ */
                             <div className="h-72 w-full flex items-end justify-around pt-6 px-4 pb-2 gap-4">
@@ -320,11 +327,11 @@ export default function AssetsPage() {
                                 })}
                             </div>
                         ) : (
-                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS CHART (TEKER TEKER SIRAYLA YÜKLENEN DİKEY SÜTUN ANIMASYONU) */
+                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS (UZARKEN SIRAYLA TEKER TEKER BELİREN DİKEY SÜTUNLAR) */
                             <motion.div 
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                transition={{ duration: 0.4 }}
+                                transition={{ duration: 0.5 }}
                                 className="h-80 w-full flex items-end justify-between pt-8 px-2 md:px-6 pb-2 gap-2 md:gap-3 overflow-x-auto scrollbar-none"
                             >
                                 {ALL_SECTORS_DATA.map((sector, idx) => {
@@ -333,11 +340,11 @@ export default function AssetsPage() {
                                     return (
                                         <motion.div 
                                             key={idx} 
-                                            initial={{ opacity: 0, scaleY: 0, y: 30 }}
+                                            initial={{ opacity: 0, scaleY: 0, y: 40 }}
                                             animate={{ opacity: 1, scaleY: 1, y: 0 }}
                                             transition={{ 
-                                                duration: 0.5, 
-                                                delay: 0.15 + (idx * 0.07), 
+                                                duration: 0.7, 
+                                                delay: 0.35 + (idx * 0.12), 
                                                 ease: [0.16, 1, 0.3, 1] 
                                             }}
                                             className="flex-1 min-w-[70px] md:min-w-[85px] flex flex-col items-center h-full justify-end group/col origin-bottom"
@@ -372,22 +379,23 @@ export default function AssetsPage() {
                                 })}
                             </motion.div>
                         )}
-                    </div>
+                    </motion.div>
 
-                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (SAYFANIN İÇİNE DOĞRU ERİYEREK KAYBOLAN ANIMASYON) */}
-                    <AnimatePresence>
+                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (SOLDAN SAĞA YAN YANA SİLİNEREK DARALAN KUTU) */}
+                    <AnimatePresence mode="popLayout">
                         {!isSectorChartExpanded && (
                             <motion.div 
-                                initial={{ opacity: 1, scale: 1, y: 0 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                initial={{ opacity: 1, scaleX: 1, width: "50%" }}
+                                animate={{ opacity: 1, scaleX: 1, width: "50%" }}
                                 exit={{ 
                                     opacity: 0, 
-                                    scale: 0.6, 
-                                    filter: "blur(12px)",
-                                    transition: { duration: 0.6, ease: [0.32, 0, 0.67, 0] } 
+                                    scaleX: 0, 
+                                    width: "0%", 
+                                    transition: { duration: 1.1, ease: [0.16, 1, 0.3, 1] } 
                                 }}
-                                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                                className="lg:col-span-6 bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-5 flex flex-col justify-between"
+                                transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                                style={{ transformOrigin: "right center" }}
+                                className="bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-5 flex flex-col justify-between shrink-0 overflow-hidden min-w-0"
                             >
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                     <div className="flex items-center gap-3">
@@ -395,12 +403,12 @@ export default function AssetsPage() {
                                             <Trophy className="w-5 h-5 text-amber-100" />
                                         </div>
                                         <div>
-                                            <h2 className="text-lg font-black text-slate-900 tracking-tight">Ayın Enleri [Şubat]</h2>
-                                            <p className="text-[11px] font-bold text-slate-400">En Çok Kazandıran & Kaybettiren Hisseler</p>
+                                            <h2 className="text-lg font-black text-slate-900 tracking-tight whitespace-nowrap">Ayın Enleri [Şubat]</h2>
+                                            <p className="text-[11px] font-bold text-slate-400 whitespace-nowrap">En Çok Kazandıran & Kaybettiren Hisseler</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-wider">
+                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-wider shrink-0">
                                         <Flame className="w-3 h-3 text-amber-500" />
                                         Performans
                                     </div>
@@ -408,7 +416,7 @@ export default function AssetsPage() {
 
                                 {/* YAN YANA (SAĞ VE SOL) İKİ KOLONLU AYIN ENLERİ DÜZENİ */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {/* SOL KOLON: OCAK AYININ EN İYİ GETİRİLİ 5 HİSSESİ */}
+                                    {/* SOL KOLON */}
                                     <div className="space-y-2 bg-emerald-50/40 p-3 rounded-2xl border border-emerald-100/80">
                                         <h3 className="text-[10px] font-black text-emerald-900 uppercase tracking-wider flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -430,7 +438,7 @@ export default function AssetsPage() {
                                         </div>
                                     </div>
 
-                                    {/* SAĞ KOLON: OCAK AYININ EN KÖTÜ GETİRİLİ 5 HİSSESİ */}
+                                    {/* SAĞ KOLON */}
                                     <div className="space-y-2 bg-rose-50/40 p-3 rounded-2xl border border-rose-100/80">
                                         <h3 className="text-[10px] font-black text-rose-900 uppercase tracking-wider flex items-center gap-1">
                                             <span className="w-2 h-2 rounded-full bg-rose-500" />
