@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
 
-// Şirket Amblem / Logo Bileşeni (Lokal public/logos Klasörü & Yerel BIST Şirket Amblemleri)
+// Şirket Amblem / Logo Bileşeni (Kare Kutusz Sade Amblem Sunumu & Eksiksiz Yerel Eşleştirme)
 function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
     const [imgIndex, setImgIndex] = useState(0);
@@ -59,20 +59,27 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
         "MGROS": "migros", "SISE": "sisecam", "FROTO": "ford-otosan",
         "TOASO": "tofas", "TCELL": "turkcell", "TTKOM": "turk-telekom",
         "SASA": "sasa", "HEKTS": "hektas", "ASTOR": "astor-enerji",
-        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik"
+        "MIATK": "mia-teknoloji", "PGSUS": "pegasus", "ARCLK": "arcelik",
+        "KRON": "kron-telekomunikasyon", "KRONT": "kron-telekomunikasyon"
     };
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
+    const altClean1 = clean.endsWith('T') ? clean.slice(0, -1) : `${clean}T`;
+    const altClean2 = clean.endsWith('A') ? clean.slice(0, -1) : `${clean}A`;
 
-    // 1. Yerel Proje Klasörü (public/logos/{symbol}) -> 2. Ekofin CDN -> 3. TradingView CDN
+    // 1. Yerel Proje Klasörü (public/logos/{symbol}) -> 2. Varyasyonlar -> 3. Ekofin CDN -> 4. TradingView CDN
     const logoSources = [
         `/logos/${clean}.png`,
         `/logos/${clean}.jpeg`,
         `/logos/${clean}.jpg`,
+        `/logos/${altClean1}.png`,
+        `/logos/${altClean1}.jpeg`,
+        `/logos/${altClean2}.png`,
         `/logos/${clean}.webp`,
         `/logos/${clean}.svg`,
         `https://cdn.ekofin.net/Logos/${clean}.png`,
         `https://cdn.ekofin.net/Front/${clean}.png`,
+        `https://cdn.ekofin.net/Logos/${altClean1}.png`,
         `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
         `https://s3-symbol-logo.tradingview.com/${slug}.svg`
     ];
@@ -87,23 +94,23 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
         }
     };
 
-    // Fotoğraftaki gibi lacivert/koyu yuvarlatılmış kare kutu amblem tasarımı (Ekofin / BIST stili)
+    // Sade Temiz Yuvarlatılmış Amblem Görünümü (Çift Çerçeve / Kare Kutu Olmadan)
     if (isFailed) {
         return (
-            <div className={cn("rounded-xl bg-[#121826] border border-slate-800 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-md", className)}>
+            <div className={cn("rounded-full bg-gradient-to-br from-[#00008B] to-blue-700 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-sm ring-1 ring-slate-200", className)}>
                 {clean.slice(0, 5)}
             </div>
         );
     }
 
     return (
-        <div className={cn("rounded-xl bg-[#121826] border border-slate-800 p-1 flex items-center justify-center shrink-0 shadow-md overflow-hidden", className)}>
+        <div className={cn("rounded-full bg-white border border-slate-200/90 p-0.5 flex items-center justify-center shrink-0 shadow-sm overflow-hidden", className)}>
             <img 
                 src={currentSource} 
                 alt={clean} 
                 referrerPolicy="no-referrer"
                 crossOrigin="anonymous"
-                className="w-full h-full object-contain rounded-lg"
+                className="w-full h-full object-contain rounded-full"
                 onError={handleError}
             />
         </div>
