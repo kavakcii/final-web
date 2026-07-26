@@ -39,7 +39,6 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS, FUND_SECTORS } from "@/lib/constants/assets-mapping";
-import { ResponsiveContainer, AreaChart, Area, YAxis } from "recharts";
 
 interface AssetData {
   symbol: string;
@@ -53,12 +52,6 @@ interface AssetData {
   low52?: number;
   pe?: number;
   pb?: number;
-}
-
-interface Suggestion {
-  symbol: string;
-  name: string;
-  type: "hisse" | "fon";
 }
 
 // Şirket Amblem / Logo Bileşeni (Kendi Depomuzda Saklanan Yerel Resmi Şirket Amblemleri)
@@ -145,38 +138,8 @@ const STOCK_NAMES: Record<string, string> = {
     "SASA": "Sasa Polyester Sanayi A.Ş.", 
     "HEKTS": "Hektaş Ticaret T.A.Ş.",
     "ASTOR": "Astor Enerji A.Ş.", 
-    "KONTR": "Kontrolmatik Teknoloji Enerji", 
     "MIATK": "Mia Teknoloji A.Ş.",
-    "REEDR": "Reeder Teknoloji Sanayi A.Ş.", 
-    "CWENE": "CW Enerji Mühendislik A.Ş.", 
-    "EUPWR": "Europower Enerji A.Ş.",
-    "GESAN": "Girişim Elektrik Sanayi A.Ş.", 
-    "ENJSA": "Enerjisa Enerji A.Ş.", 
-    "ODAS": "Odaş Elektrik Üretim A.Ş.",
-    "PGSUS": "Pegasus Hava Taşımacılığı A.Ş.", 
-    "TAVHL": "TAV Havalimanları Holding A.Ş.", 
-    "ARCLK": "Arçelik A.Ş.",
-    "VESTL": "Vestel Elektronik Sanayi A.Ş.", 
-    "VESBE": "Vestel Beyaz Eşya Sanayi A.Ş.", 
-    "PETKM": "Petkim Petrokimya Holding A.Ş.",
-    "KRDMD": "Kardemir Karabük Demir Çelik", 
-    "ALARK": "Alarko Holding A.Ş.", 
-    "TKFEN": "Tekfen Holding A.Ş.",
-    "EKGYO": "Emlak Konut GYO A.Ş.", 
-    "HALKB": "Türkiye Halk Bankası A.Ş.", 
-    "VAKBN": "Türkiye Vakıflar Bankası T.A.O.",
-    "AEFES": "Anadolu Efes Biracılık ve Malt", 
-    "CCOLA": "Coca-Cola İçecek A.Ş.", 
-    "ULKER": "Ülker Bisküvi Sanayi A.Ş.",
-    "ANSGR": "Anadolu Anonim Türk Sigorta", 
-    "TURSG": "Türkiye Sigorta A.Ş.", 
-    "ALTNY": "Altınay Savunma Teknolojileri",
-    "OTKAR": "Otokar Otomotiv ve Savunma", 
-    "DOAS": "Doğuş Otomotiv Servis ve Ticaret", 
-    "PATEK": "Pasifik Teknoloji A.Ş.",
-    "ARDYZ": "ARD Grup Bilişim Teknolojileri", 
-    "BRSAN": "Borusan Birleşik Boru Fabrikaları", 
-    "SDTTR": "SDT Uzay ve Savunma Teknolojileri"
+    "PGSUS": "Pegasus Hava Taşımacılığı A.Ş."
 };
 
 // SEKTÖRLER YILLIK GETİRİLERİ TÜM SEKTÖR VERİSİ (Yıllık Getirisine Göre Sıralı)
@@ -225,27 +188,11 @@ const RECOMMENDED_ASSETS = [
 ];
 
 export default function AssetsPage() {
-    const [assetType, setAssetType] = useState<"hisse" | "fon">("hisse");
-    const [selectedSector, setSelectedSector] = useState(Object.keys(STOCK_SECTORS)[0]);
-    const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-    const [sortBy, setSortBy] = useState<"change-desc" | "change-asc" | "price-desc" | "price-asc">("change-desc");
-    const [data, setData] = useState<AssetData[]>([]);
-    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-    const [allFunds, setAllFunds] = useState<{code: string, title: string}[]>([]);
-    const [addedSymbols, setAddedSymbols] = useState<Record<string, boolean>>({});
 
     // GRAFİK GENİŞLEME & DIŞARI TIKLAMA STATE & REF
     const [isSectorChartExpanded, setIsSectorChartExpanded] = useState(false);
     const sectorChartRef = useRef<HTMLDivElement>(null);
-
-    // KARŞILAŞTIRMA WIDGET'I STATE'LERİ
-    const [compAsset1, setCompAsset1] = useState<string>("THYAO");
-    const [compAsset2, setCompAsset2] = useState<string>("PGSUS");
-    const [compTimeframe, setCompTimeframe] = useState<"1A" | "6A" | "1Y">("1A");
-
-    const sectors = assetType === "hisse" ? Object.keys(STOCK_SECTORS) : Object.keys(FUND_SECTORS);
 
     // Sayfanın/kapsayıcının boş bir alanına tıklandığında genişlemiş grafiği kapatma
     useEffect(() => {
@@ -262,120 +209,17 @@ export default function AssetsPage() {
         };
     }, [isSectorChartExpanded]);
 
-    useEffect(() => {
-        setSelectedSector(assetType === "hisse" ? Object.keys(STOCK_SECTORS)[0] : Object.keys(FUND_SECTORS)[0]);
-    }, [assetType]);
-
-    useEffect(() => {
-        const loadAllFunds = async () => {
-            try {
-                const res = await fetch('/api/tefas/list');
-                const json = await res.json();
-                if (json.success) setAllFunds(json.data);
-            } catch (e) { console.error("Fund index failed", e); }
-        };
-        loadAllFunds();
-    }, []);
-
-    useEffect(() => {
-        if (searchTerm.length > 1) {
-            const term = searchTerm.toLowerCase();
-            const matches: Suggestion[] = [];
-
-            const allStockSymbols = Object.values(STOCK_SECTORS).flat();
-            const matchedStocks = allStockSymbols.filter(s => 
-                s.toLowerCase().includes(term) || (STOCK_NAMES[s] && STOCK_NAMES[s].toLowerCase().includes(term))
-            ).slice(0, 5);
-
-            matchedStocks.forEach(s => matches.push({ symbol: s, name: STOCK_NAMES[s] || "BIST Hisse Senedi", type: 'hisse' }));
-
-            const matchedFunds = allFunds.filter(f => 
-                f.code.toLowerCase().includes(term) || f.title.toLowerCase().includes(term)
-            ).slice(0, 5);
-
-            matchedFunds.forEach(f => matches.push({ symbol: f.code, name: f.title, type: 'fon' }));
-            setSuggestions(matches.slice(0, 10));
-        } else {
-            setSuggestions([]);
-        }
-    }, [searchTerm, allFunds]);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const res = await fetch('/api/assets/market-data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sector: selectedSector, type: assetType })
-                });
-                const json = await res.json();
-                if (json.success) setData(json.data);
-            } catch (error) { 
-                console.error("Varlıklar piyasa veri çekim hatası:", error); 
-            } finally { 
-                setLoading(false); 
-            }
-        };
-        fetchData();
-    }, [selectedSector, assetType]);
-
-    const processedData = useMemo(() => {
-        let list = data.filter(item => 
-            (item.symbol || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (item.name || "").toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-        return list.sort((a, b) => {
-            if (sortBy === 'price-desc') return (b.price || 0) - (a.price || 0);
-            if (sortBy === 'price-asc') return (a.price || 0) - (b.price || 0);
-            if (sortBy === 'change-desc') return (b.changePercent || 0) - (a.changePercent || 0);
-            if (sortBy === 'change-asc') return (a.changePercent || 0) - (b.changePercent || 0);
-            return 0;
-        });
-    }, [data, searchTerm, sortBy]);
-
-    const compData1 = useMemo(() => {
-        const found = data.find(d => d.symbol === compAsset1);
-        return {
-            symbol: compAsset1,
-            name: STOCK_NAMES[compAsset1] || compAsset1,
-            price: found?.price || 315.25,
-            changePercent: found?.changePercent || 2.45,
-            pe: 6.8,
-            pb: 1.45,
-            annualYield: 44.5,
-            volume: "4.8 Mr TL"
-        };
-    }, [compAsset1, data]);
-
-    const compData2 = useMemo(() => {
-        const found = data.find(d => d.symbol === compAsset2);
-        return {
-            symbol: compAsset2,
-            name: STOCK_NAMES[compAsset2] || compAsset2,
-            price: found?.price || 234.10,
-            changePercent: found?.changePercent || -1.12,
-            pe: 8.2,
-            pb: 2.10,
-            annualYield: 38.2,
-            volume: "2.1 Mr TL"
-        };
-    }, [compAsset2, data]);
-
-    const availableSymbols = useMemo(() => {
-        return Object.keys(STOCK_NAMES);
-    }, []);
-
-    const handleQuickAdd = (symbol: string) => {
-        setAddedSymbols(prev => ({ ...prev, [symbol]: true }));
-        setTimeout(() => {
-            setAddedSymbols(prev => ({ ...prev, [symbol]: false }));
-        }, 2000);
-    };
-
     // Dinamik En Çok Getirisi Olan İlk 4 Sektör (Varsayılan dikey sütun görünümü için)
     const top4Sectors = useMemo(() => ALL_SECTORS_DATA.slice(0, 4), []);
+
+    // Arama filtreli önerilen varlıklar
+    const filteredRecommended = useMemo(() => {
+        if (!searchTerm.trim()) return RECOMMENDED_ASSETS;
+        const term = searchTerm.toLowerCase();
+        return RECOMMENDED_ASSETS.filter(a => 
+            a.symbol.toLowerCase().includes(term) || a.name.toLowerCase().includes(term)
+        );
+    }, [searchTerm]);
 
     return (
         <div className="p-4 md:p-6 min-h-screen bg-[#F8FAFC] space-y-8 w-full max-w-full overflow-x-hidden">
@@ -392,7 +236,7 @@ export default function AssetsPage() {
                         className={cn(
                             "bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative overflow-hidden cursor-pointer group flex flex-col justify-between",
                             isSectorChartExpanded 
-                                ? "lg:col-span-12 ring-4 ring-[#00008B]/20 shadow-2xl bg-gradient-to-br from-white via-blue-50/20 to-white" 
+                                ? "lg:col-span-12 ring-4 ring-[#00008B]/20 shadow-2xl bg-gradient-to-br from-white via-blue-50/30 to-white" 
                                 : "lg:col-span-6 hover:border-[#00008B]/40 hover:shadow-2xl"
                         )}
                         onClick={() => !isSectorChartExpanded && setIsSectorChartExpanded(true)}
@@ -406,13 +250,13 @@ export default function AssetsPage() {
                                     <div className="flex items-center gap-2">
                                         <h2 className="text-lg font-black text-slate-900 tracking-tight">Sektörler Yıllık Getirileri</h2>
                                         <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200/60 uppercase tracking-widest">
-                                            {isSectorChartExpanded ? "Tüm Sektörler Dikey Grafiği" : "En Yüksek 4 Sektör"}
+                                            {isSectorChartExpanded ? "Tüm Sektörler Dikey Grafiği (Canlı Animasyon)" : "En Yüksek 4 Sektör"}
                                         </span>
                                     </div>
                                     <p className="text-[11px] font-bold text-slate-400">
                                         {isSectorChartExpanded 
-                                            ? "Yıllık getirisine göre sıralanmış tüm ana sektörlerin dikey sütun grafiği" 
-                                            : "Genişletmek ve tüm dikey sektör sütunlarını görmek için tıklayın"}
+                                            ? "Yıllık getirisine göre dikey sütunlar halinde sırayla yüklenen tüm ana sektörler" 
+                                            : "Genişletmek ve tüm dikey sektör sütunlarını canlı görmek için tıklayın"}
                                     </p>
                                 </div>
                             </div>
@@ -476,37 +320,45 @@ export default function AssetsPage() {
                                 })}
                             </div>
                         ) : (
-                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS CHART (TÜM SEKTÖRLER DİKEY SÜTUN GRAFİĞİ) */
+                            /* EXPANDED ALL SECTORS VERTICAL COLUMNS CHART (TEKER TEKER SIRAYLA YÜKLENEN DİKEY SÜTUN ANIMASYONU) */
                             <motion.div 
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                                className="h-80 w-full flex items-end justify-between pt-8 px-2 md:px-6 pb-2 gap-2 md:gap-4 overflow-x-auto scrollbar-none"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.4 }}
+                                className="h-80 w-full flex items-end justify-between pt-8 px-2 md:px-6 pb-2 gap-2 md:gap-3 overflow-x-auto scrollbar-none"
                             >
                                 {ALL_SECTORS_DATA.map((sector, idx) => {
                                     const maxVal = 55;
                                     const heightPercent = (sector.annualReturn / maxVal) * 100;
                                     return (
-                                        <div key={idx} className="flex-1 min-w-[70px] md:min-w-[85px] flex flex-col items-center h-full justify-end group/col">
+                                        <motion.div 
+                                            key={idx} 
+                                            initial={{ opacity: 0, scaleY: 0, y: 30 }}
+                                            animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                                            transition={{ 
+                                                duration: 0.5, 
+                                                delay: 0.15 + (idx * 0.07), 
+                                                ease: [0.16, 1, 0.3, 1] 
+                                            }}
+                                            className="flex-1 min-w-[70px] md:min-w-[85px] flex flex-col items-center h-full justify-end group/col origin-bottom"
+                                        >
                                             {/* Getiri Yüzdesi */}
                                             <span className="text-[11px] md:text-xs font-black text-[#00008B] mb-2 group-hover/col:scale-110 transition-transform">
                                                 +{sector.annualReturn}%
                                             </span>
                                             
                                             {/* Dikey Sütun Barı */}
-                                            <motion.div 
-                                                initial={{ height: 0 }}
-                                                animate={{ height: `${heightPercent}%` }}
-                                                transition={{ duration: 0.7, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                                            <div 
                                                 className={cn(
                                                     "w-full max-w-[65px] rounded-t-2xl bg-gradient-to-t transition-all duration-300 shadow-lg group-hover/col:brightness-110 relative overflow-hidden flex items-start justify-center pt-2",
                                                     sector.color
                                                 )}
+                                                style={{ height: `${heightPercent}%` }}
                                             >
                                                 <span className="text-[9px] font-black text-white/90 bg-black/20 px-1.5 py-0.5 rounded-full">
                                                     #{idx + 1}
                                                 </span>
-                                            </motion.div>
+                                            </div>
                                             
                                             {/* Sektör Adı & Lideri */}
                                             <span className="text-[10px] md:text-xs font-black text-slate-800 mt-2.5 text-center truncate w-full" title={sector.name}>
@@ -515,20 +367,25 @@ export default function AssetsPage() {
                                             <span className="text-[9px] font-bold text-slate-400">
                                                 {sector.leader}
                                             </span>
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                             </motion.div>
                         )}
                     </div>
 
-                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (%50 - INWARD FADE & SHRINK ON EXPAND) */}
+                    {/* SAĞ ÜST MODÜL: AYIN ENLERİ [ŞUBAT] (SAYFANIN İÇİNE DOĞRU ERİYEREK KAYBOLAN ANIMASYON) */}
                     <AnimatePresence>
                         {!isSectorChartExpanded && (
                             <motion.div 
                                 initial={{ opacity: 1, scale: 1, y: 0 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 15, filter: "blur(4px)" }}
+                                exit={{ 
+                                    opacity: 0, 
+                                    scale: 0.6, 
+                                    filter: "blur(12px)",
+                                    transition: { duration: 0.6, ease: [0.32, 0, 0.67, 0] } 
+                                }}
                                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                 className="lg:col-span-6 bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-5 flex flex-col justify-between"
                             >
@@ -602,7 +459,7 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. BÖLÜM: ALT YARI (SEARCH & DISCOVERY) */}
+            {/* 2. BÖLÜM: ALT YARI (SEARCH & DISCOVERY - SADECE ÖNERİLEN HİSSELER KALDI) */}
             {/* ========================================================================= */}
             <div className="w-full bg-white border border-slate-200/90 rounded-[32px] p-6 shadow-xl space-y-6 relative overflow-hidden">
                 <div className="space-y-4">
@@ -618,7 +475,7 @@ export default function AssetsPage() {
                         />
                     </div>
 
-                    {/* RASTGELE ÖNERİLEN VARLIKLAR (8-10 KART & TARGET="_BLANK" NATIVE NAVIGATION) */}
+                    {/* RASTGELE ÖNERİLEN VARLIKLAR (TARGET="_BLANK" NATIVE NAVIGATION) */}
                     <div className="space-y-3 pt-2">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
@@ -629,7 +486,7 @@ export default function AssetsPage() {
                         </div>
 
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 w-full">
-                            {RECOMMENDED_ASSETS.map((item) => (
+                            {filteredRecommended.map((item) => (
                                 <a
                                     key={item.symbol}
                                     href={`/varlik/${item.symbol}`}
@@ -658,387 +515,6 @@ export default function AssetsPage() {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* ========================================================================= */}
-            {/* WIDGET 1: VARLIK KARŞILAŞTIRMA TERMİNALİ */}
-            {/* ========================================================================= */}
-            <div className="w-full bg-white border border-slate-200/90 rounded-[32px] p-5 md:p-7 shadow-xl shadow-slate-200/40 space-y-6 relative overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-md shadow-[#00008B]/20 shrink-0">
-                            <Scale className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-black text-slate-900 tracking-tight">Varlık Karşılaştırma Terminali</h2>
-                            <p className="text-[11px] font-bold text-slate-400">İki Varlığın Fiyat, Çarpan ve Getiri Göstergelerini Kıyaslayın</p>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/70 self-start sm:self-auto">
-                        {(['1A', '6A', '1Y'] as const).map((tf) => (
-                            <button
-                                key={tf}
-                                onClick={() => setCompTimeframe(tf)}
-                                className={cn(
-                                    "px-3 py-1 text-xs font-black rounded-lg transition-all uppercase tracking-wider",
-                                    compTimeframe === tf
-                                        ? "bg-[#00008B] text-white shadow-sm scale-105"
-                                        : "text-slate-500 hover:text-[#00008B]"
-                                )}
-                            >
-                                {tf === '1A' ? '1 Aylık' : tf === '6A' ? '6 Aylık' : '1 Yıllık'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* İKİ VARLIK BAŞ BAŞA GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center w-full">
-                    {/* 1. VARLIK */}
-                    <div className="lg:col-span-5 bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <AssetLogo symbol={compAsset1} className="w-11 h-11" />
-                                <div className="min-w-0">
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">1. Varlık</span>
-                                    <h3 className="text-sm font-black text-slate-900 truncate">{compData1.name}</h3>
-                                </div>
-                            </div>
-
-                            <select
-                                value={compAsset1}
-                                onChange={(e) => setCompAsset1(e.target.value)}
-                                className="bg-white border border-slate-200 text-xs font-black text-[#00008B] rounded-xl px-2.5 py-1.5 focus:outline-none shrink-0"
-                            >
-                                {availableSymbols.map(sym => (
-                                    <option key={sym} value={sym}>{sym}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Canlı Fiyat</span>
-                                <span className="text-base font-black text-slate-900">{compData1.price} ₺</span>
-                            </div>
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Günlük Değişim</span>
-                                <span className={cn("text-base font-black", compData1.changePercent >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                    %{compData1.changePercent}
-                                </span>
-                            </div>
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">F/K Oranı</span>
-                                <span className="text-xs font-black text-slate-800">{compData1.pe}</span>
-                            </div>
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">1Y Getiri</span>
-                                <span className="text-xs font-black text-emerald-600">+{compData1.annualYield}%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ORTA VS İKONU */}
-                    <div className="lg:col-span-2 flex items-center justify-center py-2 lg:py-0">
-                        <div className="w-11 h-11 rounded-full bg-[#00008B] text-white font-black text-xs flex items-center justify-center shadow-lg ring-4 ring-blue-50">
-                            VS
-                        </div>
-                    </div>
-
-                    {/* 2. VARLIK */}
-                    <div className="lg:col-span-5 bg-slate-50 border border-slate-200/80 rounded-2xl p-5 space-y-4">
-                        <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <AssetLogo symbol={compAsset2} className="w-11 h-11" />
-                                <div className="min-w-0">
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">2. Varlık</span>
-                                    <h3 className="text-sm font-black text-slate-900 truncate">{compData2.name}</h3>
-                                </div>
-                            </div>
-
-                            <select
-                                value={compAsset2}
-                                onChange={(e) => setCompAsset2(e.target.value)}
-                                className="bg-white border border-slate-200 text-xs font-black text-sky-700 rounded-xl px-2.5 py-1.5 focus:outline-none shrink-0"
-                            >
-                                {availableSymbols.map(sym => (
-                                    <option key={sym} value={sym}>{sym}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Canlı Fiyat</span>
-                                <span className="text-base font-black text-slate-900">{compData2.price} ₺</span>
-                            </div>
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">Günlük Değişim</span>
-                                <span className={cn("text-base font-black", compData2.changePercent >= 0 ? "text-emerald-600" : "text-rose-600")}>
-                                    %{compData2.changePercent}
-                                </span>
-                            </div>
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">F/K Oranı</span>
-                                <span className="text-xs font-black text-slate-800">{compData2.pe}</span>
-                            </div>
-                            <div className="bg-white p-2.5 rounded-xl border border-slate-100">
-                                <span className="text-[9px] font-bold text-slate-400 uppercase block">1Y Getiri</span>
-                                <span className="text-xs font-black text-emerald-600">+{compData2.annualYield}%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* YAPAY ZEKA KUTUSU */}
-                <div className="bg-[#00008B] rounded-2xl p-4 text-white text-xs font-medium leading-relaxed">
-                    <span className="font-black text-sky-300 uppercase tracking-wider mr-2">FinAi Karşılaştırma Analizi:</span>
-                    {compAsset1} ve {compAsset2} varlıkları kıyaslandığında, {compAsset1} daha düşük F/K çarpanı ({compData1.pe}) ve %{compData1.annualYield} yıllık getirisiyle öne çıkarken; {compAsset2} dengeli volatilite sergilemektedir.
-                </div>
-            </div>
-
-            {/* ========================================================================= */}
-            {/* WIDGET 3: HİSSE & VARLIK ARAŞTIRMA TERMINALİ */}
-            {/* ========================================================================= */}
-            <div className="w-full bg-white border border-slate-200/90 rounded-[32px] p-5 md:p-7 shadow-2xl shadow-slate-200/50 space-y-6 relative overflow-hidden">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white shadow-md shadow-[#00008B]/20 shrink-0">
-                            <Building2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-black text-slate-900 tracking-tight">Hisse & Varlık Araştırma Terminalı</h2>
-                            <p className="text-[11px] font-bold text-slate-400">Tüm BIST Şirketlerini ve TEFAS Fonlarını Detaylıca İnceleyin</p>
-                        </div>
-                    </div>
-
-                    <div className="flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 self-start md:self-auto">
-                        {[
-                            { id: "hisse", label: "Hisse Senetleri", icon: TrendingUp }, 
-                            { id: "fon", label: "Yatırım Fonları", icon: Layers }
-                        ].map((t) => (
-                            <button 
-                                key={t.id} 
-                                onClick={() => setAssetType(t.id as any)} 
-                                className={cn(
-                                    "flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all", 
-                                    assetType === t.id 
-                                        ? "bg-[#00008B] text-white shadow-sm" 
-                                        : "text-slate-500 hover:text-[#00008B]"
-                                )}
-                            >
-                                <t.icon className="w-3.5 h-3.5" /> {t.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="space-y-4 w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
-                        <div className="relative flex-1 group">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#00008B]" />
-                            <input 
-                                type="text"
-                                placeholder="Hisse sembolü veya şirket adı..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-8 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00008B]"
-                            />
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-2.5 rounded-xl">
-                                <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
-                                <select 
-                                    value={sortBy} 
-                                    onChange={(e: any) => setSortBy(e.target.value)}
-                                    className="bg-transparent text-xs font-black text-slate-700 focus:outline-none cursor-pointer"
-                                >
-                                    <option value="change-desc">En Çok Yükselenler</option>
-                                    <option value="change-asc">En Çok Düşenler</option>
-                                    <option value="price-desc">Fiyat: Yüksekten Düşüğe</option>
-                                    <option value="price-asc">Fiyat: Düşükten Yüksek</option>
-                                </select>
-                            </div>
-
-                            <div className="flex items-center p-1 bg-slate-200/70 rounded-xl">
-                                <button 
-                                    onClick={() => setViewMode("grid")}
-                                    className={cn("p-1.5 rounded-lg transition-all", viewMode === "grid" ? "bg-white text-[#00008B] shadow-sm" : "text-slate-500")}
-                                >
-                                    <Grid className="w-4 h-4" />
-                                </button>
-                                <button 
-                                    onClick={() => setViewMode("list")}
-                                    className={cn("p-1.5 rounded-lg transition-all", viewMode === "list" ? "bg-white text-[#00008B] shadow-sm" : "text-slate-500")}
-                                >
-                                    <List className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 w-full pt-1">
-                        {sectors.map((sector) => (
-                            <button 
-                                key={sector} 
-                                onClick={() => setSelectedSector(sector)} 
-                                className={cn(
-                                    "px-3.5 py-2 rounded-xl text-[11px] font-black transition-all border uppercase tracking-wider", 
-                                    selectedSector === sector 
-                                        ? "bg-[#00008B] border-[#00008B] text-white shadow-md scale-105" 
-                                        : "bg-slate-50 border-slate-200 text-slate-600 hover:border-[#00008B]/40 hover:bg-white"
-                                )}
-                            >
-                                {sector}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <AnimatePresence mode="wait">
-                    {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 space-y-3">
-                            <div className="w-12 h-12 border-4 border-slate-100 border-t-[#00008B] rounded-full animate-spin" />
-                            <p className="text-xs font-black text-[#00008B] uppercase tracking-widest">Varlıklar Yükleniyor...</p>
-                        </div>
-                    ) : processedData.length === 0 ? (
-                        <div className="text-center py-16 space-y-2">
-                            <Info className="w-10 h-10 text-slate-300 mx-auto" />
-                            <h3 className="text-base font-black text-slate-700">Sonuç Bulunamadı</h3>
-                        </div>
-                    ) : viewMode === "grid" ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
-                            {processedData.map((item) => {
-                                const fullName = STOCK_NAMES[item.symbol] || item.name || item.symbol;
-                                const isPositive = item.changePercent >= 0;
-
-                                return (
-                                    <div 
-                                        key={item.symbol} 
-                                        className="group bg-white border border-slate-200/90 hover:border-[#00008B]/40 rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
-                                    >
-                                        <div className="space-y-3">
-                                            <div className="flex items-start justify-between gap-2">
-                                                <div className="flex items-center gap-2.5 min-w-0">
-                                                    <AssetLogo symbol={item.symbol} className="w-10 h-10" />
-                                                    <div className="min-w-0">
-                                                        <h3 className="text-xs font-black text-slate-900 truncate group-hover:text-[#00008B] transition-colors">
-                                                            {item.symbol}
-                                                        </h3>
-                                                        <p className="text-[9px] font-bold text-slate-400 truncate" title={fullName}>
-                                                            {fullName}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <span className={cn(
-                                                    "px-2 py-0.5 rounded-lg text-[10px] font-black border flex items-center gap-0.5 shrink-0",
-                                                    isPositive 
-                                                        ? "bg-emerald-50 border-emerald-200 text-emerald-600" 
-                                                        : "bg-rose-50 border-rose-200 text-rose-600"
-                                                )}>
-                                                    %{Math.abs(item.changePercent).toFixed(2)}
-                                                </span>
-                                            </div>
-
-                                            <div className="h-12 w-full pt-1">
-                                                {item.history && item.history.length > 0 && (
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <AreaChart data={item.history}>
-                                                            <defs>
-                                                                <linearGradient id={`grad-${item.symbol}`} x1="0" y1="0" x2="0" y2="1">
-                                                                    <stop offset="0%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
-                                                                    <stop offset="100%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.0} />
-                                                                </linearGradient>
-                                                            </defs>
-                                                            <YAxis hide domain={['auto', 'auto']} />
-                                                            <Area 
-                                                                type="monotone" 
-                                                                dataKey="price" 
-                                                                stroke={isPositive ? "#10b981" : "#ef4444"} 
-                                                                strokeWidth={2} 
-                                                                fill={`url(#grad-${item.symbol})`} 
-                                                            />
-                                                        </AreaChart>
-                                                    </ResponsiveContainer>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                                            <div>
-                                                <span className="text-[9px] font-bold text-slate-400 block">Canlı Fiyat</span>
-                                                <span className="font-black text-slate-900">
-                                                    {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(item.price || 0)}
-                                                </span>
-                                            </div>
-
-                                            <button 
-                                                onClick={() => handleQuickAdd(item.symbol)}
-                                                className={cn(
-                                                    "p-2 rounded-lg border transition-all flex items-center justify-center",
-                                                    addedSymbols[item.symbol] 
-                                                        ? "bg-emerald-500 border-emerald-500 text-white" 
-                                                        : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-[#00008B] hover:border-[#00008B] hover:text-white"
-                                                )}
-                                                title="Portföyüme Ekle"
-                                            >
-                                                {addedSymbols[item.symbol] ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="space-y-2 w-full">
-                            {processedData.map((item) => {
-                                const fullName = STOCK_NAMES[item.symbol] || item.name || item.symbol;
-                                const isPositive = item.changePercent >= 0;
-
-                                return (
-                                    <div 
-                                        key={item.symbol} 
-                                        className="flex items-center justify-between p-3 bg-slate-50/80 border border-slate-200/70 rounded-2xl hover:bg-blue-50/40 transition-colors gap-3"
-                                    >
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <AssetLogo symbol={item.symbol} className="w-9 h-9" />
-                                            <div className="min-w-0">
-                                                <h4 className="text-xs font-black text-slate-900 truncate">{item.symbol}</h4>
-                                                <p className="text-[10px] text-slate-400 truncate">{fullName}</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-4 shrink-0 text-right">
-                                            <div>
-                                                <span className="text-xs font-black text-slate-900 block">
-                                                    {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 2 }).format(item.price || 0)}
-                                                </span>
-                                                <span className={cn("text-[10px] font-black", isPositive ? "text-emerald-600" : "text-rose-600")}>
-                                                    {isPositive ? `+` : ``}%{item.changePercent.toFixed(2)}
-                                                </span>
-                                            </div>
-
-                                            <button 
-                                                onClick={() => handleQuickAdd(item.symbol)}
-                                                className={cn(
-                                                    "px-3 py-1.5 rounded-xl text-xs font-bold transition-all border",
-                                                    addedSymbols[item.symbol]
-                                                        ? "bg-emerald-500 border-emerald-500 text-white"
-                                                        : "bg-white border-slate-200 text-[#00008B] hover:bg-[#00008B] hover:text-white"
-                                                )}
-                                            >
-                                                {addedSymbols[item.symbol] ? "Eklendi" : "+ Ekle"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </AnimatePresence>
             </div>
         </div>
     );
