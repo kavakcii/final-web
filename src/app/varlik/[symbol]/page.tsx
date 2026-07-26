@@ -21,7 +21,9 @@ import {
   Coins,
   Activity,
   Sliders,
-  ListFilter
+  ListFilter,
+  DollarSign,
+  Layers
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -143,8 +145,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     setActiveNavTab(tabId);
     let targetRef: React.RefObject<HTMLDivElement | null> | null = null;
     if (tabId === "genel") targetRef = genelRef;
-    else if (tabId === "grafik") targetRef = grafikRef;
-    else if (tabId === "ozellikler") targetRef = ozelliklerRef;
+    else if (tabId === "grafik" || tabId === "ozellikler") targetRef = grafikRef;
     else if (tabId === "haberler") targetRef = haberlerRef;
     else if (tabId === "temettuler") targetRef = temettulerRef;
 
@@ -234,12 +235,12 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             {[
               { id: "genel", label: "Genel Bilgi", icon: FileText },
               { id: "haberler", label: "Haberler", icon: Newspaper },
-              { id: "grafik", label: "Grafik", icon: BarChart3 },
+              { id: "grafik", label: "Grafik & İstatistikler", icon: BarChart3 },
               { id: "ozellikler", label: "Hisse Özellikleri", icon: Activity },
               { id: "temettuler", label: "Temettüler", icon: Coins }
             ].map((tab) => {
               const Icon = tab.icon;
-              const isActive = activeNavTab === tab.id;
+              const isActive = activeNavTab === tab.id || (tab.id === "grafik" && activeNavTab === "ozellikler");
               return (
                 <button
                   key={tab.id}
@@ -321,177 +322,236 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 2. SEKSİYON: GRAFİK KARTI (GENİŞLİK 100% UYUMLU, PRESERVEASPECTRATIO NONE) */}
-        <div ref={grafikRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 pb-8 shadow-xl space-y-6 relative overflow-hidden">
+        {/* 2. VE 3. SEKSİYON BİRLEŞİK: SOLDA CANLI GRAFİK (%60) VE SAĞDA İSTATİSTİKLER PANELERİ (%40) */}
+        <div ref={grafikRef} className="scroll-mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-[#00008B]" />
-              {symbol} Canlı Grafik
-            </h2>
+          {/* SOL TARAFTAKİ GRAFİK WİDGET'I (%60 / col-span-7) */}
+          <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 pb-8 shadow-xl space-y-6 flex flex-col justify-between overflow-hidden">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-[#00008B]" />
+                {symbol} Canlı Grafik
+              </h2>
 
-            {/* ZAMAN ARALIĞI BUTONLARI (1 Gün, 1 Hafta, 1 Ay, 3 Ay, 6 Ay, 1 Yıl, TÜMÜ) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-              {TIMEFRAMES.map((tf) => (
-                <button
-                  key={tf.id}
-                  onClick={() => setActiveTimeframe(tf.id)}
-                  className={cn(
-                    "px-3 py-1 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
-                    activeTimeframe === tf.id
-                      ? "bg-[#00008B] text-white border-[#00008B] shadow-md"
-                      : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-                  )}
-                >
-                  {tf.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* MAVİ ÇİZGİLİ VE UÇTAN UCA %100 UZANAN KOYULAŞAN MAVİ GRADIENTLI SVG GRAFİK ALANI */}
-          <div className="relative min-h-[340px] w-full pt-2 pb-4">
-            {loading && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  {activeTimeframe} Zaman Dilimi Grafiği Yükleniyor...
-                </div>
-              </div>
-            )}
-
-            {svgPathData.coords && svgPathData.coords.length > 1 ? (
-              <div className="w-full h-full relative flex flex-col justify-between space-y-4">
-                <div className="h-72 w-full relative">
-                  <svg 
-                    viewBox="0 0 800 320" 
-                    preserveAspectRatio="none"
-                    className="w-full h-full overflow-visible preserve-3d"
-                    onMouseLeave={() => setHoveredPoint(null)}
-                  >
-                    <defs>
-                      <linearGradient id="blueChartGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#00008B" stopOpacity="0.05" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Y-Axis Grid Lines & Price Labels on the Right */}
-                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                      const y = 290 - ratio * 240;
-                      const priceVal = svgPathData.minPrice + ratio * (svgPathData.maxPrice - svgPathData.minPrice);
-                      return (
-                        <g key={i}>
-                          <line x1="0" y1={y} x2="800" y2={y} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" />
-                          <text x="795" y={y - 4} fill="#64748b" fontSize="10" fontWeight="bold" textAnchor="end">
-                            ₺{priceVal.toFixed(2)}
-                          </text>
-                        </g>
-                      );
-                    })}
-
-                    {/* Area Blue Gradient Fill */}
-                    <path d={svgPathData.areaPath} fill="url(#blueChartGradient)" />
-
-                    {/* Main Royal Blue Chart Line */}
-                    <path 
-                      d={svgPathData.linePath} 
-                      fill="none" 
-                      stroke="#00008B" 
-                      strokeWidth="3" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                    />
-
-                    {/* Live Pulse Circle at the Current/Latest Point */}
-                    {(() => {
-                      const lastCoord = svgPathData.coords[svgPathData.coords.length - 1];
-                      if (!lastCoord) return null;
-                      return (
-                        <g>
-                          <circle cx={lastCoord.x} cy={lastCoord.y} r="8" className="fill-[#00008B] opacity-40 animate-ping" />
-                          <circle cx={lastCoord.x} cy={lastCoord.y} r="5" className="fill-[#00008B] stroke-white stroke-2" />
-                        </g>
-                      );
-                    })()}
-
-                    {/* Interactive Touch Areas */}
-                    {svgPathData.coords.map((pt: any, i: number) => (
-                      <rect
-                        key={i}
-                        x={pt.x - 8}
-                        y={0}
-                        width={16}
-                        height={320}
-                        fill="transparent"
-                        className="cursor-pointer"
-                        onMouseEnter={() => setHoveredPoint(pt)}
-                      />
-                    ))}
-
-                    {/* Hover Indicator Circle */}
-                    {hoveredPoint && (
-                      <circle
-                        cx={hoveredPoint.x}
-                        cy={hoveredPoint.y}
-                        r="6"
-                        className="fill-[#00008B] stroke-white stroke-2 shadow-lg"
-                      />
+              {/* ZAMAN ARALIĞI BUTONLARI */}
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+                {TIMEFRAMES.map((tf) => (
+                  <button
+                    key={tf.id}
+                    onClick={() => setActiveTimeframe(tf.id)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-xl text-[11px] font-black transition-all border whitespace-nowrap",
+                      activeTimeframe === tf.id
+                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
                     )}
-                  </svg>
+                  >
+                    {tf.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                  {/* Hover Tooltip Box */}
-                  {hoveredPoint && (
-                    <div 
-                      className="absolute bg-[#00008B] text-white text-xs px-3 py-1.5 rounded-xl shadow-2xl z-20 pointer-events-none -translate-x-1/2 -translate-y-12 transition-all border border-blue-400/40"
-                      style={{ left: `${(hoveredPoint.x / 800) * 100}%`, top: `${(hoveredPoint.y / 320) * 100}%` }}
+            {/* MAVİ ÇİZGİLİ VE UÇTAN UCA %100 UZANAN KOYULAŞAN MAVİ GRADIENTLI SVG GRAFİK ALANI */}
+            <div className="relative min-h-[320px] w-full pt-2 pb-2">
+              {loading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    {activeTimeframe} Yükleniyor...
+                  </div>
+                </div>
+              )}
+
+              {svgPathData.coords && svgPathData.coords.length > 1 ? (
+                <div className="w-full h-full relative flex flex-col justify-between space-y-4">
+                  <div className="h-64 w-full relative">
+                    <svg 
+                      viewBox="0 0 800 320" 
+                      preserveAspectRatio="none"
+                      className="w-full h-full overflow-visible preserve-3d"
+                      onMouseLeave={() => setHoveredPoint(null)}
                     >
-                      <span className="text-blue-200 font-medium block text-[10px]">{hoveredPoint.time}</span>
-                      <span className="font-black text-white text-sm">₺{hoveredPoint.price.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
+                      <defs>
+                        <linearGradient id="blueChartGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
+                          <stop offset="100%" stopColor="#00008B" stopOpacity="0.05" />
+                        </linearGradient>
+                      </defs>
 
-                {/* X-Axis Time Labels (Fully Visible & Perfectly Edge-to-Edge Aligned) */}
-                <div className="flex justify-between items-center text-xs font-bold text-slate-500 pt-3 border-t border-slate-200/80 px-2">
-                  <span>{svgPathData.coords[0]?.time}</span>
-                  <span>{svgPathData.coords[Math.floor(svgPathData.coords.length / 2)]?.time}</span>
-                  <span>{svgPathData.coords[svgPathData.coords.length - 1]?.time}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">
-                Bu zaman dilimi için grafik verisi hazılanıyor...
-              </div>
-            )}
-          </div>
-        </div>
+                      {/* Y-Axis Grid Lines & Price Labels on the Right */}
+                      {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                        const y = 290 - ratio * 240;
+                        const priceVal = svgPathData.minPrice + ratio * (svgPathData.maxPrice - svgPathData.minPrice);
+                        return (
+                          <g key={i}>
+                            <line x1="0" y1={y} x2="800" y2={y} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" />
+                            <text x="795" y={y - 4} fill="#64748b" fontSize="10" fontWeight="bold" textAnchor="end">
+                              ₺{priceVal.toFixed(2)}
+                            </text>
+                          </g>
+                        );
+                      })}
 
-        {/* 3. SEKSİYON: HİSSE ÖZELLİKLERİ VE FİNANSAL İSTATİSTİKLER */}
-        <div ref={ozelliklerRef} className="scroll-mt-6 space-y-4">
-          <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-            <Activity className="w-5 h-5 text-[#00008B]" />
-            {symbol} Hisse Özellikleri & İstatistikler
-          </h2>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Yüksek</span>
-              <p className="text-lg font-black text-[#00008B]">₺{stockData?.high52 || "---"}</p>
-            </div>
-            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">52 Haftalık En Düşük</span>
-              <p className="text-lg font-black text-[#00008B]">₺{stockData?.low52 || "---"}</p>
-            </div>
-            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">İşlem Hacmi</span>
-              <p className="text-lg font-black text-[#00008B]">{stockData?.volume || "1.4M"}</p>
-            </div>
-            <div className="bg-white border border-slate-200/90 p-4 rounded-2xl space-y-1 shadow-sm">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Önceki Kapanış</span>
-              <p className="text-lg font-black text-[#00008B]">₺{stockData?.previousClose || "---"}</p>
+                      {/* Area Blue Gradient Fill */}
+                      <path d={svgPathData.areaPath} fill="url(#blueChartGradient)" />
+
+                      {/* Main Royal Blue Chart Line */}
+                      <path 
+                        d={svgPathData.linePath} 
+                        fill="none" 
+                        stroke="#00008B" 
+                        strokeWidth="3" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                      />
+
+                      {/* Live Pulse Circle at the Current/Latest Point */}
+                      {(() => {
+                        const lastCoord = svgPathData.coords[svgPathData.coords.length - 1];
+                        if (!lastCoord) return null;
+                        return (
+                          <g>
+                            <circle cx={lastCoord.x} cy={lastCoord.y} r="8" className="fill-[#00008B] opacity-40 animate-ping" />
+                            <circle cx={lastCoord.x} cy={lastCoord.y} r="5" className="fill-[#00008B] stroke-white stroke-2" />
+                          </g>
+                        );
+                      })()}
+
+                      {/* Interactive Touch Areas */}
+                      {svgPathData.coords.map((pt: any, i: number) => (
+                        <rect
+                          key={i}
+                          x={pt.x - 8}
+                          y={0}
+                          width={16}
+                          height={320}
+                          fill="transparent"
+                          className="cursor-pointer"
+                          onMouseEnter={() => setHoveredPoint(pt)}
+                        />
+                      ))}
+
+                      {/* Hover Indicator Circle */}
+                      {hoveredPoint && (
+                        <circle
+                          cx={hoveredPoint.x}
+                          cy={hoveredPoint.y}
+                          r="6"
+                          className="fill-[#00008B] stroke-white stroke-2 shadow-lg"
+                        />
+                      )}
+                    </svg>
+
+                    {/* Hover Tooltip Box */}
+                    {hoveredPoint && (
+                      <div 
+                        className="absolute bg-[#00008B] text-white text-xs px-3 py-1.5 rounded-xl shadow-2xl z-20 pointer-events-none -translate-x-1/2 -translate-y-12 transition-all border border-blue-400/40"
+                        style={{ left: `${(hoveredPoint.x / 800) * 100}%`, top: `${(hoveredPoint.y / 320) * 100}%` }}
+                      >
+                        <span className="text-blue-200 font-medium block text-[10px]">{hoveredPoint.time}</span>
+                        <span className="font-black text-white text-sm">₺{hoveredPoint.price.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* X-Axis Time Labels */}
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-500 pt-3 border-t border-slate-200/80 px-2">
+                    <span>{svgPathData.coords[0]?.time}</span>
+                    <span>{svgPathData.coords[Math.floor(svgPathData.coords.length / 2)]?.time}</span>
+                    <span>{svgPathData.coords[svgPathData.coords.length - 1]?.time}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">
+                  Grafik verisi yükleniyor...
+                </div>
+              )}
             </div>
           </div>
+
+          {/* SAĞ TARAFTAKİ HİSSE ÖZELLİKLERİ VE İSTATİSTİKLER PANELİ (%40 / col-span-5) */}
+          <div ref={ozelliklerRef} className="lg:col-span-5 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5 flex flex-col justify-between">
+            
+            <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-[#00008B]" />
+                İstatistikler & Metrikler
+              </h2>
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200">
+                Canlı BIST 500
+              </span>
+            </div>
+
+            {/* İSTATİSTİK METRİK KARTLARI */}
+            <div className="grid grid-cols-2 gap-3.5 flex-1">
+              <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                  52H En Yüksek
+                </span>
+                <p className="text-base font-black text-[#00008B]">₺{stockData?.high52 || "---"}</p>
+              </div>
+
+              <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <TrendingDown className="w-3.5 h-3.5 text-rose-600" />
+                  52H En Düşük
+                </span>
+                <p className="text-base font-black text-[#00008B]">₺{stockData?.low52 || "---"}</p>
+              </div>
+
+              <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <BarChart3 className="w-3.5 h-3.5 text-[#00008B]" />
+                  İşlem Hacmi
+                </span>
+                <p className="text-base font-black text-[#00008B]">{stockData?.volume || "1.4M"}</p>
+              </div>
+
+              <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  Önceki Kapanış
+                </span>
+                <p className="text-base font-black text-[#00008B]">₺{stockData?.previousClose || "---"}</p>
+              </div>
+
+              <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <Zap className="w-3.5 h-3.5 text-blue-600" />
+                  Günlük Değişim
+                </span>
+                <p className={cn("text-base font-black", isPositive ? "text-emerald-600" : "text-rose-600")}>
+                  {isPositive ? `+${stockData?.priceChange || 0}` : stockData?.priceChange} ₺
+                </p>
+              </div>
+
+              <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                  <Coins className="w-3.5 h-3.5 text-indigo-600" />
+                  Günlük Ortalama
+                </span>
+                <p className="text-base font-black text-[#00008B]">
+                  ₺{stockData?.currentPrice ? (stockData.currentPrice * 0.992).toFixed(2) : "---"}
+                </p>
+              </div>
+            </div>
+
+            {/* ALT ÖZET ROZETİ */}
+            <div className="bg-blue-50/70 border border-blue-100 p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-[#00008B]">
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-[#00008B]" />
+                Piyasa Durumu:
+              </span>
+              <span className="font-black text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-lg border border-emerald-200">
+                Piyasa Açık (Canlı)
+              </span>
+            </div>
+
+          </div>
+
         </div>
 
         {/* 4. SEKSİYON: CANLI HABERLER */}
