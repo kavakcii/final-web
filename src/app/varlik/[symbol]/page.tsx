@@ -221,19 +221,24 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     <div className="flex min-h-screen bg-[#F8FAFC] w-full overflow-x-hidden relative">
       
       {/* ========================================================================= */}
-      {/* 1. SOL DÜZEN: LACİVERT SOL MENÜ (#00008B) - TIKLANAN VARLIĞIN ADI VE SEKMELER */}
+      {/* 1. SOL DÜZEN: LACİVERT SOL MENÜ (#00008B) - SEMBOL, FİYAT VE SEKMELER */}
       {/* ========================================================================= */}
       <aside className="w-64 shrink-0 min-h-screen bg-[#00008B] text-white p-5 space-y-6 flex flex-col justify-between shadow-2xl z-20">
         <div className="space-y-6">
           
-          {/* TIKLANAN HİSSENİN BAŞLIĞI VE LOGOSU */}
+          {/* TIKLANAN HİSSENİN BAŞLIĞI, LOGOSU VE FİYATI (GÖRSEL 2 UYUMLU) */}
           <div className="flex items-center gap-3 border-b border-blue-800/80 pb-5">
             <div className="w-11 h-11 rounded-2xl bg-white text-[#00008B] flex items-center justify-center font-black text-xl shadow-md shrink-0">
               {symbol.slice(0, 1)}
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl font-black text-white tracking-tight truncate">{symbol}</h1>
-              <p className="text-[10px] font-bold text-blue-200/80 truncate max-w-[150px]">{fullName}</p>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-1.5">
+                <h1 className="text-xl font-black text-white tracking-tight truncate">{symbol}</h1>
+                <span className="text-xs font-black text-blue-100 whitespace-nowrap bg-blue-900/60 px-2 py-0.5 rounded-lg border border-blue-700/60">
+                  {stockData?.currentPrice || "---"} ₺
+                </span>
+              </div>
+              <p className="text-[10px] font-bold text-blue-200/80 truncate max-w-[150px] mt-0.5">{fullName}</p>
             </div>
           </div>
 
@@ -304,79 +309,49 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           </div>
         </div>
 
-        {/* 1. SEKSİYON: ŞİRKET HAKKINDA (RENK PALETİNDEKİ MAVİ BÖLGEDE BEYAZ YAZILAR İLE) */}
-        <div ref={genelRef} className="scroll-mt-6 space-y-4">
-          <div className="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
+        {/* 1. SEKSİYON: DİREKT ŞİRKET HAKKINDA (ÜST ÜSTELİK VE FİYAT YAZISI OLMADAN, PARAGRAFLARA AYRILMIŞ) */}
+        <div ref={genelRef} className="scroll-mt-6">
+          <div className="bg-[#00008B] text-white rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl border border-blue-900">
             
-            {/* ÜST BİLGİ & FİYAT ÇUBUĞU */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-black text-slate-900 tracking-tight">{symbol} Genel Bilgi</h1>
-                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200">
-                    BIST 500
-                  </span>
-                </div>
-                <p className="text-xs font-bold text-slate-400 mt-1">{fullName}</p>
-              </div>
+            <button 
+              onClick={() => setIsAboutOpen(!isAboutOpen)}
+              className="w-full flex items-center justify-between text-left font-black text-xl text-white hover:text-blue-200 transition-colors"
+            >
+              <span className="flex items-center gap-2 tracking-tight">
+                Şirket Hakkında
+              </span>
+              <ChevronUp className={cn("w-6 h-6 text-blue-200 transition-transform duration-300", !isAboutOpen && "rotate-180")} />
+            </button>
 
-              <div className="flex items-baseline gap-3">
-                <div className="text-3xl font-black text-[#00008B] tracking-tight">
-                  {hoveredPoint ? hoveredPoint.price.toFixed(2) : (stockData?.currentPrice || "---")} <span className="text-2xl font-bold">₺</span>
-                </div>
-                <div className={cn(
-                  "px-3 py-1 rounded-xl text-xs font-black flex items-center gap-1 border",
-                  isPositive 
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                )}>
-                  {isPositive ? <TrendingUp className="w-3.5 h-3.5 text-emerald-600" /> : <TrendingDown className="w-3.5 h-3.5 text-rose-600" />}
-                  {isPositive ? `+${stockData?.priceChange || 0}` : stockData?.priceChange} ₺ ({isPositive ? `+${stockData?.priceChangePercent || 0}` : stockData?.priceChangePercent}%)
-                </div>
-              </div>
-            </div>
-
-            {/* RENK PALETİNDEKİ MAVİ BÖLGEDE BEYAZ YAZILAR İLE Sadece ŞİRKET HAKKINDA METNİ */}
-            <div className="bg-[#00008B] text-white rounded-2xl p-5 md:p-6 space-y-4 shadow-xl border border-blue-900">
-              <button 
-                onClick={() => setIsAboutOpen(!isAboutOpen)}
-                className="w-full flex items-center justify-between text-left font-black text-lg text-white hover:text-blue-200 transition-colors"
+            {isAboutOpen && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-5 pt-3 border-t border-blue-800/80"
               >
-                <span className="flex items-center gap-2">
-                  Şirket Hakkında
-                </span>
-                <ChevronUp className={cn("w-5 h-5 text-blue-200 transition-transform duration-300", !isAboutOpen && "rotate-180")} />
-              </button>
+                <h3 className="font-black text-white text-lg tracking-tight">{fullName}</h3>
 
-              {isAboutOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-4 pt-2 border-t border-blue-800/80"
-                >
-                  <h3 className="font-black text-white text-base tracking-tight">{fullName}</h3>
-
-                  {aboutLoading ? (
-                    <div className="py-4 flex items-center gap-2 text-blue-200 font-bold text-xs">
-                      <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                      {symbol} Şirket Hakkında bilgisi yükleniyor...
-                    </div>
-                  ) : aboutText ? (
-                    <div className="space-y-3.5 text-white text-xs font-semibold leading-relaxed">
-                      {aboutText.split('\n\n').map((para, i) => (
-                        <p key={i}>{para}</p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs font-semibold text-blue-100">
-                      {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
-                    </p>
-                  )}
-                </motion.div>
-              )}
-            </div>
-
+                {aboutLoading ? (
+                  <div className="py-6 flex items-center gap-2.5 text-blue-200 font-bold text-xs">
+                    <RefreshCw className="w-5 h-5 animate-spin text-white" />
+                    {symbol} Şirket Hakkında detayları yükleniyor...
+                  </div>
+                ) : aboutText ? (
+                  <div className="space-y-4 text-white text-xs md:text-sm font-medium leading-relaxed tracking-wide">
+                    {aboutText.split('\n\n').map((paragraph, idx) => (
+                      <p key={idx} className="bg-blue-950/40 p-4 rounded-2xl border border-blue-800/50 shadow-inner">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs font-semibold text-blue-100 bg-blue-950/40 p-4 rounded-2xl border border-blue-800/50">
+                    {symbol} ({fullName}), Borsa İstanbul (BIST) piyasasında sürdürülebilir büyüme odaklı faaliyet gösteren lider kuruluşlar arasında yer almaktadır.
+                  </p>
+                )}
+              </motion.div>
+            )}
           </div>
         </div>
 
