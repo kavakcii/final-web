@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
 
-// Şirket Amblem / Logo Bileşeni (Ekofin & Resmi BIST Şirket Amblemleri Kataloğu)
+// Şirket Amblem / Logo Bileşeni (Lokal public/logos Klasörü & Yerel BIST Şirket Amblemleri)
 function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; className?: string }) {
     const clean = symbol.toUpperCase().replace('.IS', '').trim();
     const [imgIndex, setImgIndex] = useState(0);
@@ -64,13 +64,14 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
 
     const slug = logoSlugMap[clean] || clean.toLowerCase();
 
-    // Ekofin CDN ve Orijinal BIST Şirket Amblemleri CDN Kaynakları (Resmi Görsel Amblemler)
+    // 1. Yerel Proje Klasörü (public/logos/{symbol}.png) -> 2. Ekofin CDN -> 3. TradingView CDN
     const logoSources = [
+        `/logos/${clean}.png`,
+        `/logos/${clean}.svg`,
         `https://cdn.ekofin.net/Logos/${clean}.png`,
         `https://cdn.ekofin.net/Front/${clean}.png`,
         `https://s3-symbol-logo.tradingview.com/${slug}--big.svg`,
-        `https://s3-symbol-logo.tradingview.com/${slug}.svg`,
-        `https://s3-symbol-logo.tradingview.com/crypto/XTVC${clean}.svg`
+        `https://s3-symbol-logo.tradingview.com/${slug}.svg`
     ];
 
     const currentSource = logoSources[imgIndex];
@@ -83,7 +84,7 @@ function AssetLogo({ symbol, className = "w-8 h-8" }: { symbol: string; classNam
         }
     };
 
-    // Ekran görüntüsündeki gibi siyah/koyu yuvarlatılmış kare kutu amblem tasarımı (Ekofin / BIST stili)
+    // Fotoğraftaki gibi lacivert/koyu yuvarlatılmış kare kutu amblem tasarımı (Ekofin / BIST stili)
     if (isFailed) {
         return (
             <div className={cn("rounded-xl bg-[#121826] border border-slate-800 text-white flex items-center justify-center font-black text-[9px] shrink-0 shadow-md", className)}>
@@ -693,7 +694,7 @@ export default function AssetsPage() {
                     </div>
 
                     {/* ========================================================================= */}
-                    {/* PROFESYONEL DERLİ TOPLU VERİ TABLOSU (SARI SIRALANABİLİR BAŞLIKLAR & NO SCROLLBAR) */}
+                    {/* PROFESYONEL DERLİ TOPLU VERİ TABLOSU (YEREL AMBLEMLER & NO SCROLLBAR) */}
                     {/* ========================================================================= */}
                     {paginatedStocks.length > 0 ? (
                         <div className="w-full rounded-2xl border border-slate-200/80 bg-white overflow-hidden shadow-sm">
@@ -786,7 +787,7 @@ export default function AssetsPage() {
                                                 idx % 2 === 1 && "bg-slate-50/40"
                                             )}
                                         >
-                                            {/* HİSSE & ŞİRKET (EKOFİN / BIST KOYU AMBLEM TASARIMI) */}
+                                            {/* HİSSE & ŞİRKET (LOCAL PUBLIC/LOGOS VE EKOFIN AMBLEM KAYNAĞI) */}
                                             <td className="py-2.5 px-3">
                                                 <div className="flex items-center gap-2.5 min-w-0">
                                                     <AssetLogo symbol={item.symbol} className="w-8 h-8" />
