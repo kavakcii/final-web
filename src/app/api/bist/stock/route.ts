@@ -15,10 +15,6 @@ const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: num
 };
 
 // ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU
-// 1H: Tam 60 Dakika
-// 1D: Tam 24 Seans Saati
-// 1W: Tam 7 BIST İşlem Günü
-// 1M: Tam 30 BIST İşlem Günü
 const timeframeConfigMap: Record<string, { range: string; interval: string; targetPoints: number; label: string }> = {
   "1H": { range: "5d", interval: "1m", targetPoints: 60, label: "1 Saat" },
   "1D": { range: "1mo", interval: "5m", targetPoints: 288, label: "1 Gün" },  // 24 seans saati
@@ -26,8 +22,8 @@ const timeframeConfigMap: Record<string, { range: string; interval: string; targ
   "1M": { range: "6mo", interval: "1d", targetPoints: 30, label: "1 Ay" }    // Tam 30 BIST İşlem Günü
 };
 
-// BIST Resmi Seans Saati Kontrolü (Pazartesi-Cuma 09:10 - 18:10 TR Saati)
-// 06:55 vb. saatler KESİNLİKLE ENGELENİR!
+// BIST Resmi Seans Saati Kontrolü (Pazartesi-Cuma Tam 09:40 - 18:10 TR Saati)
+// 07:10, 15:00 vb. seans dışı saatler KESİNLİKLE ENGELENİR!
 function isWithinBistTradingHours(tsMs: number): boolean {
   try {
     const trDateStr = new Date(tsMs).toLocaleString("en-US", { timeZone: "Europe/Istanbul" });
@@ -35,13 +31,15 @@ function isWithinBistTradingHours(tsMs: number): boolean {
     const day = date.getDay(); // 0: Pazar, 6: Cumartesi
     if (day === 0 || day === 6) return false;
     const mins = date.getHours() * 60 + date.getMinutes();
-    return mins >= 550 && mins <= 1090; // 09:10 - 18:10
+    return mins >= 580 && mins <= 1090; // Tam 09:40 - 18:10 seans aralığı
   } catch (e) {
     return true;
   }
 }
 
-// BIST Canlı/Son Seans Kapanış Zamanı Hesaplama (Piyasa Kapalıyken Son 18:10 Kapanışı)
+// BIST Canlı/Son Seans Kapanış Zamanı Hesaplama
+// Piyasa Açıkken: Anlık Canlı Dakika (Örn: 15:16)
+// Piyasa Kapalıyken: En Son BIST Seans Kapanışı (Tam 18:10)
 function getLastBistSessionEndTimeMs(): number {
   const now = new Date();
   const trDateStr = now.toLocaleString("en-US", { timeZone: "Europe/Istanbul" });
@@ -50,16 +48,18 @@ function getLastBistSessionEndTimeMs(): number {
   const day = trDate.getDay();
   const mins = trDate.getHours() * 60 + trDate.getMinutes();
 
-  if (day >= 1 && day <= 5 && mins >= 550 && mins <= 1090) {
+  // Eğer seans saatleri içerisindeyse (Hafta içi 09:40 - 18:10) canlı zamanı ver
+  if (day >= 1 && day <= 5 && mins >= 580 && mins <= 1090) {
     return now.getTime();
   }
 
+  // Piyasa kapalıysa en son gerçekleşen BIST seansının TAM 18:10 kapanış saatine git
   const lastSessionDate = new Date(trDate);
   if (day === 0) { // Pazar -> Cuma 18:10
     lastSessionDate.setDate(lastSessionDate.getDate() - 2);
   } else if (day === 6) { // Cumartesi -> Cuma 18:10
     lastSessionDate.setDate(lastSessionDate.getDate() - 1);
-  } else if (mins < 550) { // Seans açılmamışsa dünkü seans
+  } else if (mins < 580) { // Seans henüz açılmadıysa dünkü seans kapanışı
     lastSessionDate.setDate(lastSessionDate.getDate() - 1);
     if (lastSessionDate.getDay() === 0) lastSessionDate.setDate(lastSessionDate.getDate() - 2);
   }
@@ -71,7 +71,8 @@ function getLastBistSessionEndTimeMs(): number {
 // Yardımcı Tarih Biçimlendirici (Türkiye Saati İle Tam Seans Saat:Dakikası)
 function formatTimestamp(tsMs: number, timeframe: string): string {
   try {
-    const date = new Date(tsMs);
+    const trDateStr = new Date(tsMs).toLocaleString("en-US", { timeZone: "Europe/Istanbul" });
+    const date = new Date(trDateStr);
     const day = date.getDate().toString().padStart(2, "0");
     const monthNames = ["Oca", "Şub", "Mar", "Nıs", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
     const month = monthNames[date.getMonth()];
@@ -132,7 +133,7 @@ export async function GET(request: Request) {
     const priceChange = currentPrice - previousClose;
     const priceChangePercent = previousClose ? (priceChange / previousClose) * 100 : stockMeta.changePercent;
 
-    // SADECE BIST İŞLEM SAATLERİNDEKİ (09:10 - 18:10) VERİ NOKTALARINI TOPLA
+    // SADECE BIST RESMİ İŞLEM SAATLERİNDEKİ (09:40 - 18:10) VERİ NOKTALARINI TOPLA
     let sessionPoints: { time: string; price: number; timestamp: number }[] = [];
     
     timestamps.forEach((ts, idx) => {
@@ -140,7 +141,7 @@ export async function GET(request: Request) {
       const p = rawPrices[idx];
 
       if (p !== null && p !== undefined && !isNaN(p)) {
-        // Günlük/Aylık sekmelerinde doğrudan seans günü, 1H/1D sekmelerinde seans saati kontrolü (09:10 - 18:10)
+        // Günlük/Aylık sekmelerinde doğrudan seans günü, 1H/1D sekmelerinde seans saati kontrolü (09:40 - 18:10)
         if (config.interval === "1d" || isWithinBistTradingHours(ptTimeMs)) {
           sessionPoints.push({
             time: formatTimestamp(ptTimeMs, timeframe),
@@ -151,7 +152,7 @@ export async function GET(request: Request) {
       }
     });
 
-    // İstenen tam seans birim sayılarını al (tersten - 1W için 7 İŞLEM GÜNÜ, 1M için 30 İŞLEM GÜNÜ)
+    // İstenen tam seans birim sayılarını tersten al (07:10 gibi saatler elenmiştir)
     let chartPoints = sessionPoints.slice(-config.targetPoints);
 
     if (chartPoints.length < 3) {
@@ -178,7 +179,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // REEL BIST SEANS SAATLERİ (09:10 - 18:10)
+    // REEL BIST SEANS SAATLERİ (09:40 - 18:10 SIKI SINIRLI)
     const currentPrice = stockMeta.current;
     const priceChange = stockMeta.change;
     const priceChangePercent = stockMeta.changePercent;
