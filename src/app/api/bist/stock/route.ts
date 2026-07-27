@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-// REEL EKOFİN.NET BIST 500 VERİ KATALOĞU (https://ekofin.net/sirket/detay/ BİREBİR EŞLEŞME)
-// FORMAT: Virgülden/Noktadan Sonra Tam 3 Basamak (xx.yyy M / B / T) - 0ms ANINDA YÜKLENME
+// REEL EKOFİN.NET BIST 500 VERİ KATALOĞU (YEDEK VE HIZLI ERİŞİM)
 const EKOFIN_BIST_PRICES: Record<string, { 
   current: number; 
   high: number; 
@@ -9,12 +8,12 @@ const EKOFIN_BIST_PRICES: Record<string, {
   change: number; 
   changePercent: number; 
   prevClose: number;
-  marketCap: string;           // Piyasa Değeri
-  volume: string;              // İşlem Hacmi
-  volatility: string;          // Volatilite (Oynaklık Oranı)
-  foreignRatio: string;        // Yabancı Takas Oranı
-  circuitBreakerCount: number; // Devre Kesici Sayısı
-  sharesOutstanding: string;   // Dolaşımdaki Hisse / Halka Açıklık
+  marketCap: string;           
+  volume: string;              
+  volatility: string;          
+  foreignRatio: string;        
+  circuitBreakerCount: number; 
+  sharesOutstanding: string;   
 }> = {
   "ASELS": { current: 363.250, high: 433.090, low: 320.000, change: -17.250, changePercent: -4.540, prevClose: 380.500, marketCap: "1.652T ₺", volume: "21.273M ₺", volatility: "%2.450", foreignRatio: "%34.200", circuitBreakerCount: 0, sharesOutstanding: "4.560B Adet (%25.800)" },
   "THYAO": { current: 312.000, high: 345.500, low: 265.000, change: +4.500, changePercent: +1.460, prevClose: 307.500, marketCap: "430.560B ₺", volume: "48.912M ₺", volatility: "%3.120", foreignRatio: "%41.800", circuitBreakerCount: 0, sharesOutstanding: "1.380B Adet (%50.400)" },
@@ -27,6 +26,51 @@ const EKOFIN_BIST_PRICES: Record<string, {
   "ISCTR": { current: 14.800, high: 18.200, low: 11.500, change: -0.150, changePercent: -1.000, prevClose: 14.950, marketCap: "370.000B ₺", volume: "52.190M ₺", volatility: "%2.900", foreignRatio: "%38.600", circuitBreakerCount: 0, sharesOutstanding: "25.000B Adet (%32.100)" },
   "YKBNK": { current: 31.200, high: 39.000, low: 24.000, change: +0.400, changePercent: +1.300, prevClose: 30.800, marketCap: "263.540B ₺", volume: "34.810M ₺", volatility: "%3.250", foreignRatio: "%29.800", circuitBreakerCount: 0, sharesOutstanding: "8.447B Adet (%30.000)" }
 };
+
+// EKOFİN.NET CANLI HTTP VERİ ÇEKİCİ (DIRECT LIVE FETCH FROM EKOFIN.NET)
+async function fetchLiveEkofinData(symbol: string) {
+  try {
+    const url = `https://ekofin.net/sirket/detay/${symbol.toUpperCase()}`;
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept-Language": "tr-TR,tr;q=0.9"
+      },
+      next: { revalidate: 30 } // 30 saniyede bir canlı revalidate
+    });
+
+    if (!res.ok) return null;
+
+    const html = await res.text();
+    
+    // HTML Metin Ayrıştırma (Realtime Extraction)
+    let marketCap = null;
+    let volume = null;
+    let volatility = null;
+    let foreignRatio = null;
+
+    const mcMatch = html.match(/Piyasa\s*Değeri[\s\S]*?([\d\.,]+\s*[MBTLt]+)/i);
+    if (mcMatch) marketCap = mcMatch[1].trim();
+
+    const volMatch = html.match(/Hacim|İşlem\s*Hacmi[\s\S]*?([\d\.,]+\s*[MBTLt]+)/i);
+    if (volMatch) volume = volMatch[1].trim();
+
+    const vltMatch = html.match(/Volatilite|Oynaklık[\s\S]*?(%?\s*[\d\.,]+)/i);
+    if (vltMatch) volatility = vltMatch[1].trim();
+
+    const frMatch = html.match(/Yabancı\s*Oranı|Yabancı\s*Takas[\s\S]*?(%?\s*[\d\.,]+)/i);
+    if (frMatch) foreignRatio = frMatch[1].trim();
+
+    return {
+      marketCap,
+      volume,
+      volatility,
+      foreignRatio
+    };
+  } catch (e) {
+    return null;
+  }
+}
 
 // ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU
 const timeframeConfigMap: Record<string, { range: string; interval: string; targetPoints: number; label: string }> = {
@@ -77,7 +121,7 @@ function getLastBistSessionEndTimeMs(): number {
   return lastSessionDate.getTime();
 }
 
-// Format Helper: Virgülden sonra tam 3 basamak ve M / B / T birimi
+// Format Helper
 function formatNumber3Decimals(num: number, unitSuffix: string = ""): string {
   if (num >= 1e12) {
     return (num / 1e12).toFixed(3) + "T" + (unitSuffix ? " " + unitSuffix : "");
@@ -135,6 +179,13 @@ export async function GET(request: Request) {
 
   const lastSessionEndMs = getLastBistSessionEndTimeMs();
 
+  // EKOFİN.NET CANLI VERİ ÇEKİMİ
+  const liveEkofinData = await fetchLiveEkofinData(cleanSymbol);
+  const marketCapVal = liveEkofinData?.marketCap || stockMeta.marketCap;
+  const volumeVal = liveEkofinData?.volume || stockMeta.volume;
+  const volatilityVal = liveEkofinData?.volatility || stockMeta.volatility;
+  const foreignRatioVal = liveEkofinData?.foreignRatio || stockMeta.foreignRatio;
+
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=${config.range}&interval=${config.interval}`;
     
@@ -142,7 +193,7 @@ export async function GET(request: Request) {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
       },
-      next: { revalidate: 60 }
+      next: { revalidate: 30 }
     });
 
     if (!res.ok) {
@@ -192,10 +243,9 @@ export async function GET(request: Request) {
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), stockMeta.high);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), stockMeta.low);
 
-    // EKOFİN.NET METRİKLERİ (PİYASA DEĞERİ, HACİM, VOLATİLİTE, YABANCI ORANI, DEVRE KESİCİ, DOLAŞIMDAKİ HİSSE)
     const exactVolVal = meta.regularMarketVolume 
       ? formatNumber3Decimals(meta.regularMarketVolume, "₺")
-      : stockMeta.volume;
+      : volumeVal;
 
     return NextResponse.json({
       success: true,
@@ -207,10 +257,10 @@ export async function GET(request: Request) {
       previousClose: parseFloat(previousClose.toFixed(3)),
       high52: parseFloat(high52.toFixed(3)),
       low52: parseFloat(low52.toFixed(3)),
-      marketCap: stockMeta.marketCap,
+      marketCap: marketCapVal,
       volume: exactVolVal,
-      volatility: stockMeta.volatility,
-      foreignRatio: stockMeta.foreignRatio,
+      volatility: volatilityVal,
+      foreignRatio: foreignRatioVal,
       circuitBreakerCount: stockMeta.circuitBreakerCount,
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
@@ -264,10 +314,10 @@ export async function GET(request: Request) {
       previousClose,
       high52: stockMeta.high,
       low52: stockMeta.low,
-      marketCap: stockMeta.marketCap,
-      volume: stockMeta.volume,
-      volatility: stockMeta.volatility,
-      foreignRatio: stockMeta.foreignRatio,
+      marketCap: marketCapVal,
+      volume: volumeVal,
+      volatility: volatilityVal,
+      foreignRatio: foreignRatioVal,
       circuitBreakerCount: stockMeta.circuitBreakerCount,
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
