@@ -14,12 +14,12 @@ const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: num
   "YKBNK": { current: 31.20, high: 39.00, low: 24.00, change: +0.40, changePercent: +1.30, prevClose: 30.80 }
 };
 
-// ROLLING BIST SEANS SÜRESİ KONFİGÜRASYONU (Sadece BIST 09:55 - 18:10 Seans Saatleri)
-const rangeIntervalMap: Record<string, { range: string; interval: string; maxSessionPoints: number; label: string }> = {
-  "1H": { range: "5d", interval: "1m", maxSessionPoints: 60, label: "1 Saat" },
-  "1D": { range: "1mo", interval: "5m", maxSessionPoints: 288, label: "1 Gün" }, // 24 seans saati (288 x 5dk)
-  "1W": { range: "3mo", interval: "15m", maxSessionPoints: 450, label: "1 Hafta" },
-  "1M": { range: "6mo", interval: "60m", maxSessionPoints: 360, label: "1 Ay" }
+// ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU
+const rangeIntervalMap: Record<string, { range: string; interval: string; pointStepMins: number; label: string }> = {
+  "1H": { range: "5d", interval: "1m", pointStepMins: 1, label: "1 Saat" }, // Her 1 dakikada bir (17:10 - 18:10)
+  "1D": { range: "1mo", interval: "1m", pointStepMins: 1, label: "1 Gün" }, // Her 1 dakikada bir
+  "1W": { range: "3mo", interval: "5m", pointStepMins: 5, label: "1 Hafta" }, // Her 5 dakikada bir
+  "1M": { range: "6mo", interval: "60m", pointStepMins: 60, label: "1 Ay" }  // Günlük/Saatlik seanslar
 };
 
 // BIST Resmi Seans Saati Kontrolü (Pazartesi-Cuma 09:55 - 18:10 TR Saati)
@@ -34,6 +34,35 @@ function isWithinBistTradingHours(tsMs: number): boolean {
   } catch (e) {
     return true;
   }
+}
+
+// BIST Canlı/Son Seans Kapanış Zamanı Hesaplama (Piyasa Kapalıyken Son 18:10 Seans Kapanışı)
+function getLastBistSessionEndTimeMs(): number {
+  const now = new Date();
+  const trDateStr = now.toLocaleString("en-US", { timeZone: "Europe/Istanbul" });
+  const trDate = new Date(trDateStr);
+  
+  const day = trDate.getDay();
+  const mins = trDate.getHours() * 60 + trDate.getMinutes();
+
+  // Eğer hafta içi ve 09:55-18:10 arasındaysa canlı zamanı kullan
+  if (day >= 1 && day <= 5 && mins >= 595 && mins <= 1090) {
+    return now.getTime();
+  }
+
+  // Aksi halde en son seans gününe ve tam 18:10 kapanış dakikasına git
+  const lastSessionDate = new Date(trDate);
+  if (day === 0) { // Pazar -> Cuma
+    lastSessionDate.setDate(lastSessionDate.getDate() - 2);
+  } else if (day === 6) { // Cumartesi -> Cuma
+    lastSessionDate.setDate(lastSessionDate.getDate() - 1);
+  } else if (mins < 595) { // Seans açılmamışsa dünkü seans
+    lastSessionDate.setDate(lastSessionDate.getDate() - 1);
+    if (lastSessionDate.getDay() === 0) lastSessionDate.setDate(lastSessionDate.getDate() - 2);
+  }
+
+  lastSessionDate.setHours(18, 10, 0, 0);
+  return lastSessionDate.getTime();
 }
 
 // Yardımcı Tarih Biçimlendirici (Türkiye Saati İle Tam Seans Saat:Dakikası)
@@ -69,6 +98,8 @@ export async function GET(request: Request) {
   const cleanSymbol = rawSymbol.toUpperCase().replace('.IS', '').trim();
   const config = rangeIntervalMap[timeframe] || rangeIntervalMap["1D"];
   const stockMeta = BIST_REAL_PRICES[cleanSymbol] || { current: 150.00, high: 190.00, low: 120.00, change: 0, changePercent: 0, prevClose: 150.00 };
+
+  const lastSessionEndMs = getLastBistSessionEndTimeMs();
 
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=${config.range}&interval=${config.interval}`;
@@ -118,8 +149,9 @@ export async function GET(request: Request) {
       }
     });
 
-    // İstenen seans süresi noktalarını tersten (en güncel seanslardan geriye doğru) al
-    let chartPoints = sessionPoints.slice(-config.maxSessionPoints);
+    // Zaman dilimine göre nokta sayısı belirleme (1H -> 60 DAKİKA DAKİKA NOKTA, 1D -> 240+ DAKİKA DAKİKA NOKTA)
+    const targetPointCount = timeframe === "1H" ? 61 : timeframe === "1D" ? 240 : timeframe === "1W" ? 300 : 180;
+    let chartPoints = sessionPoints.slice(-targetPointCount);
 
     if (chartPoints.length < 5) {
       chartPoints = sessionPoints;
@@ -145,17 +177,17 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // REEL BIST SEANS SAATLERİ (SADECE 09:55 - 18:10 SEANS İÇİ NOKTALARI)
+    // REEL BIST SEANS SAATLERİ (PİYASA KAPALIYKEN TAM 18:10 KAPANIS REFERANSI İLE DAKİKA DAKİKA)
     const currentPrice = stockMeta.current;
     const priceChange = stockMeta.change;
     const priceChangePercent = stockMeta.changePercent;
     const previousClose = stockMeta.prevClose;
-    const pointCount = config.maxSessionPoints;
-    const now = Date.now();
 
-    // Seans dakikalarını hesaplama
+    const pointCount = timeframe === "1H" ? 61 : timeframe === "1D" ? 240 : timeframe === "1W" ? 200 : 120;
+    const stepMs = config.pointStepMins * 60000;
+    
     let chartPoints: { time: string; price: number; timestamp: number }[] = [];
-    let ptMs = now;
+    let ptMs = lastSessionEndMs;
     
     for (let i = pointCount - 1; i >= 0; i--) {
       // Eğer zaman seans dışına geldiyse bir önceki seans kapanışına (18:10) geriye atla
@@ -174,7 +206,7 @@ export async function GET(request: Request) {
         timestamp: ptMs
       });
 
-      ptMs -= (timeframe === "1H" ? 60000 : 300000);
+      ptMs -= stepMs;
     }
 
     if (chartPoints.length > 0) {
