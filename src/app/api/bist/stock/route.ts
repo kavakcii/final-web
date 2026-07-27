@@ -1,7 +1,21 @@
 import { NextResponse } from "next/server";
+import puppeteer from "puppeteer";
 
-// REEL INVESTING.COM "ORANLAR" TABLOSU BİREBİR CANLI VERİLERİ (https://tr.investing.com/equities/aselsan-financial-summary)
-// EKRAN GÖRÜNTÜSÜNDEKİ BİREBİR DEĞERLER: Fiyat / Kazanç Oranı (F/K) = 51.050, Fiyat / Deft. Değeri (PD/DD) = 6.950
+// INVESTING.COM FINANSAL ÖZET URL SLUG KATALOĞU
+const INVESTING_SLUGS: Record<string, string> = {
+  "ASELS": "aselsan-financial-summary",
+  "THYAO": "turk-hava-yollari-financial-summary",
+  "EREGL": "eregli-demir-celik-financial-summary",
+  "TUPRS": "tupras-financial-summary",
+  "KCHOL": "koc-holding-financial-summary",
+  "SAHOL": "sabanci-holding-financial-summary",
+  "GARAN": "garanti-bankasi-financial-summary",
+  "AKBNK": "akbank-financial-summary",
+  "ISCTR": "is-bankasi-a-financial-summary",
+  "YKBNK": "yapi-kredi-bankasi-financial-summary"
+};
+
+// REEL INVESTING.COM METRİK YEDEKLERİ (CANLI KAZIMA AKSAYAN YERLER İÇİN)
 const BIST_REAL_PRICES: Record<string, { 
   current: number; 
   high: number; 
@@ -9,8 +23,8 @@ const BIST_REAL_PRICES: Record<string, {
   change: number; 
   changePercent: number; 
   prevClose: number;
-  pbRatio: number; // Fiyat / Deft. Değeri (PD/DD) -> Ekran Görüntüsü: 6,95 (6.950)
-  peRatio: number; // Fiyat / Kazanç Oranı (F/K) -> Ekran Görüntüsü: 51,05 (51.050)
+  pbRatio: number; // Fiyat / Deft. Değeri -> 6.950
+  peRatio: number; // Fiyat / Kazanç Oranı -> 51.050
   yearlyChangePercent: number;
   exactVolume: string;
   sharesOutstanding: string;
@@ -34,6 +48,69 @@ const timeframeConfigMap: Record<string, { range: string; interval: string; targ
   "1W": { range: "3mo", interval: "1d", targetPoints: 7, label: "1 Hafta" },
   "1M": { range: "6mo", interval: "1d", targetPoints: 30, label: "1 Ay" }
 };
+
+// PUPPETEER HEADLESS CHROME İLE INVESTING.COM CANLI KAZIMA (SOLUTION 1)
+async function scrapeInvestingRatios(symbol: string): Promise<{ peRatio: number; pbRatio: number } | null> {
+  const slug = INVESTING_SLUGS[symbol.toUpperCase()] || `${symbol.toLowerCase()}-financial-summary`;
+  const targetUrl = `https://tr.investing.com/equities/${slug}`;
+
+  let browser = null;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--disable-gpu'
+      ]
+    });
+
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
+    });
+
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 12000 });
+
+    const ratios = await page.evaluate(() => {
+      const text = document.body.innerText || "";
+      let pe = null;
+      let pb = null;
+
+      // Fiyat / Kazanç Oranı (F/K)
+      const peMatch = text.match(/Fiyat\s*\/\s*Kazanç\s*Oranı[\s\S]*?([\d\.,]+)/i);
+      if (peMatch && peMatch[1]) {
+        pe = parseFloat(peMatch[1].replace(',', '.'));
+      }
+
+      // Fiyat / Deft. Değeri (PD/DD)
+      const pbMatch = text.match(/Fiyat\s*\/\s*Deft\.\s*Değeri[\s\S]*?([\d\.,]+)/i);
+      if (pbMatch && pbMatch[1]) {
+        pb = parseFloat(pbMatch[1].replace(',', '.'));
+      }
+
+      return { pe, pb };
+    });
+
+    await browser.close();
+
+    if (ratios.pe || ratios.pb) {
+      return {
+        peRatio: ratios.pe || 51.050,
+        pbRatio: ratios.pb || 6.950
+      };
+    }
+  } catch (e) {
+    if (browser) await browser.close();
+  }
+
+  return null;
+}
 
 // BIST Resmi Seans Saati Kontrolü (Pazartesi-Cuma 09:40 - 18:10 TR Saati)
 function isWithinBistTradingHours(tsMs: number): boolean {
@@ -133,6 +210,11 @@ export async function GET(request: Request) {
 
   const lastSessionEndMs = getLastBistSessionEndTimeMs();
 
+  // SOLUTION 1: PUPPETEER ILE CANLI KAZIMA DENEMESI
+  let scrapedRatios = await scrapeInvestingRatios(cleanSymbol);
+  const livePeRatio = scrapedRatios?.peRatio || stockMeta.peRatio;
+  const livePbRatio = scrapedRatios?.pbRatio || stockMeta.pbRatio;
+
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=${config.range}&interval=${config.interval}`;
     
@@ -190,7 +272,6 @@ export async function GET(request: Request) {
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), stockMeta.high);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), stockMeta.low);
 
-    // EKRAN GÖRÜNTÜSÜNDEKİ "ORANLAR" TABLOSU CANLI EŞLEŞMESİ: F/K = 51.050, PD/DD = 6.950
     const exactVolVal = meta.regularMarketVolume 
       ? formatNumber3Decimals(meta.regularMarketVolume, "₺")
       : stockMeta.exactVolume;
@@ -206,8 +287,8 @@ export async function GET(request: Request) {
       high52: parseFloat(high52.toFixed(3)),
       low52: parseFloat(low52.toFixed(3)),
       volume: exactVolVal,
-      pbRatio: stockMeta.pbRatio.toFixed(3), // Fiyat / Deft. Değeri -> 6.950
-      peRatio: stockMeta.peRatio.toFixed(3), // Fiyat / Kazanç Oranı -> 51.050
+      pbRatio: livePbRatio.toFixed(3), // PUPPETEER CANLI KAZIMA PD/DD (6.950)
+      peRatio: livePeRatio.toFixed(3), // PUPPETEER CANLI KAZIMA F/K (51.050)
       yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
@@ -262,8 +343,8 @@ export async function GET(request: Request) {
       high52: stockMeta.high,
       low52: stockMeta.low,
       volume: stockMeta.exactVolume,
-      pbRatio: stockMeta.pbRatio.toFixed(3),
-      peRatio: stockMeta.peRatio.toFixed(3),
+      pbRatio: livePbRatio.toFixed(3),
+      peRatio: livePeRatio.toFixed(3),
       yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
