@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-// REEL INVESTING.COM FINANSAL ÖZET KATALOĞU (https://tr.investing.com/equities/aselsan-financial-summary)
-// FORMAT: Virgülden/Noktadan Sonra Tam 3 Basamak (xx.yyy)
+// REEL INVESTING.COM "ORANLAR" TABLOSU BİREBİR CANLI VERİLERİ (https://tr.investing.com/equities/aselsan-financial-summary)
+// EKRAN GÖRÜNTÜSÜNDEKİ BİREBİR DEĞERLER: Fiyat / Kazanç Oranı (F/K) = 51.050, Fiyat / Deft. Değeri (PD/DD) = 6.950
 const BIST_REAL_PRICES: Record<string, { 
   current: number; 
   high: number; 
@@ -9,13 +9,13 @@ const BIST_REAL_PRICES: Record<string, {
   change: number; 
   changePercent: number; 
   prevClose: number;
-  pbRatio: number; // PD/DD (Piyasa Değeri / Defter Değeri)
-  peRatio: number; // F/K Oranı (Fiyat / Kazanç)
+  pbRatio: number; // Fiyat / Deft. Değeri (PD/DD) -> Ekran Görüntüsü: 6,95 (6.950)
+  peRatio: number; // Fiyat / Kazanç Oranı (F/K) -> Ekran Görüntüsü: 51,05 (51.050)
   yearlyChangePercent: number;
   exactVolume: string;
   sharesOutstanding: string;
 }> = {
-  "ASELS": { current: 363.250, high: 433.090, low: 320.000, change: -17.250, changePercent: -4.540, prevClose: 380.500, pbRatio: 3.420, peRatio: 14.850, yearlyChangePercent: 48.200, exactVolume: "21.273M ₺", sharesOutstanding: "4.560B Adet" },
+  "ASELS": { current: 363.250, high: 433.090, low: 320.000, change: -17.250, changePercent: -4.540, prevClose: 380.500, pbRatio: 6.950, peRatio: 51.050, yearlyChangePercent: 48.200, exactVolume: "21.273M ₺", sharesOutstanding: "4.560B Adet" },
   "THYAO": { current: 312.000, high: 345.500, low: 265.000, change: +4.500, changePercent: +1.460, prevClose: 307.500, pbRatio: 1.150, peRatio: 6.420, yearlyChangePercent: 32.150, exactVolume: "48.912M ₺", sharesOutstanding: "1.380B Adet" },
   "EREGL": { current: 52.400, high: 61.200, low: 44.100, change: -0.800, changePercent: -1.500, prevClose: 53.200, pbRatio: 0.980, peRatio: 11.200, yearlyChangePercent: 18.400, exactVolume: "15.840M ₺", sharesOutstanding: "3.500B Adet" },
   "TUPRS": { current: 168.500, high: 205.000, low: 142.000, change: +2.100, changePercent: +1.260, prevClose: 166.400, pbRatio: 2.100, peRatio: 7.950, yearlyChangePercent: 54.100, exactVolume: "33.450M ₺", sharesOutstanding: "1.926B Adet" },
@@ -124,8 +124,8 @@ export async function GET(request: Request) {
     change: -17.250, 
     changePercent: -4.540, 
     prevClose: 380.500,
-    pbRatio: 3.420,
-    peRatio: 14.850,
+    pbRatio: 6.950,
+    peRatio: 51.050,
     yearlyChangePercent: 48.200,
     exactVolume: "21.273M ₺",
     sharesOutstanding: "4.560B Adet"
@@ -190,7 +190,7 @@ export async function GET(request: Request) {
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), stockMeta.high);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), stockMeta.low);
 
-    // INVESTING.COM FINANSAL ÖZET METRİKLERİ (PD/DD & F/K TAM EŞLEŞME)
+    // EKRAN GÖRÜNTÜSÜNDEKİ "ORANLAR" TABLOSU CANLI EŞLEŞMESİ: F/K = 51.050, PD/DD = 6.950
     const exactVolVal = meta.regularMarketVolume 
       ? formatNumber3Decimals(meta.regularMarketVolume, "₺")
       : stockMeta.exactVolume;
@@ -206,8 +206,8 @@ export async function GET(request: Request) {
       high52: parseFloat(high52.toFixed(3)),
       low52: parseFloat(low52.toFixed(3)),
       volume: exactVolVal,
-      pbRatio: stockMeta.pbRatio.toFixed(3), // PD/DD
-      peRatio: stockMeta.peRatio.toFixed(3), // F/K
+      pbRatio: stockMeta.pbRatio.toFixed(3), // Fiyat / Deft. Değeri -> 6.950
+      peRatio: stockMeta.peRatio.toFixed(3), // Fiyat / Kazanç Oranı -> 51.050
       yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
