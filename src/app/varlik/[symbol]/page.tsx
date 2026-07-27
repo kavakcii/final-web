@@ -256,10 +256,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
     let linePath = `M ${coords[0].x} ${coords[0].y}`;
     for (let i = 1; i < coords.length; i++) {
-      const prev = coords[i - 1];
-      const curr = coords[i];
-      const cx = (prev.x + curr.x) / 2;
-      linePath += ` C ${cx} ${prev.y}, ${cx} ${curr.y}, ${curr.x} ${curr.y}`;
+      linePath += ` L ${coords[i].x} ${coords[i].y}`;
     }
 
     const areaPath = `${linePath} L ${chartWidth} ${height} L 0 ${height} Z`;
