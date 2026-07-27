@@ -91,62 +91,6 @@ const TIMEFRAMES = [
   { id: "1M", label: "1 ay" }
 ];
 
-// Anında Beklemesiz (0ms) Reel BIST Fiyatlı & TradingView 1. Görsel Birebir Dalga Eğrisi
-function generateInstantStockData(sym: string, tf: string = "1D") {
-  const meta = BIST_REAL_PRICES[sym] || { current: 150.00, high: 190.00, low: 120.00, change: -2.50, changePercent: -1.60, prevClose: 152.50 };
-  const pointCount = tf === "1D" ? 120 : 60;
-  const now = Date.now();
-  const stepMs = tf === "1D" ? 86400000 : tf.endsWith("MIN") ? 60000 : 3600000;
-
-  const monthNames = ["Oca", "Şub", "Mar", "Nıs", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
-
-  const chartPoints = Array.from({ length: pointCount }).map((_, i) => {
-    const t = i / (pointCount - 1);
-    // Investing 1. Görseldeki dalga profili: 320 ₺ dip -> 433.09 ₺ tepe -> 363.25 ₺ güncel
-    const wave1 = Math.sin(t * Math.PI * 3) * 35;
-    const wave2 = Math.cos(t * Math.PI * 5) * 15;
-    const priceVal = Math.max(meta.low, Math.min(meta.high, meta.current + wave1 + wave2));
-    const ptTime = now - (pointCount - i) * stepMs;
-    const dateObj = new Date(ptTime);
-
-    let timeStr = "";
-    if (tf.endsWith("MIN") || tf === "1H" || tf === "2H") {
-      timeStr = `${dateObj.getHours().toString().padStart(2, "0")}:${dateObj.getMinutes().toString().padStart(2, "0")}`;
-    } else if (tf === "4H" || tf === "5H" || tf === "1D") {
-      timeStr = `${dateObj.getDate().toString().padStart(2, "0")} ${monthNames[dateObj.getMonth()]}`;
-    } else if (tf === "1W") {
-      timeStr = `${dateObj.getDate().toString().padStart(2, "0")} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-    } else {
-      timeStr = `${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
-    }
-
-    return {
-      time: timeStr,
-      price: parseFloat(priceVal.toFixed(2)),
-      timestamp: ptTime
-    };
-  });
-
-  if (chartPoints.length > 0) {
-    chartPoints[chartPoints.length - 1].price = meta.current;
-  }
-
-  return {
-    success: true,
-    symbol: sym,
-    timeframe: tf,
-    currentPrice: parseFloat(meta.current.toFixed(2)),
-    priceChange: meta.change,
-    priceChangePercent: meta.changePercent,
-    previousClose: meta.prevClose,
-    high52: meta.high,
-    low52: meta.low,
-    volume: "42.9M",
-    currency: "₺",
-    chartPoints
-  };
-}
-
 export default function StockDetailPage({ params }: { params: Promise<{ symbol: string }> }) {
   const resolvedParams = use(params);
   const rawSymbol = resolvedParams.symbol || "ASELS";
@@ -156,9 +100,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [activeNavTab, setActiveNavTab] = useState("genel");
   const [isTimeframeDropdownOpen, setIsTimeframeDropdownOpen] = useState(false);
   
-  // 0ms Anında Beklemesiz Başlangıç Verisi (Reel BIST Fiyatlı ASELS = 363.25 ₺)
-  const [stockData, setStockData] = useState<any>(() => generateInstantStockData(symbol, "1D"));
-  const [loading, setLoading] = useState(false);
+  // Reel BIST Veri Durumu (Saçma geçici mock veriler tamamen kaldırıldı)
+  const [stockData, setStockData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
 
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
@@ -199,9 +143,9 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     }
   }, []);
 
-  // Fetch stock detail & chart data (Sessiz canlı güncelleme imkanı)
+  // Fetch stock detail & chart data (DOĞRUDAN REEL BIST VERİLERİ)
   const fetchStockData = async (tf: string, isQuiet: boolean = false) => {
-    if (!isQuiet && (!stockData || stockData.timeframe !== tf)) {
+    if (!isQuiet) {
       setLoading(true);
     }
     try {
@@ -258,7 +202,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     }
   };
 
-  // SVG Path Calculation for TradingView/Investing Birebir Uyumlu Sıkı Y-Eksen Ölçeklemesi
+  // SVG Path Calculation for Dynamic Tight Y-Axis Scaling (REEL BIST VERİLERİ)
   const svgPathData = useMemo(() => {
     if (!stockData || !stockData.chartPoints || stockData.chartPoints.length < 2) {
       return { linePath: "", areaPath: "", minPrice: 0, maxPrice: 0, coords: [] };
@@ -319,7 +263,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
       <aside className="w-64 shrink-0 min-h-screen bg-[#00008B] text-white p-5 space-y-6 flex flex-col justify-between shadow-2xl z-20">
         <div className="space-y-6">
           
-          {/* TIKLANAN HİSSENİN BAŞLIĞI, LOGOSU VE FİYATI (REEL BIST FİYAT - ASELS 363.25 ₺) */}
+          {/* TIKLANAN HİSSENİN BAŞLIĞI, LOGOSU VE FİYATI (REEL BIST FİYAT) */}
           <div className="flex items-center gap-3 border-b border-blue-800/80 pb-5">
             <div className="w-11 h-11 rounded-2xl bg-white text-[#00008B] flex items-center justify-center font-black text-xl shadow-md shrink-0">
               {symbol.slice(0, 1)}
@@ -328,7 +272,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               <div className="flex items-baseline justify-between gap-1.5">
                 <h1 className="text-xl font-black text-white tracking-tight truncate">{symbol}</h1>
                 <span className="text-xs font-black text-blue-100 whitespace-nowrap bg-blue-900/60 px-2 py-0.5 rounded-lg border border-blue-700/60">
-                  {stockData?.currentPrice ? stockData.currentPrice.toFixed(2) : "363.25"} ₺
+                  {stockData?.currentPrice ? stockData.currentPrice.toFixed(2) : "---"} ₺
                 </span>
               </div>
               <p className="text-[10px] font-bold text-blue-200/80 truncate max-w-[150px] mt-0.5">{fullName}</p>
@@ -439,7 +383,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 {symbol} Canlı Grafik
               </h2>
 
-              {/* 3. FOTOĞRAFTAKİ ZAMAN DİLİMLERİ MENÜSÜ & AÇILIR LİSTE (1dk - 1ay) */}
+              {/* 3. FOTOĞRAFTAKİ ZAMAN DİLİMLERİ MENÜSÜ & AÇILIR LİSTE (PÜRÜZSÜZ CANLI GEÇİŞ) */}
               <div className="relative">
                 <button
                   onClick={() => setIsTimeframeDropdownOpen(!isTimeframeDropdownOpen)}
@@ -450,7 +394,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isTimeframeDropdownOpen && "rotate-180")} />
                 </button>
 
-                {/* DROPDOWN MENU (3. Görsel Birebir Eşleşme) */}
+                {/* DROPDOWN MENU (Pürüzsüz Canlı BIST Veri Geçişi) */}
                 <AnimatePresence>
                   {isTimeframeDropdownOpen && (
                     <motion.div
@@ -466,7 +410,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                           onClick={() => {
                             setActiveTimeframe(tf.id);
                             setIsTimeframeDropdownOpen(false);
-                            setStockData((prev: any) => generateInstantStockData(symbol, tf.id));
+                            fetchStockData(tf.id, false);
                           }}
                           className={cn(
                             "w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-blue-50 hover:text-[#00008B]",
@@ -484,7 +428,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                           onClick={() => {
                             setActiveTimeframe(tf.id);
                             setIsTimeframeDropdownOpen(false);
-                            setStockData((prev: any) => generateInstantStockData(symbol, tf.id));
+                            fetchStockData(tf.id, false);
                           }}
                           className={cn(
                             "w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-blue-50 hover:text-[#00008B]",
@@ -502,7 +446,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                           onClick={() => {
                             setActiveTimeframe(tf.id);
                             setIsTimeframeDropdownOpen(false);
-                            setStockData((prev: any) => generateInstantStockData(symbol, tf.id));
+                            fetchStockData(tf.id, false);
                           }}
                           className={cn(
                             "w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-blue-50 hover:text-[#00008B]",
@@ -518,13 +462,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               </div>
             </div>
 
-            {/* MAVİ ÇİZGİLİ VE TRADINGVIEW 1. GÖRSEL İLE BİREBİR DALGALI SVG GRAFİK ALANI */}
+            {/* MAVİ ÇİZGİLİ VE Y-EKSENİ FİYAT YAZILARIYLA ASLA ÇAKIŞMAYAN SVG GRAFİK ALANI */}
             <div className="relative min-h-[320px] w-full pt-2 pb-2">
               {loading && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
                   <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
                     <RefreshCw className="w-5 h-5 animate-spin" />
-                    {currentTfLabel} Yükleniyor...
+                    {currentTfLabel} Canlı BIST Verileri Çekiliyor...
                   </div>
                 </div>
               )}
@@ -545,7 +489,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                         </linearGradient>
                       </defs>
 
-                      {/* Y-Axis Grid Lines & Dynamic Tight Price Labels (Yazılar Çizgiden İzole Edilmiş x=795 Sağ Marjda) */}
+                      {/* Y-Axis Grid Lines & Price Labels (Yazılar Çizgiden İzole Edilmiş x=795 Sağ Marjda) */}
                       {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
                         const y = 290 - ratio * 240;
                         const priceVal = svgPathData.minPrice + ratio * (svgPathData.maxPrice - svgPathData.minPrice);
@@ -584,7 +528,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                         );
                       })()}
 
-                      {/* Interactive Touch Areas */}
+                      {/* Interactive Touch Areas (DAKİKA DAKİKA HASSAS DOKUNMA ALANLARI) */}
                       {svgPathData.coords.map((pt: any, i: number) => (
                         <rect
                           key={i}
@@ -609,7 +553,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                       )}
                     </svg>
 
-                    {/* Hover Tooltip Box (GERÇEK TARİH/SAAT BİÇİMLENDİRMESİ İLE) */}
+                    {/* Hover Tooltip Box (DAKİKA DAKİKA REEL SAAT:DAKİKA BİÇİMLENDİRMESİ İLE) */}
                     {hoveredPoint && (
                       <div 
                         className="absolute bg-[#00008B] text-white text-xs px-3 py-1.5 rounded-xl shadow-2xl z-20 pointer-events-none -translate-x-1/2 -translate-y-12 transition-all border border-blue-400/40"
@@ -630,7 +574,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 </div>
               ) : (
                 <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">
-                  Grafik verisi hazırlanıyor...
+                  Canlı BIST verileri yükleniyor...
                 </div>
               )}
             </div>
@@ -658,7 +602,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   52H En Yüksek
                 </span>
                 <p className="text-base font-black text-[#00008B]">
-                  ₺{stockData?.high52 ? Number(stockData.high52).toFixed(2) : "433.09"}
+                  ₺{stockData?.high52 ? Number(stockData.high52).toFixed(2) : "---"}
                 </p>
               </div>
 
@@ -668,7 +612,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   52H En Düşük
                 </span>
                 <p className="text-base font-black text-[#00008B]">
-                  ₺{stockData?.low52 ? Number(stockData.low52).toFixed(2) : "320.00"}
+                  ₺{stockData?.low52 ? Number(stockData.low52).toFixed(2) : "---"}
                 </p>
               </div>
 
@@ -677,7 +621,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   <BarChart3 className="w-3.5 h-3.5 text-[#00008B]" />
                   İşlem Hacmi
                 </span>
-                <p className="text-base font-black text-[#00008B]">{stockData?.volume || "42.9M"}</p>
+                <p className="text-base font-black text-[#00008B]">{stockData?.volume || "---"}</p>
               </div>
 
               <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
@@ -686,11 +630,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   Önceki Kapanış
                 </span>
                 <p className="text-base font-black text-[#00008B]">
-                  ₺{stockData?.previousClose ? Number(stockData.previousClose).toFixed(2) : "380.50"}
+                  ₺{stockData?.previousClose ? Number(stockData.previousClose).toFixed(2) : "---"}
                 </p>
               </div>
 
-              {/* REEL DEĞİŞİM (1. Görsel ile Birebir Eşleşme -4.54%) */}
+              {/* REEL DEĞİŞİM */}
               <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <Zap className="w-3.5 h-3.5 text-blue-600" />
@@ -699,7 +643,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <p className={cn("text-base font-black", isPositive ? "text-emerald-600" : "text-rose-600")}>
                   {stockData?.priceChangePercent !== undefined 
                     ? `${stockData.priceChangePercent > 0 ? '+' : ''}${stockData.priceChangePercent}%` 
-                    : "-4.54%"}
+                    : "---"}
                 </p>
               </div>
 
@@ -709,7 +653,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   Günlük Ortalama
                 </span>
                 <p className="text-base font-black text-[#00008B]">
-                  ₺{stockData?.currentPrice ? (stockData.currentPrice * 0.992).toFixed(2) : "360.10"}
+                  ₺{stockData?.currentPrice ? (stockData.currentPrice * 0.992).toFixed(2) : "---"}
                 </p>
               </div>
             </div>
@@ -868,7 +812,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              exit={{ opacity: 0, scale: 0.95, y: 0 }}
               className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto"
             >
               <button 
