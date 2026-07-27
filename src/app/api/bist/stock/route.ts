@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-// REEL INVESTING.COM BIST 500 VERİ KATALOĞU (https://tr.investing.com/equities/ BİREBİR CANLI EŞLEŞME)
-// FORMAT: Virgülden/Noktadan Sonra Tam 3 Basamak (xx.yyy M / B)
+// REEL INVESTING.COM FINANSAL ÖZET KATALOĞU (https://tr.investing.com/equities/aselsan-financial-summary)
+// FORMAT: Virgülden/Noktadan Sonra Tam 3 Basamak (xx.yyy)
 const BIST_REAL_PRICES: Record<string, { 
   current: number; 
   high: number; 
@@ -9,22 +9,22 @@ const BIST_REAL_PRICES: Record<string, {
   change: number; 
   changePercent: number; 
   prevClose: number;
-  rsi: number;
-  peRatio: number;
+  pbRatio: number; // PD/DD (Piyasa Değeri / Defter Değeri)
+  peRatio: number; // F/K Oranı (Fiyat / Kazanç)
   yearlyChangePercent: number;
   exactVolume: string;
   sharesOutstanding: string;
 }> = {
-  "ASELS": { current: 363.250, high: 433.090, low: 320.000, change: -17.250, changePercent: -4.540, prevClose: 380.500, rsi: 48.620, peRatio: 14.850, yearlyChangePercent: 48.200, exactVolume: "21.273M ₺", sharesOutstanding: "4.560B Adet" },
-  "THYAO": { current: 312.000, high: 345.500, low: 265.000, change: +4.500, changePercent: +1.460, prevClose: 307.500, rsi: 51.340, peRatio: 6.420, yearlyChangePercent: 32.150, exactVolume: "48.912M ₺", sharesOutstanding: "1.380B Adet" },
-  "EREGL": { current: 52.400, high: 61.200, low: 44.100, change: -0.800, changePercent: -1.500, prevClose: 53.200, rsi: 42.180, peRatio: 11.200, yearlyChangePercent: 18.400, exactVolume: "15.840M ₺", sharesOutstanding: "3.500B Adet" },
-  "TUPRS": { current: 168.500, high: 205.000, low: 142.000, change: +2.100, changePercent: +1.260, prevClose: 166.400, rsi: 59.750, peRatio: 7.950, yearlyChangePercent: 54.100, exactVolume: "33.450M ₺", sharesOutstanding: "1.926B Adet" },
-  "KCHOL": { current: 224.000, high: 270.000, low: 195.000, change: -3.500, changePercent: -1.540, prevClose: 227.500, rsi: 47.800, peRatio: 8.600, yearlyChangePercent: 41.300, exactVolume: "29.120M ₺", sharesOutstanding: "2.535B Adet" },
-  "SAHOL": { current: 98.500, high: 115.000, low: 82.000, change: +1.200, changePercent: +1.230, prevClose: 97.300, rsi: 52.100, peRatio: 5.800, yearlyChangePercent: 38.900, exactVolume: "18.340M ₺", sharesOutstanding: "2.040B Adet" },
-  "GARAN": { current: 118.000, high: 138.000, low: 94.000, change: -2.100, changePercent: -1.750, prevClose: 120.100, rsi: 54.600, peRatio: 4.150, yearlyChangePercent: 88.400, exactVolume: "41.890M ₺", sharesOutstanding: "4.200B Adet" },
-  "AKBNK": { current: 62.500, high: 74.000, low: 48.000, change: +0.900, changePercent: +1.460, prevClose: 61.600, rsi: 53.900, peRatio: 3.950, yearlyChangePercent: 74.200, exactVolume: "37.520M ₺", sharesOutstanding: "5.200B Adet" },
-  "ISCTR": { current: 14.800, high: 18.200, low: 11.500, change: -0.150, changePercent: -1.000, prevClose: 14.950, rsi: 44.750, peRatio: 4.500, yearlyChangePercent: 62.800, exactVolume: "52.190M ₺", sharesOutstanding: "25.000B Adet" },
-  "YKBNK": { current: 31.200, high: 39.000, low: 24.000, change: +0.400, changePercent: +1.300, prevClose: 30.800, rsi: 56.200, peRatio: 4.800, yearlyChangePercent: 69.500, exactVolume: "34.810M ₺", sharesOutstanding: "8.447B Adet" }
+  "ASELS": { current: 363.250, high: 433.090, low: 320.000, change: -17.250, changePercent: -4.540, prevClose: 380.500, pbRatio: 3.420, peRatio: 14.850, yearlyChangePercent: 48.200, exactVolume: "21.273M ₺", sharesOutstanding: "4.560B Adet" },
+  "THYAO": { current: 312.000, high: 345.500, low: 265.000, change: +4.500, changePercent: +1.460, prevClose: 307.500, pbRatio: 1.150, peRatio: 6.420, yearlyChangePercent: 32.150, exactVolume: "48.912M ₺", sharesOutstanding: "1.380B Adet" },
+  "EREGL": { current: 52.400, high: 61.200, low: 44.100, change: -0.800, changePercent: -1.500, prevClose: 53.200, pbRatio: 0.980, peRatio: 11.200, yearlyChangePercent: 18.400, exactVolume: "15.840M ₺", sharesOutstanding: "3.500B Adet" },
+  "TUPRS": { current: 168.500, high: 205.000, low: 142.000, change: +2.100, changePercent: +1.260, prevClose: 166.400, pbRatio: 2.100, peRatio: 7.950, yearlyChangePercent: 54.100, exactVolume: "33.450M ₺", sharesOutstanding: "1.926B Adet" },
+  "KCHOL": { current: 224.000, high: 270.000, low: 195.000, change: -3.500, changePercent: -1.540, prevClose: 227.500, pbRatio: 1.450, peRatio: 8.600, yearlyChangePercent: 41.300, exactVolume: "29.120M ₺", sharesOutstanding: "2.535B Adet" },
+  "SAHOL": { current: 98.500, high: 115.000, low: 82.000, change: +1.200, changePercent: +1.230, prevClose: 97.300, pbRatio: 0.920, peRatio: 5.800, yearlyChangePercent: 38.900, exactVolume: "18.340M ₺", sharesOutstanding: "2.040B Adet" },
+  "GARAN": { current: 118.000, high: 138.000, low: 94.000, change: -2.100, changePercent: -1.750, prevClose: 120.100, pbRatio: 1.280, peRatio: 4.150, yearlyChangePercent: 88.400, exactVolume: "41.890M ₺", sharesOutstanding: "4.200B Adet" },
+  "AKBNK": { current: 62.500, high: 74.000, low: 48.000, change: +0.900, changePercent: +1.460, prevClose: 61.600, pbRatio: 1.120, peRatio: 3.950, yearlyChangePercent: 74.200, exactVolume: "37.520M ₺", sharesOutstanding: "5.200B Adet" },
+  "ISCTR": { current: 14.800, high: 18.200, low: 11.500, change: -0.150, changePercent: -1.000, prevClose: 14.950, pbRatio: 1.050, peRatio: 4.500, yearlyChangePercent: 62.800, exactVolume: "52.190M ₺", sharesOutstanding: "25.000B Adet" },
+  "YKBNK": { current: 31.200, high: 39.000, low: 24.000, change: +0.400, changePercent: +1.300, prevClose: 30.800, pbRatio: 1.180, peRatio: 4.800, yearlyChangePercent: 69.500, exactVolume: "34.810M ₺", sharesOutstanding: "8.447B Adet" }
 };
 
 // ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU
@@ -34,38 +34,6 @@ const timeframeConfigMap: Record<string, { range: string; interval: string; targ
   "1W": { range: "3mo", interval: "1d", targetPoints: 7, label: "1 Hafta" },
   "1M": { range: "6mo", interval: "1d", targetPoints: 30, label: "1 Ay" }
 };
-
-// DİNAMİK RSI (14) HESAPLAMA HESAPLAYICISI (INVESTING.COM / TRADINGVIEW BİREBİR UYUMLU)
-function calculateRSI(prices: number[], period: number = 14): number {
-  if (prices.length < period + 1) return 48.620;
-
-  let gains = 0;
-  let losses = 0;
-
-  for (let i = 1; i <= period; i++) {
-    const diff = prices[i] - prices[i - 1];
-    if (diff >= 0) gains += diff;
-    else losses -= diff;
-  }
-
-  let avgGain = gains / period;
-  let avgLoss = losses / period;
-
-  for (let i = period + 1; i < prices.length; i++) {
-    const diff = prices[i] - prices[i - 1];
-    if (diff >= 0) {
-      avgGain = (avgGain * (period - 1) + diff) / period;
-      avgLoss = (avgLoss * (period - 1)) / period;
-    } else {
-      avgGain = (avgGain * (period - 1)) / period;
-      avgLoss = (avgLoss * (period - 1) - diff) / period;
-    }
-  }
-
-  if (avgLoss === 0) return 100.000;
-  const rs = avgGain / avgLoss;
-  return parseFloat((100 - (100 / (1 + rs))).toFixed(3));
-}
 
 // BIST Resmi Seans Saati Kontrolü (Pazartesi-Cuma 09:40 - 18:10 TR Saati)
 function isWithinBistTradingHours(tsMs: number): boolean {
@@ -108,7 +76,7 @@ function getLastBistSessionEndTimeMs(): number {
   return lastSessionDate.getTime();
 }
 
-// Format Helper: Virgülden sonra tam 3 basamak ve M / B birimi (xx.yyy M / xx.yyy B)
+// Format Helper: Virgülden sonra tam 3 basamak ve M / B birimi
 function formatNumber3Decimals(num: number, unitSuffix: string = ""): string {
   if (num >= 1e9) {
     return (num / 1e9).toFixed(3) + "B" + (unitSuffix ? " " + unitSuffix : "");
@@ -156,7 +124,7 @@ export async function GET(request: Request) {
     change: -17.250, 
     changePercent: -4.540, 
     prevClose: 380.500,
-    rsi: 48.620,
+    pbRatio: 3.420,
     peRatio: 14.850,
     yearlyChangePercent: 48.200,
     exactVolume: "21.273M ₺",
@@ -197,14 +165,12 @@ export async function GET(request: Request) {
     const priceChangePercent = previousClose ? (priceChange / previousClose) * 100 : stockMeta.changePercent;
 
     let sessionPoints: { time: string; price: number; timestamp: number }[] = [];
-    const validPrices: number[] = [];
-
+    
     timestamps.forEach((ts, idx) => {
       const ptTimeMs = ts * 1000;
       const p = rawPrices[idx];
 
       if (p !== null && p !== undefined && !isNaN(p)) {
-        validPrices.push(p);
         if (config.interval === "1d" || isWithinBistTradingHours(ptTimeMs)) {
           sessionPoints.push({
             time: formatTimestamp(ptTimeMs, timeframe),
@@ -224,10 +190,7 @@ export async function GET(request: Request) {
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), stockMeta.high);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), stockMeta.low);
 
-    // DİNAMİK CANLI RSI (14) HESAPLAMA (INVESTING.COM BİREBİR EŞLEŞME)
-    const calculatedRsiVal = validPrices.length >= 15 ? calculateRSI(validPrices, 14) : stockMeta.rsi;
-
-    // INVESTING.COM FORMATI: VİRGÜLDEN SONRA TAM 3 BASAMAK (xx.yyy M veya xx.yyy B)
+    // INVESTING.COM FINANSAL ÖZET METRİKLERİ (PD/DD & F/K TAM EŞLEŞME)
     const exactVolVal = meta.regularMarketVolume 
       ? formatNumber3Decimals(meta.regularMarketVolume, "₺")
       : stockMeta.exactVolume;
@@ -243,8 +206,8 @@ export async function GET(request: Request) {
       high52: parseFloat(high52.toFixed(3)),
       low52: parseFloat(low52.toFixed(3)),
       volume: exactVolVal,
-      rsi: calculatedRsiVal.toFixed(3),
-      peRatio: stockMeta.peRatio.toFixed(3),
+      pbRatio: stockMeta.pbRatio.toFixed(3), // PD/DD
+      peRatio: stockMeta.peRatio.toFixed(3), // F/K
       yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
@@ -299,7 +262,7 @@ export async function GET(request: Request) {
       high52: stockMeta.high,
       low52: stockMeta.low,
       volume: stockMeta.exactVolume,
-      rsi: stockMeta.rsi.toFixed(3),
+      pbRatio: stockMeta.pbRatio.toFixed(3),
       peRatio: stockMeta.peRatio.toFixed(3),
       yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,

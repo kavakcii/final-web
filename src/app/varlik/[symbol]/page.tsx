@@ -598,10 +598,10 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                   <Activity className="w-3.5 h-3.5 text-blue-600" />
-                  RSI (Göreceli Güç)
+                  PD/DD (Piyasa/Defter)
                 </span>
                 <p className="text-base font-black text-[#00008B]">
-                  {stockData?.rsi !== undefined ? stockData.rsi : "62.45"}
+                  {stockData?.pbRatio !== undefined ? stockData.pbRatio : "3.420"}
                 </p>
               </div>
 
