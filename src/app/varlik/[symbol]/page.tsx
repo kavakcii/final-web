@@ -14,7 +14,6 @@ import {
   Zap, 
   ShieldCheck, 
   ChevronRight,
-  ChevronDown,
   Newspaper,
   X,
   FileText,
@@ -75,20 +74,12 @@ const STOCK_NAMES: Record<string, string> = {
     "TKFEN": "Tekfen Holding A.Ş."
 };
 
-// 3. FOTOĞRAFTAKİ ZAMAN DİLİMLERİ (1dk, 5dk, 15dk, 30dk, 45dk, 1st, 2st, 4st, 5st, 1gün, 1hafta, 1ay)
+// 4 TEMEL ZAMAN DİLİMLERİ (1 Saat, 1 Gün, 1 Hafta, 1 Ay)
 const TIMEFRAMES = [
-  { id: "1MIN", label: "1 dakika" },
-  { id: "5MIN", label: "5 dakika" },
-  { id: "15MIN", label: "15 dakika" },
-  { id: "30MIN", label: "30 dakika" },
-  { id: "45MIN", label: "45 dakika" },
-  { id: "1H", label: "1 saat" },
-  { id: "2H", label: "2 saat" },
-  { id: "4H", label: "4 saat" },
-  { id: "5H", label: "5 saat" },
-  { id: "1D", label: "1 gün" },
-  { id: "1W", label: "1 hafta" },
-  { id: "1M", label: "1 ay" }
+  { id: "1H", label: "1 Saat" },
+  { id: "1D", label: "1 Gün" },
+  { id: "1W", label: "1 Hafta" },
+  { id: "1M", label: "1 Ay" }
 ];
 
 export default function StockDetailPage({ params }: { params: Promise<{ symbol: string }> }) {
@@ -98,9 +89,8 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
   const [activeTimeframe, setActiveTimeframe] = useState("1D");
   const [activeNavTab, setActiveNavTab] = useState("genel");
-  const [isTimeframeDropdownOpen, setIsTimeframeDropdownOpen] = useState(false);
   
-  // Reel BIST Veri Durumu (Saçma geçici mock veriler tamamen kaldırıldı)
+  // Reel BIST Veri Durumu (Pürüzsüz Canlı Yükleme)
   const [stockData, setStockData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
@@ -202,7 +192,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     }
   };
 
-  // SVG Path Calculation for Dynamic Tight Y-Axis Scaling (REEL BIST VERİLERİ)
+  // SVG Path Calculation for Dynamic Tight Y-Axis Scaling & Dikenli/Keskin Tepe Dip Hareketleri
   const svgPathData = useMemo(() => {
     if (!stockData || !stockData.chartPoints || stockData.chartPoints.length < 2) {
       return { linePath: "", areaPath: "", minPrice: 0, maxPrice: 0, coords: [] };
@@ -218,7 +208,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     let maxPrice = rawMax;
     const diff = maxPrice - minPrice;
     if (diff > 0) {
-      minPrice = Math.max(0, rawMin - diff * 0.03); // %3 sıkı alt marj
+      minPrice = Math.max(0, rawMin - diff * 0.03); // %3 sıkı alt marj (Dikenli sivri görünüm)
       maxPrice = rawMax + diff * 0.03; // %3 sıkı üst marj
     } else {
       minPrice = rawMin * 0.95;
@@ -252,7 +242,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   }, [stockData]);
 
   const isPositive = (stockData?.priceChange || 0) >= 0;
-  const currentTfLabel = TIMEFRAMES.find(tf => tf.id === activeTimeframe)?.label || "1 gün";
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] w-full overflow-x-hidden relative">
@@ -377,88 +366,31 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
           {/* SOL TARAFTAKİ GRAFİK WİDGET'I (%60 / col-span-7) */}
           <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 pb-8 shadow-xl space-y-6 flex flex-col justify-between overflow-hidden">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 relative">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[#00008B]" />
                 {symbol} Canlı Grafik
               </h2>
 
-              {/* 3. FOTOĞRAFTAKİ ZAMAN DİLİMLERİ MENÜSÜ & AÇILIR LİSTE (PÜRÜZSÜZ CANLI GEÇİŞ) */}
-              <div className="relative">
-                <button
-                  onClick={() => setIsTimeframeDropdownOpen(!isTimeframeDropdownOpen)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black border border-slate-300 flex items-center gap-1.5 transition-all shadow-sm"
-                >
-                  <Clock className="w-3.5 h-3.5 text-[#00008B]" />
-                  {currentTfLabel}
-                  <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", isTimeframeDropdownOpen && "rotate-180")} />
-                </button>
-
-                {/* DROPDOWN MENU (Pürüzsüz Canlı BIST Veri Geçişi) */}
-                <AnimatePresence>
-                  {isTimeframeDropdownOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 5 }}
-                      className="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-2xl shadow-2xl z-30 py-2 divide-y divide-slate-100 max-h-72 overflow-y-auto"
-                    >
-                      <div className="px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">Dakikalık</div>
-                      {TIMEFRAMES.filter(tf => tf.id.endsWith("MIN")).map((tf) => (
-                        <button
-                          key={tf.id}
-                          onClick={() => {
-                            setActiveTimeframe(tf.id);
-                            setIsTimeframeDropdownOpen(false);
-                            fetchStockData(tf.id, false);
-                          }}
-                          className={cn(
-                            "w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-blue-50 hover:text-[#00008B]",
-                            activeTimeframe === tf.id ? "text-[#00008B] bg-blue-50 font-black" : "text-slate-700"
-                          )}
-                        >
-                          {tf.label}
-                        </button>
-                      ))}
-
-                      <div className="px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider pt-1">Saatlik</div>
-                      {TIMEFRAMES.filter(tf => tf.id.endsWith("H")).map((tf) => (
-                        <button
-                          key={tf.id}
-                          onClick={() => {
-                            setActiveTimeframe(tf.id);
-                            setIsTimeframeDropdownOpen(false);
-                            fetchStockData(tf.id, false);
-                          }}
-                          className={cn(
-                            "w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-blue-50 hover:text-[#00008B]",
-                            activeTimeframe === tf.id ? "text-[#00008B] bg-blue-50 font-black" : "text-slate-700"
-                          )}
-                        >
-                          {tf.label}
-                        </button>
-                      ))}
-
-                      <div className="px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider pt-1">Günlük & Aylık</div>
-                      {TIMEFRAMES.filter(tf => tf.id === "1D" || tf.id === "1W" || tf.id === "1M").map((tf) => (
-                        <button
-                          key={tf.id}
-                          onClick={() => {
-                            setActiveTimeframe(tf.id);
-                            setIsTimeframeDropdownOpen(false);
-                            fetchStockData(tf.id, false);
-                          }}
-                          className={cn(
-                            "w-full text-left px-4 py-2 text-xs font-bold transition-colors hover:bg-blue-50 hover:text-[#00008B]",
-                            activeTimeframe === tf.id ? "text-[#00008B] bg-blue-50 font-black" : "text-slate-700"
-                          )}
-                        >
-                          {tf.label}
-                        </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              {/* 4 TEMEL ZAMAN DİLİMİ BUTONLARI (1 Saat, 1 Gün, 1 Hafta, 1 Ay) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                {TIMEFRAMES.map((tf) => (
+                  <button
+                    key={tf.id}
+                    onClick={() => {
+                      setActiveTimeframe(tf.id);
+                      fetchStockData(tf.id, false);
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
+                      activeTimeframe === tf.id
+                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-[1.02]"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    {tf.label}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -468,7 +400,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
                   <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
                     <RefreshCw className="w-5 h-5 animate-spin" />
-                    {currentTfLabel} Canlı BIST Verileri Çekiliyor...
+                    Canlı BIST Verileri Çekiliyor...
                   </div>
                 </div>
               )}
@@ -515,18 +447,6 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                         strokeLinecap="round" 
                         strokeLinejoin="round" 
                       />
-
-                      {/* Live Pulse Circle at the Current/Latest Point */}
-                      {(() => {
-                        const lastCoord = svgPathData.coords[svgPathData.coords.length - 1];
-                        if (!lastCoord) return null;
-                        return (
-                          <g>
-                            <circle cx={lastCoord.x} cy={lastCoord.y} r="8" className="fill-[#00008B] opacity-40 animate-ping" />
-                            <circle cx={lastCoord.x} cy={lastCoord.y} r="5" className="fill-[#00008B] stroke-white stroke-2" />
-                          </g>
-                        );
-                      })()}
 
                       {/* Interactive Touch Areas (DAKİKA DAKİKA HASSAS DOKUNMA ALANLARI) */}
                       {svgPathData.coords.map((pt: any, i: number) => (
@@ -594,7 +514,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               </span>
             </div>
 
-            {/* İSTATİSTİK METRİK KARTLARI (REEL FİYATLAR & YÜZDELİK DEĞİŞİM - ASELS = 363.25 ₺ / 433.09 ₺ / -4.54%) */}
+            {/* İSTATİSTİK METRİK KARTLARI (REEL FİYATLAR & YÜZDELİK DEĞİŞİM) */}
             <div className="grid grid-cols-2 gap-3.5 flex-1">
               <div className="bg-slate-50/80 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm flex flex-col justify-center">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">

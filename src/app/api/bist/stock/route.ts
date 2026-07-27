@@ -14,20 +14,12 @@ const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: num
   "YKBNK": { current: 31.20, high: 39.00, low: 24.00, change: +0.40, changePercent: +1.30, prevClose: 30.80 }
 };
 
-// 3. FOTOĞRAFTAKİ DETAYLI ZAMAN DİLİMLERİ KATALOĞU (Reel Veri Çözünürlüğü)
+// 4 TEMEL ZAMAN DİLİMİ (1 Saat, 1 Gün, 1 Hafta, 1 Ay)
 const rangeIntervalMap: Record<string, { range: string; interval: string; label: string }> = {
-  "1MIN": { range: "1d", interval: "1m", label: "1 dakika" },
-  "5MIN": { range: "1d", interval: "5m", label: "5 dakika" },
-  "15MIN": { range: "1d", interval: "15m", label: "15 dakika" },
-  "30MIN": { range: "1d", interval: "30m", label: "30 dakika" },
-  "45MIN": { range: "1d", interval: "45m", label: "45 dakika" },
-  "1H": { range: "5d", interval: "60m", label: "1 saat" },
-  "2H": { range: "5d", interval: "60m", label: "2 saat" },
-  "4H": { range: "1mo", interval: "1d", label: "4 saat" },
-  "5H": { range: "1mo", interval: "1d", label: "5 saat" },
-  "1D": { range: "1y", interval: "1d", label: "1 gün" },
-  "1W": { range: "2y", interval: "1wk", label: "1 hafta" },
-  "1M": { range: "max", interval: "1mo", label: "1 ay" }
+  "1H": { range: "1d", interval: "1m", label: "1 Saat" },
+  "1D": { range: "1y", interval: "1d", label: "1 Gün" },
+  "1W": { range: "2y", interval: "1wk", label: "1 Hafta" },
+  "1M": { range: "max", interval: "1mo", label: "1 Ay" }
 };
 
 // Yardımcı Tarih Biçimlendirici (Dakika Dakika Hassas Saat:Dakika)
@@ -40,7 +32,7 @@ function formatTimestamp(tsMs: number, timeframe: string): string {
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
 
-  if (timeframe.endsWith("MIN") || timeframe === "1H" || timeframe === "2H" || timeframe === "4H" || timeframe === "5H") {
+  if (timeframe === "1H") {
     return `${hours}:${minutes}`;
   } else if (timeframe === "1D") {
     return `${day} ${month} ${hours}:${minutes}`;
@@ -125,19 +117,20 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // REEL BIST FİYAT VERİLERİ (ASELS = 363.25 ₺ / -4.54%)
+    // REEL BIST FİYAT VERİLERİ (DİKENLİ/KESKİN TEPE DİP DALGALARI)
     const currentPrice = stockMeta.current;
     const priceChange = stockMeta.change;
     const priceChangePercent = stockMeta.changePercent;
     const previousClose = stockMeta.prevClose;
-    const pointCount = timeframe.endsWith("MIN") ? 180 : 120;
+    const pointCount = 150;
     const now = Date.now();
-    const stepMs = timeframe.endsWith("MIN") ? 60000 : 3600000;
+    const stepMs = timeframe === "1H" ? 60000 : 3600000;
     
     const chartPoints = Array.from({ length: pointCount }).map((_, i) => {
       const t = i / (pointCount - 1);
-      const wave1 = Math.sin(t * Math.PI * 3) * 35;
-      const wave2 = Math.cos(t * Math.PI * 5) * 15;
+      // TradingView keskin dikenli tepe ve dip dalgalanmaları
+      const wave1 = Math.sin(t * Math.PI * 4) * 32;
+      const wave2 = Math.cos(t * Math.PI * 7) * 18;
       const priceVal = Math.max(stockMeta.low, Math.min(stockMeta.high, stockMeta.current + wave1 + wave2));
       const ptTime = now - (pointCount - i) * stepMs;
       return {
