@@ -10,6 +10,29 @@ const rangeIntervalMap: Record<string, { range: string; interval: string; label:
   "ALL": { range: "max", interval: "1mo", label: "TÜMÜ" }
 };
 
+// Yardımcı Tarih Biçimlendirici (Türkçe Aylarla)
+function formatTimestamp(tsMs: number, timeframe: string): string {
+  const date = new Date(tsMs);
+  const day = date.getDate().toString().padStart(2, "0");
+  const monthNames = ["Oca", "Şub", "Mar", "Nıs", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+  const month = monthNames[date.getMonth()];
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  if (timeframe === "1D") {
+    return `${hours}:${minutes}`;
+  } else if (timeframe === "1W") {
+    return `${day} ${month} ${hours}:${minutes}`;
+  } else if (timeframe === "1M" || timeframe === "3M") {
+    return `${day} ${month}`;
+  } else if (timeframe === "6M" || timeframe === "1Y") {
+    return `${day} ${month} ${year}`;
+  } else {
+    return `${month} ${year}`;
+  }
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const rawSymbol = searchParams.get("symbol") || "ASELS";
@@ -55,21 +78,10 @@ export async function GET(request: Request) {
     timestamps.forEach((ts, idx) => {
       const p = rawPrices[idx];
       if (p !== null && p !== undefined && !isNaN(p)) {
-        const dateObj = new Date(ts * 1000);
-        let timeStr = "";
-
-        if (config.range === "1d") {
-          timeStr = dateObj.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
-        } else if (config.range === "5d") {
-          timeStr = dateObj.toLocaleDateString("tr-TR", { weekday: "short", hour: "2-digit", minute: "2-digit" });
-        } else {
-          timeStr = dateObj.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: config.range === "max" || config.range === "1y" ? "2-digit" : undefined });
-        }
-
         chartPoints.push({
-          time: timeStr,
+          time: formatTimestamp(ts * 1000, timeframe),
           price: parseFloat(p.toFixed(2)),
-          timestamp: ts
+          timestamp: ts * 1000
         });
       }
     });
@@ -79,20 +91,24 @@ export async function GET(request: Request) {
     if (chartPoints.length < 5 || uniquePrices.size <= 2) {
       const pointCount = timeframe === "1D" ? 30 : timeframe === "1W" ? 40 : 50;
       const base = currentPrice > 0 ? currentPrice : 128.5;
+      const now = Date.now();
+      const stepMs = timeframe === "1D" ? 300000 : timeframe === "1W" ? 3600000 : 86400000;
+
       chartPoints = Array.from({ length: pointCount }).map((_, i) => {
         const factor = Math.sin(i / 4) * 0.025 + Math.cos(i / 2) * 0.015 + ((i / pointCount) * 0.02);
         const p = base * (0.98 + factor);
+        const ptTime = now - (pointCount - i) * stepMs;
         return {
-          time: timeframe === "1D" ? `${10 + Math.floor(i / 6)}:${(i % 6) * 10 || '00'}` : `Nokta ${i + 1}`,
+          time: formatTimestamp(ptTime, timeframe),
           price: parseFloat(p.toFixed(2)),
-          timestamp: Date.now() - (pointCount - i) * 300000
+          timestamp: ptTime
         };
       });
     }
 
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), currentPrice * 1.2);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), currentPrice * 0.8);
-    const volume = meta.regularMarketVolume ? `${(meta.regularMarketVolume / 1e6).toFixed(1)}M` : "1.4M";
+    const volume = meta.regularMarketVolume ? `${(meta.regularMarketVolume / 1e6).toFixed(1)}M` : "14.2M";
 
     return NextResponse.json({
       success: true,
@@ -110,18 +126,21 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // Synthetic fallback generator for seamless UI experience if external API rate-limited
+    // Synthetic fallback generator for seamless UI experience
     const basePrice = Math.abs((cleanSymbol.charCodeAt(0) * 17 + (cleanSymbol.charCodeAt(1) || 65) * 5) % 450) + 12.5;
     const changeVal = parseFloat((((cleanSymbol.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
     const pointCount = timeframe === "1D" ? 30 : timeframe === "1W" ? 40 : 50;
+    const now = Date.now();
+    const stepMs = timeframe === "1D" ? 300000 : timeframe === "1W" ? 3600000 : 86400000;
     
     const chartPoints = Array.from({ length: pointCount }).map((_, i) => {
       const factor = Math.sin(i / 4) * 0.03 + Math.cos(i / 3) * 0.02 + ((i / pointCount) * 0.015);
       const priceVal = basePrice * (0.97 + factor);
+      const ptTime = now - (pointCount - i) * stepMs;
       return {
-        time: timeframe === "1D" ? `${10 + Math.floor(i / 6)}:${(i % 6) * 10 || '00'}` : `Saat ${10 + Math.floor(i/4)}:00`,
+        time: formatTimestamp(ptTime, timeframe),
         price: parseFloat(priceVal.toFixed(2)),
-        timestamp: Date.now() - (pointCount - i) * 300000
+        timestamp: ptTime
       };
     });
 
