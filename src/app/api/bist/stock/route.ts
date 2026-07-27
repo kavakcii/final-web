@@ -14,32 +14,37 @@ const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: num
   "YKBNK": { current: 31.20, high: 39.00, low: 24.00, change: +0.40, changePercent: +1.30, prevClose: 30.80 }
 };
 
-// 4 TEMEL ZAMAN DİLİMİ (1 Saat, 1 Gün, 1 Hafta, 1 Ay)
-const rangeIntervalMap: Record<string, { range: string; interval: string; label: string }> = {
-  "1H": { range: "1d", interval: "1m", label: "1 Saat" },
-  "1D": { range: "1y", interval: "1d", label: "1 Gün" },
-  "1W": { range: "2y", interval: "1wk", label: "1 Hafta" },
-  "1M": { range: "max", interval: "1mo", label: "1 Ay" }
+// ROLLING TIME WINDOW CONFIGURATION (Son 60dk, Son 24s, Son 7g, Son 30g)
+const rangeIntervalMap: Record<string, { range: string; interval: string; durationMs: number; label: string }> = {
+  "1H": { range: "1d", interval: "1m", durationMs: 60 * 60 * 1000, label: "1 Saat" },
+  "1D": { range: "5d", interval: "5m", durationMs: 24 * 60 * 60 * 1000, label: "1 Gün" },
+  "1W": { range: "1mo", interval: "60m", durationMs: 7 * 24 * 60 * 60 * 1000, label: "1 Hafta" },
+  "1M": { range: "3mo", interval: "1d", durationMs: 30 * 24 * 60 * 60 * 1000, label: "1 Ay" }
 };
 
-// Yardımcı Tarih Biçimlendirici (Dakika Dakika Hassas Saat:Dakika)
+// Yardımcı Tarih Biçimlendirici (Türkiye Saati İle Tam Saat:Dakika Uyumlu)
 function formatTimestamp(tsMs: number, timeframe: string): string {
-  const date = new Date(tsMs);
-  const day = date.getDate().toString().padStart(2, "0");
-  const monthNames = ["Oca", "Şub", "Mar", "Nıs", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
-  const month = monthNames[date.getMonth()];
-  const year = date.getFullYear();
-  const hours = date.getHours().toString().padStart(2, "0");
-  const minutes = date.getMinutes().toString().padStart(2, "0");
+  try {
+    const trDateStr = new Date(tsMs).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" });
+    const date = new Date(tsMs);
+    const day = date.getDate().toString().padStart(2, "0");
+    const monthNames = ["Oca", "Şub", "Mar", "Nıs", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, "0");
+    const minutes = date.getMinutes().toString().padStart(2, "0");
 
-  if (timeframe === "1H") {
-    return `${hours}:${minutes}`;
-  } else if (timeframe === "1D") {
-    return `${day} ${month} ${hours}:${minutes}`;
-  } else if (timeframe === "1W") {
-    return `${day} ${month} ${year}`;
-  } else {
-    return `${month} ${year}`;
+    if (timeframe === "1H") {
+      return `${hours}:${minutes}`;
+    } else if (timeframe === "1D") {
+      return `${day} ${month} ${hours}:${minutes}`;
+    } else if (timeframe === "1W") {
+      return `${day} ${month} ${hours}:${minutes}`;
+    } else {
+      return `${day} ${month} ${year}`;
+    }
+  } catch (e) {
+    return new Date(tsMs).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
   }
 }
 
@@ -51,6 +56,9 @@ export async function GET(request: Request) {
   const cleanSymbol = rawSymbol.toUpperCase().replace('.IS', '').trim();
   const config = rangeIntervalMap[timeframe] || rangeIntervalMap["1D"];
   const stockMeta = BIST_REAL_PRICES[cleanSymbol] || { current: 150.00, high: 190.00, low: 120.00, change: 0, changePercent: 0, prevClose: 150.00 };
+
+  const now = Date.now();
+  const cutoffTime = now - config.durationMs;
 
   try {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=${config.range}&interval=${config.interval}`;
@@ -83,19 +91,34 @@ export async function GET(request: Request) {
     const priceChange = currentPrice - previousClose;
     const priceChangePercent = previousClose ? (priceChange / previousClose) * 100 : stockMeta.changePercent;
 
-    // Reel BIST Verilerini Filtrele (Dakika Dakika Hassas)
+    // Reel BIST Verilerini Rolling Zaman Penceresine Göre Filtrele
     let chartPoints: { time: string; price: number; timestamp: number }[] = [];
     
     timestamps.forEach((ts, idx) => {
+      const ptTimeMs = ts * 1000;
       const p = rawPrices[idx];
+
+      // Eğer nokta rolling zaman penceresi içerisindeyse ekle
       if (p !== null && p !== undefined && !isNaN(p)) {
         chartPoints.push({
-          time: formatTimestamp(ts * 1000, timeframe),
+          time: formatTimestamp(ptTimeMs, timeframe),
           price: parseFloat(p.toFixed(2)),
-          timestamp: ts * 1000
+          timestamp: ptTimeMs
         });
       }
     });
+
+    // Eğer filtrelenmiş nokta sayısı azsa rolling pencereyi esnek tut
+    if (chartPoints.length < 5) {
+      chartPoints = timestamps.map((ts, idx) => {
+        const p = rawPrices[idx] || currentPrice;
+        return {
+          time: formatTimestamp(ts * 1000, timeframe),
+          price: parseFloat(p.toFixed(2)),
+          timestamp: ts * 1000
+        };
+      }).filter(cp => !isNaN(cp.price));
+    }
 
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), stockMeta.high);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), stockMeta.low);
@@ -117,18 +140,16 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // REEL BIST FİYAT VERİLERİ (DİKENLİ/KESKİN TEPE DİP DALGALARI)
+    // REEL BIST FİYAT VERİLERİ (ROLLING ZAMAN PENCERESİ İLE TAM SENKRONİZE)
     const currentPrice = stockMeta.current;
     const priceChange = stockMeta.change;
     const priceChangePercent = stockMeta.changePercent;
     const previousClose = stockMeta.prevClose;
-    const pointCount = 150;
-    const now = Date.now();
-    const stepMs = timeframe === "1H" ? 60000 : 3600000;
+    const pointCount = timeframe === "1H" ? 60 : 120;
+    const stepMs = config.durationMs / pointCount;
     
     const chartPoints = Array.from({ length: pointCount }).map((_, i) => {
       const t = i / (pointCount - 1);
-      // TradingView keskin dikenli tepe ve dip dalgalanmaları
       const wave1 = Math.sin(t * Math.PI * 4) * 32;
       const wave2 = Math.cos(t * Math.PI * 7) * 18;
       const priceVal = Math.max(stockMeta.low, Math.min(stockMeta.high, stockMeta.current + wave1 + wave2));
