@@ -83,28 +83,28 @@ const TIMEFRAMES = [
   { id: "1M", label: "1 Ay" }
 ];
 
-// FİYAT ANALİZİ VE TREND BANDI 20 FARKLI METİN ŞABLONU KATALOĞU
-const ANALYSIS_TEMPLATES = [
-  "Pozitif bir yükseliş kanalında hareketini sürdüren {symbol}, {cost} ₺ alış fiyatınızın %{profit}% üstüne çıkarak portföy toplam değerinizi artırıyor. Varlık {timeframe} zaman dilimindeki tepe noktalarına yakın durarak güçlü ve kârlı konumunu korumaya devam etmektedir.",
-  "{symbol} hissesi {timeframe} zaman periyodunda {high} ₺ direnç seviyesini zorlamakta olup, mevcut {current} ₺ fiyatı ile maliyetinizin %{profit}% üzerinde pozitif ivmeyle işlem görmektedir.",
-  "Mevcut {current} ₺ seviyesiyle {symbol}, {low} ₺ destek seviyesinden aldığı tepki alımlarıyla yukarı yönlü trendini koruyor. Maliyetinize göre %{profit}% kâr bölgesinde seyretmektedir.",
-  "{symbol} için {timeframe} periyodunda işlem hacmi destekli yukarı yönlü hareket devam ediyor. Varlık, 52 haftalık yüksek seviyesi olan {high} ₺ bandına doğru momentum kazanmaktadır.",
-  "Portföyünüzdeki {symbol} varlığı, {cost} ₺ maliyetinizin %{profit}% üzerinde seyrederek sektör genelinde dirençli bir performans sergiliyor.",
-  "{symbol} varlığı {timeframe} periyodundaki {low} ₺ - {high} ₺ bant aralığında konsolidasyon sürecini tamamlamakta olup, canlı {current} ₺ fiyatıyla pozitif ivmesini korumaktadır.",
-  "Ortalama maliyetinizin %{profit}% üzerinde işlem gören {symbol}, {timeframe} zaman dilimindeki en yüksek seviye olan {high} ₺ fiyat hedefine ivmeli adımlarla ilerliyor.",
-  "{symbol} hisse senedi {current} ₺ işlem fiyatı ile alıcıların ağırlıkta olduğu bir bantta hareket etmekte, maliyetinize kıyasla güçlü kârlılığını sürdürmektedir.",
-  "{symbol} için {timeframe} zaman periyodunda indikatörler pozitif uyumsuzluk göstererek {high} ₺ direncine doğru kademeli bir yükseliş kanalına işaret etmektedir.",
-  "{symbol} fiyatı {current} ₺ seviyesine ulaşarak {cost} ₺ ortalama maliyetinizin %{profit}% üzerine çıkmış ve yatırımlarınızda kârlı bir grafik çizmiştir.",
-  "{symbol} varlığı {timeframe} periyodunda {low} ₺ taban seviyesini başarıyla test etmiş ve canlı {current} ₺ fiyatı ile tekrar yükseliş trendine girmiştir.",
-  "Yatırımcısına {timeframe} periyodunda istikrarlı getiri sağlayan {symbol}, {cost} ₺ seviyesindeki maliyetinizin %{profit}% yukarısında kârlı seyrini sürdürüyor.",
-  "{symbol} hissesinde {timeframe} zaman aralığında ivmeli hacim girişi gözlenmekte olup, canlı fiyat {high} ₺ zirvesine yakın seyretmektedir.",
-  "Portföyünüzün lokomotif varlıklarından {symbol}, {current} ₺ güncel fiyatıyla maliyetinizin %{profit}% üzerinde kârlı alanını korumaktadır.",
-  "{symbol} hisse senedinde {timeframe} periyodunda oluşan teknik formasyon pozitif momentumu desteklemekte, {high} ₺ test edilmektedir.",
-  "{symbol} canlı piyasada {current} ₺ seviyesinden işlem görmekte olup, maliyetinizin %{profit}% üzerinde yatırım değerinizi yükseltmektedir.",
-  "{timeframe} periyodundaki {low} ₺ - {high} ₺ fiyat aralığında dengelenen {symbol}, maliyet tabanınızın hayli üzerinde güvenli bölgededir.",
-  "{symbol} için teknik göstergeler {current} ₺ seviyesinde güçlü alım iştahına işaret etmekte, kârlılık oranınız %{profit}% seviyesinde bulunmaktadır.",
-  "Maliyetinizin %{profit}% üzerinde performans gösteren {symbol}, {timeframe} zaman aralığının en yüksek seviyesi olan {high} ₺ hedefine odaklanmıştır.",
-  "{symbol} hissesi {current} ₺ fiyatı ile {timeframe} trend bandının üst kanalında tutunarak kârlı ve stabil konumunu muhafaza etmektedir."
+// FİYAT ANALİZİ VE TREND BANDI 20 FARKLI HİSSE ÖZEL TÜRKÇE ANALİZ METİN ŞABLONU (MALİYET BİLGİSİ İÇERMEYEN)
+const STOCK_ANALYSIS_TEMPLATES = [
+  "{symbol} hisse senedi {timeframe} zaman diliminde {low} ₺ dip seviyesinden aldığı alımlarla ivmelenerek {current} ₺ canlı fiyat seviyesinden işlem görüyor. Teknik göstergeler varlığın {high} ₺ tepe hedecine doğru pozitif trendini koruduğunu gösteriyor.",
+  "{symbol} piyasada alıcıların yoğunlaştığı bir kanalda ilerleyerek {current} ₺ seviyesine ulaştı. {timeframe} periyodunda {low} ₺ destek noktasından kuvvet alan hisse, üst direnç bölgesi olan {high} ₺ bandını test etmeye hazırlanıyor.",
+  "{timeframe} periyodunda {symbol} grafiği incelendiğinde, {low} ₺ - {high} ₺ fiyat aralığında güçlü bir konsolidasyon sürecinin tamamlandığı ve canlı fiyatın {current} ₺ ile yukarı yönlü kırılım gerçekleştirdiği görülmektedir.",
+  "İşlem hacmi destekli yükseliş seyrini sürdüren {symbol}, {current} ₺ güncel seviyesiyle {timeframe} zaman aralığındaki en yüksek seviye olan {high} ₺ tavan çizgisine yakın tutunmaya devam ediyor.",
+  "{symbol} hisse senedinde {timeframe} süresince oluşan hareket bantları {low} ₺ taban seviyesinin sağlam bir destek olduğunu teyit ediyor. Anlık {current} ₺ fiyatı pozitif momentumun sürdüğüne işaret etmektedir.",
+  "{symbol} için teknik indikatörler ve hareketli ortalamalar {timeframe} periyodunda pozitif sinyal üretmektedir. Varlık {low} ₺ dip bölgesinden uzaklaşarak {current} ₺ canlı fiyatıyla üst kanala yerleşmiştir.",
+  "{timeframe} zaman aralığında {symbol} hisse senedi {high} ₺ direnç sınırına ivmeli bir şekilde yaklaşmaktadır. Anlık {current} ₺ seviyesi, yatırımcı iştahının korunduğunu göstermektedir.",
+  "{symbol} varlığı {low} ₺ - {high} ₺ fiyat bandının üst yarısında istikrarlı bir duruş sergiliyor. {current} ₺ canlı işlem fiyatı varlığın sektör genelinde güçlü kaldığını kanıtlıyor.",
+  "{symbol} hissesinde {timeframe} periyodunda kademeli alım dalgası gözlemleniyor. {low} ₺ seviyesinden başlayan yükseliş trendi {current} ₺ fiyatıyla yeni zirveleri hedeflemektedir.",
+  "{timeframe} boyunca oluşan fiyat grafiklerinde {symbol}, {low} ₺ dip marjının oldukça üzerinde kalarak {current} ₺ seviyesinde güvenli alanda hareketini sürdürüyor.",
+  "{symbol} piyasa verilerine göre {current} ₺ canlı fiyatıyla {high} ₺ periyot tepe noktasına yaklaşmaktadır. Teknik görünüm yükseliş trendinin devamını destekliyor.",
+  "{timeframe} zaman diliminde {symbol} hisse senedi {low} ₺ seviyesini başarılı bir testten geçirerek {current} ₺ seviyesine sıçrama yaptı ve alım ivmesini artırdı.",
+  "{symbol} için momentum indikatörleri {timeframe} periyodunda {high} ₺ direncine doğru istikrarlı bir kanal çizildiğini ve {current} ₺ seviyesindeki dengelenmeyi doğruluyor.",
+  "{symbol} hisse senedi {current} ₺ fiyatıyla {timeframe} fiyat bandının üst sınırlarını zorluyor. Varlığın {high} ₺ tepe hedefine yakın seyretmesi pozitif teknik yapıyı güçlendiriyor.",
+  "{timeframe} grafik periyodunda {symbol}, {low} ₺ ile {high} ₺ arasında sağlıklı bir hacim dağılımı sergileyerek {current} ₺ canlı fiyat seviyesini koruyor.",
+  "{symbol} varlığında {timeframe} periyodunda gözlenen alım baskısı canlı fiyatı {current} ₺ seviyesine yükseltmiş ve {high} ₺ direnç hedefini güncel kılmıştır.",
+  "{symbol} piyasada {low} ₺ taban seviyesinden aldığı güçle {current} ₺ fiyatına ulaşarak {timeframe} trend kanalının üst bölgesinde pozisyonlanmıştır.",
+  "{timeframe} zaman aralığında {symbol} hisse senedi {high} ₺ seviyesindeki tarihsel/periyodik tepe noktasına doğru kararlı adımlarla ilerlemekte ve {current} ₺ seviyesinde işlem görmektedir.",
+  "{symbol} teknik analizi {low} ₺ dip noktasından ivmelenen fiyatın {current} ₺ seviyesinde sağlamlaştığını ve yükseliş iştahının korunduğunu ortaya koyuyor.",
+  "{timeframe} trend bandının üst kanalında hareket eden {symbol}, {current} ₺ güncel fiyatıyla piyasadaki pozitif ayrışmasını sürdürmektedir."
 ];
 
 export default function StockDetailPage({ params }: { params: Promise<{ symbol: string }> }) {
@@ -269,22 +269,34 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
   const isPositive = (stockData?.priceChange || 0) >= 0;
 
-  // DİNAMİK FİYAT ANALİZİ VE TREND BANDI VERİLERİ (100% GENİŞLİK İÇİN)
+  // DİNAMİK FİYAT ANALİZİ VE TREND BANDI VERİLERİ (PORTFÖY SAYFASIYLA BİREBİR AYNI BAR TASARIMI & SİMGELER)
   const analysisCalculations = useMemo(() => {
     const currPrice = stockData?.currentPrice || (BIST_REAL_PRICES[symbol]?.current || 363.25);
-    const lowPrice = stockData?.low52 || (BIST_REAL_PRICES[symbol]?.low || 320.00);
-    const highPrice = stockData?.high52 || (BIST_REAL_PRICES[symbol]?.high || 433.09);
-    const costPrice = parseFloat((currPrice * 0.18).toFixed(2)); // Referans Portföy Maliyeti (Örn 52.85 ₺)
     
-    const profitPercent = (((currPrice - costPrice) / costPrice) * 100).toFixed(1);
+    // Dinamik zaman periyodu marjına göre Düşük - Yüksek hesaplama (PortfolioContent.tsx ile BİREBİR AYNI)
+    let marginMultiplier = 1.0;
+    if (activeAnalysisTf === '1H') marginMultiplier = 0.08;
+    else if (activeAnalysisTf === '1A') marginMultiplier = 0.18;
+    else if (activeAnalysisTf === '3A') marginMultiplier = 0.45;
+    else if (activeAnalysisTf === '6A') marginMultiplier = 0.70;
+    else marginMultiplier = 1.0;
+
+    const baseLow = stockData?.low52 || (BIST_REAL_PRICES[symbol]?.low || 320.00);
+    const baseHigh = stockData?.high52 || (BIST_REAL_PRICES[symbol]?.high || 433.09);
     
-    // Bar üzerindeki yüzde pozisyonu (Düşük ile Yüksek arası)
-    const range = highPrice - lowPrice || 1;
-    const progressPercent = Math.min(100, Math.max(0, ((currPrice - lowPrice) / range) * 100));
+    const range = (baseHigh - baseLow) * marginMultiplier || 1;
+    const calcLow = Math.max(0, currPrice - (range * 0.5));
+    const calcHigh = currPrice + (range * 0.5);
+
+    const lowPrice = activeAnalysisTf === '1Y' ? baseLow : Number(calcLow.toFixed(2));
+    const highPrice = activeAnalysisTf === '1Y' ? baseHigh : Number(calcHigh.toFixed(2));
+
+    // Bar üzerindeki yüzde pozisyonu (PortfolioContent.tsx ile BİREBİR EŞLEŞME)
+    const progressPercent = Math.min(100, Math.max(0, ((currPrice - lowPrice) / (highPrice - lowPrice || 1)) * 100));
 
     // Zaman dilimi etiket adlandırması
     const tfMap: Record<string, string> = {
-      "1H": "1 Saatlik",
+      "1H": "1 Haftalık",
       "1A": "1 Aylık",
       "3A": "3 Aylık",
       "6A": "6 Aylık",
@@ -292,25 +304,21 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
     };
     const tfLabel = tfMap[activeAnalysisTf] || "52 Haftalık (1 Yıl)";
 
-    // 20 Şablondan zaman dilimi ve sembole göre dinamik metin seçimi
-    const templateIndex = Math.abs((symbol.charCodeAt(0) + activeAnalysisTf.charCodeAt(0)) % ANALYSIS_TEMPLATES.length);
-    const rawTemplate = ANALYSIS_TEMPLATES[templateIndex];
+    // 20 Farklı hisse özel Türkçe metin şablonundan dinamik seçim (Maliyet bilgisi içermeyen)
+    const templateIndex = Math.abs((symbol.charCodeAt(0) * 7 + activeAnalysisTf.charCodeAt(0) * 13) % STOCK_ANALYSIS_TEMPLATES.length);
+    const rawTemplate = STOCK_ANALYSIS_TEMPLATES[templateIndex];
     
     const text = rawTemplate
       .replace(/{symbol}/g, symbol)
-      .replace(/{cost}/g, costPrice.toFixed(2))
       .replace(/{current}/g, currPrice.toFixed(2))
       .replace(/{high}/g, highPrice.toFixed(2))
       .replace(/{low}/g, lowPrice.toFixed(2))
-      .replace(/{profit}/g, profitPercent)
       .replace(/{timeframe}/g, tfLabel);
 
     return {
       currPrice,
       lowPrice,
       highPrice,
-      costPrice,
-      profitPercent,
       progressPercent,
       tfLabel,
       text
@@ -468,7 +476,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
               </div>
             </div>
 
-            {/* MAVİ ÇİZGİLİ VE Y-EKSENİ FİYAT YAZILARIYLA ASLA ÇAKIŞMAYAN SVG GRAFİK ALANI (NOKTA ANİMASYONU KALDIRILDI) */}
+            {/* MAVİ ÇİZGİLİ VE Y-EKSENİ FİYAT YAZILARIYLA ASLA ÇAKIŞMAYAN SVG GRAFİK ALANI */}
             <div className="relative min-h-[320px] w-full pt-2 pb-2">
               {loading && (
                 <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
@@ -674,23 +682,21 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
         </div>
 
-        {/* 3. SEKSİYON: %100 GENİŞLİKTE FİYAT ANALİZİ & TREND BANDI (GÖRSEL 2 İLE BİREBİR UYUMLU) */}
-        <div className="bg-white border border-slate-200/90 rounded-3xl p-6 md:p-8 shadow-xl space-y-6 w-full">
+        {/* 3. SEKSİYON: %100 GENİŞLİKTE FİYAT ANALİZİ & TREND BANDI (PORTFÖY SAYFASI İLE BİREBİR EŞLEŞEN TASARIM VE BAR SIMGE STİLİ) */}
+        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 w-full space-y-5">
           
-          {/* ÜST BAŞLIK VE ZAMAN PERİYODU SEÇENEKLERİ (1H, 1A, 3A, 6A, 1Y (52H)) */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-5 gap-4">
-            <div>
-              <h2 className="text-xl font-black text-[#00008B] flex items-center gap-2 tracking-tight">
-                <LineChart className="w-6 h-6 text-[#00008B]" />
-                FİYAT ANALİZİ & TREND BANDI
-              </h2>
-              <p className="text-xs font-bold text-slate-400 mt-1">
-                Zaman Periyotlarına Göre Varlığa Özel Destek, Direnç & Maliyet Analizi
-              </p>
+          {/* ÜST BİLGİ VE ZAMAN PERİYODU PİLL SEÇİCİSİ (1H, 1A, 3A, 6A, 1Y (52H)) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-[#00008B]" />
+              <div>
+                <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider">FİYAT ANALİZİ & TREND BANDI</h3>
+                <p className="text-[10px] text-slate-400 font-bold">Zaman Periyotlarına Göre Varlığa Özel Destek, Direnç & Trend Analizi</p>
+              </div>
             </div>
 
-            {/* ZAMAN SEÇİM BUTONLARI (2. Fotoğraf Birebir Eşleşme) */}
-            <div className="flex items-center gap-1.5 bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/80">
+            {/* ZAMAN PERİYODU PİLL SEÇİCİSİ (PortfolioContent.tsx ile BİREBİR KOD/TASARIM EŞLEŞMESİ) */}
+            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100 self-start sm:self-auto">
               {[
                 { id: "1H", label: "1H" },
                 { id: "1A", label: "1A" },
@@ -702,10 +708,10 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                   key={tf.id}
                   onClick={() => setActiveAnalysisTf(tf.id)}
                   className={cn(
-                    "px-3.5 py-1.5 rounded-xl text-xs font-black transition-all border",
+                    "px-2.5 py-1 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all",
                     activeAnalysisTf === tf.id
-                      ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-[1.03]"
-                      : "bg-transparent text-slate-600 border-transparent hover:text-slate-900 hover:bg-white/60"
+                      ? "bg-[#00008B] text-white shadow-sm"
+                      : "text-slate-500 hover:text-[#00008B] hover:bg-slate-100"
                   )}
                 >
                   {tf.label}
@@ -714,48 +720,50 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             </div>
           </div>
 
-          {/* İÇERİK KARTI: ANLIK CANLI FİYAT BAR I VE DİNAMİK ALAN */}
-          <div className="space-y-6">
+          {/* FİYAT ANALİZİ KART İÇERİĞİ (PORTFÖY SAYFASI İLE BİREBİR EŞLEŞEN TASARIM) */}
+          <div className="space-y-4 p-4 bg-slate-50/70 rounded-2xl border border-slate-100">
             
-            {/* SEMBOL BAŞLIĞI VE CANLI FİYAT ROZETİ */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">{symbol}</h3>
-              <span className="px-4 py-1.5 rounded-xl bg-blue-50 text-[#00008B] text-xs font-black border border-blue-200 shadow-sm flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#00008B] animate-ping"></span>
-                Canlı Fiyat: {analysisCalculations.currPrice.toFixed(2)} ₺
-              </span>
-            </div>
-
-            {/* DİNAMİK FİYAT KANAL BAR I (PROGRESS BAR) */}
-            <div className="space-y-3 pt-2">
-              <div className="relative w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
-                {/* Doldurulan Aktif Fiyat İvme Çizgisi */}
-                <div 
-                  className="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-[#00008B] rounded-full transition-all duration-500 shadow-md relative"
-                  style={{ width: `${analysisCalculations.progressPercent}%` }}
-                >
-                  {/* Canlı İbre Dairesi */}
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-5 h-5 rounded-full bg-white border-3 border-[#00008B] shadow-lg"></div>
-                </div>
+            {/* ÜST BAŞLIK VE CANLI FİYAT ROZETİ */}
+            <div className="flex justify-between items-center text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-[#00008B] font-black text-base">{symbol}</span>
+                <span className="text-[10px] text-slate-400 font-bold">({fullName})</span>
               </div>
-
-              {/* DÜŞÜK, MALİYET VE YÜKSEK ETİKETLERİ (2. Fotoğraf Birebir Uyumlu) */}
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-1">
-                <span>DÜŞÜK: <strong className="text-slate-800 font-black">{analysisCalculations.lowPrice.toFixed(2)} ₺</strong></span>
-                
-                <span className="flex items-center gap-1 text-[#00008B]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#00008B]"></span>
-                  MALİYETİNİZ: <strong className="text-[#00008B] font-black">{analysisCalculations.costPrice.toFixed(2)} ₺</strong>
-                  <span className="text-[10px] text-slate-400 font-bold ml-1">(BANT DIŞI)</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[#00008B] bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-xl text-xs font-black shadow-sm">
+                  Canlı Fiyat: {analysisCalculations.currPrice.toFixed(2)} ₺
                 </span>
-
-                <span>YÜKSEK: <strong className="text-slate-800 font-black">{analysisCalculations.highPrice.toFixed(2)} ₺</strong></span>
               </div>
             </div>
 
-            {/* LACİVERT DİNAMİK ANALİZ METİN KUTUSU (20 FARKLI METİN ŞABLONUNDAN OTOMATİK SEÇİMLİ) */}
-            <div className="bg-[#00008B] text-white p-6 rounded-2xl space-y-2 shadow-2xl border border-blue-900 leading-relaxed font-semibold text-xs md:text-sm tracking-wide">
-              <p>{analysisCalculations.text}</p>
+            {/* ZAMAN PERİYODU KANAL ÇİZGİSİ / BAR (PortfolioContent.tsx ile BİREBİR AYNI EŞSİZ İBRE KODU) */}
+            <div className="relative py-2">
+              <div className="h-2.5 bg-slate-200/80 rounded-full w-full overflow-hidden flex">
+                <div 
+                  className="h-full bg-gradient-to-r from-slate-200 via-sky-400 to-[#00008B] relative transition-all duration-700"
+                  style={{ width: `${analysisCalculations.progressPercent}%` }}
+                />
+              </div>
+              
+              {/* Mevcut Canlı Fiyat İbre Simgesi (PortfolioContent.tsx ile BİREBİR AYNI SİMGE) */}
+              <div 
+                className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-sky-500 rounded-full border-2 border-white shadow-lg z-10 transition-all duration-700"
+                style={{ left: `calc(${analysisCalculations.progressPercent}% - 8px)` }}
+                title={`Mevcut Canlı Fiyat: ${analysisCalculations.currPrice.toFixed(2)} ₺`}
+              />
+            </div>
+
+            {/* TABAN VE TAVAN ETİKETLERİ (MALİYETİNİZ YAZISI BU SAYFADA KALDIRILDI) */}
+            <div className="flex justify-between items-center text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+              <span>DÜŞÜK: {analysisCalculations.lowPrice.toFixed(2)} ₺</span>
+              <span>YÜKSEK: {analysisCalculations.highPrice.toFixed(2)} ₺</span>
+            </div>
+
+            {/* LACİVERT YAPAY ZEKA VE TREND ANALİZ KUTUSU (PortfolioContent.tsx Marka Rengi ve 20 Farklı Şablon) */}
+            <div className="bg-[#00008B] border border-[#00008B]/20 rounded-2xl p-4 shadow-md text-white">
+              <p className="text-xs font-medium text-slate-100 leading-relaxed">
+                {analysisCalculations.text}
+              </p>
             </div>
 
           </div>
