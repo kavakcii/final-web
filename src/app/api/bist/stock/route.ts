@@ -14,12 +14,16 @@ const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: num
   "YKBNK": { current: 31.20, high: 39.00, low: 24.00, change: +0.40, changePercent: +1.30, prevClose: 30.80 }
 };
 
-// ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU
-const rangeIntervalMap: Record<string, { range: string; interval: string; pointStepMins: number; label: string }> = {
-  "1H": { range: "5d", interval: "1m", pointStepMins: 1, label: "1 Saat" }, // Her 1 dakikada bir (17:10 - 18:10)
-  "1D": { range: "1mo", interval: "1m", pointStepMins: 1, label: "1 Gün" }, // Her 1 dakikada bir
-  "1W": { range: "3mo", interval: "5m", pointStepMins: 5, label: "1 Hafta" }, // Her 5 dakikada bir
-  "1M": { range: "6mo", interval: "60m", pointStepMins: 60, label: "1 Ay" }  // Günlük/Saatlik seanslar
+// ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU (Investing.com BIST Seans Saatleri)
+// 1H: Tam 60 Dakikalık Seans Noktası
+// 1D: Tam 24 Seans Saati
+// 1W: Tam 168 Seans Saati
+// 1M: Tam 720 Seans Saati / 30 Seans Günü
+const rangeIntervalMap: Record<string, { range: string; interval: string; maxSessionPoints: number; pointStepMins: number; label: string }> = {
+  "1H": { range: "5d", interval: "1m", maxSessionPoints: 60, pointStepMins: 1, label: "1 Saat" },   // Tam 60 Dakika
+  "1D": { range: "1mo", interval: "5m", maxSessionPoints: 288, pointStepMins: 5, label: "1 Gün" },  // Tam 24 Seans Saati (288 * 5dk)
+  "1W": { range: "3mo", interval: "30m", maxSessionPoints: 336, pointStepMins: 30, label: "1 Hafta" },// Tam 168 Seans Saati
+  "1M": { range: "6mo", interval: "60m", maxSessionPoints: 720, pointStepMins: 60, label: "1 Ay" }  // Tam 720 Seans Saati (30 Seans Günü)
 };
 
 // BIST Resmi Seans Saati Kontrolü (Pazartesi-Cuma 09:55 - 18:10 TR Saati)
@@ -45,12 +49,10 @@ function getLastBistSessionEndTimeMs(): number {
   const day = trDate.getDay();
   const mins = trDate.getHours() * 60 + trDate.getMinutes();
 
-  // Eğer hafta içi ve 09:55-18:10 arasındaysa canlı zamanı kullan
   if (day >= 1 && day <= 5 && mins >= 595 && mins <= 1090) {
     return now.getTime();
   }
 
-  // Aksi halde en son seans gününe ve tam 18:10 kapanış dakikasına git
   const lastSessionDate = new Date(trDate);
   if (day === 0) { // Pazar -> Cuma
     lastSessionDate.setDate(lastSessionDate.getDate() - 2);
@@ -139,7 +141,6 @@ export async function GET(request: Request) {
       const ptTimeMs = ts * 1000;
       const p = rawPrices[idx];
 
-      // Gece ve Hafta sonu kapalı saatleri ele, SADECE seans saatlerini topla
       if (p !== null && p !== undefined && !isNaN(p) && isWithinBistTradingHours(ptTimeMs)) {
         sessionPoints.push({
           time: formatTimestamp(ptTimeMs, timeframe),
@@ -149,9 +150,8 @@ export async function GET(request: Request) {
       }
     });
 
-    // Zaman dilimine göre nokta sayısı belirleme (1H -> 60 DAKİKA DAKİKA NOKTA, 1D -> 240+ DAKİKA DAKİKA NOKTA)
-    const targetPointCount = timeframe === "1H" ? 61 : timeframe === "1D" ? 240 : timeframe === "1W" ? 300 : 180;
-    let chartPoints = sessionPoints.slice(-targetPointCount);
+    // İstenen tam seans birim sayılarını tersten (en güncel seanslardan geriye doğru) al
+    let chartPoints = sessionPoints.slice(-config.maxSessionPoints);
 
     if (chartPoints.length < 5) {
       chartPoints = sessionPoints;
@@ -177,20 +177,19 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    // REEL BIST SEANS SAATLERİ (PİYASA KAPALIYKEN TAM 18:10 KAPANIS REFERANSI İLE DAKİKA DAKİKA)
+    // REEL BIST SEANS SAATLERİ (Investing.com Seans Çözünürlüğü)
     const currentPrice = stockMeta.current;
     const priceChange = stockMeta.change;
     const priceChangePercent = stockMeta.changePercent;
     const previousClose = stockMeta.prevClose;
 
-    const pointCount = timeframe === "1H" ? 61 : timeframe === "1D" ? 240 : timeframe === "1W" ? 200 : 120;
+    const pointCount = config.maxSessionPoints;
     const stepMs = config.pointStepMins * 60000;
     
     let chartPoints: { time: string; price: number; timestamp: number }[] = [];
     let ptMs = lastSessionEndMs;
     
     for (let i = pointCount - 1; i >= 0; i--) {
-      // Eğer zaman seans dışına geldiyse bir önceki seans kapanışına (18:10) geriye atla
       while (!isWithinBistTradingHours(ptMs)) {
         ptMs -= 60000;
       }
