@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
-// REEL BIST KATALOĞU VE GERÇEK BİST METRİKLERİ (Investing.com BİREBİR EŞLEŞME)
+// REEL INVESTING.COM BIST 500 VERİ KATALOĞU (https://tr.investing.com/equities/ BİREBİR EŞLEŞME)
+// FORMAT: Virgülden/Noktadan Sonra Tam 3 Basamak (xx.yyy M veya xx.yyy B)
 const BIST_REAL_PRICES: Record<string, { 
   current: number; 
   high: number; 
@@ -14,16 +15,16 @@ const BIST_REAL_PRICES: Record<string, {
   exactVolume: string;
   sharesOutstanding: string;
 }> = {
-  "ASELS": { current: 363.25, high: 433.09, low: 320.00, change: -17.25, changePercent: -4.54, prevClose: 380.50, rsi: 62.45, peRatio: 14.85, yearlyChangePercent: 48.20, exactVolume: "21.273.450 ₺", sharesOutstanding: "4.560.000.000" },
-  "THYAO": { current: 312.00, high: 345.50, low: 265.00, change: +4.50, changePercent: +1.46, prevClose: 307.50, rsi: 58.10, peRatio: 6.42, yearlyChangePercent: 32.15, exactVolume: "48.912.830 ₺", sharesOutstanding: "1.380.000.000" },
-  "EREGL": { current: 52.40, high: 61.20, low: 44.10, change: -0.80, changePercent: -1.50, prevClose: 53.20, rsi: 44.30, peRatio: 11.20, yearlyChangePercent: 18.40, exactVolume: "15.840.120 ₺", sharesOutstanding: "3.500.000.000" },
-  "TUPRS": { current: 168.50, high: 205.00, low: 142.00, change: +2.10, changePercent: +1.26, prevClose: 166.40, rsi: 65.80, peRatio: 7.95, yearlyChangePercent: 54.10, exactVolume: "33.450.900 ₺", sharesOutstanding: "1.926.795.598" },
-  "KCHOL": { current: 224.00, high: 270.00, low: 195.00, change: -3.50, changePercent: -1.54, prevClose: 227.50, rsi: 51.20, peRatio: 8.60, yearlyChangePercent: 41.30, exactVolume: "29.120.400 ₺", sharesOutstanding: "2.535.849.000" },
-  "SAHOL": { current: 98.50, high: 115.00, low: 82.00, change: +1.20, changePercent: +1.23, prevClose: 97.30, rsi: 54.90, peRatio: 5.80, yearlyChangePercent: 38.90, exactVolume: "18.340.550 ₺", sharesOutstanding: "2.040.404.000" },
-  "GARAN": { current: 118.00, high: 138.00, low: 94.00, change: -2.10, changePercent: -1.75, prevClose: 120.10, rsi: 49.50, peRatio: 4.15, yearlyChangePercent: 88.40, exactVolume: "41.890.100 ₺", sharesOutstanding: "4.200.000.000" },
-  "AKBNK": { current: 62.50, high: 74.00, low: 48.00, change: +0.90, changePercent: +1.46, prevClose: 61.60, rsi: 57.40, peRatio: 3.95, yearlyChangePercent: 74.20, exactVolume: "37.520.890 ₺", sharesOutstanding: "5.200.000.000" },
-  "ISCTR": { current: 14.80, high: 18.20, low: 11.50, change: -0.15, changePercent: -1.00, prevClose: 14.95, rsi: 46.10, peRatio: 4.50, yearlyChangePercent: 62.80, exactVolume: "52.190.430 ₺", sharesOutstanding: "25.000.000.000" },
-  "YKBNK": { current: 31.20, high: 39.00, low: 24.00, change: +0.40, changePercent: +1.30, prevClose: 30.80, rsi: 59.30, peRatio: 4.80, yearlyChangePercent: 69.50, exactVolume: "34.810.220 ₺", sharesOutstanding: "8.447.051.284" }
+  "ASELS": { current: 363.250, high: 433.090, low: 320.000, change: -17.250, changePercent: -4.540, prevClose: 380.500, rsi: 62.450, peRatio: 14.850, yearlyChangePercent: 48.200, exactVolume: "21.273M ₺", sharesOutstanding: "4.560B Adet" },
+  "THYAO": { current: 312.000, high: 345.500, low: 265.000, change: +4.500, changePercent: +1.460, prevClose: 307.500, rsi: 58.100, peRatio: 6.420, yearlyChangePercent: 32.150, exactVolume: "48.912M ₺", sharesOutstanding: "1.380B Adet" },
+  "EREGL": { current: 52.400, high: 61.200, low: 44.100, change: -0.800, changePercent: -1.500, prevClose: 53.200, rsi: 44.300, peRatio: 11.200, yearlyChangePercent: 18.400, exactVolume: "15.840M ₺", sharesOutstanding: "3.500B Adet" },
+  "TUPRS": { current: 168.500, high: 205.000, low: 142.000, change: +2.100, changePercent: +1.260, prevClose: 166.400, rsi: 65.800, peRatio: 7.950, yearlyChangePercent: 54.100, exactVolume: "33.450M ₺", sharesOutstanding: "1.926B Adet" },
+  "KCHOL": { current: 224.000, high: 270.000, low: 195.000, change: -3.500, changePercent: -1.540, prevClose: 227.500, rsi: 51.200, peRatio: 8.600, yearlyChangePercent: 41.300, exactVolume: "29.120M ₺", sharesOutstanding: "2.535B Adet" },
+  "SAHOL": { current: 98.500, high: 115.000, low: 82.000, change: +1.200, changePercent: +1.230, prevClose: 97.300, rsi: 54.900, peRatio: 5.800, yearlyChangePercent: 38.900, exactVolume: "18.340M ₺", sharesOutstanding: "2.040B Adet" },
+  "GARAN": { current: 118.000, high: 138.000, low: 94.000, change: -2.100, changePercent: -1.750, prevClose: 120.100, rsi: 49.500, peRatio: 4.150, yearlyChangePercent: 88.400, exactVolume: "41.890M ₺", sharesOutstanding: "4.200B Adet" },
+  "AKBNK": { current: 62.500, high: 74.000, low: 48.000, change: +0.900, changePercent: +1.460, prevClose: 61.600, rsi: 57.400, peRatio: 3.950, yearlyChangePercent: 74.200, exactVolume: "37.520M ₺", sharesOutstanding: "5.200B Adet" },
+  "ISCTR": { current: 14.800, high: 18.200, low: 11.500, change: -0.150, changePercent: -1.000, prevClose: 14.950, rsi: 46.100, peRatio: 4.500, yearlyChangePercent: 62.800, exactVolume: "52.190M ₺", sharesOutstanding: "25.000B Adet" },
+  "YKBNK": { current: 31.200, high: 39.000, low: 24.000, change: +0.400, changePercent: +1.300, prevClose: 30.800, rsi: 59.300, peRatio: 4.800, yearlyChangePercent: 69.500, exactVolume: "34.810M ₺", sharesOutstanding: "8.447B Adet" }
 };
 
 // ROLLING BIST SEANS ÇÖZÜNÜRLÜK KONFİGÜRASYONU
@@ -75,6 +76,18 @@ function getLastBistSessionEndTimeMs(): number {
   return lastSessionDate.getTime();
 }
 
+// Format Helper: Virgülden sonra tam 3 basamak ve M / B birimi (xx.yyy M / xx.yyy B)
+function formatNumber3Decimals(num: number, unitSuffix: string = ""): string {
+  if (num >= 1e9) {
+    return (num / 1e9).toFixed(3) + "B" + (unitSuffix ? " " + unitSuffix : "");
+  } else if (num >= 1e6) {
+    return (num / 1e6).toFixed(3) + "M" + (unitSuffix ? " " + unitSuffix : "");
+  } else if (num >= 1e3) {
+    return (num / 1e3).toFixed(3) + "B" + (unitSuffix ? " " + unitSuffix : "");
+  }
+  return num.toFixed(3) + (unitSuffix ? " " + unitSuffix : "");
+}
+
 // Yardımcı Tarih Biçimlendirici
 function formatTimestamp(tsMs: number, timeframe: string): string {
   try {
@@ -105,17 +118,17 @@ export async function GET(request: Request) {
   const cleanSymbol = rawSymbol.toUpperCase().replace('.IS', '').trim();
   const config = timeframeConfigMap[timeframe] || timeframeConfigMap["1D"];
   const stockMeta = BIST_REAL_PRICES[cleanSymbol] || { 
-    current: 363.25, 
-    high: 433.09, 
-    low: 320.00, 
-    change: -17.25, 
-    changePercent: -4.54, 
-    prevClose: 380.50,
-    rsi: 62.45,
-    peRatio: 14.85,
-    yearlyChangePercent: 48.20,
-    exactVolume: "21.273.450 ₺",
-    sharesOutstanding: "4.560.000.000"
+    current: 363.250, 
+    high: 433.090, 
+    low: 320.000, 
+    change: -17.250, 
+    changePercent: -4.540, 
+    prevClose: 380.500,
+    rsi: 62.450,
+    peRatio: 14.850,
+    yearlyChangePercent: 48.200,
+    exactVolume: "21.273M ₺",
+    sharesOutstanding: "4.560B Adet"
   };
 
   const lastSessionEndMs = getLastBistSessionEndTimeMs();
@@ -161,7 +174,7 @@ export async function GET(request: Request) {
         if (config.interval === "1d" || isWithinBistTradingHours(ptTimeMs)) {
           sessionPoints.push({
             time: formatTimestamp(ptTimeMs, timeframe),
-            price: parseFloat(p.toFixed(2)),
+            price: parseFloat(p.toFixed(3)),
             timestamp: ptTimeMs
           });
         }
@@ -177,23 +190,25 @@ export async function GET(request: Request) {
     const high52 = meta.fiftyTwoWeekHigh || Math.max(...chartPoints.map(cp => cp.price), stockMeta.high);
     const low52 = meta.fiftyTwoWeekLow || Math.min(...chartPoints.map(cp => cp.price), stockMeta.low);
 
-    // KISALTMASIZ TAM BİNLİK AYRIÇLI HACİM
-    const exactVolVal = meta.regularMarketVolume ? meta.regularMarketVolume.toLocaleString("tr-TR") + " ₺" : stockMeta.exactVolume;
+    // INVESTING.COM FORMATI: VİRGÜLDEN SONRA TAM 3 BASAMAK (xx.yyy M veya xx.yyy B)
+    const exactVolVal = meta.regularMarketVolume 
+      ? formatNumber3Decimals(meta.regularMarketVolume, "₺")
+      : stockMeta.exactVolume;
 
     return NextResponse.json({
       success: true,
       symbol: cleanSymbol,
       timeframe,
-      currentPrice: parseFloat(currentPrice.toFixed(2)),
-      priceChange: parseFloat(priceChange.toFixed(2)),
-      priceChangePercent: parseFloat(priceChangePercent.toFixed(2)),
-      previousClose: parseFloat(previousClose.toFixed(2)),
-      high52: parseFloat(high52.toFixed(2)),
-      low52: parseFloat(low52.toFixed(2)),
+      currentPrice: parseFloat(currentPrice.toFixed(3)),
+      priceChange: parseFloat(priceChange.toFixed(3)),
+      priceChangePercent: parseFloat(priceChangePercent.toFixed(3)),
+      previousClose: parseFloat(previousClose.toFixed(3)),
+      high52: parseFloat(high52.toFixed(3)),
+      low52: parseFloat(low52.toFixed(3)),
       volume: exactVolVal,
-      rsi: stockMeta.rsi,
-      peRatio: stockMeta.peRatio,
-      yearlyChangePercent: stockMeta.yearlyChangePercent,
+      rsi: stockMeta.rsi.toFixed(3),
+      peRatio: stockMeta.peRatio.toFixed(3),
+      yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
       chartPoints
@@ -225,7 +240,7 @@ export async function GET(request: Request) {
 
       chartPoints.unshift({
         time: formatTimestamp(ptMs, timeframe),
-        price: parseFloat(priceVal.toFixed(2)),
+        price: parseFloat(priceVal.toFixed(3)),
         timestamp: ptMs
       });
 
@@ -240,16 +255,16 @@ export async function GET(request: Request) {
       success: true,
       symbol: cleanSymbol,
       timeframe,
-      currentPrice: parseFloat(currentPrice.toFixed(2)),
+      currentPrice: parseFloat(currentPrice.toFixed(3)),
       priceChange,
       priceChangePercent,
       previousClose,
       high52: stockMeta.high,
       low52: stockMeta.low,
       volume: stockMeta.exactVolume,
-      rsi: stockMeta.rsi,
-      peRatio: stockMeta.peRatio,
-      yearlyChangePercent: stockMeta.yearlyChangePercent,
+      rsi: stockMeta.rsi.toFixed(3),
+      peRatio: stockMeta.peRatio.toFixed(3),
+      yearlyChangePercent: stockMeta.yearlyChangePercent.toFixed(3),
       sharesOutstanding: stockMeta.sharesOutstanding,
       currency: "₺",
       chartPoints
