@@ -1,28 +1,23 @@
 "use client";
 
-// Dashboard v1.1.5 - Optimized Build Sequence
+// Dashboard v1.2.0 - Refactored Main Page Layout with Synchronized & Modular Widgets
 import { AuthComponent } from "@/components/ui/sign-up";
-import { TrendingUp, Activity, DollarSign, BarChart2, ArrowUpRight, ArrowDownRight, Wallet, Newspaper, Loader2, CheckCircle2 } from "lucide-react";
+import { TrendingUp, Activity, Newspaper, Loader2 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
-import { cn } from "@/lib/utils";
 
-import TradingViewWidget from "@/components/TradingViewWidget";
-import { TefasChart } from "@/components/TefasChart";
-import { PortfolioService, Asset } from "@/lib/portfolio-service";
-import { DashboardPortfolioWidget } from "@/components/DashboardPortfolioWidget";
-import { MiniBalanceHistoryChart } from "@/components/MiniBalanceHistoryChart";
+import { DashboardSummaryCards } from "@/components/DashboardSummaryCards";
+import { EconomicCalendarWidget } from "@/components/EconomicCalendarWidget";
+import { BalanceGrowthChartWidget } from "@/components/BalanceGrowthChartWidget";
+import { FinAiYesterdayReportWidget } from "@/components/FinAiYesterdayReportWidget";
 import { VerificationCard } from "@/components/ui/verification-card";
-import { GradientCard } from "@/components/ui/gradient-card";
+import { MiniBalanceHistoryChart } from "@/components/MiniBalanceHistoryChart";
 import { RiskTestWidget } from "@/components/RiskTestWidget";
 import Link from "next/link";
 
 export default function DashboardPage() {
-    const { user, email: userEmail, userName, isAuthenticated, myAssets, prices, stats, portfolioHistory, isDataLoaded, globalNews } = useUser();
-    const [selectedAsset, setSelectedAsset] = useState<string>("FOREKS:XU100");
-    const [isTefas, setIsTefas] = useState(false);
+    const { user, email: userEmail, userName, isAuthenticated, stats, portfolioHistory, isDataLoaded, globalNews } = useUser();
     const [news, setNews] = useState<any[]>([]);
 
     const totalBalance = useMemo(() => stats?.[0]?.value || "₺0,00", [stats]);
@@ -35,7 +30,7 @@ export default function DashboardPage() {
     useEffect(() => {
         const fetchNews = async () => {
             if (!isDataLoaded || !user) return;
-            
+
             try {
                 const res = await fetch(`/api/news?userId=${user.id}`);
                 const data = await res.json();
@@ -51,29 +46,6 @@ export default function DashboardPage() {
         };
         fetchNews();
     }, [isDataLoaded, user, globalNews]);
-
-    const groupedAssets = useMemo(() => {
-        const groups: Record<string, { symbol: string, type: string, quantity: number, totalCost: number }> = {};
-        myAssets.forEach((asset: Asset) => {
-            if (!groups[asset.symbol]) {
-                groups[asset.symbol] = { symbol: asset.symbol, type: asset.type, quantity: 0, totalCost: 0 };
-            }
-            groups[asset.symbol].quantity += asset.quantity;
-            groups[asset.symbol].totalCost += (asset.quantity * asset.avgCost);
-        });
-        return Object.values(groups);
-    }, [myAssets]);
-
-    const handleAssetSelect = (symbol: string, type: string) => {
-        if (type === 'FUND') {
-            setSelectedAsset(symbol);
-            setIsTefas(true);
-        } else {
-            const cleanSymbol = symbol.replace('.IS', '').replace('.is', '');
-            setSelectedAsset(`BIST:${cleanSymbol}`);
-            setIsTefas(false);
-        }
-    };
 
     const [loadingStep, setLoadingStep] = useState(0);
     const loadingMessages = [
@@ -99,7 +71,7 @@ export default function DashboardPage() {
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
-            
+
             <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
                 <AnimatePresence>
                     {!isDataLoaded && (
@@ -121,6 +93,7 @@ export default function DashboardPage() {
                     )}
                 </AnimatePresence>
 
+                {/* Header Welcome Area */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
                     <div>
                         <h1 className="text-4xl font-bold text-[#00008B] flex items-center gap-3 tracking-tight">
@@ -130,33 +103,63 @@ export default function DashboardPage() {
                         <p className="text-[#00008B] mt-2 text-xs font-bold tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Link href="/dashboard/portfolio/correlation" className="flex items-center gap-2 px-6 py-3 bg-[#00008B] rounded-2xl text-white text-[11px] font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 active:scale-95">
+                        <Link href="/dashboard/portfolio/correlation" className="flex items-center gap-2 px-6 py-3 bg-[#00008B] rounded-2xl text-white text-[11px] font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 active:scale-95 transition-all">
                             <Activity className="w-4 h-4" />
                             Korelasyon Analizi
                         </Link>
                     </div>
                 </div>
 
-                <div className="flex flex-col lg:flex-row items-start gap-12">
-                    <div className="flex flex-col gap-6">
-                        <div className="relative group">
-                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-56">
-                                <VerificationCard 
-                                    name={userName?.toUpperCase() || "FINAI USER"} 
+                {/* Synchronized Summary Cards Row (Birebir Portföyüm Özeti) */}
+                <div className="w-full">
+                    <DashboardSummaryCards />
+                </div>
+
+                {/* Main Dashboard Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Left & Middle Column (8 Cols) */}
+                    <div className="lg:col-span-8 space-y-8">
+                        {/* Varlık Gelişim Grafiği Widget */}
+                        <BalanceGrowthChartWidget />
+
+                        {/* Ekonomik Takvim Widget */}
+                        <EconomicCalendarWidget />
+                    </div>
+
+                    {/* Right Column (4 Cols) */}
+                    <div className="lg:col-span-4 space-y-8">
+                        {/* FinAI Dünün Özeti & Günlük Analiz Kutusu */}
+                        <FinAiYesterdayReportWidget />
+
+                        {/* FinAi Verification Card & Mini Balance Card */}
+                        <div className="relative group flex justify-center">
+                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-full max-w-sm">
+                                <VerificationCard
+                                    name={userName?.toUpperCase() || "FINAI USER"}
                                     idNumber={maskedId}
                                     balance={totalBalance}
                                     label="FINAI PREMIUM"
                                     validThru="12/26"
                                 />
                             </Link>
-                            <div className="absolute left-0 top-0 w-56 h-36 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-[110%] transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden group/chart">
+                            <div className="absolute left-0 top-0 w-full h-36 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-4 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
                                 <MiniBalanceHistoryChart history={portfolioHistory} />
                                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/20 via-transparent to-transparent pointer-events-none" />
                             </div>
                         </div>
 
+                        {/* Risk Test Widget */}
+                        <RiskTestWidget
+                            hasCompletedTest={user?.user_metadata?.hasCompletedTest || false}
+                            userName={userName || user?.user_metadata?.full_name || userEmail?.split('@')[0]}
+                            userProfile={user?.user_metadata?.riskProfile}
+                            userScore={user?.user_metadata?.riskScore}
+                            investmentAmount={user?.user_metadata?.investmentAmount}
+                            aiPortfolio={user?.user_metadata?.aiPortfolio}
+                        />
 
-                        <div className="w-full lg:w-[450px] bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
+                        {/* Son Gündem Haber Özeti */}
+                        <div className="w-full bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <Newspaper className="w-4 h-4 text-[#00008B]" />
@@ -164,8 +167,8 @@ export default function DashboardPage() {
                                 </div>
                                 <Link href="/dashboard/news" className="text-[9px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
-                                {news && news.length > 0 ? news.slice(0, 4).map((item, idx) => (
+                            <div className="grid grid-cols-1 gap-y-3">
+                                {news && news.length > 0 ? news.slice(0, 3).map((item, idx) => (
                                     <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-2 hover:border-[#00008B]/20 transition-all">
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">{new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
@@ -173,22 +176,9 @@ export default function DashboardPage() {
                                         </div>
                                     </Link>
                                 )) : (
-                                    <p className="text-[10px] text-slate-300 col-span-2 py-4 text-center font-bold">Haberler yükleniyor...</p>
+                                    <p className="text-[10px] text-slate-300 py-4 text-center font-bold">Haberler yükleniyor...</p>
                                 )}
                             </div>
-                        </div>
-                    </div>
-
-                    <div className="flex-1 w-full flex items-start justify-center">
-                        <div className="w-full max-w-3xl">
-                            <RiskTestWidget 
-                                hasCompletedTest={user?.user_metadata?.hasCompletedTest || false} 
-                                userName={userName || user?.user_metadata?.full_name || userEmail?.split('@')[0]} 
-                                userProfile={user?.user_metadata?.riskProfile}
-                                userScore={user?.user_metadata?.riskScore}
-                                investmentAmount={user?.user_metadata?.investmentAmount}
-                                aiPortfolio={user?.user_metadata?.aiPortfolio}
-                            />
                         </div>
                     </div>
                 </div>
