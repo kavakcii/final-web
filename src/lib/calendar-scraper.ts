@@ -1,37 +1,71 @@
+const FLAG_MAP: Record<string, string> = {
+    USD: '🇺🇸',
+    US: '🇺🇸',
+    EUR: '🇪🇺',
+    EU: '🇪🇺',
+    TRY: '🇹🇷',
+    TR: '🇹🇷',
+    GBP: '🇬🇧',
+    GB: '🇬🇧',
+    JPY: '🇯🇵',
+    JP: '🇯🇵',
+    CAD: '🇨🇦',
+    CA: '🇨🇦',
+    AUD: '🇦🇺',
+    AU: '🇦🇺',
+    CHF: '🇨🇭',
+    CH: '🇨🇭',
+    CNY: '🇨🇳',
+    CN: '🇨🇳'
+};
+
 export async function scrapeEconomicCalendar() {
     try {
-        // Fetch from ForexFactory (public JSON)
-        const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json');
-        
-        if (!response.ok) throw new Error('Failed to fetch calendar');
-        
+        // Fetch live economic calendar feed (FairEconomy / ForexFactory real-time feed)
+        const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            next: { revalidate: 300 } // Cache for 5 mins
+        });
+
+        if (!response.ok) throw new Error(`Calendar fetch failed with status: ${response.status}`);
+
         const data = await response.json();
-        
-        // Filter and map data
-        const events = data.map((item: any) => {
+
+        // User requested ONLY 2-star (Medium) and 3-star (High/Critical) events
+        const filteredData = data.filter((item: any) => {
+            const impact = item.impact ? item.impact.toLowerCase() : '';
+            return impact === 'medium' || impact === 'high' || impact === 'critical';
+        });
+
+        const events = filteredData.map((item: any) => {
             const dateObj = new Date(item.date);
             const time = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-            
-            // Only show future events or today's events
-            // For now, just return all sorted by date
+            const countryCode = item.country ? item.country.toUpperCase() : 'TR';
+            const flag = FLAG_MAP[countryCode] || '🌐';
+
+            // Map impact string
+            let impactLevel: 'medium' | 'high' | 'critical' = 'medium';
+            if (item.impact?.toLowerCase() === 'high' || item.impact?.toLowerCase() === 'critical') {
+                impactLevel = item.title?.toLowerCase().includes('fed') || item.title?.toLowerCase().includes('tcmb') ? 'critical' : 'high';
+            }
+
             return {
+                id: item.title + '_' + item.date,
                 time,
-                country: item.country,
+                country: countryCode,
+                flag,
                 event: item.title,
-                actual: item.forecast || '-', // Use forecast as placeholder for actual/expected
+                forecast: item.forecast || '-',
                 previous: item.previous || '-',
-                impact: item.impact.toLowerCase(),
-                originalDate: dateObj // for sorting
+                actual: item.actual || 'Bekleniyor',
+                impact: impactLevel,
+                originalDate: dateObj
             };
         });
 
-        // Filter for today and future, sort by date
-        const now = new Date();
-        const futureEvents = events.filter((e: any) => e.originalDate >= new Date(now.setHours(0,0,0,0)));
-        
-        futureEvents.sort((a: any, b: any) => a.originalDate.getTime() - b.originalDate.getTime());
-        
-        return futureEvents.slice(0, 10);
+        return events;
     } catch (error) {
         console.error("Calendar fetch failed:", error);
         return [];

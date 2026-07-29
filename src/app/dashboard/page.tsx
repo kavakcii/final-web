@@ -1,9 +1,9 @@
 "use client";
 
-// Dashboard v1.2.0 - Refactored Main Page Layout with Synchronized & Modular Widgets
+// Dashboard v1.2.1 - Cleaned Main Page Layout with Economic Calendar & yesterday report
 import { AuthComponent } from "@/components/ui/sign-up";
 import { TrendingUp, Activity, Newspaper, Loader2 } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
 
@@ -11,21 +11,11 @@ import { DashboardSummaryCards } from "@/components/DashboardSummaryCards";
 import { EconomicCalendarWidget } from "@/components/EconomicCalendarWidget";
 import { BalanceGrowthChartWidget } from "@/components/BalanceGrowthChartWidget";
 import { FinAiYesterdayReportWidget } from "@/components/FinAiYesterdayReportWidget";
-import { VerificationCard } from "@/components/ui/verification-card";
-import { MiniBalanceHistoryChart } from "@/components/MiniBalanceHistoryChart";
-import { RiskTestWidget } from "@/components/RiskTestWidget";
 import Link from "next/link";
 
 export default function DashboardPage() {
-    const { user, email: userEmail, userName, isAuthenticated, stats, portfolioHistory, isDataLoaded, globalNews } = useUser();
+    const { user, email: userEmail, userName, isAuthenticated, isDataLoaded, globalNews } = useUser();
     const [news, setNews] = useState<any[]>([]);
-
-    const totalBalance = useMemo(() => stats?.[0]?.value || "₺0,00", [stats]);
-
-    const maskedId = useMemo(() => {
-        if (!user?.id) return "ID **** 0000";
-        return `ID **** ${user.id.slice(-4).toUpperCase()}`;
-    }, [user?.id]);
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -131,33 +121,6 @@ export default function DashboardPage() {
                         {/* FinAI Dünün Özeti & Günlük Analiz Kutusu */}
                         <FinAiYesterdayReportWidget />
 
-                        {/* FinAi Verification Card & Mini Balance Card */}
-                        <div className="relative group flex justify-center">
-                            <Link href="/dashboard/portfolio" className="relative z-30 shadow-xl rounded-[16px] block transition-transform hover:scale-[1.01] w-full max-w-sm">
-                                <VerificationCard
-                                    name={userName?.toUpperCase() || "FINAI USER"}
-                                    idNumber={maskedId}
-                                    balance={totalBalance}
-                                    label="FINAI PREMIUM"
-                                    validThru="12/26"
-                                />
-                            </Link>
-                            <div className="absolute left-0 top-0 w-full h-36 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl opacity-0 translate-x-0 z-10 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-x-4 transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] hidden lg:block overflow-hidden">
-                                <MiniBalanceHistoryChart history={portfolioHistory} />
-                                <div className="absolute inset-0 bg-gradient-to-tr from-blue-50/20 via-transparent to-transparent pointer-events-none" />
-                            </div>
-                        </div>
-
-                        {/* Risk Test Widget */}
-                        <RiskTestWidget
-                            hasCompletedTest={user?.user_metadata?.hasCompletedTest || false}
-                            userName={userName || user?.user_metadata?.full_name || userEmail?.split('@')[0]}
-                            userProfile={user?.user_metadata?.riskProfile}
-                            userScore={user?.user_metadata?.riskScore}
-                            investmentAmount={user?.user_metadata?.investmentAmount}
-                            aiPortfolio={user?.user_metadata?.aiPortfolio}
-                        />
-
                         {/* Son Gündem Haber Özeti */}
                         <div className="w-full bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-4">
@@ -168,7 +131,7 @@ export default function DashboardPage() {
                                 <Link href="/dashboard/news" className="text-[9px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
                             </div>
                             <div className="grid grid-cols-1 gap-y-3">
-                                {news && news.length > 0 ? news.slice(0, 3).map((item, idx) => (
+                                {news && news.length > 0 ? news.slice(0, 4).map((item, idx) => (
                                     <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-2 hover:border-[#00008B]/20 transition-all">
                                         <div className="flex flex-col gap-0.5">
                                             <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">{new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
