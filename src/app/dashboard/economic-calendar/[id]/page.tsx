@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers, ShoppingBag, Target, CreditCard, Zap } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
@@ -19,6 +19,83 @@ const OVERVIEW_TR_DESCRIPTIONS: Record<string, string> = {
     "TCMB Politika Faizi Kararı": "TCMB Politika Faizi Kararı, Türkiye Cumhuriyeti Merkez Bankası'nın haftalık repo faiz oranını belirlediği karardır. TL'nin değeri, mevduat ve kredi faizleri ile BIST 100 endeksi üzerinde birinci derecede etkilidir.",
     "Tarım Dışı İstihdam Değişimi (NFP)": "Tarım Dışı İstihdam (NFP), ABD ekonomisinde tarım sektörü dışındaki yeni yaratılan veya kaybedilen iş sayısını ölçer. Doların gücü ve Fed faiz beklentileri üzerinde en yüksek etkiye sahip veridir.",
     "İşsizlik Oranı": "İşsizlik Oranı, işgücü içerisindeki işsiz bireylerin yüzdesini gösterir. İstihdam piyasasının genel sağlık durumu hakkında temel göstergedir."
+};
+
+// 3-Mini Card Group Educational Data Map (Veri Nedir ve Ne İşe Yarar?)
+interface EducationThreeCards {
+    dailyLife: string;
+    whatItMeasures: string;
+    walletImpact: string;
+    quickSummary: string;
+}
+
+const THREE_CARD_EDUCATION_MAP: Record<string, EducationThreeCards> = {
+    "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
+        dailyLife: "Düşünün ki her ay marketten ve pazardan aldığınız 50 temel ürünün sepet fiyatıdır. Geçen ay 1.000 TL olan sepet bu ay 1.030 TL olduysa o ayki enflasyon %3'tür.",
+        whatItMeasures: "Cebinizdeki Türk Lirası'nın satın alma gücünün ne kadar hızlı eridiğini veya korunduğunu gösteren ana karnedir.",
+        walletImpact: "Maaş zamlarından ev kiralarına, market etiketlerinden mevduat faizlerine kadar tüm harcama bütçenizi yönlendirir.",
+        quickSummary: "Bu rakam yükselirse market alışverişiniz ve yaşam maliyetiniz pahalılaşır; düştüğünde fiyat artışları yavaşlar."
+    },
+    "Yıllık Enflasyon Oranı (TÜFE)": {
+        dailyLife: "Geçen yılın aynı ayında 1.000 TL olan ürün sepetinin bugün kaç TL olduğunu gösteren 12 aylık toplam fiyat değişimidir.",
+        whatItMeasures: "Ülkedeki fiyatlar genel seviyesinin yıllık bazdaki artış hızını ve paranızın yıllık alım gücü kaybını ölçer.",
+        walletImpact: "Yıllık kira artış oranları, asgari ücret ve emekli zamları doğrudan bu verinin sonucuna göre hesaplanır.",
+        quickSummary: "Yıllık hayat pahalılığının hızını gösterir; düşüşe geçmesi paranın değer kaybının yavaşladığını kanıtlar."
+    },
+    "Aylık Üretici Fiyat Endeksi (ÜFE)": {
+        dailyLife: "Fabrikaların ve imalatçıların hammadde, elektrik ve işçilik için ödediği maliyet sepetidir. Üretim bandından çıkan malın fabrika çıkış fiyatıdır.",
+        whatItMeasures: "Üreticinin sırtındaki maliyet yükünü ölçer. Fabrikadaki maliyet artışı 1-2 ay sonra etiketlere yansıyacağı için TÜFE'nin öncü sinyalidir.",
+        walletImpact: "Fabrika maliyetleri artarsa ilerleyen aylarda tükettiğiniz tüm ürünlere zam geleceğinin haberini verir.",
+        quickSummary: "Üretici maliyetlerinin yönünü gösterir; yüksek ÜFE gelecekteki tüketici zamlarının habercisidir."
+    },
+    "ISM İmalat PMI Endeksi": {
+        dailyLife: "Fabrika ve şirket yöneticilerine yapılan 'Gelecek ay daha çok hammadde alacak mısınız, işçi çıkaracak mısınız?' anketinin sonuç karnesidir.",
+        whatItMeasures: "Sanayide çarkların dönüp dönmediğini ölçer. 50 puan üzerindeki değerler büyümeyi, 50 altı ise daralmayı ifade eder.",
+        walletImpact: "Ekonominin canlı kalmasını ve iş imkanlarının artmasını sağlar; düşük kalırsa şirket karlarını ve borsayı baskılar.",
+        quickSummary: "Sanayide çarkların dönüp dönmediğini fısıldayan ilk erken uyarı göstergesidir."
+    },
+    "S&P Global İmalat PMI (Nihai)": {
+        dailyLife: "İmalat sektöründeki satınalma yöneticilerinin sipariş, üretim ve stok seviyelerine göre verdikleri puanların ortalamasıdır.",
+        whatItMeasures: "Ülke sanayisinin büyüme hızını ve ekonomik aktivite gücünü puanlar.",
+        walletImpact: "Fabrikaların üretim gücünü temsil eder; yüksek puanlar borsa şirketlerinin kârlılığını olumlu etkiler.",
+        quickSummary: "Sanayinin sağlık durumunu puanlayan küresel büyüme göstergesidir."
+    },
+    "Fed Politika Faizi Kararı": {
+        dailyLife: "Dünyanın en büyük Merkez Bankası'nın küresel para musluğunu kısması (faiz artırma) veya vanayı açmasıdır (faiz indirimi).",
+        whatItMeasures: "Piyasadaki borçlanma maliyetini ve Doların küresel değerini belirler.",
+        walletImpact: "Dünya borsalarını, kuyumcudaki Altın fiyatlarını ve Dolar/TL kurunun yönünü doğrudan çizer.",
+        quickSummary: "Küresel para vanasının ayarıdır; yüksek faiz borçlanmayı zorlaştırır, düşük faiz piyasayı coşturur."
+    },
+    "TCMB Politika Faizi Kararı": {
+        dailyLife: "TCMB'nin bankalara para verirken uyguladığı taban faiz oranını belirleyerek piyasadaki para musluğunu ayarlamasıdır.",
+        whatItMeasures: "TL'nin zamansal değerini ve bankaların mevduat/kredi faiz oranlarının tabanını belirler.",
+        walletImpact: "Banka kredi kartı faizlerinizi, konut/taşıt kredilerini ve Borsa İstanbul'un çekiciliğini doğrudan yönlendirir.",
+        quickSummary: "Türkiye ekonomisinin ana vana ayarıdır; faiz artarsa borçlanmak zorlaşır, mevduat getirisi yükselir."
+    },
+    "Tarım Dışı İstihdam Değişimi (NFP)": {
+        dailyLife: "ABD'deki büyük fabrikaların, dükkanların ve şirketlerin o ay kaç bin yeni elemanı işe aldığının resmi karnesidir.",
+        whatItMeasures: "Tarım sektörü dışındaki işgücü piyasasının canlılığını ve iş yaratma kapasitesini ölçer.",
+        walletImpact: "Küresel Dolar gücünü belirler; kuyumcudaki Gram Altın ve Dolar/TL fiyatlarını doğrudan sallar.",
+        quickSummary: "Dünya ekonomisinin iş yaratma gücüdür; yüksek gelirse Dolar güçlenir, Altın gerileyebilir."
+    },
+    "Dış Ticaret Dengesi": {
+        dailyLife: "Ülkenin yurt dışına sattığı mallar (ihracat) ile dışarıdan satın aldığı mallar (ithalat) arasındaki bütçe farkıdır.",
+        whatItMeasures: "Ülkeye giren döviz ile ülkeden çıkan döviz arasındaki net bakiyeyi ölçer. Açık vermek dışarıya borçlanmak demektir.",
+        walletImpact: "Döviz ihtiyacını belirlediği için Dolar ve Euro kurunun üzerindeki baskıyı doğrudan etkiler.",
+        quickSummary: "Ülkenin dış döviz bilançosudur; ticaret açığı arttıkça dövize olan ihtiyaç yükselir."
+    },
+    "İşsizlik Oranı": {
+        dailyLife: "İş aradığı halde bulamayan kişilerin toplam aktif işgücüne olan oranını gösteren halk karnesidir.",
+        whatItMeasures: "İstihdam piyasasının sağlık durumunu ve ekonomik refah seviyesini ölçer.",
+        walletImpact: "Halkın alım gücünü ve tüketim harcamalarını belirler; düşük işsizlik güçlü ekonomi demektir.",
+        quickSummary: "Halkın iş bulma kolaylığını gösterir; düşük işsizlik ekonominin sağlam olduğunu kanıtlar."
+    },
+    "Default": {
+        dailyLife: "Ülke ekonomisindeki üretim, tüketim ve fiyat hareketlerinin genel seyrini gösteren resmi makro veri göstergesidir.",
+        whatItMeasures: "Piyasalardaki ekonomik canlılık düzeyini ve finansal dengeyi ölçer.",
+        walletImpact: "Bireysel birikimlerinizin değerini ve piyasalardaki yatırım kararlarını etkiler.",
+        quickSummary: "Piyasanın genel gidişatını ve ekonomik sağlık durumunu özetleyen temel göstergedir."
+    }
 };
 
 // Distinct Historical Release Datasets for Every Specific Macro Indicator
@@ -160,6 +237,11 @@ export default function EconomicEventDetailPage() {
     const overviewText = OVERVIEW_TR_DESCRIPTIONS[event.event] || 
         OVERVIEW_TR_DESCRIPTIONS[Object.keys(OVERVIEW_TR_DESCRIPTIONS).find(k => event.event.includes(k)) || ""] ||
         `${event.country} makroekonomik verileri arasında yer alan ${event.event}, piyasa yapıcılar ve yatırımcılar tarafından yakından takip edilen temel göstergelerden biridir.`;
+
+    // 3-Mini Card Group Educational Object
+    const eduCards = THREE_CARD_EDUCATION_MAP[event.event] ||
+        THREE_CARD_EDUCATION_MAP[Object.keys(THREE_CARD_EDUCATION_MAP).find(k => event.event.includes(k)) || ""] ||
+        THREE_CARD_EDUCATION_MAP["Default"];
 
     // Historical chart series specific to this exact event
     const chartSeries = EVENT_HISTORICAL_SERIES[event.event] || 
@@ -313,25 +395,76 @@ export default function EconomicEventDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left & Middle Column (2 Cols): What is it & Why follow? */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Box 1: Nedir ve Ne İş Yapar? */}
-                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
-                                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
-                                    <BookOpen className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-[#00008B]">Bu Veri Nedir ve Ne İşe Yarar?</h3>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Basitleştirilmiş Tanım & Temel Bilgi</p>
+                        {/* WIDGET 1: Bu Veri Nedir ve Ne İşe Yarar? (3'LÜ MİNİ KART GRUBU & 10 SANİYEDE ÖZET) */}
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-150">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
+                                        <BookOpen className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-[#00008B]">Bu Veri Nedir ve Ne İşe Yarar?</h3>
+                                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Basitleştirilmiş Tanım & Temel Finansal Bilgi</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="text-xs font-semibold text-slate-600 leading-relaxed space-y-3">
-                                <p>
-                                    <strong className="text-[#00008B] font-bold">{event.event}</strong>, ekonomideki fiyat hareketlerini ve piyasa dinamiklerini ölçen en kritik temel göstergelerden biridir.
-                                </p>
-                                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-start gap-3">
-                                    <Info className="w-4 h-4 text-[#00008B] shrink-0 mt-0.5" />
-                                    <span>
-                                        Finansal okuryazarlığı olmayan bir kullanıcının bile saniyeler içinde kavrayabileceği anlaşılır anlatımlarla desteklenmiştir.
+
+                            {/* ⚡ 10 Saniyede Özet Şeridi */}
+                            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3 text-xs text-amber-900 font-semibold">
+                                <Zap className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                <div>
+                                    <strong className="text-amber-950 font-black block mb-0.5">⚡ 10 Saniyede Hızlı Özet:</strong>
+                                    <span>{eduCards.quickSummary}</span>
+                                </div>
+                            </div>
+
+                            {/* 🎨 3'LÜ MİNİ KART GRUBU */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {/* Kart 1: Gündelik Hayattaki Karşılığı */}
+                                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/60 space-y-2 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-black text-[#00008B]">
+                                            <ShoppingBag className="w-4 h-4 text-blue-600" />
+                                            <span>Gündelik Hayat Benzetmesi</span>
+                                        </div>
+                                        <p className="text-xs font-medium text-slate-700 leading-relaxed mt-2">
+                                            {eduCards.dailyLife}
+                                        </p>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-blue-600 uppercase tracking-wider block pt-2 border-t border-blue-200/40">
+                                        • Somut Örnek
+                                    </span>
+                                </div>
+
+                                {/* Kart 2: Neyi Ölçer? */}
+                                <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/60 space-y-2 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-black text-indigo-900">
+                                            <Target className="w-4 h-4 text-indigo-600" />
+                                            <span>Neyi Ölçer?</span>
+                                        </div>
+                                        <p className="text-xs font-medium text-slate-700 leading-relaxed mt-2">
+                                            {eduCards.whatItMeasures}
+                                        </p>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-wider block pt-2 border-t border-indigo-200/40">
+                                        • Temel İşlev
+                                    </span>
+                                </div>
+
+                                {/* Kart 3: Cebinize & Bütçenize Etkisi */}
+                                <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 space-y-2 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex items-center gap-2 text-xs font-black text-emerald-950">
+                                            <CreditCard className="w-4 h-4 text-emerald-600" />
+                                            <span>Cebinize & Bütçenize Etkisi</span>
+                                        </div>
+                                        <p className="text-xs font-medium text-slate-700 leading-relaxed mt-2">
+                                            {eduCards.walletImpact}
+                                        </p>
+                                    </div>
+                                    <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider block pt-2 border-t border-emerald-200/40">
+                                        • Kişisel Bütçe
                                     </span>
                                 </div>
                             </div>
