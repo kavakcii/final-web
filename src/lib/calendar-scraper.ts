@@ -33,6 +33,10 @@ const TITLE_TR_MAP: Record<string, string> = {
     "PPI YoY": "Yıllık Üretici Fiyat Endeksi (ÜFE)",
     "Manufacturing PMI": "İmalat PMI Endeksi",
     "Services PMI": "Hizmet PMI Endeksi",
+    "ISM Manufacturing Prices": "ISM İmalat Fiyat Endeksi",
+    "ISM Manufacturing Price": "ISM İmalat Fiyat Endeksi",
+    "Manufacturing Prices": "İmalat Fiyat Endeksi",
+    "Manufacturing Price": "İmalat Fiyat Endeksi",
     "S&P Global Manufacturing PMI Final": "S&P Global İmalat PMI (Nihai)",
     "S&P Global Services PMI Final": "S&P Global Hizmet PMI (Nihai)",
     "ISM Manufacturing PMI": "ISM İmalat PMI Endeksi",
@@ -67,16 +71,23 @@ function translateTitle(title: string): string {
 
     // Substring translations for dynamic titles
     let tr = cleanTitle;
-    tr = tr.replace(/Manufacturing PMI/g, 'İmalat PMI');
-    tr = tr.replace(/Services PMI/g, 'Hizmet PMI');
-    tr = tr.replace(/Inflation Rate/g, 'Enflasyon Oranı');
-    tr = tr.replace(/Unemployment Rate/g, 'İşsizlik Oranı');
-    tr = tr.replace(/Interest Rate Decision/g, 'Faiz Kararı');
-    tr = tr.replace(/MoM/g, '(Aylık)');
-    tr = tr.replace(/YoY/g, '(Yıllık)');
-    tr = tr.replace(/QoQ/g, '(Çeyreklik)');
-    tr = tr.replace(/Prel/g, '(Öncü)');
-    tr = tr.replace(/Final/g, '(Nihai)');
+    tr = tr.replace(/ISM Manufacturing Prices/gi, 'ISM İmalat Fiyat Endeksi');
+    tr = tr.replace(/ISM Manufacturing Price/gi, 'ISM İmalat Fiyat Endeksi');
+    tr = tr.replace(/Manufacturing Prices/gi, 'İmalat Fiyat Endeksi');
+    tr = tr.replace(/Manufacturing Price/gi, 'İmalat Fiyat Endeksi');
+    tr = tr.replace(/Manufacturing PMI/gi, 'İmalat PMI');
+    tr = tr.replace(/Services PMI/gi, 'Hizmet PMI');
+    tr = tr.replace(/Inflation Rate/gi, 'Enflasyon Oranı');
+    tr = tr.replace(/Unemployment Rate/gi, 'İşsizlik Oranı');
+    tr = tr.replace(/Interest Rate Decision/gi, 'Faiz Kararı');
+    tr = tr.replace(/Trade Balance/gi, 'Ticaret Dengesi');
+    tr = tr.replace(/Retail Sales/gi, 'Perakende Satışlar');
+    tr = tr.replace(/Consumer Sentiment/gi, 'Tüketici Duyarlılığı');
+    tr = tr.replace(/MoM/gi, '(Aylık)');
+    tr = tr.replace(/YoY/gi, '(Yıllık)');
+    tr = tr.replace(/QoQ/gi, '(Çeyreklik)');
+    tr = tr.replace(/Prel/gi, '(Öncü)');
+    tr = tr.replace(/Final/gi, '(Nihai)');
 
     return tr;
 }

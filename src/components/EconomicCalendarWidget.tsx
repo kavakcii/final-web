@@ -16,6 +16,7 @@ export interface CalendarEvent {
     forecast?: string;
     impact: 'low' | 'medium' | 'high' | 'critical';
     isToday?: boolean;
+    originalDate?: any;
 }
 
 interface EconomicCalendarWidgetProps {
@@ -26,6 +27,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
     const router = useRouter();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [now, setNow] = useState<Date>(new Date());
 
     useEffect(() => {
         const fetchCalendarData = async () => {
@@ -43,6 +45,13 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         };
 
         fetchCalendarData();
+
+        // Update current time every 30 seconds for live soon alert
+        const interval = setInterval(() => {
+            setNow(new Date());
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     // Sadece Bugün haberlerini filtrele
@@ -52,7 +61,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         return true;
     });
 
-    // Bugünün Tarihi (03.08.2026 Formatında TSİ)
+    // Bugünün Tarihi (03.08.2026 Formatında TSİ - Beyaz Metin)
     const todayFormattedDate = new Date().toLocaleDateString('tr-TR', {
         timeZone: 'Europe/Istanbul',
         day: '2-digit',
@@ -60,18 +69,43 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         year: 'numeric'
     });
 
-    // Sinyal Barları (Beyaz Parlak Kontrastlı Gösterge)
+    // Etki Sinyal Barları (Tam Net, Beyaz & Yüksek Kontrastlı)
     const renderSignalBars = (impact: string) => {
         const isHigh = impact === 'high' || impact === 'critical';
         const isMedium = impact === 'medium';
 
         return (
             <div className="flex items-end gap-[2px] h-3.5 w-4" title={isHigh ? "Yüksek Etki" : "Orta Etki"}>
-                <div className={`w-[3px] rounded-xs ${isHigh || isMedium ? 'h-1.5 bg-white shadow-sm' : 'h-1 bg-white/30'}`} />
-                <div className={`w-[3px] rounded-xs ${isHigh || isMedium ? 'h-2.5 bg-white shadow-sm' : 'h-1 bg-white/30'}`} />
-                <div className={`w-[3px] rounded-xs ${isHigh ? 'h-3.5 bg-amber-300 shadow-sm' : 'h-1 bg-white/30'}`} />
+                <div className={`w-[3px] rounded-xs ${isHigh || isMedium ? 'h-1.5 bg-white drop-shadow-[0_0_2px_rgba(255,255,255,0.9)]' : 'h-1 bg-white/20'}`} />
+                <div className={`w-[3px] rounded-xs ${isHigh || isMedium ? 'h-2.5 bg-white drop-shadow-[0_0_2px_rgba(255,255,255,0.9)]' : 'h-1 bg-white/20'}`} />
+                <div className={`w-[3px] rounded-xs ${isHigh ? 'h-3.5 bg-white drop-shadow-[0_0_4px_rgba(255,255,255,1)]' : 'h-1 bg-white/20'}`} />
             </div>
         );
+    };
+
+    // Açıklanan Veri & Son 30 Dakika "Yakında" Yanıp Sönme Mantığı
+    const renderActualValue = (item: CalendarEvent) => {
+        if (item.actual && item.actual !== 'Bekleniyor' && item.actual !== '-') {
+            return <span className="font-black text-white">{item.actual}</span>;
+        }
+
+        // Check if event time is within the next 30 minutes (or past 15 mins)
+        if (item.originalDate) {
+            const eventTimestamp = new Date(item.originalDate).getTime();
+            const currentTimestamp = now.getTime();
+            const diffMinutes = (eventTimestamp - currentTimestamp) / (1000 * 60);
+
+            // Son 30 dakika ve açıklanma zamanına 15 dk geçene kadar: "Yakında" (Sarı - Beyaz Yanıp Söner)
+            if (diffMinutes <= 30 && diffMinutes >= -30) {
+                return (
+                    <span className="font-black text-amber-300 animate-pulse tracking-wider bg-amber-400/20 px-2 py-0.5 rounded-lg border border-amber-300/40 inline-block shadow-sm">
+                        Yakında 🔥
+                    </span>
+                );
+            }
+        }
+
+        return <span className="font-bold text-white/60">Bekleniyor</span>;
     };
 
     const handleCardClick = () => {
@@ -148,23 +182,23 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                                             </div>
                                         </td>
 
-                                        {/* Etki Sinyal Barları (Tam Beyaz & Parlak) */}
+                                        {/* Etki Sinyal Barları (Tam Net & Beyaz) */}
                                         <td className="py-3.5 px-2 text-center align-top pt-4">
                                             <div className="flex justify-center">
                                                 {renderSignalBars(item.impact)}
                                             </div>
                                         </td>
 
-                                        {/* Haber Başlığı (Tam Beyaz) */}
+                                        {/* Haber Başlığı (%100 Türkçe & Tam Beyaz) */}
                                         <td className="py-3.5 px-3 align-top">
-                                            <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block">
+                                            <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug">
                                                 {item.event}
                                             </span>
                                         </td>
 
-                                        {/* Açıklanan (Actual) */}
-                                        <td className="py-3.5 px-3 text-right font-black text-white align-top">
-                                            {item.actual || 'Bekleniyor'}
+                                        {/* Açıklanan (Actual veya Son 30 Dk Yanıp Sönen "Yakında 🔥") */}
+                                        <td className="py-3.5 px-3 text-right align-top">
+                                            {renderActualValue(item)}
                                         </td>
 
                                         {/* Beklenen (Forecast) */}
@@ -188,12 +222,12 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                 )}
             </div>
 
-            {/* Footer - Bugünün Tarihi (03.08.2026) */}
+            {/* Footer - Bugünün Tarihi (Tam Beyaz Metin) */}
             <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[11px] font-bold text-white">
-                <span className="flex items-center gap-1.5 font-black tracking-wider text-amber-300">
+                <span className="flex items-center gap-1.5 font-black tracking-wider text-white">
                     Tarih: {todayFormattedDate}
                 </span>
-                <span className="text-blue-200 font-bold">
+                <span className="text-white/80 font-bold">
                     {filteredEvents.length} Haber
                 </span>
             </div>
