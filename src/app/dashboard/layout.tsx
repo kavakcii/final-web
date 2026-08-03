@@ -100,12 +100,12 @@ function DashboardShell({
                 <div className="flex-1 flex bg-transparent">
                     
                     {/* Sidebar (Premium Frosted Glass) */}
-                    <aside className="w-24 hover:w-72 border-r border-white/40 premium-frost hidden md:flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen">
+                    <aside className="w-32 md:w-24 md:hover:w-72 border-r border-white/40 premium-frost flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen">
                         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10 relative z-10">
                             <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
                                 <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.1)]" />
-                                <span className="text-2xl font-black tracking-tighter text-[#00008B] opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] group-hover:translate-x-0 whitespace-nowrap">
+                                <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-0 md:translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap">
                                     FinAi<span className="text-blue-600">.</span>
                                 </span>
                             </Link>
@@ -117,7 +117,7 @@ function DashboardShell({
                                 return (
                                     <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/5'}`}>
                                         <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/60 group-hover/nav:text-[#00008B] transition-colors'}`} />
-                                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 uppercase tracking-widest text-[10px]">
+                                        <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate">
                                             {item.label}
                                         </span>
                                     </Link>
@@ -128,7 +128,7 @@ function DashboardShell({
                         <div className="p-4 border-t border-white/10 shrink-0">
                             <button onClick={handleLogout} className="flex items-center px-4 py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left group/out">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
-                                <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 ml-3 uppercase tracking-wider text-[11px]">
+                                <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate">
                                     Çıkış Yap
                                 </span>
                             </button>
