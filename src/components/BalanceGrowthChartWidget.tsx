@@ -252,9 +252,11 @@ export function BalanceGrowthChartWidget() {
                                             fontWeight:      'bold',
                                             boxShadow:       '0 10px 25px -5px rgba(0, 0, 139, 0.3)'
                                         }}
+                                        labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: 2 }}
+                                        itemStyle={{ color: '#ffffff' }}
                                         formatter={(value: any) => [
                                             `₺${Number(value).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
-                                            'Portföy Değeri'
+                                            ''
                                         ]}
                                     />
                                     <Area
