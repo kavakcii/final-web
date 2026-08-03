@@ -8,8 +8,8 @@ import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-
 
 // Overview Description Map (Türkçe Özellik Açıklamaları)
 const OVERVIEW_TR_DESCRIPTIONS: Record<string, string> = {
-    "Dış Ticaret Dengesi": "Türkiye dış ticaret dengesi 1947 yılından bu yana açık vermektedir. Türkiye'nin başlıca ihracat kalemi kara taşıtları, tekstil, demir-çelik, giyim ve gıda ürünlerinden oluşurken; ithalat kalemleri makine, ulaşım ekipmanları, işlenmiş mallar, mineral yakıtlar, yağlar ve kimyasallardan oluşmaktadır. En büyük ticaret açıkları Çin, Rusya, Almanya, Güney Kore, İsviçre, Hindistan, İran ve Japonya ile verilirken; en büyük ticaret fazlası ise Irak, BAE, Birleşik Krallık, İsrail, Suriye, Kuzey Kıbrıs ve Azerbaycan ile verilmektedir.",
-    "Aylık Tüketici Fiyat Endeksi (TÜFE)": "Tüketici Fiyat Endeksi (TÜFE), hanehalklarının satın aldığı mal ve hizmet sepetinin fiyatlarındaki ortalama değişimini ölçer. Türkiye'de TÜFE verisi enflasyon oranının ana göstergesidir ve TCMB faiz kararları, mevduat faizleri ile borsa değerlemeleri üzerinde doğrudan etkiye sahiptir.",
+    "Dış Ticaret Dengesi": "Türkiye dış ticaret dengesi 1947 yılından bu yana açık vermektedir. Türkiye'nin başlıca ihracat kalemi kara taşıtları, tekstil, demir-çelik, giyim ve gıda ürünlerinden oluşurken; ithalat kalemleri makine, ulaşım ekipmanları, işlenmiş mallar, mineral yakıtlar, yağlar ve kimyasallardan oluşmaktadır. En büyük ticaret açıkları Çin, Rusya, Almanya, Güney Kore, İsviçre, Hindistan, İran ve Japonya ile verilerken; en büyük ticaret fazlası ise Irak, BAE, Birleşik Krallık, İsrail, Suriye, Kuzey Kıbrıs ve Azerbaycan ile verilmektedir.",
+    "Aylık Tüketici Fiyat Endeksi (TÜFE)": "Tüketici Fiyat Endeksi (TÜFE), hanehalklarının satın aldığı mal ve hizmet sepetindeki fiyatların ortalama değişimini ölçer. Türkiye'de TÜFE verisi enflasyon oranının ana göstergesidir ve TCMB faiz kararları, mevduat faizleri ile borsa değerlemeleri üzerinde doğrudan etkiye sahiptir.",
     "Yıllık Enflasyon Oranı (TÜFE)": "Yıllık TÜFE Enflasyonu, son 12 ay içerisindeki tüketici fiyat seviyesinin yıllık bazdaki artış hızını gösterir. Enflasyondaki düşüş (dezenflasyon) süreci piyasalar ve TL varlıkları açısından olumlu algılanır.",
     "Aylık Üretici Fiyat Endeksi (ÜFE)": "Üretici Fiyat Endeksi (ÜFE), ülke ekonomisinde üretilen malların üretici aşamasındaki fiyat değişimlerini ölçer. ÜFE maliyet artışlarını yansıttığı için ilerleyen aylarda TÜFE enflasyonu üzerinde öncü gösterge niteliğindedir.",
     "ISM İmalat PMI Endeksi": "ISM İmalat PMI, ABD sanayi ve imalat sektöründeki satınalma yöneticilerinin sipariş, üretim ve istihdam beklentilerini ölçen en önemli makro veridir. 50 üzerindeki değerler sektörde büyümeyi, 50 altı ise daralmayı ifade eder.",
@@ -98,67 +98,103 @@ const THREE_CARD_EDUCATION_MAP: Record<string, EducationThreeCards> = {
     }
 };
 
-// Widget 2: "Bu Veri Neleri Etkiler?" Data Map
+// Widget 2: "Bu Veri Neleri Etkiler?" Data Map (Habere Özel Özel Başlıklar ve İçerikler)
 interface DataEffects {
+    dailyLifeTitle: string;
     dailyLifeEffect: string;
+    bankingCreditTitle: string;
     bankingCreditEffect: string;
+    marketAssetsTitle: string;
     marketAssetsEffect: string;
 }
 
 const DATA_EFFECTS_MAP: Record<string, DataEffects> = {
     "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
+        dailyLifeTitle: "1. Market Etiketlerini, Ev Kiralarını ve Maaş Zamlarını Etkiler",
         dailyLifeEffect: "TÜFE enflasyonu doğrudan ev kiranızı, market etiketlerini ve maaş zam oranlarınızı etkiler. Rakam yüksek çıktığında önümüzdeki aylarda alışveriş sepetinizin pahalılaşacağını ve alım gücünüzün azalacağını gösterir.",
+        bankingCreditTitle: "2. Banka Kredi Maliyetlerini ve Vadeli Mevduat Getirilerini Etkiler",
         bankingCreditEffect: "Merkez Bankası enflasyonu düşürmek için faiz artırdığında; konut, araç ve ihtiyaç kredisi faizleri tırmanır. Kredi çekip ev/araba almak zorlaşır ancak bankadaki vadeli mevduatınızın faiz getirisi yükselir.",
+        marketAssetsTitle: "3. Borsa Hisselerini, Dolar/TL ve Gram Altın Fiyatlarını Etkiler",
         marketAssetsEffect: "Büyük yatırımcılar paralarını enflasyona karşı korumak için saniyeler içinde karar verir. Yüksek faiz beklentisiyle Borsa İstanbul'daki hisseler kısa vadede satış yiyebilir; Dolar/TL ve kuyumcudaki Gram Altın fiyatlarında yukarı yönlü hareketlenme yaşanır."
     },
     "Yıllık Enflasyon Oranı (TÜFE)": {
+        dailyLifeTitle: "1. Yıllık Kira Artış Tavanını ve Asgari Ücret Güncellemelerini Etkiler",
         dailyLifeEffect: "Yıllık bazdaki ev kiralama artış tavanınızı, asgari ücret ve memur maaş güncellemelerini doğrudan etkiler.",
+        bankingCreditTitle: "2. Bankaların Uzun Vadeli Konut Kredileri ve Mevduat Getirilerini Etkiler",
         bankingCreditEffect: "Bankaların uzun vadeli konut kredisi faiz oranlarını ve mevduat ürünlerinin reel getirisini etkiler.",
+        marketAssetsTitle: "3. Enflasyondan Korunma Yatırımlarını ve Borsa Varlıklarını Etkiler",
         marketAssetsEffect: "Yıllık enflasyon faizlerin üzerindeyse parayı korumak için hisse senetleri ve altın yatırımlarına hücum yaşanır."
     },
     "Aylık Üretici Fiyat Endeksi (ÜFE)": {
+        dailyLifeTitle: "1. Fabrika Çıkış Fiyatlarını ve İlerleyen Aylardaki Tüketici Zamlarını Etkiler",
         dailyLifeEffect: "Fabrikaların üretim maliyetlerini etkiler. Yüksek ÜFE 1-2 ay sonra tükettiğiniz tüm ürün ve hizmetlerin raf etiketlerine zam olarak yansır.",
+        bankingCreditTitle: "2. Sanayi Şirketlerinin Ticari Kredi İhtiyacını ve Borçlanmasını Etkiler",
         bankingCreditEffect: "Şirketlerin borçlanma ihtiyacını etkiler. Üretim maliyetleri artan sanayiciler bankalara daha fazla ticari kredi başvurusu yapar.",
+        marketAssetsTitle: "3. İmalat ve Sanayi Şirketlerinin Kâr Marjları ile Hisselerini Etkiler",
         marketAssetsEffect: "İmalat şirketlerinin kâr marjlarını etkiler. Yüksek maliyet yükü sanayi hisselerini düşürebilir."
     },
     "ISM İmalat PMI Endeksi": {
+        dailyLifeTitle: "1. Fabrika Siparişlerini, İstihdam Canlılığını ve İş İmkânlarını Etkiler",
         dailyLifeEffect: "İş bulma imkanlarını ve piyasadaki istihdam canlılığını etkiler. Fabrikalar daha çok sipariş aldıkça yeni eleman alımları artar.",
+        bankingCreditTitle: "2. Büyüme Durgunluk Riski Karşısında Merkez Bankası Faizlerini Etkiler",
         bankingCreditEffect: "Ekonomide büyüme veya resesyon tehlikesine göre faiz oranlarını etkiler. PMI düşükse Merkez Bankası kredileri ucuzlatmak için faiz indirir.",
+        marketAssetsTitle: "3. Sanayi Hisselerini, Borsa Kârlılıklarını ve Doların Gücünü Etkiler",
         marketAssetsEffect: "Sanayi hisselerini ve küresel Dolar gücünü etkiler. Yüksek PMI borsa şirket karlarını uçurur."
     },
     "S&P Global İmalat PMI (Nihai)": {
+        dailyLifeTitle: "1. Fabrika Üretim Hacmini ve Genel Ekonomik Canlılığı Etkiler",
         dailyLifeEffect: "Fabrikaların çarklarının ne kadar hızlı döndüğünü ve genel ekonomik canlılığı etkiler.",
+        bankingCreditTitle: "2. Ticari Sanayi Kredilerinin Büyüme Hızını ve Banka İştahını Etkiler",
         bankingCreditEffect: "Sanayi kredilerinin büyüme hızını ve bankaların ticari kredi iştahını etkiler.",
+        marketAssetsTitle: "3. İhracatçı Şirket Hisselerini ve Yabancı Sermaye Girişini Etkiler",
         marketAssetsEffect: "İhracatçı şirket hisselerini ve doğrudan yabancı sermaye girişlerini etkiler."
     },
     "Fed Politika Faizi Kararı": {
+        dailyLifeTitle: "1. Küresel Borçlanma Maliyetlerini ve İthal Ürün Fiyatlarını Etkiler",
         dailyLifeEffect: "Küresel kredi kartı faizlerini, taksitli borçlanmanızı ve dövizle aldığınız tüm ithal ürünlerin maliyetini etkiler.",
+        bankingCreditTitle: "2. Uluslararası Banka Kredi Faizlerini ve Küresel Likiditeyi Etkiler",
         bankingCreditEffect: "Dünya genelindeki tüm bankaların faiz politikalarını etkiler. Yüksek Fed faizi küresel borçlanmayı zorlaştırır.",
+        marketAssetsTitle: "3. Ons Altın, Küresel Dolar Gücü ve Dünya Borsalarını Etkiler",
         marketAssetsEffect: "Borsa İstanbul, Ons Altın ve Dolar/TL fiyatlarını anında etkiler. Faiz düştüğünde borsalara para akar, faiz yükseldiğinde hisselerden para çıkabilir."
     },
     "TCMB Politika Faizi Kararı": {
+        dailyLifeTitle: "1. Kredi Kartı Asgari Ödeme Faizlerini ve Taksitli Harcamaları Etkiler",
         dailyLifeEffect: "Kredi kartı asgari ödeme faizlerinizi, kredili mevduat hesaplarınızı (KMH) ve taksitli harcamalarınızı doğrudan etkiler.",
+        bankingCreditTitle: "2. Bankaların Konut, Taşıt ve Vadeli Mevduat Faiz Oranlarını Etkiler",
         bankingCreditEffect: "Bankaların konut, taşıt ve mevduat faiz oranlarını tabandan tavanına kadar etkiler. Faiz artarsa borçlanmak zorlaşır, mevduat fonu kazandırır.",
+        marketAssetsTitle: "3. Borsa İstanbul Değerlemelerini ve Türk Lirası Kurlarını Etkiler",
         marketAssetsEffect: "Borsa İstanbul ve TL döviz kurlarını doğrudan etkiler. Faiz artırımı TL'ye değer kazandırır."
     },
     "Tarım Dışı İstihdam Değişimi (NFP)": {
+        dailyLifeTitle: "1. Küresel İşgücü Piyasası Canlılığını ve İş İmkanlarını Etkiler",
         dailyLifeEffect: "Dünya ekonomisindeki istihdam canlılığını ve küresel refah seviyesini etkiler.",
+        bankingCreditTitle: "2. Fed'in Faiz İndirimi veya Artırımı Zamanlamasını Etkiler",
         bankingCreditEffect: "Amerikan Merkez Bankası'nın (Fed) faiz indirme veya artırma zamanlamasını etkiler.",
+        marketAssetsTitle: "3. Kuyumcudaki Gram Altın, Ons Altın ve Dolar/TL Kurlarını Etkiler",
         marketAssetsEffect: "Kuyumcudaki Gram Altın ve Dolar/TL fiyatını saniyeler içinde etkiler. Yüksek veri Doları güçlendirir, Altını geriletebilir."
     },
     "Dış Ticaret Dengesi": {
+        dailyLifeTitle: "1. İthal Ürün Fiyatlarını, Teknolojik Cihaz ve Akaryakıt Maliyetini Etkiler",
         dailyLifeEffect: "Ülkeye giren ithal malların, teknolojik cihazların ve akaryakıtın fiyatını etkiler.",
+        bankingCreditTitle: "2. Merkez Bankası Döviz Rezervlerini ve Ülke Dış Borçlanmasını Etkiler",
         bankingCreditEffect: "Ülkenin döviz rezervlerini ve Merkez Bankası'nın döviz kurlarını koruma kapasitesini etkiler.",
+        marketAssetsTitle: "3. Dolar/TL ve Euro/TL Kur Baskısını Etkiler",
         marketAssetsEffect: "Dolar ve Euro kurunun üzerindeki baskıyı doğrudan etkiler. Dış ticaret açığı büyürse kurlar yukarı yönlenir."
     },
     "İşsizlik Oranı": {
+        dailyLifeTitle: "1. İş Gücü Piyasasını ve Maaş Teklif Seviyelerini Etkiler",
         dailyLifeEffect: "Halkın genel iş bulma kolaylığını ve şirketlerin maaş teklif seviyelerini etkiler.",
+        bankingCreditTitle: "2. Tüketici Kredileri Geri Ödemelerini ve Kredi İştahını Etkiler",
         bankingCreditEffect: "Tüketici kredileri geri ödeme performanslarını ve taksitli kredi iştahını etkiler.",
+        marketAssetsTitle: "3. Perakende ve Tüketim Şirketlerinin Mağaza Cirolarını Etkiler",
         marketAssetsEffect: "Perakende ve tüketim hisselerinin mağaza cirolarını etkiler."
     },
     "Default": {
+        dailyLifeTitle: "1. Piyasadaki Fiyat Düzeyini ve Yaşam Maliyetini Etkiler",
         dailyLifeEffect: "Piyasadaki fiyatları, harcama imkanlarını ve yaşam maliyetini etkiler.",
+        bankingCreditTitle: "2. Kredi ve Mevduat Faiz Oranlarının Genel Yönünü Etkiler",
         bankingCreditEffect: "Kredi ve mevduat faiz oranlarının yönünü etkiler.",
+        marketAssetsTitle: "3. Borsa, Döviz Kurları ve Yatırım Varlıklarını Etkiler",
         marketAssetsEffect: "Borsa, döviz kurları ve altın fiyatlarındaki dengeleri etkiler."
     }
 };
@@ -208,7 +244,7 @@ const EVENT_SCENARIOS_MAP: Record<string, EventCauseEffectScenarioGroup> = {
         below: {
             title: "Beklentinin Altında Gelirse",
             badge: "Hızlı Gerileme",
-            paragraph: "Yıllık enflasyon oranının tahmin edilenden belirgin şekilde düşük çıkması, baz etkisinin de katkısıyla dezenflasyon sürecinin hızlandığını gösterir. Paranın satın alma gücündeki aşınmanın yavaşlaması piyasa moralini yükseltir ve yabancı sermaye girişlerini teşvik eder. Merkez Bankası'nın faiz indirim döngüsünü başlatması veya hızlandırması için güçlü bir zemin oluşur. Kredi erişiminin kolaylaşacağı ve sermaye maliyetinin düşeceği algısıyla reel sektör yatırımları cesaret kazanır."
+            paragraph: "Yıllık enflasyon oranının tahmin edilenden belirgin şekilde düşük çıkması, baz etkisinin de katkısıyla dezenflasyon sürecinin hızlandığını gösterir. Paranın satın alma gücündeki aşınmanın yavaşlaması piyasa moralini yükseltir ve yabancı sermaye girişlerini teşvik eder. Merkez Bankası'nın faiz indirim döngüsünü başlatması veya hızlandırması için güçlü bir zemin oluşur. Kredi erişiminin kolaylaşacağı ve sermaye maliyetinin düşeceği algısıyla reel sektor yatırımları cesaret kazanır."
         }
     },
     "Aylık Üretici Fiyat Endeksi (ÜFE)": {
@@ -459,12 +495,12 @@ export default function EconomicEventDetailPage() {
         THREE_CARD_EDUCATION_MAP[Object.keys(THREE_CARD_EDUCATION_MAP).find(k => event.event.includes(k)) || ""] ||
         THREE_CARD_EDUCATION_MAP["Default"];
 
-    // Widget 2: "Bu Veri Neleri Etkiler?" Object
+    // Widget 2: "Bu Veri Neleri Etkiler?" Object (Habere Özel Dinamik Başlıklar)
     const dataEffects = DATA_EFFECTS_MAP[event.event] ||
         DATA_EFFECTS_MAP[Object.keys(DATA_EFFECTS_MAP).find(k => event.event.includes(k)) || ""] ||
         DATA_EFFECTS_MAP["Default"];
 
-    // Widget 4: Scenario Analysis Object Group (Fluid Explanatory Paragraphs)
+    // Widget 4: Scenario Analysis Object Group
     const scenarios = EVENT_SCENARIOS_MAP[event.event] ||
         EVENT_SCENARIOS_MAP[Object.keys(EVENT_SCENARIOS_MAP).find(k => event.event.includes(k)) || ""] ||
         EVENT_SCENARIOS_MAP["Default"];
@@ -493,7 +529,7 @@ export default function EconomicEventDetailPage() {
                     </Link>
                 </div>
 
-                {/* Event Main Header Banner (LACİVERT ZEMİN) */}
+                {/* Event Main Header Banner */}
                 <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
                     <div className="relative z-10 space-y-6">
                         {/* Üst Başlık Alanı */}
@@ -505,7 +541,7 @@ export default function EconomicEventDetailPage() {
                             </div>
                         </div>
 
-                        {/* ÖZET BİLGİ KUTUSU (Tamamen Beyaz Başlık ve İkon) */}
+                        {/* ÖZET BİLGİ KUTUSU */}
                         <div className="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md leading-relaxed space-y-2">
                             <p className="text-white font-bold text-sm flex items-center gap-2">
                                 <Info className="w-4 h-4 text-white" /> Veri Hakkında Özet Bilgi:
@@ -663,7 +699,7 @@ export default function EconomicEventDetailPage() {
                             </div>
                         </div>
 
-                        {/* WIDGET 2: Bu Veri Neleri Etkiler? (İKON KUTULARI KALDIRILMIŞ SADE PANEL YAPISI) */}
+                        {/* WIDGET 2: Bu Veri Neleri Etkiler? (HABERE ÖZEL DİNAMİK PANEL BAŞLIKLARI VE İÇERİKLERİ) */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
                             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
                                 <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
@@ -674,32 +710,32 @@ export default function EconomicEventDetailPage() {
                                 </div>
                             </div>
 
-                            {/* 3 ODAK PANELİ (İkon kutuları tamamen kaldırılmış tam genişlikli metin kutuları) */}
+                            {/* 3 ODAK PANELİ (Her habere özel değişen dinamik özel başlıklar) */}
                             <div className="space-y-4">
-                                {/* Panel 1: Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler */}
+                                {/* Panel 1: Habere Özel 1. Başlık */}
                                 <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 space-y-1.5">
                                     <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">
-                                        1. Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler
+                                        {dataEffects.dailyLifeTitle}
                                     </h4>
                                     <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                         {dataEffects.dailyLifeEffect}
                                     </p>
                                 </div>
 
-                                {/* Panel 2: Banka Kredilerini ve Mevduat Faizlerini Etkiler */}
+                                {/* Panel 2: Habere Özel 2. Başlık */}
                                 <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-1.5">
                                     <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">
-                                        2. Banka Kredilerini ve Mevduat Faizlerini Etkiler
+                                        {dataEffects.bankingCreditTitle}
                                     </h4>
                                     <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                         {dataEffects.bankingCreditEffect}
                                     </p>
                                 </div>
 
-                                {/* Panel 3: Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler */}
+                                {/* Panel 3: Habere Özel 3. Başlık */}
                                 <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-1.5">
                                     <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                                        3. Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler
+                                        {dataEffects.marketAssetsTitle}
                                     </h4>
                                     <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                         {dataEffects.marketAssetsEffect}
@@ -709,7 +745,7 @@ export default function EconomicEventDetailPage() {
                         </div>
                     </div>
 
-                    {/* Right Column (1 Col): Scenario Analysis (Zengin ve Akıcı Paragraf Yapısı) */}
+                    {/* Right Column (1 Col): Scenario Analysis */}
                     <div className="space-y-6">
                         {/* WIDGET 4: SENARYO ANALİZİ */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
@@ -753,7 +789,7 @@ export default function EconomicEventDetailPage() {
                                 </button>
                             </div>
                             
-                            {/* AKTİF SEÇİLİ SENARYO PARAGRAF KARTI (TEK VE ZENGİN ANLATIM KARTI) */}
+                            {/* AKTİF SEÇİLİ SENARYO PARAGRAF KARTI */}
                             <div className={`p-5 rounded-2xl border space-y-3 transition-all ${
                                 activeScenarioTab === 'above'
                                     ? 'bg-emerald-50/90 border-emerald-200'
