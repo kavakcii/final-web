@@ -53,12 +53,32 @@ export function BalanceGrowthChartWidget() {
         setLoading(true);
         try {
             const data = await PortfolioService.getHistory(range);
-            setChartData(
-                data.map((item: any) => ({
-                    date:    formatDate(item.snapshot_date),
-                    balance: Number(item.total_value ?? 0)
-                }))
-            );
+            const mapped: { date: string; balance: number }[] = data.map((item: any) => ({
+                date:    formatDate(item.snapshot_date),
+                balance: Number(item.total_value ?? 0)
+            }));
+
+            // Seçili zaman diliminin sol ucuna sentetik başlangıç noktası ekle.
+            // Grafik her zaman soldan başlar; yeni veriler geldikçe çizgi sağa büyür.
+            if (mapped.length > 0) {
+                const firstValue = mapped[0].balance;
+                const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+                const startDate = new Date(now);
+                if (range === '1W')       startDate.setDate(now.getDate() - 7);
+                else if (range === '1M')  startDate.setDate(now.getDate() - 30);
+                else if (range === '3M')  startDate.setDate(now.getDate() - 90);
+                else if (range === 'YTD') startDate.setMonth(0, 1);
+                else                      startDate.setFullYear(now.getFullYear() - 1);
+
+                const startLabel = startDate.toLocaleDateString('tr-TR', {
+                    day: '2-digit', month: 'short', timeZone: 'Europe/Istanbul'
+                });
+                if (mapped[0].date !== startLabel) {
+                    mapped.unshift({ date: startLabel, balance: firstValue });
+                }
+            }
+
+            setChartData(mapped);
         } catch {
             setChartData([]);
         } finally {
