@@ -260,13 +260,9 @@ export function BalanceGrowthChartWidget() {
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
-                                        width={58}
+                                        width={90}
                                         domain={['dataMin', 'dataMax']}
-                                        tickFormatter={(v: number) => {
-                                            if (v >= 1_000_000) return `₺${(v / 1_000_000).toFixed(1)}M`;
-                                            if (v >= 1_000)     return `₺${(v / 1_000).toFixed(1)}k`;
-                                            return `₺${v.toFixed(0)}`;
-                                        }}
+                                        tickFormatter={(v: number) => `₺${v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                                         tickCount={5}
                                     />
                                     <Tooltip
