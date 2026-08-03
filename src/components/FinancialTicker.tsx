@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ArrowUp, ArrowDown, Activity, Settings, Plus, X, Check, Search, Loader2 } from "lucide-react";
-import { BIST_CATALOG, COMMODITY_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalogs";
+import { BIST_CATALOG, COMMODITY_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 
 interface Quote {
     symbol: string;
