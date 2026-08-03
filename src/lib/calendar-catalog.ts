@@ -18,7 +18,7 @@ export interface CatalogCalendarEvent {
 
 // 3 Haftalık Kapsamlı Önceden Çevrilmiş ve İndekslenmiş Ekonomik Takvim Kataloğu
 export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
-    // --- BUGÜN & BU HAFTA (1. HAFTA) ---
+    // --- BUGÜN & BU HAFTA (1. HAFTA: 03 AĞUSTOS 2026) ---
     {
         id: "tr_cpi_mom_1",
         dateFormatted: "03.08.2026",
@@ -104,7 +104,7 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "ISM İmalat PMI Endeksi",
         forecast: "49,5",
         previous: "48,5",
-        actual: "49,8",
+        actual: "Bekleniyor",
         impact: "high",
         isToday: true,
         weekOffset: 0
@@ -119,7 +119,7 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "ISM İmalat Fiyat Endeksi",
         forecast: "53,2",
         previous: "52,1",
-        actual: "53,8",
+        actual: "Bekleniyor",
         impact: "high",
         isToday: true,
         weekOffset: 0
@@ -134,7 +134,7 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "Aylık İnşaat Harcamaları",
         forecast: "%0,2",
         previous: "-%0,1",
-        actual: "%0,3",
+        actual: "Bekleniyor",
         impact: "medium",
         isToday: true,
         weekOffset: 0
@@ -151,7 +151,7 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "Dış Ticaret Dengesi (Öncü)",
         forecast: "-7,2 B $",
         previous: "-10,37 B $",
-        actual: "-6,9 B $",
+        actual: "Bekleniyor",
         impact: "high",
         isTomorrow: true,
         weekOffset: 0
