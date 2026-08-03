@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ArrowUp, ArrowDown, Activity, Settings, Plus, X, Check, Search, Loader2 } from "lucide-react";
-import { BIST_CATALOG, COMMODITY_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
+import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 
 interface Quote {
     symbol: string;
@@ -19,6 +19,14 @@ const SYMBOL_NAMES: Record<string, string> = {
     "BTC-TRY": "Bitcoin (TL)",
     "XAUTRY=X": "Gram Altın"
 };
+
+const COMMODITY_CATALOG = [
+    { symbol: "ALTIN", name: "Gram Altın", type: "Altın" },
+    { symbol: "GUMUS", name: "Gram Gümüş", type: "Altın/Emtia" },
+    { symbol: "ALTIN.S1", name: "Darphane Altın Sertifikası", type: "Altın" },
+    { symbol: "BTC", name: "Bitcoin (BTC)", type: "Kripto" },
+    { symbol: "ETH", name: "Ethereum (ETH)", type: "Kripto" }
+];
 
 export function FinancialTicker() {
     const [symbols, setSymbols] = useState<string[]>(DEFAULT_SYMBOLS);
