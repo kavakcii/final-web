@@ -14,6 +14,7 @@ export interface CatalogCalendarEvent {
     isTomorrow?: boolean;
     weekOffset: number; // 0 = Bu Hafta, 1 = Gelecek Hafta, 2 = 3. Hafta
     originalDate?: any;
+    releasedAt?: string; // ISO string
 }
 
 // 3 Haftalık Kapsamlı Önceden Çevrilmiş ve İndekslenmiş Ekonomik Takvim Kataloğu
@@ -491,3 +492,65 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         weekOffset: 2
     }
 ];
+
+/**
+ * Haber açıklanma zamanı (Date objesi olarak)
+ */
+export function getEventReleaseTimestamp(event: CatalogCalendarEvent): Date | null {
+    if (event.releasedAt) return new Date(event.releasedAt);
+
+    if (!event.dateFormatted || !event.time) return null;
+    
+    // Parse DD.MM.YYYY and HH:mm
+    const [day, month, year] = event.dateFormatted.split('.').map(Number);
+    const [hour, minute] = event.time.split(':').map(Number);
+
+    if (!day || !month || !year || isNaN(hour) || isNaN(minute)) return null;
+
+    // TSİ (UTC+3)
+    return new Date(Date.UTC(year, month - 1, day, hour - 3, minute));
+}
+
+/**
+ * Açıklanan verinin beklentiye kıyasla durumu
+ */
+export function getActualVsForecastStatus(event: CatalogCalendarEvent): 'above' | 'below' | 'inline' | 'pending' {
+    if (!event.actual || event.actual === 'Bekleniyor' || event.actual === 'Açıklanacak') {
+        return 'pending';
+    }
+
+    const parseNum = (str: string) => {
+        if (!str) return NaN;
+        const clean = str.replace(/%/g, '').replace(/,/g, '.').replace(/B/g, '').replace(/\$/g, '').replace(/K/g, '').replace(/M/g, '').trim();
+        return parseFloat(clean);
+    };
+
+    const actVal = parseNum(event.actual);
+    const foreVal = parseNum(event.forecast);
+
+    if (isNaN(actVal) || isNaN(foreVal)) return 'inline';
+
+    if (actVal > foreVal) return 'above';
+    if (actVal < foreVal) return 'below';
+    return 'inline';
+}
+
+/**
+ * Veri açıklanalı henüz 30 dakika geçip geçmediğini kontrol eder
+ */
+export function isEventWithin30Minutes(event: CatalogCalendarEvent): boolean {
+    if (!event.actual || event.actual === 'Bekleniyor' || event.actual === 'Açıklanacak') {
+        return false;
+    }
+
+    const releaseTime = getEventReleaseTimestamp(event);
+    if (!releaseTime) return false;
+
+    const now = new Date();
+    const diffMs = now.getTime() - releaseTime.getTime();
+    const diffMinutes = diffMs / (1000 * 60);
+
+    // 0 ile 30 dakika arasında açıklanmışsa yanıp sönmeli!
+    return diffMinutes >= 0 && diffMinutes <= 30;
+}
+

@@ -4,7 +4,12 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, Calendar, Loader2, Check, Filter, Database, Zap, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
+import { 
+    ECONOMIC_CALENDAR_CATALOG, 
+    CatalogCalendarEvent, 
+    isEventWithin30Minutes, 
+    getActualVsForecastStatus 
+} from "@/lib/calendar-catalog";
 
 function parseNumber(str?: string): number | null {
     if (!str || str === '-' || str === 'Bekleniyor') return null;
@@ -20,10 +25,10 @@ export default function EconomicCalendarPage() {
     const [loading, setLoading] = useState(false);
     const [now, setNow] = useState<Date>(new Date());
 
-    // All countries selected by default so users can remove what they don't want!
+    // All countries selected by default
     const [selectedCountries, setSelectedCountries] = useState<string[]>(['TR', 'ABD', 'EU', 'UK']);
 
-    // Time Horizon Filter (Bugün, Yarın, Bu Hafta, Gelecek Hafta, Diğer Hafta, Tümü)
+    // Time Horizon Filter
     const [timeTab, setTimeTab] = useState<'today' | 'tomorrow' | 'week0' | 'week1' | 'week2' | 'all'>('all');
 
     const fetchCalendarData = async () => {
@@ -41,11 +46,11 @@ export default function EconomicCalendarPage() {
     useEffect(() => {
         fetchCalendarData();
 
-        // 5-sec fast polling for live actual releases
+        // Fast interval for scheduled event time updates & 30-min pulsing animation refresh
         const interval = setInterval(() => {
             fetchCalendarData();
             setNow(new Date());
-        }, 5000);
+        }, 3000);
 
         return () => clearInterval(interval);
     }, []);
@@ -98,44 +103,50 @@ export default function EconomicCalendarPage() {
         );
     };
 
-    // Actual vs Forecast Color Logic
+    // Actual vs Forecast Color Logic + 30-Minute Pulsing Animation
     const renderActualValue = (item: CatalogCalendarEvent) => {
-        if (item.actual && item.actual !== 'Bekleniyor' && item.actual !== '-') {
-            const actualNum = parseNumber(item.actual);
-            const forecastNum = parseNumber(item.forecast) ?? parseNumber(item.previous);
+        if (item.actual && item.actual !== 'Bekleniyor' && item.actual !== '-' && item.actual !== 'Açıklanacak') {
+            const status = getActualVsForecastStatus(item);
+            const isPulsing = isEventWithin30Minutes(item);
 
-            if (actualNum !== null && forecastNum !== null) {
-                if (actualNum > forecastNum) {
+            if (isPulsing) {
+                if (status === 'above') {
                     return (
-                        <span className="font-black text-emerald-400 flex items-center justify-end gap-0.5">
-                            <span className="text-[10px]">▲</span> {item.actual}
+                        <span className="font-black text-white bg-emerald-500 px-2.5 py-1 rounded-xl shadow-lg shadow-emerald-500/50 animate-pulse flex items-center justify-end gap-1 text-xs">
+                            <span>▲</span> {item.actual}
                         </span>
                     );
-                } else if (actualNum < forecastNum) {
+                } else if (status === 'below') {
                     return (
-                        <span className="font-black text-rose-400 flex items-center justify-end gap-0.5">
-                            <span className="text-[10px]">▼</span> {item.actual}
+                        <span className="font-black text-white bg-rose-500 px-2.5 py-1 rounded-xl shadow-lg shadow-rose-500/50 animate-pulse flex items-center justify-end gap-1 text-xs">
+                            <span>▼</span> {item.actual}
+                        </span>
+                    );
+                } else {
+                    return (
+                        <span className="font-black text-white bg-slate-700 px-2.5 py-1 rounded-xl shadow-lg shadow-slate-500/50 animate-pulse flex items-center justify-end gap-1 text-xs">
+                            {item.actual}
                         </span>
                     );
                 }
             }
 
-            return <span className="font-black text-white">{item.actual}</span>;
-        }
-
-        // Flashing Soon Alert within 30 minutes
-        if (item.originalDate) {
-            const eventTimestamp = new Date(item.originalDate).getTime();
-            const currentTimestamp = now.getTime();
-            const diffMinutes = (eventTimestamp - currentTimestamp) / (1000 * 60);
-
-            if (diffMinutes <= 30 && diffMinutes >= -30) {
+            // Static after 30 minutes
+            if (status === 'above') {
                 return (
-                    <span className="font-black text-amber-300 animate-pulse tracking-wider bg-amber-400/20 px-2 py-0.5 rounded-lg border border-amber-300/40 inline-block shadow-sm">
-                        Yakında 🔥
+                    <span className="font-black text-emerald-400 flex items-center justify-end gap-0.5">
+                        <span className="text-[10px]">▲</span> {item.actual}
+                    </span>
+                );
+            } else if (status === 'below') {
+                return (
+                    <span className="font-black text-rose-400 flex items-center justify-end gap-0.5">
+                        <span className="text-[10px]">▼</span> {item.actual}
                     </span>
                 );
             }
+
+            return <span className="font-black text-white">{item.actual}</span>;
         }
 
         return <span className="font-bold text-white/60">Bekleniyor</span>;
@@ -158,7 +169,7 @@ export default function EconomicCalendarPage() {
                         <ArrowLeft className="w-4 h-4" /> Ana Sayfaya Dön
                     </Link>
                     <div className="flex items-center gap-2 text-xs font-black text-[#00008B] bg-blue-50 px-4 py-2 rounded-2xl border border-blue-200">
-                        <Database className="w-4 h-4 text-[#00008B]" /> 3 Haftalık Ön İndekslenmiş Ekonomik Takvim Kataloğu
+                        <Database className="w-4 h-4 text-[#00008B]" /> Otomatik Canlı Veri Takip Deposu
                     </div>
                 </div>
 
@@ -170,17 +181,17 @@ export default function EconomicCalendarPage() {
                                 Özel Ekonomik Takvim
                             </h1>
                             <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1">
-                                <Zap className="w-3.5 h-3.5" /> KATALOG DEPOSU
+                                <Zap className="w-3.5 h-3.5" /> CANLI VERİ & ANIMASYON
                             </span>
                         </div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            Anında Yüklenen 3 Haftalık Önceden Çevrilmiş Makro Veri Kataloğu (TSİ UTC+3)
+                            Haber Saatlerinde Otomatik Güncellenen & 30 Dakika Yanıp Sönen Makro Veri Takvimi (TSİ UTC+3)
                         </p>
                     </div>
 
-                    {/* Filter Card Box - Vertical Grid Box Style */}
+                    {/* Filter Card Box */}
                     <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
-                        {/* Multi-Select Country Checkbox Cards (Vertical Grid Box Layout) */}
+                        {/* Multi-Select Country Checkbox Cards */}
                         <div>
                             <div className="flex items-center justify-between mb-3">
                                 <span className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
@@ -233,7 +244,7 @@ export default function EconomicCalendarPage() {
                             </div>
                         </div>
 
-                        {/* Time Horizon Filter Buttons (Bugün, Yarın, Bu Hafta, Gelecek Hafta, Diğer Hafta, Tümü) */}
+                        {/* Time Horizon Filter Buttons */}
                         <div className="pt-2 border-t border-slate-200">
                             <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block mb-3 flex items-center gap-1.5">
                                 <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Zaman Dilimi Filtresi
@@ -298,7 +309,7 @@ export default function EconomicCalendarPage() {
                                                     {item.time}
                                                 </td>
 
-                                                {/* Ülke (TR, ABD, EU, UK) */}
+                                                {/* Ülke */}
                                                 <td className="py-4 px-3 align-top">
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="text-base">{item.flag || '🌐'}</span>
@@ -315,14 +326,14 @@ export default function EconomicCalendarPage() {
                                                     </div>
                                                 </td>
 
-                                                {/* Haber Başlığı (%100 Türkçe & Tıklanabilir Rehber) */}
+                                                {/* Haber Başlığı */}
                                                 <td className="py-4 px-3 align-top">
                                                     <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug underline-offset-4 group-hover:underline">
                                                         {item.event}
                                                     </span>
                                                 </td>
 
-                                                {/* Açıklanan (YEŞİL / KIRMIZI / YAKINDA 🔥) */}
+                                                {/* Açıklanan (30 DAKİKA YANIP SÖNEN YEŞİL / KIRMIZI ANİMASYONLU) */}
                                                 <td className="py-4 px-3 text-right align-top">
                                                     {renderActualValue(item)}
                                                 </td>
@@ -353,8 +364,8 @@ export default function EconomicCalendarPage() {
                                 Toplam Gösterilen: {filteredEvents.length} Haber (3 Haftalık Katalog)
                             </span>
                             <span className="text-blue-200 font-bold flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                                TSİ (UTC+3) Anında Yüklenen Katalog Deposu
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                                TSİ Saat Başı Otomatik Canlı Yenileme Aktif
                             </span>
                         </div>
                     </div>

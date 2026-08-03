@@ -498,16 +498,10 @@ export default function EconomicEventDetailPage() {
                     <div className="relative z-10 space-y-6">
                         {/* Üst Başlık Alanı */}
                         <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl">{event.flag}</span>
-                                <div>
-                                    <span className="text-xs font-black text-blue-200 uppercase tracking-widest block">
-                                        {event.country} • MAKROEKONOMİK GÖSTERGE ANALİZİ
-                                    </span>
-                                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-0.5">
-                                        {event.event}
-                                    </h1>
-                                </div>
+                            <div>
+                                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                                    {event.event}
+                                </h1>
                             </div>
                         </div>
 
@@ -767,22 +761,13 @@ export default function EconomicEventDetailPage() {
                                     ? 'bg-slate-50 border-slate-200'
                                     : 'bg-rose-50/90 border-rose-200'
                             }`}>
-                                {/* Kart Başlığı ve Rozet */}
+                                {/* Kart Başlığı */}
                                 <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
                                     <h5 className={`text-xs font-black uppercase tracking-wider ${
                                         activeScenarioTab === 'above' ? 'text-emerald-900' : activeScenarioTab === 'inline' ? 'text-slate-800' : 'text-rose-900'
                                     }`}>
                                         {currentScenario.title}
                                     </h5>
-                                    <span className={`text-[9px] font-black px-2.5 py-1 rounded-md ${
-                                        activeScenarioTab === 'above'
-                                            ? 'bg-emerald-200/70 text-emerald-900'
-                                            : activeScenarioTab === 'inline'
-                                            ? 'bg-slate-200 text-slate-800'
-                                            : 'bg-rose-200/70 text-rose-900'
-                                    }`}>
-                                        {currentScenario.badge}
-                                    </span>
                                 </div>
 
                                 {/* DETAYLI, AÇIKLAYICI VE ZENGİN TEK PARAGRAF METNİ */}
