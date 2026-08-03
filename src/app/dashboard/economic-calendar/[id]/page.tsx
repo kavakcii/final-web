@@ -187,34 +187,34 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* Event Main Header Banner (BEYAZ Ana Kutu + LACİVERT Özellik & Metrik Widget'ları) */}
-                <div className="w-full bg-white text-[#00008B] border border-slate-200 rounded-3xl p-8 shadow-sm relative overflow-hidden space-y-6">
+                {/* Event Main Header Banner (TAMAMEN LACİVERT KUTU ZEMİNİ + BEYAZ YAZILAR) */}
+                <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
                     <div className="relative z-10 space-y-6">
-                        {/* BEYAZ Üst Başlık Alanı */}
+                        {/* LACİVERT ZEMİN ÜZERİNE BEYAZ Üst Başlık Alanı */}
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <span className="text-3xl">{event.flag}</span>
                                 <div>
-                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">
-                                        {event.country} • Makroekonomik Gösterge Analizi
+                                    <span className="text-xs font-black text-blue-200 uppercase tracking-widest block">
+                                        {event.country} • MAKROEKONOMİK GÖSTERGE ANALİZİ
                                     </span>
-                                    <h1 className="text-2xl md:text-3xl font-black text-[#00008B] tracking-tight mt-0.5">
+                                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-0.5">
                                         {event.event}
                                     </h1>
                                 </div>
                             </div>
 
                             {/* Impact Badge */}
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-50 border border-blue-200">
-                                <ShieldAlert className={`w-4 h-4 ${isHighImpact ? 'text-amber-500' : 'text-blue-600'}`} />
-                                <span className="text-xs font-extrabold text-[#00008B]">
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
+                                <ShieldAlert className={`w-4 h-4 ${isHighImpact ? 'text-amber-300' : 'text-blue-300'}`} />
+                                <span className="text-xs font-extrabold text-white">
                                     {isHighImpact ? 'Yüksek Piyasa Etkisi' : 'Orta Piyasa Etkisi'}
                                 </span>
                             </div>
                         </div>
 
-                        {/* MAVİ RENKTEKİ ÖZET BİLGİ KUTUSU */}
-                        <div className="p-5 rounded-2xl bg-[#00008B] text-white border border-[#00008B] shadow-md shadow-[#00008B]/20 leading-relaxed space-y-2">
+                        {/* ÖZET BİLGİ KUTUSU (Şeffaf Mavi Kontraslı) */}
+                        <div className="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md leading-relaxed space-y-2">
                             <p className="text-amber-300 font-bold text-sm flex items-center gap-2">
                                 <Info className="w-4 h-4 text-amber-300" /> Veri Hakkında Özet Bilgi:
                             </p>
@@ -223,30 +223,30 @@ export default function EconomicEventDetailPage() {
                             </p>
                         </div>
 
-                        {/* MAVİ RENKTEKİ METRİK WIDGET'LARI (Açıklanma Zamanı, Açıklanan, Beklenen, Önceki) */}
+                        {/* METRİK WIDGET'LARI (Açıklanma Zamanı, Açıklanan, Beklenen, Önceki - Koyu Mavi Kartlar) */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
+                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanma Zamanı</span>
                                 <span className="text-sm font-black text-white block mt-1">
                                     {event.dateFormatted || 'Bugün'} - {event.time} (TSİ)
                                 </span>
                             </div>
 
-                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
+                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanan Veri</span>
                                 <span className="text-sm font-black text-white block mt-1">
                                     {event.actual || 'Bekleniyor'}
                                 </span>
                             </div>
 
-                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
+                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Piyasa Beklentisi</span>
                                 <span className="text-sm font-black text-blue-100 block mt-1">
                                     {event.forecast || '-'}
                                 </span>
                             </div>
 
-                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
+                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Önceki Veri</span>
                                 <span className="text-sm font-black text-blue-100 block mt-1">
                                     {event.previous || '-'}
@@ -256,7 +256,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (Fotoğraftaki Sektör Getirileri Özgün Mum Renk Gradient'ı) */}
+                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (BEYAZ Ana Kutu + Fotoğraftaki Sektör Getirileri Özgün Mum Renk Gradient'ı) */}
                 <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
@@ -287,7 +287,7 @@ export default function EconomicEventDetailPage() {
                                 const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 18), 100);
                                 return (
                                     <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                                        {/* Value Label on Top of Bar (Matching Screenshot) */}
+                                        {/* Value Label on Top of Bar */}
                                         <span className="text-xs font-black text-[#00008B] mb-2 tracking-tight block group-hover:scale-110 transition-transform">
                                             {s.formattedActual}
                                         </span>
