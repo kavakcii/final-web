@@ -141,6 +141,12 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         }
     };
 
+    const handleRowClick = (e: React.MouseEvent, item: CalendarEvent) => {
+        e.stopPropagation();
+        const targetId = item.id || item.event;
+        router.push(`/dashboard/economic-calendar/${encodeURIComponent(targetId)}`);
+    };
+
     return (
         <div
             onClick={handleCardClick}
@@ -195,7 +201,8 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                                 {filteredEvents.slice(0, 15).map((item, idx) => (
                                     <tr
                                         key={idx}
-                                        className="hover:bg-white/10 transition-colors group border-b border-white/10"
+                                        onClick={(e) => handleRowClick(e, item)}
+                                        className="hover:bg-white/15 cursor-pointer transition-colors group border-b border-white/10"
                                     >
                                         {/* Saat */}
                                         <td className="py-3.5 px-3 font-bold text-white align-top">
@@ -221,7 +228,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
 
                                         {/* Haber Başlığı (%100 Türkçe & Tam Beyaz) */}
                                         <td className="py-3.5 px-3 align-top">
-                                            <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug">
+                                            <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug underline-offset-4 group-hover:underline">
                                                 {item.event}
                                             </span>
                                         </td>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Calendar, Loader2, Check, Filter, Database, Zap, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
 function parseNumber(str?: string): number | null {
@@ -13,6 +14,7 @@ function parseNumber(str?: string): number | null {
 }
 
 export default function EconomicCalendarPage() {
+    const router = useRouter();
     // Initial load instantly from pre-indexed catalog (0 ms lag!)
     const [events, setEvents] = useState<CatalogCalendarEvent[]>(ECONOMIC_CALENDAR_CATALOG);
     const [loading, setLoading] = useState(false);
@@ -137,6 +139,11 @@ export default function EconomicCalendarPage() {
         }
 
         return <span className="font-bold text-white/60">Bekleniyor</span>;
+    };
+
+    const handleRowClick = (item: CatalogCalendarEvent) => {
+        const targetId = item.id || item.event;
+        router.push(`/dashboard/economic-calendar/${encodeURIComponent(targetId)}`);
     };
 
     return (
@@ -277,7 +284,8 @@ export default function EconomicCalendarPage() {
                                         {filteredEvents.map((item, idx) => (
                                             <tr
                                                 key={idx}
-                                                className="hover:bg-white/10 transition-colors group border-b border-white/10"
+                                                onClick={() => handleRowClick(item)}
+                                                className="hover:bg-white/15 cursor-pointer transition-colors group border-b border-white/10"
                                             >
                                                 {/* Tarih */}
                                                 <td className="py-4 px-3 font-bold text-white align-top">
@@ -307,9 +315,9 @@ export default function EconomicCalendarPage() {
                                                     </div>
                                                 </td>
 
-                                                {/* Haber Başlığı (%100 Türkçe) */}
+                                                {/* Haber Başlığı (%100 Türkçe & Tıklanabilir Rehber) */}
                                                 <td className="py-4 px-3 align-top">
-                                                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug">
+                                                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug underline-offset-4 group-hover:underline">
                                                         {item.event}
                                                     </span>
                                                 </td>
