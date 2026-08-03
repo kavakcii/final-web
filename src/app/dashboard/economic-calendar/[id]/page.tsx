@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, ShoppingBag, Target, CreditCard, Zap, MinusCircle } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, BookOpen, BarChart3, HelpCircle, ShoppingBag, Target, CreditCard, MinusCircle } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
@@ -163,13 +163,11 @@ const DATA_EFFECTS_MAP: Record<string, DataEffects> = {
     }
 };
 
-// Widget 4: Scenario Analysis Event Map (Clean Cause and Effect, No Emojis)
+// Widget 4: Scenario Analysis Event Map (Rich Fluid Explanatory Paragraphs)
 interface CauseEffectScenarioDetail {
     title: string;
     badge: string;
-    causeText: string;
-    mechanismText: string;
-    resultText: string;
+    paragraph: string;
 }
 
 interface EventCauseEffectScenarioGroup {
@@ -183,184 +181,136 @@ const EVENT_SCENARIOS_MAP: Record<string, EventCauseEffectScenarioGroup> = {
         above: {
             title: "Beklentinin Üstünde Gelirse",
             badge: "Yüksek Enflasyon Baskısı",
-            causeText: "Neden (Sebep): Market ve tüketim sepetindeki fiyat artış hızının piyasanın tahmin ettiğinden daha yüksek gerçekleşmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasada harcama iştahının devam ettiği algısı pekişir. Merkez Bankası fiyat istikrarını sağlamak üzere politika faizini artırma baskısı altına girer.",
-            resultText: "Sonuç (Makro Etki): Kredi ve borçlanma maliyetleri yükselir, vadeli mevduat getirileri cazipleşir; şirketler borçlanarak yatırım yapmakta zorlanır ve piyasada sıkılaşma süreci güçlenir."
+            paragraph: "Tüketici Fiyat Endeksi'nin (TÜFE) piyasa beklentilerinin üzerinde gerçekleşmesi, hanehalkı tüketim sepetindeki mal ve hizmet fiyatlarının tahmin edilenden daha hızlı tırmandığını kanıtlar. Bu durum, piyasada enflasyonist baskıların katılaştığı ve harcama iştahının henüz dizginlenemediği algısını güçlendirir. Fiyat istikrarını sağlamakla yükümlü olan Merkez Bankası, paranın değer kaybını durdurabilmek adına politika faizini artırmak veya yüksek faiz oranlarını daha uzun bir süre korumak zorunda kalır. Faizlerin tırmanmasıyla birlikte ticari ve bireysel kredi maliyetleri yükselirken, vadeli mevduat ve likit fonların getirisi cazip hale gelir; bu da piyasada genel bir likidite sıkılaşmasına ve ekonomik aktivitede denge arayışına yol açar."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Sürpriz Yok / Nötr Seyir",
-            causeText: "Neden (Sebep): Açıklanan verinin piyasadaki analist ve kurumların tahmin ortalamasıyla birebir örtüşmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasa yapıcılar verinin olası sonuçlarını haber öncesinde fiyatlara zaten yansıtmıştır.",
-            resultText: "Sonuç (Makro Etki): Beklenmeyen bir şok yaşanmadığı için faiz ve kur dengesinde ani kırılmalar görülmez, mevcut ekonomik trend ve politikalar korunur."
+            paragraph: "Açıklanan TÜFE verisinin analistlerin ve kurumsal piyasa yapıcıların tahmin ortalamasıyla birebir örtüşmesi, ekonomi yönetiminin ve enflasyon patikasının öngörülen rotada ilerlediğini gösterir. Finansal piyasalar verinin getireceği olası makroekonomik sonuçları haber açıklanmadan önce varlık fiyatlarına büyük ölçüde yansıttığı (fiyatladığı) için faiz ve kur dengesinde şok kırılmalar yaşanmaz. Merkez Bankası mevcut para politikası duruşunu koruma esnekliği kazanırken, şirketler ve bireysel yatırımcılar önceden planladıkları finansal projeksiyonları revize etmek zorunda kalmadan mevcut yatırım dengelerini sürdürürler."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
             badge: "Dezenflasyon İvmesi",
-            causeText: "Neden (Sebep): Tüketici fiyat artışlarının tahmin edilenden daha yavaş seyretmesi veya gerilemesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Hayat pahalılığının hız kestiği ve dezenflasyon sürecinin güçlendiği algısı pekişir. Merkez Bankası'nın faiz indirme esnekliği artar.",
-            resultText: "Sonuç (Makro Etki): Borçlanma maliyetlerinin düşeceği beklentisiyle piyasa rahatlar, şirket kârlılıkları üzerindeki finansman yükü hafifler ve ekonomik aktivite canlılık kazanır."
+            paragraph: "Tüketici Fiyat Endeksi'nin beklentilerin altında kalması, mal ve hizmet fiyatlarındaki artış hızının yavaşladığını ve dezenflasyon sürecinin güç kazandığını ortaya koyar. Ülkedeki hayat pahalılığının ivme kaybetmesi, hanehalklarının alım gücü üzerindeki baskıyı hafifletirken piyasadaki enflasyonist beklentileri de olumlu yönde kırar. Bu dezenflasyonist tablo, Merkez Bankası'na politika faizinde indirime gitme ve para politikasını gevşetme alanı tanır. Borçlanma ve kredi maliyetlerinin gerileyeceği beklentisiyle şirket kârlılıkları üzerindeki finansman yükü hafifler, piyasalarda genel risk iştahı artar ve reel ekonomik canlılık ivme kazanır."
         }
     },
     "Yıllık Enflasyon Oranı (TÜFE)": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
             badge: "Yıllık Katı Enflasyon",
-            causeText: "Neden (Sebep): 12 aylık toplam enflasyon oranının tahmin edilen düşüş patikasının üzerinde kalması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Enflasyonun katılaştığı düşünülür, Merkez Bankası faizleri uzun süre yüksek tutmak zorunda kalır.",
-            resultText: "Sonuç (Makro Etki): Uzun vadeli kredi faizleri yüksek kalır, harcama gücü baskılanır ve reel gelir kaybı riski sürer."
+            paragraph: "Yıllık enflasyon oranının öngörülen düşüş patikasının üzerinde gerçekleşmesi, fiyat artışlarının ekonomi geneline yayılarak katılaştığını gösterir. Bu durum, piyasa katılımcılarının geleceğe yönelik enflasyonist beklentilerini yukarı yönlü revize etmesine neden olur. Merkez Bankası, enflasyon ataletini kırmak için para politikasını daha da sıkılaştırmak ve faiz oranlarını uzun süre yüksek tutmak durumunda kalır. Yüksek seyreden kredi faizleri yatırım ve tüketim iştahını frenlerken, paranın zamansal değer kaybı endişesi tasarruf tercihlerinde korumacı enstrümanlara olan talebi canlı tutar."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Patikayla Uyumlu",
-            causeText: "Neden (Sebep): Yıllık bazdaki fiyat artışının beklenen ana senaryoya tam paralel gerçekleşmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasa fiyatlamalarında ekstra bir beklenti revizyonuna ihtiyaç duyulmaz.",
-            resultText: "Sonuç (Makro Etki): Para politikasının mevcut duruşu ve yıllık makro hedefler geçerliliğini korur."
+            paragraph: "Yıllık enflasyonun piyasa tahminleriyle tam uyum göstermesi, 12 aylık fiyat artış trendinin dezenflasyon programıyla paralel ilerlediğini teyit eder. Piyasalarda ekstra bir belirsizlik dalgası oluşmadığı için uzun vadeli borçlanma senetleri ve mevduat faiz oranları mevcut dengesini muhafaza eder. Şirketler yıllık bütçeleme ve yatırım planlarını sarsıntı yaşamadan sürdürebilirken, Merkez Bankası makro ihtiyati tedbirlerini planlanan takvim dahilinde uygulamaya devam eder."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
             badge: "Hızlı Gerileme",
-            causeText: "Neden (Sebep): Yıllık enflasyondaki baz etkisinin ve dezenflasyonun tahminlerden hızlı gerçekleşmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Enflasyonist beklentiler kırılır, paranın zamansal değer kaybı yavaşlar.",
-            resultText: "Sonuç (Makro Etki): Merkez Bankası faiz indirim döngüsüne zemin hazırlar, ekonomik güven endeksi yükselir."
+            paragraph: "Yıllık enflasyon oranının tahmin edilenden belirgin şekilde düşük çıkması, baz etkisinin de katkısıyla dezenflasyon sürecinin hızlandığını gösterir. Paranın satın alma gücündeki aşınmanın yavaşlaması piyasa moralini yükseltir ve yabancı sermaye girişlerini teşvik eder. Merkez Bankası'nın faiz indirim döngüsünü başlatması veya hızlandırması için güçlü bir zemin oluşur. Kredi erişiminin kolaylaşacağı ve sermaye maliyetinin düşeceği algısıyla reel sektör yatırımları cesaret kazanır."
         }
     },
     "Aylık Üretici Fiyat Endeksi (ÜFE)": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
             badge: "Üretim Maliyet Baskısı",
-            causeText: "Neden (Sebep): İmalatçıların elektrik, hammadde ve işçilik maliyetlerinin beklenenden hızlı tırmanması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Üreticilerin sırtındaki maliyet yükü 1-2 ay içerisinde raflara zam olarak yansıma riski taşır.",
-            resultText: "Sonuç (Makro Etki): Gelecek aylara ilişkin tüketici enflasyon beklentileri yükselir, sanayi şirketlerinin kâr marjları baskılanır."
+            paragraph: "Üretici Fiyat Endeksi'nin (ÜFE) beklenenden yüksek açıklanması; sanayicinin elektrik, hammadde, lojistik ve işçilik giderlerindeki artışın hızlandığını gösterir. Fabrika çıkış fiyatlarındaki bu maliyet tırmanışı, üreticilerin kâr marjlarını baskılarken birkaç ay içerisinde bu yükün tüketici etiketlerine zam olarak yansıyacağı endişesini doğurur. Tüketici enflasyonuna (TÜFE) ilişkin öncü bir sinyal kabul edilen bu tablo, Merkez Bankası'nın faiz indirim adımlarını ertelemesine ve maliyet yönlü enflasyon baskılarına karşı daha temkinli bir duruş sergilemesine yol açar."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Maliyet Düzeyi Dengeli",
-            causeText: "Neden (Sebep): Fabrika çıkış maliyetlerinin öngörülen seviyelerde seyretmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Maliyet tarafında ekstra bir fiyatlama baskısı oluşmaz.",
-            resultText: "Sonuç (Makro Etki): İmalat sektöründe planlanan üretim maliyetleri ve kârlılık projeksiyonları korunur."
+            paragraph: "Üretici maliyetlerindeki değişimlerin piyasa tahminleri düzeyinde gerçekleşmesi, imalat sektörünün girdi maliyetlerinde beklenmedik bir şok yaşanmadığını kanıtlar. Fabrikalar üretim bütçelerini ve kârlılık hedeflerini öngörüldüğü şekilde yönetme imkanı bulur. Sanayi şirketleri üzerindeki maliyet baskısı sabit kaldığı için tüketici fiyatlarına yansıyacak ekstra bir zam dalgası riski oluşmaz ve üretim çarkları istikrarlı seyrini korur."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
             badge: "Girdi Maliyetlerinde Rahatlama",
-            causeText: "Neden (Sebep): Üretimde kullanılan girdi ve hammadde fiyatlarının gerilemesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Fabrikaların üretim maliyeti hafifler, tüketime yansıyacak zam baskısı azalır.",
-            resultText: "Sonuç (Makro Etki): İlerleyen aylarda tüketici enflasyonunun düşeceği beklentisi doğar, üretici kâr marjları rahatlar."
+            paragraph: "ÜFE'nin beklentilerin altında kalması, küresel hammadde, enerji ve tedarik maliyetlerinde gevşeme yaşandığına işaret eder. İmalatçıların üretim maliyetlerinin hafiflemesi, şirketlerin kâr marjlarını rahatlatırken önümüzdeki dönemde tüketici fiyatları üzerindeki zam baskısını önemli ölçüde azaltır. Gelecek aylara dair enflasyon beklentilerinin gerilemesiyle birlikte para politikasında rahatlama sinyalleri güçlenir ve sanayi üretimine yönelik yatırım iştahı artar."
         }
     },
     "ISM İmalat PMI Endeksi": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
             badge: "Sanayide Güçlü Büyüme",
-            causeText: "Neden (Sebep): Fabrikalara gelen yeni siparişlerin ve üretim hacminin beklenenden canlı olması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Sanayide çarkların hızlı döndüğü ve ekonomik büyümenin güçlü sürdüğü kanıtlanır.",
-            resultText: "Sonuç (Makro Etki): Ekonomide ısınma algısıyla Merkez Bankası'nın faizleri yüksek tutma süresi uzayabilir."
+            paragraph: "ISM İmalat PMI endeksinin beklentilerin üzerinde açıklanması, imalat sektöründeki fabrika siparişlerinin, üretimin ve istihdamın canlılığını sürdürdüğünü kanıtlar. Sanayi çarklarının hızlı dönmesi genel ekonomik büyümenin güçlü olduğunu gösterse de, aşırı ısınan bir ekonomide işgücü ve hammadde maliyetlerinin artarak enflasyonu tetikleyebileceği endişesini yaratır. Bu durum, Merkez Bankası'nın para politikasını sıkı tutma veya faiz oranlarını yüksek seviyelerde koruma süresini uzatabileceği beklentisini doğurur."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Dengeli Üretim Hacmi",
-            causeText: "Neden (Sebep): İmalat sektörü anket sonuçlarının tahminlerle uyumlu gerçekleşmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Büyüme temposunda ekstra bir hızlanma veya yavaşlama sinyali oluşmaz.",
-            resultText: "Sonuç (Makro Etki): Sanayi üretimi ve istihdam beklentileri mevcut rotasında ilerler."
+            paragraph: "PMI verisinin piyasa beklentileriyle tam uyum sağlaması, imalat sektörünün ne aşırı ısındığını ne de daralma riski taşıdığını, makul bir büyüme temposunda ilerlediğini gösterir. Satınalma yöneticilerinin sipariş ve stok projeksiyonları doğrulandığı için piyasalarda ani bir reaksiyon yaşanmaz. Küresel ekonomi yönetimleri mevcut para ve maliye politikalarını değiştirmeden uygulamaya devam ederler."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
             badge: "Sanayide Yavaşlama Sinyali",
-            causeText: "Neden (Sebep): Fabrika siparişlerinin azalması ve üretim bandındaki daralma.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Sanayide çarkların yavaşladığı ve resesyon (durgunluk) riski belirdiği algısı oluşur.",
-            resultText: "Sonuç (Makro Etki): Merkez Bankası ekonomiyi canlandırmak üzere faiz indirimlerini gündeme almak zorunda kalabilir."
+            paragraph: "PMI endeksinin beklentilerin gerisinde kalması (özellikle 50 referans çizgisinin altına inmesi), sanayi üretiminde ve fabrika siparişlerinde belirgin bir kan kaybına işaret eder. Ekonomik aktivitenin yavaşladığı ve resesyon (ekonomik durgunluk) riskinin kapıya dayandığı algısı güçlenir. Büyümeyi yeniden canlandırmak ve istihdam kaybını önlemek amacıyla Merkez Bankaları politika faizlerinde indirim yapma ve piyasaya likidite sağlama baskısı altına girerler."
         }
     },
     "Fed Politika Faizi Kararı": {
         above: {
             title: "Sürpriz Faiz Artırımı / Şahin Karar",
             badge: "Para Musluğu Sıkılaştı",
-            causeText: "Neden (Sebep): Merkez Bankası'nın enflasyonu dizginlemek için faiz oranını beklenenden yüksek belirlemesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasadaki borçlanma maliyeti tırmanır, paraya erişim zorlaşır.",
-            resultText: "Sonuç (Makro Etki): Tüketim harcamaları ve kredi çekme iştahı yavaşlar, vadeli mevduat fonlarının cazibesi artar."
+            paragraph: "Fed'in beklentilerin üzerinde bir faiz artırımına gitmesi veya karar metninde beklenenden çok daha sert (şahin) bir tonda sıkılaşma vurgusu yapması, küresel finans sisteminde paraya erişim maliyetini anında tırmandırır. Küresel Dolar likiditesinin çekilmesiyle birlikte borçlanma maliyetleri yükselir, bireysel ve kurumsal harcama iştahı baskılanır. Gelişmekte olan ülkelerden sermaye çıkış riski doğarken, uluslararası yatırımcılar riskli varlıklardan kaçınarak yüksek faiz getirisi sunan güvenli liman enstrümanlarına yönelirler."
         },
         inline: {
             title: "Beklentilere Paralel Karar",
             badge: "Piyasa Beklentisi Karşılandı",
-            causeText: "Neden (Sebep): Faiz kararının piyasa yapıcıların öngördüğü seviyede açıklanması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasa kararı önceden fiyatladığı için karar metnindeki gelecek dönem mesajlarına odaklanılır.",
-            resultText: "Sonuç (Makro Etki): Faiz oranlarında şok bir değişim yaşanmaz, mevcut borçlanma koşulları sürer."
+            paragraph: "Fed'in faiz kararını piyasa yapıcıların ve analistlerin tam olarak öngördüğü seviyede açıklaması, karar öncesinde yapılan fiyatlamaları doğrular. Kararın kendisi bir sürpriz yaratmadığı için küresel borsalarda şok dalgalanmalar görülmez. Tüm piyasa katılımcıları, faiz kararından ziyade Merkez Bankası Başkanı'nın basın toplantısındaki ifadelerine ve gelecek dönem faiz patikasına ilişkin ipuçlarına odaklanırlar."
         },
         below: {
             title: "Sürpriz Faiz İndirimi / Güvercin Karar",
             badge: "Piyasaya Likidite Desteği",
-            causeText: "Neden (Sebep): Merkez Bankası'nın büyümeyi teşvik etmek için faiz indirimi yapması veya indirim sinyali vermesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Kredi maliyetleri ucuzlar, piyasaya taze likidite akışı başlar.",
-            resultText: "Sonuç (Makro Etki): Şirketlerin borçlanarak yatırım yapması kolaylaşır, riskli varlıklara yönelim canlılık kazanır."
+            paragraph: "Fed'in sürpriz bir faiz indirimine gitmesi veya gevşeme sürecinin hızlanacağına dair güvercin mesajlar vermesi, küresel para musluklarının açıldığı anlamına gelir. Borçlanma maliyetlerinin düşmesiyle birlikte şirketlerin yatırım yapması ve finansmana erişimi kolaylaşır. Küresel sermayenin risk iştahı artarak gelişmekte olan piyasalara ve büyüme odaklı varlıklara taze para akışı başlar, ekonomik aktivite küresel ölçekte canlılık kazanır."
         }
     },
     "TCMB Politika Faizi Kararı": {
         above: {
             title: "Beklentinin Üstünde Faiz Artırımı",
             badge: "Şok Sıkılaşma",
-            causeText: "Neden (Sebep): TCMB'nin Türk Lirası'nın cazibesini korumak için politika faizini tahminlerin üstünde artırması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Bankaların konut, taşıt ve ihtiyaç kredisi faiz oranları tırmanır, mevduat getirileri yükselir.",
-            resultText: "Sonuç (Makro Etki): Piyasadaki borçlanma iştahı yavaşlar, Türk Lirası mevduat ürünlerine talep tavan yapar."
+            paragraph: "TCMB'nin politika faizini piyasa beklentilerinin üzerinde artırması, enflasyonla mücadelede kararlılık ve Türk Lirası'nın cazibesini koruma hamlesi olarak okunur. Bankaların mevduat faiz oranları ve kredi maliyetleri hızla tırmanırken, piyasadaki Türk Lirası likiditesi çekilir. Kredi çekerek harcama yapma iştahı yavaşlar, vadeli TL mevduat ürünlerinin cazibesi tavan yapar; bu da enflasyonist beklentileri kırmayı ve döviz talebini dizginlemeyi hedefler."
         },
         inline: {
             title: "Beklentilerle Paralel Karar",
             badge: "Karar Fiyatlandı",
-            causeText: "Neden (Sebep): Politika faizi kararının piyasanın genel beklentisi doğrultusunda sabit bırakılması veya ayarlanması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Finansal kurumlar kararı önden fiyatladığından kredi/mevduat şoku yaşanmaz.",
-            resultText: "Sonuç (Makro Etki): Mevcut faiz oranları ve kredi büyüme sınırları geçerliliğini sürdürür."
+            paragraph: "TCMB kararlarının piyasa konsensüsüne tam uyum göstermesi, finansal kurumların ve yatırımcıların önceden aldığı pozisyonların korunmasını sağlar. Kredi ve mevduat faizlerinde ani bir sıçrama veya çöküş yaşanmaz. Piyasa odak noktası karar metnindeki sterilizasyon adımlarına ve Merkez Bankası'nın önümüzdeki toplantılara dair politika yönlendirmelerine kayar."
         },
         below: {
             title: "Faiz İndirimi / Gevşeme",
             badge: "Kredi & Büyüme Desteği",
-            causeText: "Neden (Sebep): TCMB'nin reel sektörü ve yatırımları desteklemek amacıyla politika faizini düşürmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Bankaların kredi verme iştahı artar, finansman maliyetleri geriler.",
-            resultText: "Sonuç (Makro Etki): Şirketlerin yatırım iştahı artar, bireysel kredi erişimi kolaylaşır."
+            paragraph: "TCMB'nin faiz indirimi başlatması veya politikayı gevşetmesi, reel sektörü ve ticari yatırımları ucuz finansmanla destekleme amacını taşır. Bankaların kredi verme iştahı artarken, borçlanma maliyetlerinin gerilemesiyle sanayi, inşaat ve perakende sektörlerinde yatırım harcamaları hız kazanır. Piyasadaki likiditenin artması ekonomik büyümeyi ivmelendirirken, enflasyon dengesinin yakından izlenmesini gerektirir."
         }
     },
     "Tarım Dışı İstihdam Değişimi (NFP)": {
         above: {
             title: "Beklentinin Üstünde İstihdam",
             badge: "Sıcak İstihdam Piyasası",
-            causeText: "Neden (Sebep): Şirketlerin beklenenden çok daha fazla yeni çalışanı işe alması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): İşgücü piyasasının son derece güçlü olduğu ve ücret artışlarının enflasyonu besleyebileceği düşünülür.",
-            resultText: "Sonuç (Makro Etki): Merkez Bankası'nın faiz indirimlerini erteleyeceği beklentisi doğar, küresel borçlanma maliyetleri yüksek kalır."
+            paragraph: "ABD Tarım Dışı İstihdam verisinin beklenenin çok üzerinde gelmesi, Amerikan şirketlerinin güçlü bir işe alım temposu sürdürdüğünü kanıtlar. İşgücü piyasasının bu derece sıkı kalması, ücret artışlarının yüksek seyretmesine ve dolayısıyla tüketim harcamalarının enflasyonu beslemesine yol açabilir. Bu durum, Amerikan Merkez Bankası'nın (Fed) faiz indirimlerini erteleyeceği beklentisini doğurarak küresel finansman koşullarının sıkı kalmasına neden olur."
         },
         inline: {
             title: "Beklentilerle Paralel İstihdam",
             badge: "Makul İstihdam Dengesi",
-            causeText: "Neden (Sebep): Yeni yaratılan iş sayısının beklentiler seviyesinde kalması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): İstihdam piyasasında aşırı ısınma veya ani soğuma işareti görülmez.",
-            resultText: "Sonuç (Makro Etki): Para politikasında değişiklik ihtiyacı doğmaz."
+            paragraph: "Yeni yaratılan iş sayısının tahminlerle uyumlu gerçekleşmesi, istihdam piyasasında aşırı ısınma ya da sert bir soğuma yaşanmadığını gösterir. İşgücü arz ve talebinin dengede ilerlemesi para politikasında acil bir rotasyon ihtiyacı yaratmaz, küresel piyasalar mevcut makroekonomik dengelerini korurlar."
         },
         below: {
             title: "Beklentinin Altında İstihdam",
             badge: "İstihdamda Soğuma Sinyali",
-            causeText: "Neden (Sebep): Şirketlerin işe alım hızının yavaşlaması veya istihdam kaybı.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Ekonomik aktivitenin ivme kaybettiği ve işsizlik riskinin arttığı düşünülür.",
-            resultText: "Sonuç (Makro Etki): Merkez Bankası'nın faiz indirim sürecini öne çekmesi ve piyasayı desteklemesi gerekliliği doğar."
+            paragraph: "İstihdam artışının beklentilerin belirgin şekilde gerisinde kalması, Amerikan ekonomisinde şirketlerin işe alımları yavaşlattığına ve ekonomik aktivitede soğuma başladığına işaret eder. İşsizlik riskinin tırmanması, Merkez Bankası'nın faiz indirim sürecini öne çekerek ekonomiyi ve istihdamı destekleme zorunluluğunu doğurur."
         }
     },
     "Default": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
             badge: "Yüksek Veri Gerçekleşmesi",
-            causeText: "Neden (Sebep): Makroekonomik göstergenin piyasa tahminlerinin üzerine çıkması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Ekonomide sıkılaşma ihtiyacı veya harcama canlılığı algısı oluşur.",
-            resultText: "Sonuç (Makro Etki): Faiz oranları ve likidite koşulları üzerinde yukarı yönlü baskı gelişebilir."
+            paragraph: "Makroekonomik verinin piyasa beklentilerinin üzerinde gerçekleşmesi, ilgili ekonomik aktivitenin veya fiyat baskılarının tahminlerden güçlü seyrettiğini gösterir. Bu tablo, para otoritelerinin sıkılaştırıcı adımları artırmasına veya yüksek faiz oranlarını korumasına neden olabilir. Borçlanma maliyetlerinde yukarı yönlü baskı oluşurken piyasada likidite koşulları sıkılaşır."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Sürpriz Yok",
-            causeText: "Neden (Sebep): Verinin piyasa beklentileriyle tam uyumlu gerçekleşmesi.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasa yapıcıların tahminleri doğrulanır.",
-            resultText: "Sonuç (Makro Etki): Mevcut finansal dengeler ve ekonomik trend korunur."
+            paragraph: "Verinin piyasa beklentileriyle tam uyumlu açıklanması, ekonomideki öngörülebilirliği artırır. Piyasa yapıcılar verinin etkilerini önden fiyatladığı için finansal dengelerde beklenmedik sarsıntılar yaşanmaz, mevcut borçlanma ve yatırım projeksiyonları korunur."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
             badge: "Düşük Veri Gerçekleşmesi",
-            causeText: "Neden (Sebep): Göstergenin beklentilerin gerisinde kalması.",
-            mechanismText: "Mekanizma (Nasıl İşler?): Piyasalarda gevşeme veya teşvik ihtiyacı algısı doğar.",
-            resultText: "Sonuç (Makro Etki): Borçlanma maliyetlerinde rahatlama ve ekonomik destek beklentisi güçlenir."
+            paragraph: "Göstergenin tahminlerin gerisinde kalması, ekonomik aktivitede veya fiyat artışlarında ivme kaybına işaret eder. Bu durum, Merkez Bankaları ve ekonomi yönetimleri üzerinde destekleyici ve gevşetici politikalar uygulama ihtiyacı doğurur. Finansman maliyetlerinde rahatlama ve piyasayı canlandırıcı beklentiler güç kazanır."
         }
     }
 };
@@ -499,8 +449,6 @@ export default function EconomicEventDetailPage() {
         );
     }
 
-    const isHighImpact = event.impact === 'high' || event.impact === 'critical';
-
     // Get overview Turkish description
     const overviewText = OVERVIEW_TR_DESCRIPTIONS[event.event] || 
         OVERVIEW_TR_DESCRIPTIONS[Object.keys(OVERVIEW_TR_DESCRIPTIONS).find(k => event.event.includes(k)) || ""] ||
@@ -516,7 +464,7 @@ export default function EconomicEventDetailPage() {
         DATA_EFFECTS_MAP[Object.keys(DATA_EFFECTS_MAP).find(k => event.event.includes(k)) || ""] ||
         DATA_EFFECTS_MAP["Default"];
 
-    // Widget 4: Scenario Analysis Object Group (Cause and Effect)
+    // Widget 4: Scenario Analysis Object Group (Fluid Explanatory Paragraphs)
     const scenarios = EVENT_SCENARIOS_MAP[event.event] ||
         EVENT_SCENARIOS_MAP[Object.keys(EVENT_SCENARIOS_MAP).find(k => event.event.includes(k)) || ""] ||
         EVENT_SCENARIOS_MAP["Default"];
@@ -543,16 +491,12 @@ export default function EconomicEventDetailPage() {
                     >
                         <ArrowLeft className="w-4 h-4" /> Ekonomik Takvime Dön
                     </Link>
-
-                    <div className="flex items-center gap-2 text-xs font-black text-[#00008B] bg-blue-50 px-4 py-2 rounded-2xl border border-blue-200">
-                        <Sparkles className="w-4 h-4 text-amber-500" /> FinAL Eğitim & Etki Analiz Rehberi
-                    </div>
                 </div>
 
-                {/* Event Main Header Banner (TAMAMEN LACİVERT KUTU ZEMİNİ + BEYAZ YAZILAR) */}
+                {/* Event Main Header Banner (LACİVERT ZEMİN) */}
                 <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
                     <div className="relative z-10 space-y-6">
-                        {/* LACİVERT ZEMİN ÜZERİNE BEYAZ Üst Başlık Alanı */}
+                        {/* Üst Başlık Alanı */}
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <span className="text-3xl">{event.flag}</span>
@@ -565,27 +509,19 @@ export default function EconomicEventDetailPage() {
                                     </h1>
                                 </div>
                             </div>
-
-                            {/* Impact Badge */}
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
-                                <ShieldAlert className={`w-4 h-4 ${isHighImpact ? 'text-amber-300' : 'text-blue-300'}`} />
-                                <span className="text-xs font-extrabold text-white">
-                                    {isHighImpact ? 'Yüksek Piyasa Etkisi' : 'Orta Piyasa Etkisi'}
-                                </span>
-                            </div>
                         </div>
 
-                        {/* ÖZET BİLGİ KUTUSU (Şeffaf Mavi Kontraslı) */}
+                        {/* ÖZET BİLGİ KUTUSU (Tamamen Beyaz Başlık ve İkon) */}
                         <div className="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md leading-relaxed space-y-2">
-                            <p className="text-amber-300 font-bold text-sm flex items-center gap-2">
-                                <Info className="w-4 h-4 text-amber-300" /> Veri Hakkında Özet Bilgi:
+                            <p className="text-white font-bold text-sm flex items-center gap-2">
+                                <Info className="w-4 h-4 text-white" /> Veri Hakkında Özet Bilgi:
                             </p>
                             <p className="text-white text-xs font-medium leading-relaxed">
                                 {overviewText}
                             </p>
                         </div>
 
-                        {/* METRİK WIDGET'LARI (Açıklanma Zamanı, Açıklanan, Beklenen, Önceki - Koyu Mavi Kartlar) */}
+                        {/* METRİK WIDGET'LARI */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
                             <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanma Zamanı</span>
@@ -618,7 +554,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (BEYAZ Ana Kutu + Fotoğraftaki Sektör Getirileri Özgün Mum Renk Gradient'ı) */}
+                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ */}
                 <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
@@ -629,7 +565,6 @@ export default function EconomicEventDetailPage() {
                                 <h3 className="text-lg font-black text-[#00008B] tracking-tight">
                                     {event.event} — Geçmiş Veri Grafiği
                                 </h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aylık Dönemler İtibarıyla Habere Özel Gerçekleşen Veri Trendi</p>
                             </div>
                         </div>
 
@@ -642,25 +577,22 @@ export default function EconomicEventDetailPage() {
                         </div>
                     </div>
 
-                    {/* Bar Chart Visualizer (Fotoğraftaki Üstü Koyu Lacivert, Altı Açık Mavi-Beyaz Geçişli Sütunlar) */}
+                    {/* Bar Chart Visualizer */}
                     <div className="py-8 px-2">
                         <div className="flex items-end justify-between gap-3 md:gap-5 h-72 border-b border-slate-200 pb-4">
                             {chartSeries.map((s, idx) => {
                                 const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 18), 100);
                                 return (
                                     <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                                        {/* Value Label on Top of Bar */}
                                         <span className="text-xs font-black text-[#00008B] mb-2 tracking-tight block group-hover:scale-110 transition-transform">
                                             {s.formattedActual}
                                         </span>
 
-                                        {/* Fotoğraftaki Sektör Getirileri Mum Tasarımı (Üst Koyu Lacivert #00008B, Altı Açık Mavi-Beyaz) */}
                                         <div
                                             style={{ height: `${heightPercent}%` }}
                                             className="w-full max-w-[48px] bg-gradient-to-b from-[#00008B] via-[#2563eb] to-[#e0f2fe] hover:from-[#0808a3] hover:via-[#3b82f6] hover:to-[#bae6fd] rounded-t-2xl border border-[#00008B]/20 shadow-lg shadow-[#00008B]/15 transition-all group-hover:scale-105"
                                         />
 
-                                        {/* Month Label */}
                                         <span className="text-[10px] font-bold text-slate-600 mt-3 text-center block">
                                             {s.month}
                                         </span>
@@ -675,7 +607,7 @@ export default function EconomicEventDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left & Middle Column (2 Cols): What is it & Why follow? */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* WIDGET 1: Bu Veri Nedir ve Ne İşe Yarar? (3'LÜ MİNİ KART GRUBU & 10 SANİYEDE ÖZET) */}
+                        {/* WIDGET 1: Bu Veri Nedir ve Ne İşe Yarar? */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
                             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
                                 <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
@@ -737,7 +669,7 @@ export default function EconomicEventDetailPage() {
                             </div>
                         </div>
 
-                        {/* WIDGET 2: Bu Veri Neleri Etkiler? */}
+                        {/* WIDGET 2: Bu Veri Neleri Etkiler? (İKON KUTULARI KALDIRILMIŞ SADE PANEL YAPISI) */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
                             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
                                 <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
@@ -748,57 +680,42 @@ export default function EconomicEventDetailPage() {
                                 </div>
                             </div>
 
-                            {/* 3 ODAK PANELİ (Gündelik Yaşam + Banka Kredileri + Piyasa Varlıkları) */}
+                            {/* 3 ODAK PANELİ (İkon kutuları tamamen kaldırılmış tam genişlikli metin kutuları) */}
                             <div className="space-y-4">
                                 {/* Panel 1: Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler */}
-                                <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-start gap-3.5">
-                                    <div className="w-9 h-9 rounded-xl bg-[#00008B] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-[#00008B]/20">
-                                        <ShoppingBag className="w-5 h-5 text-amber-300" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">
-                                            1. Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler
-                                        </h4>
-                                        <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                            {dataEffects.dailyLifeEffect}
-                                        </p>
-                                    </div>
+                                <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 space-y-1.5">
+                                    <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">
+                                        1. Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler
+                                    </h4>
+                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                        {dataEffects.dailyLifeEffect}
+                                    </p>
                                 </div>
 
                                 {/* Panel 2: Banka Kredilerini ve Mevduat Faizlerini Etkiler */}
-                                <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 flex items-start gap-3.5">
-                                    <div className="w-9 h-9 rounded-xl bg-indigo-900 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-indigo-900/20">
-                                        <CreditCard className="w-5 h-5 text-indigo-300" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">
-                                            2. Banka Kredilerini ve Mevduat Faizlerini Etkiler
-                                        </h4>
-                                        <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                            {dataEffects.bankingCreditEffect}
-                                        </p>
-                                    </div>
+                                <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-1.5">
+                                    <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">
+                                        2. Banka Kredilerini ve Mevduat Faizlerini Etkiler
+                                    </h4>
+                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                        {dataEffects.bankingCreditEffect}
+                                    </p>
                                 </div>
 
                                 {/* Panel 3: Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler */}
-                                <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start gap-3.5">
-                                    <div className="w-9 h-9 rounded-xl bg-emerald-800 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-emerald-800/20">
-                                        <TrendingUp className="w-5 h-5 text-emerald-300" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                                            3. Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler
-                                        </h4>
-                                        <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                            {dataEffects.marketAssetsEffect}
-                                        </p>
-                                    </div>
+                                <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-1.5">
+                                    <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+                                        3. Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler
+                                    </h4>
+                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                        {dataEffects.marketAssetsEffect}
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column (1 Col): Scenario Analysis */}
+                    {/* Right Column (1 Col): Scenario Analysis (Zengin ve Akıcı Paragraf Yapısı) */}
                     <div className="space-y-6">
                         {/* WIDGET 4: SENARYO ANALİZİ */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
@@ -842,8 +759,8 @@ export default function EconomicEventDetailPage() {
                                 </button>
                             </div>
                             
-                            {/* AKTİF SEÇİLİ SENARYO NEDEN-SONUÇ KARTI */}
-                            <div className={`p-5 rounded-2xl border space-y-4 transition-all ${
+                            {/* AKTİF SEÇİLİ SENARYO PARAGRAF KARTI (TEK VE ZENGİN ANLATIM KARTI) */}
+                            <div className={`p-5 rounded-2xl border space-y-3 transition-all ${
                                 activeScenarioTab === 'above'
                                     ? 'bg-emerald-50/90 border-emerald-200'
                                     : activeScenarioTab === 'inline'
@@ -851,7 +768,7 @@ export default function EconomicEventDetailPage() {
                                     : 'bg-rose-50/90 border-rose-200'
                             }`}>
                                 {/* Kart Başlığı ve Rozet */}
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
                                     <h5 className={`text-xs font-black uppercase tracking-wider ${
                                         activeScenarioTab === 'above' ? 'text-emerald-900' : activeScenarioTab === 'inline' ? 'text-slate-800' : 'text-rose-900'
                                     }`}>
@@ -868,35 +785,10 @@ export default function EconomicEventDetailPage() {
                                     </span>
                                 </div>
 
-                                {/* NEDEN - SEBEP KUTUSU */}
-                                <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 shadow-xs space-y-1">
-                                    <span className="text-[10px] font-black text-[#00008B] uppercase tracking-wider block">
-                                        Neden (Sebep):
-                                    </span>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                        {currentScenario.causeText.replace(/^Neden \(Sebep\):\s*/, '')}
-                                    </p>
-                                </div>
-
-                                {/* MEKANİZMA - NASIL İŞLER KUTUSU */}
-                                <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 shadow-xs space-y-1">
-                                    <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider block">
-                                        Mekanizma (Nasıl İşler?):
-                                    </span>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                        {currentScenario.mechanismText.replace(/^Mekanizma \(Nasıl İşler\?\):\s*/, '')}
-                                    </p>
-                                </div>
-
-                                {/* SONUÇ - MAKRO ETKİ KUTUSU */}
-                                <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 shadow-xs space-y-1">
-                                    <span className="text-[10px] font-black text-emerald-900 uppercase tracking-wider block">
-                                        Sonuç (Makro Etki):
-                                    </span>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                        {currentScenario.resultText.replace(/^Sonuç \(Makro Etki\):\s*/, '')}
-                                    </p>
-                                </div>
+                                {/* DETAYLI, AÇIKLAYICI VE ZENGİN TEK PARAGRAF METNİ */}
+                                <p className="text-xs font-medium text-slate-700 leading-relaxed pt-1">
+                                    {currentScenario.paragraph}
+                                </p>
                             </div>
                         </div>
                     </div>
