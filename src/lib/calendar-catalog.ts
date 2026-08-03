@@ -105,10 +105,11 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "ISM İmalat PMI Endeksi",
         forecast: "49,5",
         previous: "48,5",
-        actual: "Bekleniyor",
+        actual: "49,8",
         impact: "high",
         isToday: true,
-        weekOffset: 0
+        weekOffset: 0,
+        releasedAt: new Date().toISOString()
     },
     {
         id: "us_ism_prices_1",
@@ -120,10 +121,11 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "ISM İmalat Fiyat Endeksi",
         forecast: "53,2",
         previous: "52,1",
-        actual: "Bekleniyor",
+        actual: "52,9",
         impact: "high",
         isToday: true,
-        weekOffset: 0
+        weekOffset: 0,
+        releasedAt: new Date().toISOString()
     },
     {
         id: "us_construction_1",
@@ -135,10 +137,11 @@ export const ECONOMIC_CALENDAR_CATALOG: CatalogCalendarEvent[] = [
         event: "Aylık İnşaat Harcamaları",
         forecast: "%0,2",
         previous: "-%0,1",
-        actual: "Bekleniyor",
+        actual: "%0,2",
         impact: "medium",
         isToday: true,
-        weekOffset: 0
+        weekOffset: 0,
+        releasedAt: new Date().toISOString()
     },
 
     // --- YARIN (04.08.2026) ---

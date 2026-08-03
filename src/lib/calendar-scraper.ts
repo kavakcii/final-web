@@ -6,18 +6,13 @@ const ALLOWED_COUNTRIES = new Set(['TR', 'TRY', 'US', 'USD', 'EU', 'EUR', 'GB', 
 function isEventTimePassed(dateFormatted: string, time: string): boolean {
     try {
         const now = new Date();
-        const [dayStr, monthStr, yearStr] = dateFormatted.split('.');
-        const [hourStr, minStr] = time.split(':');
+        const [dayStr, monthStr, yearStr] = dateFormatted.split('.').map(Number);
+        const [hourStr, minStr] = time.split(':').map(Number);
 
-        const eventDate = new Date(
-            parseInt(yearStr),
-            parseInt(monthStr) - 1,
-            parseInt(dayStr),
-            parseInt(hourStr),
-            parseInt(minStr)
-        );
+        // TSİ (UTC+3) conversion to UTC timestamp
+        const eventUtc = new Date(Date.UTC(yearStr, monthStr - 1, dayStr, hourStr - 3, minStr));
 
-        return now.getTime() >= eventDate.getTime();
+        return now.getTime() >= eventUtc.getTime();
     } catch {
         return false;
     }
