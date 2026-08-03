@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ArrowUp, ArrowDown, Activity, Settings, Plus, X, Check } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { ArrowUp, ArrowDown, Activity, Settings, Plus, X, Check, Search, Loader2 } from "lucide-react";
 
 interface Quote {
     symbol: string;
@@ -26,6 +26,12 @@ export function FinancialTicker() {
     const [isEditing, setIsEditing] = useState(false);
     const [newSymbol, setNewSymbol] = useState("");
 
+    // Autocomplete State
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
     // Load saved symbols
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -46,6 +52,44 @@ export function FinancialTicker() {
             localStorage.setItem("financialTickerSymbols", JSON.stringify(symbols));
         }
     }, [symbols]);
+
+    // Autocomplete Search Effect
+    useEffect(() => {
+        if (!newSymbol || newSymbol.trim().length === 0) {
+            setSearchResults([]);
+            setShowDropdown(false);
+            return;
+        }
+
+        const delayDebounceFn = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const res = await fetch(`/api/search?q=${newSymbol}`);
+                const data = await res.json();
+                if (data.results) {
+                    setSearchResults(data.results.slice(0, 5));
+                    setShowDropdown(true);
+                }
+            } catch (e) {
+                console.error("Search error:", e);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [newSymbol]);
+
+    // Close Dropdown on Click Outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Fetch data
     useEffect(() => {
@@ -76,10 +120,11 @@ export function FinancialTicker() {
         return () => clearInterval(interval);
     }, [symbols]);
 
-    const handleAddSymbol = () => {
-        if (newSymbol && !symbols.includes(newSymbol.toUpperCase())) {
-            setSymbols([...symbols, newSymbol.toUpperCase()]);
+    const handleAddSymbol = (symbolToAdd: string = newSymbol) => {
+        if (symbolToAdd && !symbols.includes(symbolToAdd.toUpperCase())) {
+            setSymbols([...symbols, symbolToAdd.toUpperCase()]);
             setNewSymbol("");
+            setShowDropdown(false);
         }
     };
 
@@ -101,17 +146,43 @@ export function FinancialTicker() {
 
             {/* Edit Mode Overlay */}
             {isEditing && (
-                <div className="absolute inset-0 z-20 bg-white flex items-center justify-between px-4 gap-4 overflow-hidden backdrop-blur-lg border-b border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <input
-                            type="text"
-                            value={newSymbol}
-                            onChange={(e) => setNewSymbol(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleAddSymbol()}
-                            placeholder="Sembol (THYAO.IS)"
-                            className="bg-slate-50 border border-slate-100 rounded-md px-3 py-1.5 text-xs text-[#00008B] font-bold placeholder:text-[#00008B]/30 focus:outline-none focus:border-[#00008B]/20 w-36 transition-colors"
-                        />
-                        <button onClick={handleAddSymbol} className="p-1.5 hover:bg-emerald-500/20 rounded-md text-emerald-400 transition-colors"><Plus className="w-4 h-4" /></button>
+                <div className="absolute inset-0 z-20 bg-white flex items-center justify-between px-4 gap-4 overflow-visible backdrop-blur-lg border-b border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2 flex-shrink-0 relative" ref={dropdownRef}>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={newSymbol}
+                                onChange={(e) => {
+                                    setNewSymbol(e.target.value);
+                                    setShowDropdown(true);
+                                }}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddSymbol()}
+                                placeholder="Sembol (Örn: THYAO)"
+                                className="bg-slate-50 border border-slate-100 rounded-md pl-8 pr-3 py-1.5 text-xs text-[#00008B] font-bold placeholder:text-[#00008B]/30 focus:outline-none focus:border-[#00008B]/20 w-44 transition-colors"
+                            />
+                            <Search className="w-3.5 h-3.5 text-[#00008B]/40 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            {isSearching && <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin absolute right-2.5 top-1/2 -translate-y-1/2" />}
+                        </div>
+                        
+                        {showDropdown && searchResults.length > 0 && (
+                            <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-100 rounded-lg shadow-xl shadow-blue-900/5 z-50 overflow-hidden">
+                                {searchResults.map((res: any, idx: number) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleAddSymbol(res.symbol)}
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center justify-between border-b border-slate-50 last:border-0 group transition-colors"
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-[#00008B] group-hover:text-blue-600 transition-colors">{res.symbol}</span>
+                                            <span className="text-[10px] text-slate-400 line-clamp-1">{res.shortname}</span>
+                                        </div>
+                                        <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-widest">{res.typeDisp || res.exchange || 'Hisse'}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <button onClick={() => handleAddSymbol()} className="p-1.5 hover:bg-emerald-500/20 rounded-md text-emerald-400 transition-colors"><Plus className="w-4 h-4" /></button>
                     </div>
 
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mask-gradient-x flex-1">
