@@ -261,10 +261,7 @@ export function BalanceGrowthChartWidget() {
                                         tickLine={false}
                                         tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
                                         width={58}
-                                        domain={[
-                                            (dataMin: number) => Math.floor(dataMin * 0.995),
-                                            (dataMax: number) => Math.ceil(dataMax * 1.005)
-                                        ]}
+                                        domain={['dataMin', 'dataMax']}
                                         tickFormatter={(v: number) => {
                                             if (v >= 1_000_000) return `₺${(v / 1_000_000).toFixed(1)}M`;
                                             if (v >= 1_000)     return `₺${(v / 1_000).toFixed(1)}k`;
