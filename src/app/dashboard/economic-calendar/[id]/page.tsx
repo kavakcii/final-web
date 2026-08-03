@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers, ShoppingBag, Target, CreditCard, Zap } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers, ShoppingBag, Target, CreditCard, Zap, Landmark, LandmarkIcon, PiggyBank, Compass } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
@@ -95,6 +95,71 @@ const THREE_CARD_EDUCATION_MAP: Record<string, EducationThreeCards> = {
         whatItMeasures: "Piyasalardaki ekonomik canlılık düzeyini ve finansal dengeyi ölçer.",
         walletImpact: "Bireysel birikimlerinizin değerini ve piyasalardaki yatırım kararlarını etkiler.",
         quickSummary: "Piyasanın genel gidişatını ve ekonomik sağlık durumunu özetleyen temel göstergedir."
+    }
+};
+
+// Widget 2: Investor Why Follow Descriptive Data Map
+interface InvestorWhyFollow {
+    centralBankAction: string;
+    bigMoneyMovement: string;
+    personalBenefit: string;
+}
+
+const INVESTOR_WHY_FOLLOW_MAP: Record<string, InvestorWhyFollow> = {
+    "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
+        centralBankAction: "Merkez Bankası'nı ekonominin dev su vanasını tutan kurum olarak düşünün. Enflasyon yüksek çıkınca 'Piyasada çok fazla para dolaşıyor, insanların harcamasını durdurmalıyım' der ve vanayı sıkar (faizleri artırır). Vanayı sıkınca kredi almak zorlaşır.",
+        bigMoneyMovement: "Milyon dolarlık dev fonlar haber açıklanacağı saniyede ekran başında pusuda bekler. Eğer faizlerin artacağını anlarlarsa 'Riski bırakıp paramı garanti mevduat faizine veya dolara yatırayım' derler. Borsanın o anda düşmesinin tek sebebi bu dev paraların yer değiştirmesidir.",
+        personalBenefit: "Bu veriyi takip etmek, havanın fırtınalı mı yoksa güneşli mi olacağını önceden görmek gibidir. Dolarınızın, altınınızın veya hissenizin yarın ne tarafa savrulacağını saniyeler öncesinden tahmin etmenizi sağlar."
+    },
+    "Yıllık Enflasyon Oranı (TÜFE)": {
+        centralBankAction: "Merkez Bankaları yıllık bazdaki enflasyon trendine bakarak uzun vadeli faiz politikasını çizer. Yıllık enflasyon katılaşırsa uzun süre yüksek faiz uygulanır.",
+        bigMoneyMovement: "Yabancı ve yerli kurumsal yatırımcılar paranızın yıllık bazda eriyip erimediğine bakar. Yıllık enflasyon faizden yüksekse parayı korumak için Borsa İstanbul hisselerine veya Altına hücum ederler.",
+        personalBenefit: "Mevduatınızın yıllık bazda size kâr mı ettirdiğini yoksa paranızı erittiğini (Reel Getiri) bilimsel olarak görmenizi sağlar."
+    },
+    "Aylık Üretici Fiyat Endeksi (ÜFE)": {
+        centralBankAction: "Merkez Bankası imalatçıların hammadde maliyet yükünü inceleyerek 2 ay sonra raflara yansıyacak tüketici enflasyonunu tahmin eder ve faiz kararını önden kurgular.",
+        bigMoneyMovement: "Sanayi şirketlerine yatırım yapan dev fonlar, imalat maliyetleri arttığında şirket kârlarının düşeceğini anlarlar ve o hisselerden kâr satışı yaparak ayrılırlar.",
+        personalBenefit: "Tüketeceğiniz malların 2 ay sonra pahalılaşıp pahalılaşmayacağını söyler; bütçenizi ve yatırımlarınızı önden korumanıza yardımcı olur."
+    },
+    "ISM İmalat PMI Endeksi": {
+        centralBankAction: "Ekonomide durgunluk (resesyon) tehlikesi belirirse Merkez Bankası faizleri düşürerek piyasaya taze para pompalamak zorunda kalır.",
+        bigMoneyMovement: "Küresel dev fonlar fabrikaların çarklarının yavaşladığını gördüğünde sanayi ve imalat hisselerinden çıkıp Altın ve Tahvil gibi limanlara sığınır.",
+        personalBenefit: "Şirket kârlılıklarının ve ekonominin genel yönünü fısıldar; ekonomik kriz risklerini önceden hissetmenizi sağlar."
+    },
+    "S&P Global İmalat PMI (Nihai)": {
+        centralBankAction: "Ülke sanayisinin büyüme gücünü ölçen Merkez Bankaları faiz oranlarını ekonomi boğulmayacak şekilde hassasçe ayarlar.",
+        bigMoneyMovement: "Uluslararası fonlar imalat puanı yüksek ülkelere doğrudan sıcak para aktarır; borsa endekslerinde güçlü yükseliş dalgası başlar.",
+        personalBenefit: "İhracat yapan yerli şirketlerin kârlılıklarını öngörüp doğru borsada doğru hisseye yatırım yapmanızı sağlar."
+    },
+    "Fed Politika Faizi Kararı": {
+        centralBankAction: "ABD Merkez Bankası (Fed) faiz artırdığında dünyadaki tüm Dolar para birimleri ABD'ye geri çağrılır. Faiz indirdiğinde ise para dünyaya dağılır.",
+        bigMoneyMovement: "Dünya üzerindeki trilyon dolarlık fonlar Fed kararı anında pozisyon değiştirir. Yüksek Amerikan faizi Türkiye gibi gelişmekte olan ülkelerden para çıkışına neden olur.",
+        personalBenefit: "Kuyumcudaki Altın fiyatlarının, Amerikan borsalarının ve Türkiye'deki Dolar kurunun yönünü doğrudan bilmenizi sağlar."
+    },
+    "TCMB Politika Faizi Kararı": {
+        centralBankAction: "TCMB politika faizini artırdığında TL'nin faiz getirisini güçlendirir, düşürdüğünde piyasaya harcama yapması için para sunar.",
+        bigMoneyMovement: "Yerli ve yabancı yatırımcılar TCMB faizinin Borsa İstanbul kârlılığına olan etkisini hesaplayarak Banka ve Sanayi hisselerinde büyük alım/satım yaparlar.",
+        personalBenefit: "Kredi çekip çekmeyeceğinize veya birikiminizi mevduat mı borsa mı yapacağınıza karar vermenizi sağlar."
+    },
+    "Tarım Dışı İstihdam Değişimi (NFP)": {
+        centralBankAction: "Fed halkın istihdam durumuna bakarak 'Ekonomi çok ısındı faiz artırmalıyım' veya 'İşsizlik artıyor faiz indirmeliyim' kararı verir.",
+        bigMoneyMovement: "Döviz ve Emtia (Altın/Gümüş) tüccarları NFP verisi ile Doların küresel gücünü hesaplar; Ons Altında saniyelik 30-40 dolarlık sıçramalar yaşanır.",
+        personalBenefit: "Gram Altın ve Dolar kurunun veri açıklandığı an hangi yöne fırlayacağını görmenizi sağlar."
+    },
+    "Dış Ticaret Dengesi": {
+        centralBankAction: "Merkez Bankası ülkedeki döviz rezervlerinin durumunu analiz ederek döviz kurlarındaki fırlama risklerini değerlendirir.",
+        bigMoneyMovement: "Dış ticaret açığı büyüdüğünde yabancı yatırımcılar 'Bu ülkeye daha fazla döviz lazım olacak' diyerek Dolar/TL'de yukarı yönlü pozisyon alırlar.",
+        personalBenefit: "Dolar ve Euro kurlarının üzerinde yukarı yönlü baskı oluşup oluşmayacağını önceden öngörmenizi sağlar."
+    },
+    "İşsizlik Oranı": {
+        centralBankAction: "Halkın iş bulma imkanlarını izleyerek büyümenin ne kadar dengeli olduğunu kontrol eder.",
+        bigMoneyMovement: "İşsizlik arttığında halkın harcama yapamayacağını bilen fonlar Perakende ve Tüketici hisselerinden kâr satışı yapar.",
+        personalBenefit: "Ülke ekonomisinin genel refah seviyesini ve iş bulma piyasasının sağlığını gösterir."
+    },
+    "Default": {
+        centralBankAction: "Merkez bankaları ekonomideki dengeleri korumak ve fiyat istikrarını sağlamak için veriyi faiz politikalarına yansıtır.",
+        bigMoneyMovement: "Piyasadaki büyük oyuncular ve fonlar risk-ödül dengesini hesaplayarak portföylerini güvenli ve yüksek getirili varlıklara dağıtır.",
+        personalBenefit: "Piyasalarda havanın ne yöne eseceğini anlayıp birikimlerinizi doğru zamanda doğru varlıkta tutmanızı sağlar."
     }
 };
 
@@ -242,6 +307,11 @@ export default function EconomicEventDetailPage() {
     const eduCards = THREE_CARD_EDUCATION_MAP[event.event] ||
         THREE_CARD_EDUCATION_MAP[Object.keys(THREE_CARD_EDUCATION_MAP).find(k => event.event.includes(k)) || ""] ||
         THREE_CARD_EDUCATION_MAP["Default"];
+
+    // Widget 2: Investor Why Follow Object
+    const whyFollow = INVESTOR_WHY_FOLLOW_MAP[event.event] ||
+        INVESTOR_WHY_FOLLOW_MAP[Object.keys(INVESTOR_WHY_FOLLOW_MAP).find(k => event.event.includes(k)) || ""] ||
+        INVESTOR_WHY_FOLLOW_MAP["Default"];
 
     // Historical chart series specific to this exact event
     const chartSeries = EVENT_HISTORICAL_SERIES[event.event] || 
@@ -470,21 +540,66 @@ export default function EconomicEventDetailPage() {
                             </div>
                         </div>
 
-                        {/* Box 2: Türkiye & Dünya Yatırımcıları Neden Takip Eder? */}
-                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
-                                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
-                                    <HelpCircle className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-[#00008B]">Yatırımcılar Bu Veriyi Neden Yakından Takip Eder?</h3>
-                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Piyasa Psikolojisi ve Merkez Bankası Kararları</p>
+                        {/* WIDGET 2: Yatırımcılar Bu Veriyi Neden Yakından Takip Eder? (3 BETİMSELE ÖDAK KARTLI YAPI) */}
+                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-150">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
+                                        <HelpCircle className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-[#00008B]">Yatırımcılar Bu Veriyi Neden Yakından Takip Eder?</h3>
+                                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Piyasa Psikolojisi, Merkez Bankası Kararları & Paranın Rotasyonu</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="text-xs font-semibold text-slate-600 leading-relaxed space-y-3">
-                                <p>
-                                    Merkez bankaları faiz kararlarını verirken ve yatırımcılar portföy dağılımlarını yaparken doğrudan bu verinin sonuçlarına göre hareket eder.
-                                </p>
+
+                            {/* 🎨 3 BETİMSEL ODAK PANELİ (Merkez Bankası + Akıllı Para + Cebiniz İçin Anlamı) */}
+                            <div className="space-y-4">
+                                {/* Panel 1: Merkez Bankası Bu Rakamı Görünce Ne Yapar? */}
+                                <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-start gap-3.5">
+                                    <div className="w-9 h-9 rounded-xl bg-[#00008B] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-[#00008B]/20">
+                                        <Landmark className="w-5 h-5 text-amber-300" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
+                                            1. Merkez Bankası Bu Rakamı Görünce Ne Yapar? <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md">(Devlet Boyutu)</span>
+                                        </h4>
+                                        <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                            {whyFollow.centralBankAction}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Panel 2: Zengin Yatırımcılar ve Büyük Fonlar Neden Pusuda Bekler? */}
+                                <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 flex items-start gap-3.5">
+                                    <div className="w-9 h-9 rounded-xl bg-indigo-900 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-indigo-900/20">
+                                        <PiggyBank className="w-5 h-5 text-indigo-300" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-2">
+                                            2. Zengin Yatırımcılar ve Dev Fonlar Neden Pusuda Bekler? <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md">(Piyasa Boyutu)</span>
+                                        </h4>
+                                        <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                            {whyFollow.bigMoneyMovement}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Panel 3: Bunu Bilmek Senin Cebine Ne Kazandırır? */}
+                                <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start gap-3.5">
+                                    <div className="w-9 h-9 rounded-xl bg-emerald-800 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-emerald-800/20">
+                                        <Compass className="w-5 h-5 text-emerald-300" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
+                                            3. Bunu Bilmek Senin Cebine Ne Kazandırır? <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">(Sizin Boyutunuz)</span>
+                                        </h4>
+                                        <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                            {whyFollow.personalBenefit}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
