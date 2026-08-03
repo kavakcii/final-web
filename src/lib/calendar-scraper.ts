@@ -1,22 +1,12 @@
+const ALLOWED_COUNTRIES = new Set(['TR', 'TRY', 'US', 'USD', 'EU', 'EUR']);
+
 const FLAG_MAP: Record<string, string> = {
     USD: '🇺🇸',
     US: '🇺🇸',
     EUR: '🇪🇺',
     EU: '🇪🇺',
     TRY: '🇹🇷',
-    TR: '🇹🇷',
-    GBP: '🇬🇧',
-    GB: '🇬🇧',
-    JPY: '🇯🇵',
-    JP: '🇯🇵',
-    CAD: '🇨🇦',
-    CA: '🇨🇦',
-    AUD: '🇦🇺',
-    AU: '🇦🇺',
-    CHF: '🇨🇭',
-    CH: '🇨🇭',
-    CNY: '🇨🇳',
-    CN: '🇨🇳'
+    TR: '🇹🇷'
 };
 
 export async function scrapeEconomicCalendar() {
@@ -33,10 +23,17 @@ export async function scrapeEconomicCalendar() {
 
         const data = await response.json();
 
-        // User requested ONLY 2-star (Medium) and 3-star (High/Critical) events
+        // User requested STRICTLY:
+        // 1. ONLY 2-star (Medium) and 3-star (High/Critical) events
+        // 2. ONLY TR (Türkiye), US (ABD), and EU (Euro Bölgesi)
         const filteredData = data.filter((item: any) => {
+            const country = item.country ? item.country.toUpperCase() : '';
             const impact = item.impact ? item.impact.toLowerCase() : '';
-            return impact === 'medium' || impact === 'high' || impact === 'critical';
+
+            const isAllowedCountry = ALLOWED_COUNTRIES.has(country);
+            const isAllowedImpact = impact === 'medium' || impact === 'high' || impact === 'critical';
+
+            return isAllowedCountry && isAllowedImpact;
         });
 
         const events = filteredData.map((item: any) => {
@@ -45,7 +42,7 @@ export async function scrapeEconomicCalendar() {
             const countryCode = item.country ? item.country.toUpperCase() : 'TR';
             const flag = FLAG_MAP[countryCode] || '🌐';
 
-            // Map impact string
+            // Map impact string (medium = 2-star, high/critical = 3-star)
             let impactLevel: 'medium' | 'high' | 'critical' = 'medium';
             if (item.impact?.toLowerCase() === 'high' || item.impact?.toLowerCase() === 'critical') {
                 impactLevel = item.title?.toLowerCase().includes('fed') || item.title?.toLowerCase().includes('tcmb') ? 'critical' : 'high';
@@ -54,7 +51,7 @@ export async function scrapeEconomicCalendar() {
             return {
                 id: item.title + '_' + item.date,
                 time,
-                country: countryCode,
+                country: countryCode === 'USD' ? 'US' : countryCode === 'EUR' ? 'EU' : countryCode === 'TRY' ? 'TR' : countryCode,
                 flag,
                 event: item.title,
                 forecast: item.forecast || '-',
