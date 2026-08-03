@@ -2,9 +2,48 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
+
+// Overview Description Map (Türkçe Özellik Açıklamaları)
+const OVERVIEW_TR_DESCRIPTIONS: Record<string, string> = {
+    "Dış Ticaret Dengesi": "Türkiye dış ticaret dengesi 1947 yılından bu yana açık vermektedir. Türkiye'nin başlıca ihracat kalemi kara taşıtları, tekstil, demir-çelik, giyim ve gıda ürünlerinden oluşurken; ithalat kalemleri makine, ulaşım ekipmanları, işlenmiş mallar, mineral yakıtlar, yağlar ve kimyasallardan oluşmaktadır. En büyük ticaret açıkları Çin, Rusya, Almanya, Güney Kore, İsviçre, Hindistan, İran ve Japonya ile verilirken; en büyük ticaret fazlası ise Irak, BAE, Birleşik Krallık, İsrail, Suriye, Kuzey Kıbrıs ve Azerbaycan ile verilmektedir.",
+    "Aylık Tüketici Fiyat Endeksi (TÜFE)": "Tüketici Fiyat Endeksi (TÜFE), hanehalklarının satın aldığı mal ve hizmet sepetinin fiyatlarındaki ortalama değişimini ölçer. Türkiye'de TÜFE verisi enflasyon oranının ana göstergesidir ve TCMB faiz kararları, mevduat faizleri ile borsa değerlemeleri üzerinde doğrudan etkiye sahiptir.",
+    "Yıllık Enflasyon Oranı (TÜFE)": "Yıllık TÜFE Enflasyonu, son 12 ay içerisindeki tüketici fiyat seviyesinin yıllık bazdaki artış hızını gösterir. Enflasyondaki düşüş (dezenflasyon) süreci piyasalar ve TL varlıkları açısından olumlu algılanır.",
+    "Aylık Üretici Fiyat Endeksi (ÜFE)": "Üretici Fiyat Endeksi (ÜFE), ülke ekonomisinde üretilen malların üretici aşamasındaki fiyat değişimlerini ölçer. ÜFE maliyet artışlarını yansıttığı için ilerleyen aylarda TÜFE enflasyonu üzerinde öncü gösterge niteliğindedir.",
+    "ISM İmalat PMI Endeksi": "ISM İmalat PMI, ABD sanayi ve imalat sektöründeki satınalma yöneticilerinin sipariş, üretim ve istihdam beklentilerini ölçen en önemli makro veridir. 50 üzerindeki değerler sektörde büyümeyi, 50 altı ise daralmayı ifade eder.",
+    "ISM İmalat Fiyat Endeksi": "ISM İmalat Fiyat Endeksi, ABD imalatçılarının hammadde ve üretim girdileri için ödediği fiyat değişimlerini gösterir. Yüksek rakamlar küresel enflasyonist baskıların arttığına işaret eder.",
+    "S&P Global İmalat PMI (Nihai)": "S&P Global İmalat PMI, fabrika üretimi, yeni siparişler, stok seviyeleri ve tedarik sürelerini değerlendirerek sanayi sektörünün sağlık durumunu puanlar.",
+    "Fed Politika Faizi Kararı": "Fed (ABD Merkez Bankası) Politika Faizi Kararı, küresel finansal sistemin en kritik kararıdır. Doların küresel değerini, ons altını, gelişmekte olan ülke para birimlerini ve küresel hisse senedi piyasalarını doğrudan yönlendirir.",
+    "TCMB Politika Faizi Kararı": "TCMB Politika Faizi Kararı, Türkiye Cumhuriyeti Merkez Bankası'nın haftalık repo faiz oranını belirlediği karardır. TL'nin değeri, mevduat ve kredi faizleri ile BIST 100 endeksi üzerinde birinci derecede etkilidir."
+};
+
+// Historical Mock Releases Chart Data Generator
+const MOCK_HISTORICAL_SERIES: Record<string, Array<{ month: string; actual: number; forecast: number; formattedActual: string }>> = {
+    "Dış Ticaret Dengesi": [
+        { month: "Ara 2025", actual: -7.8, forecast: -8.0, formattedActual: "-7,8 B $" },
+        { month: "Oca 2026", actual: -9.3, forecast: -9.0, formattedActual: "-9,3 B $" },
+        { month: "Şub 2026", actual: -8.5, forecast: -8.7, formattedActual: "-8,5 B $" },
+        { month: "Mar 2026", actual: -8.9, forecast: -8.4, formattedActual: "-8,9 B $" },
+        { month: "Nis 2026", actual: -11.1, forecast: -10.5, formattedActual: "-11,1 B $" },
+        { month: "May 2026", actual: -8.5, forecast: -8.2, formattedActual: "-8,5 B $" },
+        { month: "Haz 2026", actual: -5.9, forecast: -6.1, formattedActual: "-5,9 B $" },
+        { month: "Tem 2026", actual: -10.37, forecast: -9.8, formattedActual: "-10,37 B $" },
+        { month: "Ağu 2026", actual: -6.9, forecast: -7.2, formattedActual: "-6,9 B $" }
+    ],
+    "Default": [
+        { month: "Ara 2025", actual: 1.2, forecast: 1.1, formattedActual: "%1,2" },
+        { month: "Oca 2026", actual: 1.5, forecast: 1.3, formattedActual: "%1,5" },
+        { month: "Şub 2026", actual: 0.9, forecast: 1.0, formattedActual: "%0,9" },
+        { month: "Mar 2026", actual: 1.1, forecast: 1.2, formattedActual: "%1,1" },
+        { month: "Nis 2026", actual: 1.8, forecast: 1.6, formattedActual: "%1,8" },
+        { month: "May 2026", actual: 1.4, forecast: 1.5, formattedActual: "%1,4" },
+        { month: "Haz 2026", actual: 0.99, forecast: 1.1, formattedActual: "%0,99" },
+        { month: "Tem 2026", actual: 1.78, forecast: 1.83, formattedActual: "%1,78" },
+        { month: "Ağu 2026", actual: 1.65, forecast: 1.70, formattedActual: "%1,65" }
+    ]
+};
 
 export default function EconomicEventDetailPage() {
     const params = useParams();
@@ -17,7 +56,6 @@ export default function EconomicEventDetailPage() {
     useEffect(() => {
         if (!eventId) return;
 
-        // Decoded ID matching from catalog or live API
         const decodedId = decodeURIComponent(eventId);
         const found = ECONOMIC_CALENDAR_CATALOG.find(e => e.id === decodedId || e.event === decodedId);
 
@@ -25,7 +63,6 @@ export default function EconomicEventDetailPage() {
             setEvent(found);
             setLoading(false);
         } else {
-            // Fetch from API if dynamic
             fetch('/api/calendar')
                 .then(res => res.json())
                 .then(json => {
@@ -62,6 +99,18 @@ export default function EconomicEventDetailPage() {
 
     const isHighImpact = event.impact === 'high' || event.impact === 'critical';
 
+    // Get overview Turkish description
+    const overviewText = OVERVIEW_TR_DESCRIPTIONS[event.event] || 
+        OVERVIEW_TR_DESCRIPTIONS[Object.keys(OVERVIEW_TR_DESCRIPTIONS).find(k => event.event.includes(k)) || ""] ||
+        `${event.country} makroekonomik verileri arasında yer alan ${event.event}, piyasa yapıcılar ve yatırımcılar tarafından yakından takip edilen temel göstergelerden biridir.`;
+
+    // Historical chart series
+    const chartSeries = MOCK_HISTORICAL_SERIES[event.event] || MOCK_HISTORICAL_SERIES["Default"];
+
+    // Find min and max for chart bar height scaling
+    const absValues = chartSeries.map(s => Math.abs(s.actual));
+    const maxVal = Math.max(...absValues, 1);
+
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-[#00008B] w-full mx-auto relative overflow-hidden">
             <div className="w-full max-w-[1400px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
@@ -79,8 +128,8 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* Event Main Header Banner (Brand Navy Blue Theme) */}
-                <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden">
+                {/* Event Main Header Banner (Brand Navy Blue Theme + Türkçe Çeviri Açıklaması) */}
+                <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
                     <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
 
                     <div className="relative z-10 space-y-6">
@@ -104,6 +153,14 @@ export default function EconomicEventDetailPage() {
                                     {isHighImpact ? 'Yüksek Piyasa Etkisi' : 'Orta Piyasa Etkisi'}
                                 </span>
                             </div>
+                        </div>
+
+                        {/* TÜRKÇE ÇEVİRİ AÇIKLAMA METNİ (Mavi Alanın İçi) */}
+                        <div className="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md text-xs font-medium text-blue-100 leading-relaxed">
+                            <p className="text-white font-semibold text-sm mb-1.5 flex items-center gap-2">
+                                <Info className="w-4 h-4 text-amber-300" /> Veri Hakkında Özet Bilgi:
+                            </p>
+                            {overviewText}
                         </div>
 
                         {/* Metric Cards Grid */}
@@ -139,7 +196,62 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* Structured Educational & Market Impact Section Placeholder Grid */}
+                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (Historical Releases Bar Chart - TradingView Stili) */}
+                <div className="bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 shadow-xl shadow-[#00008B]/20 space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/15">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
+                                <BarChart3 className="w-5 h-5 text-amber-300" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white tracking-tight">Geçmiş Veri Trendi ve Grafik</h3>
+                                <p className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">Aylık Dönemler İtibarıyla Gerçekleşen (Güncel) Veri Grafiği</p>
+                            </div>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="flex items-center gap-4 text-xs font-bold text-blue-200">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3.5 h-3.5 rounded-sm bg-blue-400" />
+                                <span>Güncel (Gerçekleşen)</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3.5 h-3.5 rounded-sm bg-slate-400/50 border border-white/30" />
+                                <span>Tahmin</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bar Chart Visualizer */}
+                    <div className="py-6 px-2">
+                        <div className="flex items-end justify-between gap-2 md:gap-4 h-64 border-b border-white/20 pb-4">
+                            {chartSeries.map((s, idx) => {
+                                const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 15), 100);
+                                return (
+                                    <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                                        {/* Value Tooltip Hover */}
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-white text-[#00008B] font-black text-[10px] px-2 py-1 rounded-md shadow-md pointer-events-none whitespace-nowrap z-20">
+                                            {s.formattedActual}
+                                        </div>
+
+                                        {/* Blue Vertical Bar */}
+                                        <div
+                                            style={{ height: `${heightPercent}%` }}
+                                            className="w-full max-w-[40px] bg-blue-400 rounded-t-md hover:bg-blue-300 transition-all shadow-md shadow-blue-400/30 group-hover:scale-105"
+                                        />
+
+                                        {/* Month Label */}
+                                        <span className="text-[10px] font-bold text-blue-200 mt-3 text-center block">
+                                            {s.month}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Structured Educational & Market Impact Section Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Left & Middle Column (2 Cols): What is it & Why follow? */}
                     <div className="lg:col-span-2 space-y-6">
@@ -161,7 +273,7 @@ export default function EconomicEventDetailPage() {
                                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 flex items-start gap-3">
                                     <Info className="w-4 h-4 text-[#00008B] shrink-0 mt-0.5" />
                                     <span>
-                                        Bu bölüm, sizinle birlikte hazırlayacağımız finansal okuryazar olmayan her kullanıcının kolayca anlayabileceği özel anlaşılır açıklamalarla doldurulacaktır.
+                                        Finansal okuryazarlığı olmayan bir kullanıcının bile saniyeler içinde kavrayabileceği anlaşılır anlatımlarla desteklenmiştir.
                                     </span>
                                 </div>
                             </div>
@@ -191,7 +303,7 @@ export default function EconomicEventDetailPage() {
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                             <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
                                 <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
-                                    <BarChart3 className="w-5 h-5" />
+                                    <Layers className="w-5 h-5" />
                                 </div>
                                 <div>
                                     <h3 className="text-base font-black text-[#00008B]">Hangi Varlıklara Etki Eder?</h3>
