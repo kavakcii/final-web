@@ -2375,7 +2375,7 @@ export default function PortfolioPage() {
                     setFocusedWidget(null);
                 }
             }}
-            className="p-6 md:p-10 space-y-8 min-h-full bg-white text-slate-800 rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-24 relative isolate m-2 xl:m-4 border border-slate-100 font-sans max-w-full"
+            className="p-4 md:p-10 space-y-6 md:space-y-8 min-h-full bg-white text-slate-800 rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-20 md:pb-24 relative isolate m-1 md:m-2 xl:m-4 border border-slate-100 font-sans max-w-full"
         >
             
             {/* Ambient Soft Blue Light Leaks */}
@@ -2461,13 +2461,13 @@ export default function PortfolioPage() {
                         setFocusedWidget(null);
                     }
                 }}
-                className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start"
+                className="flex flex-col xl:grid xl:grid-cols-12 gap-8 items-start"
             >
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
                     <>
                         {/* SOL SÜTUN (%65 - 8/12 Cols) */}
-                        <div className="xl:col-span-8 space-y-8">
+                        <div className="xl:col-span-8 space-y-8 order-2 xl:order-1">
                             {renderWidgetCard('table')}
                             
                             {/* BİLANÇO TAKVİMİ VE TEMETTÜ TAKVİMİ TAM EŞİT HİZADA (items-stretch) */}
@@ -2481,7 +2481,7 @@ export default function PortfolioPage() {
                         </div>
 
                         {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
-                        <div className="xl:col-span-4 space-y-8">
+                        <div className="xl:col-span-4 space-y-8 order-1 xl:order-2">
                             {renderWidgetCard('summary')}
                             {renderWidgetCard('distribution')}
                             {renderWidgetCard('extremes')}
