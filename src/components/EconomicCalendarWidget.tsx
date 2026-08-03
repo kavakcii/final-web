@@ -23,35 +23,43 @@ interface EconomicCalendarWidgetProps {
     isDetailedPage?: boolean;
 }
 
+function parseNumber(str?: string): number | null {
+    if (!str || str === '-' || str === 'Bekleniyor') return null;
+    const cleaned = str.replace(/[^0-9\.\,\-]/g, '').replace(',', '.');
+    const val = parseFloat(cleaned);
+    return isNaN(val) ? null : val;
+}
+
 export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalendarWidgetProps) {
     const router = useRouter();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [now, setNow] = useState<Date>(new Date());
 
-    useEffect(() => {
-        const fetchCalendarData = async () => {
-            try {
-                const res = await fetch('/api/calendar');
-                const json = await res.json();
-                if (json.data && Array.isArray(json.data)) {
-                    setEvents(json.data);
-                }
-            } catch (err) {
-                console.error("Calendar fetch error:", err);
-            } finally {
-                setLoading(false);
+    const fetchCalendarData = async () => {
+        try {
+            const res = await fetch('/api/calendar');
+            const json = await res.json();
+            if (json.data && Array.isArray(json.data)) {
+                setEvents(json.data);
             }
-        };
+        } catch (err) {
+            console.error("Calendar fetch error:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchCalendarData();
 
-        // Update current time every 30 seconds for live soon alert
-        const interval = setInterval(() => {
+        // High frequency 5-second polling for instant live data release
+        const pollInterval = setInterval(() => {
+            fetchCalendarData();
             setNow(new Date());
-        }, 30000);
+        }, 5000);
 
-        return () => clearInterval(interval);
+        return () => clearInterval(pollInterval);
     }, []);
 
     // Sadece Bugün haberlerini filtrele
@@ -83,9 +91,28 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         );
     };
 
-    // Açıklanan Veri & Son 30 Dakika "Yakında" Yanıp Sönme Mantığı
+    // Açıklanan Veri Renklendirme Mantığı (Beklenenden Yüksekse YEŞİL, Düşükse KIRMIZI)
     const renderActualValue = (item: CalendarEvent) => {
         if (item.actual && item.actual !== 'Bekleniyor' && item.actual !== '-') {
+            const actualNum = parseNumber(item.actual);
+            const forecastNum = parseNumber(item.forecast) ?? parseNumber(item.previous);
+
+            if (actualNum !== null && forecastNum !== null) {
+                if (actualNum > forecastNum) {
+                    return (
+                        <span className="font-black text-emerald-400 flex items-center justify-end gap-0.5">
+                            <span className="text-[10px]">▲</span> {item.actual}
+                        </span>
+                    );
+                } else if (actualNum < forecastNum) {
+                    return (
+                        <span className="font-black text-rose-400 flex items-center justify-end gap-0.5">
+                            <span className="text-[10px]">▼</span> {item.actual}
+                        </span>
+                    );
+                }
+            }
+
             return <span className="font-black text-white">{item.actual}</span>;
         }
 
@@ -95,7 +122,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
             const currentTimestamp = now.getTime();
             const diffMinutes = (eventTimestamp - currentTimestamp) / (1000 * 60);
 
-            // Son 30 dakika ve açıklanma zamanına 15 dk geçene kadar: "Yakında" (Sarı - Beyaz Yanıp Söner)
+            // Son 30 dakika: "Yakında 🔥" (Sarı - Beyaz Yanıp Söner)
             if (diffMinutes <= 30 && diffMinutes >= -30) {
                 return (
                     <span className="font-black text-amber-300 animate-pulse tracking-wider bg-amber-400/20 px-2 py-0.5 rounded-lg border border-amber-300/40 inline-block shadow-sm">
@@ -125,13 +152,16 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
             <div className="absolute top-0 right-0 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10">
-                {/* Clean Header - Sadece Ekonomik Takvim */}
+                {/* Clean Header */}
                 <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/15">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
                             <Calendar className="w-5 h-5 text-white" />
                         </div>
-                        <h3 className="text-xl font-black tracking-tight text-white">Ekonomik Takvim</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-xl font-black tracking-tight text-white">Ekonomik Takvim</h3>
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Saniyelik Canlı Akış" />
+                        </div>
                     </div>
 
                     {!isDetailedPage && (
@@ -145,7 +175,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                 {loading ? (
                     <div className="py-16 text-center flex flex-col items-center justify-center gap-3">
                         <Loader2 className="w-7 h-7 text-white animate-spin" />
-                        <span className="text-xs font-bold text-blue-200">Bugünün Ekonomik Haberleri Yükleniyor...</span>
+                        <span className="text-xs font-bold text-blue-200">Bugünün Canlı Ekonomik Haberleri Yükleniyor...</span>
                     </div>
                 ) : filteredEvents.length > 0 ? (
                     <div className="overflow-x-auto max-h-[500px] overflow-y-auto pr-1">
@@ -167,7 +197,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                                         key={idx}
                                         className="hover:bg-white/10 transition-colors group border-b border-white/10"
                                     >
-                                        {/* Saat (Her satır için yazılır) */}
+                                        {/* Saat */}
                                         <td className="py-3.5 px-3 font-bold text-white align-top">
                                             {item.time}
                                         </td>
@@ -196,7 +226,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                                             </span>
                                         </td>
 
-                                        {/* Açıklanan (Actual veya Son 30 Dk Yanıp Sönen "Yakında 🔥") */}
+                                        {/* Açıklanan (Beklenenden Yüksekse YEŞİL ▲, Düşükse KIRMIZI ▼) */}
                                         <td className="py-3.5 px-3 text-right align-top">
                                             {renderActualValue(item)}
                                         </td>
@@ -227,8 +257,9 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                 <span className="flex items-center gap-1.5 font-black tracking-wider text-white">
                     Tarih: {todayFormattedDate}
                 </span>
-                <span className="text-white/80 font-bold">
-                    {filteredEvents.length} Haber
+                <span className="text-white/80 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    Saniyelik Canlı Akış
                 </span>
             </div>
         </div>

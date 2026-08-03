@@ -94,11 +94,12 @@ function translateTitle(title: string): string {
 
 export async function scrapeEconomicCalendar() {
     try {
+        // Real-time fetch without cache for instant live updates
         const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             },
-            next: { revalidate: 180 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Calendar fetch failed with status: ${response.status}`);

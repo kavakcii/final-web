@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scrapeEconomicCalendar } from '@/lib/calendar-scraper';
 
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
       const events = await scrapeEconomicCalendar();
       if (events && events.length > 0) {
-          return NextResponse.json({ success: true, source: 'live-feed', data: events });
+          return NextResponse.json(
+            { success: true, source: 'live-feed', data: events },
+            { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+          );
       }
   } catch (e: any) {
       console.error("Economic calendar API route error:", e);
