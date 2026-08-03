@@ -866,34 +866,7 @@ export default function EconomicEventDetailPage() {
 
                     {/* Right Column (1 Col): Affected Parities & Assets Impact Matrix */}
                     <div className="space-y-6">
-                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
-                                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
-                                    <Layers className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-base font-black text-[#00008B]">Hangi Varlıklara Etki Eder?</h3>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Doğrudan Etkilenen Pariteler</p>
-                                </div>
-                            </div>
 
-                            <div className="space-y-3">
-                                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                                    <span className="text-xs font-black text-[#00008B]">BIST 100 Endeksi</span>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">Yüksek Duyarlılık</span>
-                                </div>
-
-                                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                                    <span className="text-xs font-black text-[#00008B]">USD/TRY Dolar Kuru</span>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">Doğrudan Etki</span>
-                                </div>
-
-                                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                                    <span className="text-xs font-black text-[#00008B]">Gram Altın / Ons Altın</span>
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">Orta Etki</span>
-                                </div>
-                            </div>
-                        </div>
 
                         {/* WIDGET 4: SENARYO ANALİZİ (3 SENARYOLU İNTERAKTİF TAB VE YÖN ROZETLERİ) */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
