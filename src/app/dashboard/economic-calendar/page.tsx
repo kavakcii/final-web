@@ -1,24 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Calendar, Loader2, Check, Filter } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, Check, Filter, Database, Zap } from "lucide-react";
 import Link from "next/link";
-
-export interface CalendarEvent {
-    id?: string;
-    time: string;
-    dateFormatted?: string;
-    dateDayName?: string;
-    country: string;
-    flag?: string;
-    event: string;
-    actual?: string;
-    previous?: string;
-    forecast?: string;
-    impact: 'low' | 'medium' | 'high' | 'critical';
-    isToday?: boolean;
-    originalDate?: any;
-}
+import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
 function parseNumber(str?: string): number | null {
     if (!str || str === '-' || str === 'Bekleniyor') return null;
@@ -28,34 +13,33 @@ function parseNumber(str?: string): number | null {
 }
 
 export default function EconomicCalendarPage() {
-    const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Initial load instantly from pre-indexed catalog (0 ms lag!)
+    const [events, setEvents] = useState<CatalogCalendarEvent[]>(ECONOMIC_CALENDAR_CATALOG);
+    const [loading, setLoading] = useState(false);
     const [now, setNow] = useState<Date>(new Date());
 
-    // Multi-Select Country Checkboxes (TR, ABD, EU, UK)
+    // Multi-Select Country Checkboxes (TR, ABD, EU, UK) - Default: TR and ABD checked
     const [selectedCountries, setSelectedCountries] = useState<string[]>(['TR', 'ABD']);
 
-    // Time Horizon Filter (Bugün, Yarın, Bu Hafta, Tüm Veriler)
-    const [timeTab, setTimeTab] = useState<'today' | 'tomorrow' | 'week' | 'all'>('week');
+    // Time Horizon Filter (Bugün, Yarın, Bu Hafta, Gelecek Hafta, 3. Hafta, Tüm 3 Hafta)
+    const [timeTab, setTimeTab] = useState<'today' | 'tomorrow' | 'week0' | 'week1' | 'week2' | 'all'>('all');
 
     const fetchCalendarData = async () => {
         try {
             const res = await fetch('/api/calendar');
             const json = await res.json();
-            if (json.data && Array.isArray(json.data)) {
+            if (json.data && Array.isArray(json.data) && json.data.length > 0) {
                 setEvents(json.data);
             }
         } catch (err) {
             console.error("Calendar page fetch error:", err);
-        } finally {
-            setLoading(false);
         }
     };
 
     useEffect(() => {
         fetchCalendarData();
 
-        // 5-sec fast polling
+        // 5-sec fast polling for live actual releases
         const interval = setInterval(() => {
             fetchCalendarData();
             setNow(new Date());
@@ -75,12 +59,6 @@ export default function EconomicCalendarPage() {
         }
     };
 
-    // Today and Tomorrow strings in TSİ
-    const todayStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
-    const tomorrowDate = new Date();
-    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
-    const tomorrowStr = tomorrowDate.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
-
     // Filtered Events
     const filteredEvents = events.filter(e => {
         // Multi-country filter
@@ -90,9 +68,15 @@ export default function EconomicCalendarPage() {
 
         // Time Horizon filter
         if (timeTab === 'today') {
-            if (e.dateFormatted !== todayStr && !e.isToday) return false;
+            if (!e.isToday && e.dateFormatted !== "03.08.2026") return false;
         } else if (timeTab === 'tomorrow') {
-            if (e.dateFormatted !== tomorrowStr) return false;
+            if (!e.isTomorrow && e.dateFormatted !== "04.08.2026") return false;
+        } else if (timeTab === 'week0') {
+            if (e.weekOffset !== 0) return false;
+        } else if (timeTab === 'week1') {
+            if (e.weekOffset !== 1) return false;
+        } else if (timeTab === 'week2') {
+            if (e.weekOffset !== 2) return false;
         }
 
         return true;
@@ -113,7 +97,7 @@ export default function EconomicCalendarPage() {
     };
 
     // Actual vs Forecast Color Logic
-    const renderActualValue = (item: CalendarEvent) => {
+    const renderActualValue = (item: CatalogCalendarEvent) => {
         if (item.actual && item.actual !== 'Bekleniyor' && item.actual !== '-') {
             const actualNum = parseNumber(item.actual);
             const forecastNum = parseNumber(item.forecast) ?? parseNumber(item.previous);
@@ -167,18 +151,23 @@ export default function EconomicCalendarPage() {
                         <ArrowLeft className="w-4 h-4" /> Ana Sayfaya Dön
                     </Link>
                     <div className="flex items-center gap-2 text-xs font-black text-[#00008B] bg-blue-50 px-4 py-2 rounded-2xl border border-blue-200">
-                        <Calendar className="w-4 h-4 text-[#00008B]" /> Özel Ekonomik Takvim Detay Sayfası
+                        <Database className="w-4 h-4 text-[#00008B]" /> 3 Haftalık Ön İndekslenmiş Ekonomik Takvim Kataloğu
                     </div>
                 </div>
 
                 {/* Page Title & Controls */}
                 <div className="space-y-6">
                     <div>
-                        <h1 className="text-3xl md:text-4xl font-black tracking-tight text-[#00008B]">
-                            Özel Ekonomik Takvim
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl md:text-4xl font-black tracking-tight text-[#00008B]">
+                                Özel Ekonomik Takvim
+                            </h1>
+                            <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1">
+                                <Zap className="w-3.5 h-3.5" /> 3 HAFTALIK KATALOG DEPOSU
+                            </span>
+                        </div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
-                            Türkiye Saati (TSİ UTC+3) ile Çoklu Ülke ve Zaman Filtreli Makro Veriler
+                            Anında Yüklenen 3 Haftalık Önceden Çevrilmiş Makro Veri Kataloğu (TSİ UTC+3)
                         </p>
                     </div>
 
@@ -187,7 +176,7 @@ export default function EconomicCalendarPage() {
                         {/* Multi-Select Country Checkboxes (TR, ABD, EU, UK) */}
                         <div>
                             <span className="text-[11px] font-black text-[#00008B] uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-                                <Filter className="w-3.5 h-3.5" /> Çoklu Ülke Seçimi (Aynı Anda Birden Fazla Seçilebilir)
+                                <Filter className="w-3.5 h-3.5" /> Çoklu Ülke Seçimi (İstediğiniz Ülkeleri Aynı Anda Seçebilirsiniz)
                             </span>
                             <div className="flex flex-wrap items-center gap-3">
                                 {[
@@ -219,22 +208,24 @@ export default function EconomicCalendarPage() {
                             </div>
                         </div>
 
-                        {/* Time Horizon Filter Tabs */}
+                        {/* Time Horizon Filter Tabs (3 Haftalık Kapsam) */}
                         <div>
                             <span className="text-[11px] font-black text-[#00008B] uppercase tracking-wider block mb-2">
-                                Zaman Aralığı
+                                3 Haftalık Takvim Kapsamı
                             </span>
                             <div className="flex flex-wrap items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 w-fit">
                                 {[
                                     { id: 'today', label: 'Bugün' },
                                     { id: 'tomorrow', label: 'Yarın' },
-                                    { id: 'week', label: 'Bu Hafta' },
-                                    { id: 'all', label: 'Tüm Haberler' }
+                                    { id: 'week0', label: 'Bu Hafta (03-07 Ağust)' },
+                                    { id: 'week1', label: 'Gelecek Hafta (10-14 Ağust)' },
+                                    { id: 'week2', label: '3. Hafta (17-21 Ağust)' },
+                                    { id: 'all', label: 'Tüm 3 Hafta' }
                                 ].map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setTimeTab(tab.id as any)}
-                                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${
+                                        className={`px-3.5 py-2 text-xs font-black rounded-xl transition-all ${
                                             timeTab === tab.id
                                                 ? 'bg-[#00008B] text-white shadow-sm'
                                                 : 'text-slate-500 hover:text-[#00008B]'
@@ -249,17 +240,12 @@ export default function EconomicCalendarPage() {
 
                     {/* Table View (Brand Blue Theme - White Text) */}
                     <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 shadow-xl shadow-[#00008B]/20">
-                        {loading ? (
-                            <div className="py-20 text-center flex flex-col items-center justify-center gap-3">
-                                <Loader2 className="w-8 h-8 text-white animate-spin" />
-                                <span className="text-xs font-bold text-blue-200">Canlı Ekonomik Haberler Yükleniyor...</span>
-                            </div>
-                        ) : filteredEvents.length > 0 ? (
+                        {filteredEvents.length > 0 ? (
                             <div className="overflow-x-auto max-h-[650px] overflow-y-auto pr-1">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
                                         <tr className="border-b border-white/15 text-[10px] font-black text-blue-200 uppercase tracking-wider pb-2">
-                                            <th className="py-3 px-3 w-28 text-blue-200">Tarih</th>
+                                            <th className="py-3 px-3 w-32 text-blue-200">Tarih</th>
                                             <th className="py-3 px-3 w-16 text-blue-200">Saat (TSİ)</th>
                                             <th className="py-3 px-3 w-24 text-blue-200">Ülke</th>
                                             <th className="py-3 px-2 w-12 text-center text-blue-200">Etki</th>
@@ -277,7 +263,7 @@ export default function EconomicCalendarPage() {
                                             >
                                                 {/* Tarih */}
                                                 <td className="py-4 px-3 font-bold text-white align-top">
-                                                    <span className="block text-xs font-black">{item.dateFormatted}</span>
+                                                    <span className="block text-xs font-black text-white">{item.dateFormatted}</span>
                                                     <span className="text-[10px] text-blue-200 block font-semibold">{item.dateDayName}</span>
                                                 </td>
 
@@ -338,11 +324,11 @@ export default function EconomicCalendarPage() {
                         {/* Footer */}
                         <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[11px] font-bold text-white">
                             <span className="flex items-center gap-1.5 font-black text-white">
-                                Toplam Gösterilen: {filteredEvents.length} Haber
+                                Toplam Gösterilen: {filteredEvents.length} Haber (3 Haftalık Katalog)
                             </span>
                             <span className="text-blue-200 font-bold flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                                TSİ (UTC+3) Anlık Akış
+                                TSİ (UTC+3) Anında Yüklenen Katalog Deposu
                             </span>
                         </div>
                     </div>

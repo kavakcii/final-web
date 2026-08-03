@@ -1,100 +1,10 @@
+import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from './calendar-catalog';
+
 const ALLOWED_COUNTRIES = new Set(['TR', 'TRY', 'US', 'USD', 'EU', 'EUR', 'GB', 'GBP']);
 
-const COUNTRY_CODE_DISPLAY: Record<string, string> = {
-    USD: 'ABD',
-    US: 'ABD',
-    EUR: 'EU',
-    EU: 'EU',
-    TRY: 'TR',
-    TR: 'TR',
-    GBP: 'UK',
-    GB: 'UK'
-};
-
-const FLAG_MAP: Record<string, string> = {
-    USD: '🇺🇸',
-    US: '🇺🇸',
-    EUR: '🇪🇺',
-    EU: '🇪🇺',
-    TRY: '🇹🇷',
-    TR: '🇹🇷',
-    GBP: '🇬🇧',
-    GB: '🇬🇧'
-};
-
-const TITLE_TR_MAP: Record<string, string> = {
-    "Inflation Rate MoM": "Aylık Enflasyon Oranı (TÜFE)",
-    "Inflation Rate YoY": "Yıllık Enflasyon Oranı (TÜFE)",
-    "CPI MoM": "Aylık Tüketici Fiyat Endeksi (TÜFE)",
-    "CPI YoY": "Yıllık Tüketici Fiyat Endeksi (TÜFE)",
-    "Core CPI MoM": "Aylık Çekirdek TÜFE",
-    "Core CPI YoY": "Yıllık Çekirdek TÜFE",
-    "PPI MoM": "Aylık Üretici Fiyat Endeksi (ÜFE)",
-    "PPI YoY": "Yıllık Üretici Fiyat Endeksi (ÜFE)",
-    "Manufacturing PMI": "İmalat PMI Endeksi",
-    "Services PMI": "Hizmet PMI Endeksi",
-    "ISM Manufacturing Prices": "ISM İmalat Fiyat Endeksi",
-    "ISM Manufacturing Price": "ISM İmalat Fiyat Endeksi",
-    "Manufacturing Prices": "İmalat Fiyat Endeksi",
-    "Manufacturing Price": "İmalat Fiyat Endeksi",
-    "S&P Global Manufacturing PMI Final": "S&P Global İmalat PMI (Nihai)",
-    "S&P Global Services PMI Final": "S&P Global Hizmet PMI (Nihai)",
-    "ISM Manufacturing PMI": "ISM İmalat PMI Endeksi",
-    "ISM Non-Manufacturing PMI": "ISM İmalat Dışı PMI Endeksi",
-    "Non Farm Payrolls": "Tarım Dışı İstihdam Değişimi",
-    "Unemployment Rate": "İşsizlik Oranı",
-    "Initial Jobless Claims": "İşsizlik Haklarından Yararlanma Başvuruları",
-    "Interest Rate Decision": "Faiz Oranı Kararı",
-    "Fed Interest Rate Decision": "Fed Politika Faizi Kararı",
-    "TCMB Interest Rate Decision": "TCMB Politika Faizi Kararı",
-    "GDP MoM": "Aylık Büyüme (GSYH)",
-    "GDP QoQ": "Çeyreklik Büyüme (GSYH)",
-    "GDP YoY": "Yıllık Büyüme (GSYH)",
-    "Balance of Trade": "Dış Ticaret Dengesi",
-    "Balance of Trade Prel": "Dış Ticaret Dengesi (Öncü)",
-    "Exports": "İhracat Verisi",
-    "Exports Prel": "İhracat (Öncü)",
-    "Imports": "İthalat Verisi",
-    "Imports Prel": "İthalat (Öncü)",
-    "Retail Sales MoM": "Aylık Perakende Satışlar",
-    "Retail Sales YoY": "Yıllık Perakende Satışlar",
-    "Consumer Confidence": "Tüketici Güven Endeksi",
-    "Industrial Production MoM": "Aylık Sanayi Üretimi",
-    "Industrial Production YoY": "Yıllık Sanayi Üretimi",
-    "Istanbul Chamber of Industry Manufacturing PMI": "İSO Türkiye İmalat PMI"
-};
-
-function translateTitle(title: string): string {
-    if (!title) return "";
-    const cleanTitle = title.trim();
-    if (TITLE_TR_MAP[cleanTitle]) return TITLE_TR_MAP[cleanTitle];
-
-    // Substring translations for dynamic titles
-    let tr = cleanTitle;
-    tr = tr.replace(/ISM Manufacturing Prices/gi, 'ISM İmalat Fiyat Endeksi');
-    tr = tr.replace(/ISM Manufacturing Price/gi, 'ISM İmalat Fiyat Endeksi');
-    tr = tr.replace(/Manufacturing Prices/gi, 'İmalat Fiyat Endeksi');
-    tr = tr.replace(/Manufacturing Price/gi, 'İmalat Fiyat Endeksi');
-    tr = tr.replace(/Manufacturing PMI/gi, 'İmalat PMI');
-    tr = tr.replace(/Services PMI/gi, 'Hizmet PMI');
-    tr = tr.replace(/Inflation Rate/gi, 'Enflasyon Oranı');
-    tr = tr.replace(/Unemployment Rate/gi, 'İşsizlik Oranı');
-    tr = tr.replace(/Interest Rate Decision/gi, 'Faiz Kararı');
-    tr = tr.replace(/Trade Balance/gi, 'Ticaret Dengesi');
-    tr = tr.replace(/Retail Sales/gi, 'Perakende Satışlar');
-    tr = tr.replace(/Consumer Sentiment/gi, 'Tüketici Duyarlılığı');
-    tr = tr.replace(/MoM/gi, '(Aylık)');
-    tr = tr.replace(/YoY/gi, '(Yıllık)');
-    tr = tr.replace(/QoQ/gi, '(Çeyreklik)');
-    tr = tr.replace(/Prel/gi, '(Öncü)');
-    tr = tr.replace(/Final/gi, '(Nihai)');
-
-    return tr;
-}
-
-export async function scrapeEconomicCalendar() {
+export async function scrapeEconomicCalendar(): Promise<CatalogCalendarEvent[]> {
     try {
-        // Real-time fetch without cache for instant live updates
+        // Try live feed first, fallback/enrich with pre-indexed catalog
         const response = await fetch('https://nfs.faireconomy.media/ff_calendar_thisweek.json', {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -102,82 +12,50 @@ export async function scrapeEconomicCalendar() {
             cache: 'no-store'
         });
 
-        if (!response.ok) throw new Error(`Calendar fetch failed with status: ${response.status}`);
+        if (response.ok) {
+            const data = await response.json();
+            const liveEventsMap = new Map<string, any>();
 
-        const data = await response.json();
-
-        // Strictly filter 2-star & 3-star for TR, US, EU, GB
-        const filteredData = data.filter((item: any) => {
-            const country = item.country ? item.country.toUpperCase() : '';
-            const impact = item.impact ? item.impact.toLowerCase() : '';
-
-            const isAllowedCountry = ALLOWED_COUNTRIES.has(country);
-            const isAllowedImpact = impact === 'medium' || impact === 'high' || impact === 'critical';
-
-            return isAllowedCountry && isAllowedImpact;
-        });
-
-        const events = filteredData.map((item: any) => {
-            const dateObj = new Date(item.date);
-            
-            // TSİ (Europe/Istanbul UTC+3) time formatting
-            const time = dateObj.toLocaleTimeString('tr-TR', {
-                timeZone: 'Europe/Istanbul',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
+            data.forEach((item: any) => {
+                if (item.title && item.date) {
+                    const dateObj = new Date(item.date);
+                    const time = dateObj.toLocaleTimeString('tr-TR', {
+                        timeZone: 'Europe/Istanbul',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    });
+                    const dateFormatted = dateObj.toLocaleDateString('tr-TR', {
+                        timeZone: 'Europe/Istanbul',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    
+                    const key = `${dateFormatted}_${time}_${item.country}`;
+                    liveEventsMap.set(key, item);
+                }
             });
 
-            // Date string (03.08.2026)
-            const dateFormatted = dateObj.toLocaleDateString('tr-TR', {
-                timeZone: 'Europe/Istanbul',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
+            // Enrich catalog with live actual values
+            const enrichedCatalog = ECONOMIC_CALENDAR_CATALOG.map(catItem => {
+                const liveKey = `${catItem.dateFormatted}_${catItem.time}_${catItem.country === 'ABD' ? 'USD' : catItem.country === 'UK' ? 'GBP' : catItem.country}`;
+                const liveItem = liveEventsMap.get(liveKey);
+
+                if (liveItem && liveItem.actual && liveItem.actual !== '-') {
+                    return {
+                        ...catItem,
+                        actual: liveItem.actual
+                    };
+                }
+                return catItem;
             });
 
-            // Day name (Pazartesi, Salı, etc.)
-            const dateDayName = dateObj.toLocaleDateString('tr-TR', {
-                timeZone: 'Europe/Istanbul',
-                weekday: 'long'
-            });
-
-            const countryCode = item.country ? item.country.toUpperCase() : 'TR';
-            const countryDisplay = COUNTRY_CODE_DISPLAY[countryCode] || countryCode;
-            const flag = FLAG_MAP[countryCode] || '🌐';
-
-            // Map impact string
-            let impactLevel: 'medium' | 'high' | 'critical' = 'medium';
-            if (item.impact?.toLowerCase() === 'high' || item.impact?.toLowerCase() === 'critical') {
-                impactLevel = item.title?.toLowerCase().includes('fed') || item.title?.toLowerCase().includes('tcmb') ? 'critical' : 'high';
-            }
-
-            const turkishTitle = translateTitle(item.title);
-
-            // Is event today in TSİ timezone?
-            const todayStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
-            const isToday = dateFormatted === todayStr;
-
-            return {
-                id: item.title + '_' + item.date,
-                time,
-                dateFormatted,
-                dateDayName,
-                country: countryDisplay,
-                flag,
-                event: turkishTitle,
-                forecast: item.forecast || '-',
-                previous: item.previous || '-',
-                actual: item.actual || 'Bekleniyor',
-                impact: impactLevel,
-                isToday,
-                originalDate: dateObj
-            };
-        });
-
-        return events;
+            return enrichedCatalog;
+        }
     } catch (error) {
-        console.error("Calendar fetch failed:", error);
-        return [];
+        console.error("Live calendar fetch failed, using catalog store:", error);
     }
+
+    return ECONOMIC_CALENDAR_CATALOG;
 }
