@@ -328,7 +328,7 @@ export default function EconomicCalendarPage() {
 
                                                 {/* Haber Başlığı */}
                                                 <td className="py-4 px-3 align-top">
-                                                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug underline-offset-4 group-hover:underline">
+                                                    <span className="text-xs font-bold text-white block leading-snug underline-offset-4 group-hover:underline">
                                                         {item.event}
                                                     </span>
                                                 </td>

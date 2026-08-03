@@ -171,7 +171,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                     </div>
 
                     {!isDetailedPage && (
-                        <div className="text-xs font-bold text-white/80 group-hover:text-amber-300 flex items-center gap-1 transition-colors">
+                        <div className="text-xs font-bold text-white flex items-center gap-1 hover:underline transition-all">
                             Detaylar <ArrowRight className="w-3.5 h-3.5" />
                         </div>
                     )}
@@ -228,7 +228,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
 
                                         {/* Haber Başlığı (%100 Türkçe & Tam Beyaz) */}
                                         <td className="py-3.5 px-3 align-top">
-                                            <span className="text-xs font-bold text-white group-hover:text-amber-300 transition-colors block leading-snug underline-offset-4 group-hover:underline">
+                                            <span className="text-xs font-bold text-white block leading-snug underline-offset-4 group-hover:underline">
                                                 {item.event}
                                             </span>
                                         </td>
