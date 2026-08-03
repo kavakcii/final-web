@@ -11,6 +11,8 @@ export interface Asset {
     userId?: string;
 }
 
+export type HistoryRange = '1W' | '1M' | '3M' | 'YTD' | '1Y';
+
 export const PortfolioService = {
     getAssets: async (): Promise<Asset[]> => {
         try {
@@ -113,13 +115,26 @@ export const PortfolioService = {
         }, 0);
     },
 
-    saveSnapshot: async (totalValue: number, totalProfit: number) => {
+    saveSnapshot: async (totalValue: number, totalProfit: number, totalCost?: number, assetCount?: number) => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            // Today's date in YYYY-MM-DD
-            const today = new Date().toISOString().split('T')[0];
+            // Today's date in YYYY-MM-DD (TSİ)
+            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+
+            const profitPct = (totalCost && totalCost > 0)
+                ? ((totalProfit / totalCost) * 100)
+                : 0;
+
+            const snapshotData = {
+                total_value: totalValue,
+                total_profit: totalProfit,
+                total_cost: totalCost ?? 0,
+                profit_pct: profitPct,
+                asset_count: assetCount ?? 0,
+                updated_at: new Date().toISOString()
+            };
 
             // Check if snapshot already exists for today
             const { data: existing } = await supabase
@@ -130,48 +145,85 @@ export const PortfolioService = {
                 .maybeSingle();
 
             if (existing) {
-                // Update today's snapshot
                 await supabase
                     .from('portfolio_history')
-                    .update({ 
-                        total_value: totalValue, 
-                        total_profit: totalProfit,
-                        updated_at: new Date().toISOString()
-                    })
+                    .update(snapshotData)
                     .eq('id', existing.id);
             } else {
-                // Insert new snapshot
                 await supabase
                     .from('portfolio_history')
-                    .insert([{
-                        user_id: user.id,
-                        snapshot_date: today,
-                        total_value: totalValue,
-                        total_profit: totalProfit
-                    }]);
+                    .insert([{ user_id: user.id, snapshot_date: today, ...snapshotData }]);
             }
         } catch (error) {
             console.error('Error saving portfolio snapshot:', error);
         }
     },
 
-    getHistory: async (): Promise<any[]> => {
+    /**
+     * Kullanıcıya ait portföy tarihçesini belirtilen zaman aralığına göre çeker.
+     * Veriler kullanıcı izolasyonu ile korunur (RLS).
+     */
+    getHistory: async (range: HistoryRange = '1M'): Promise<any[]> => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return [];
 
+            // Seçilen zaman dilimine göre başlangıç tarihi hesapla (TSİ)
+            const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+            let fromDate: Date;
+
+            if (range === '1W') {
+                fromDate = new Date(now);
+                fromDate.setDate(now.getDate() - 7);
+            } else if (range === '1M') {
+                fromDate = new Date(now);
+                fromDate.setDate(now.getDate() - 30);
+            } else if (range === '3M') {
+                fromDate = new Date(now);
+                fromDate.setDate(now.getDate() - 90);
+            } else if (range === 'YTD') {
+                fromDate = new Date(now.getFullYear(), 0, 1); // 1 Ocak
+            } else { // 1Y
+                fromDate = new Date(now);
+                fromDate.setFullYear(now.getFullYear() - 1);
+            }
+
+            const fromDateStr = fromDate.toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+
             const { data, error } = await supabase
                 .from('portfolio_history')
-                .select('*')
+                .select('snapshot_date, total_value, total_profit, profit_pct, asset_count')
                 .eq('user_id', user.id)
-                .order('snapshot_date', { ascending: true })
-                .limit(30);
+                .gte('snapshot_date', fromDateStr)
+                .order('snapshot_date', { ascending: true });
 
             if (error) throw error;
-            return data;
+            return data ?? [];
         } catch (error) {
             console.error('Error fetching portfolio history:', error);
             return [];
+        }
+    },
+
+    /**
+     * İlk kayıt tarihini döndürür → kaç günlük veri var bilgisi için
+     */
+    getFirstSnapshotDate: async (): Promise<string | null> => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return null;
+
+            const { data } = await supabase
+                .from('portfolio_history')
+                .select('snapshot_date')
+                .eq('user_id', user.id)
+                .order('snapshot_date', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+
+            return data?.snapshot_date ?? null;
+        } catch {
+            return null;
         }
     }
 };
