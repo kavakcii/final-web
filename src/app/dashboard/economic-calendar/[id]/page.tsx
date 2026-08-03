@@ -128,65 +128,66 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* Event Main Header Banner (Brand Navy Blue Theme + Türkçe Çeviri Açıklaması) */}
-                <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-
+                {/* Event Main Header Banner (BEYAZ Ana Kutu + LACİVERT Özellik & Metrik Widget'ları) */}
+                <div className="w-full bg-white text-[#00008B] border border-slate-200 rounded-3xl p-8 shadow-sm relative overflow-hidden space-y-6">
                     <div className="relative z-10 space-y-6">
+                        {/* BEYAZ Üst Başlık Alanı */}
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-3">
                                 <span className="text-3xl">{event.flag}</span>
                                 <div>
-                                    <span className="text-xs font-black text-blue-200 uppercase tracking-widest block">
+                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest block">
                                         {event.country} • Makroekonomik Gösterge Analizi
                                     </span>
-                                    <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mt-0.5">
+                                    <h1 className="text-2xl md:text-3xl font-black text-[#00008B] tracking-tight mt-0.5">
                                         {event.event}
                                     </h1>
                                 </div>
                             </div>
 
                             {/* Impact Badge */}
-                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md">
-                                <ShieldAlert className={`w-4 h-4 ${isHighImpact ? 'text-amber-300' : 'text-blue-300'}`} />
-                                <span className="text-xs font-extrabold text-white">
+                            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-blue-50 border border-blue-200">
+                                <ShieldAlert className={`w-4 h-4 ${isHighImpact ? 'text-amber-500' : 'text-blue-600'}`} />
+                                <span className="text-xs font-extrabold text-[#00008B]">
                                     {isHighImpact ? 'Yüksek Piyasa Etkisi' : 'Orta Piyasa Etkisi'}
                                 </span>
                             </div>
                         </div>
 
-                        {/* TÜRKÇE ÇEVİRİ AÇIKLAMA METNİ (Mavi Alanın İçi) */}
-                        <div className="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md text-xs font-medium text-blue-100 leading-relaxed">
-                            <p className="text-white font-semibold text-sm mb-1.5 flex items-center gap-2">
+                        {/* MAVİ RENKTEKİ ÖZET BİLGİ KUTUSU */}
+                        <div className="p-5 rounded-2xl bg-[#00008B] text-white border border-[#00008B] shadow-md shadow-[#00008B]/20 leading-relaxed space-y-2">
+                            <p className="text-amber-300 font-bold text-sm flex items-center gap-2">
                                 <Info className="w-4 h-4 text-amber-300" /> Veri Hakkında Özet Bilgi:
                             </p>
-                            {overviewText}
+                            <p className="text-white text-xs font-medium leading-relaxed">
+                                {overviewText}
+                            </p>
                         </div>
 
-                        {/* Metric Cards Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/15">
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                        {/* MAVİ RENKTEKİ METRİK WIDGET'LARI (Açıklanma Zamanı, Açıklanan, Beklenen, Önceki) */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanma Zamanı</span>
                                 <span className="text-sm font-black text-white block mt-1">
                                     {event.dateFormatted || 'Bugün'} - {event.time} (TSİ)
                                 </span>
                             </div>
 
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanan Veri</span>
                                 <span className="text-sm font-black text-white block mt-1">
                                     {event.actual || 'Bekleniyor'}
                                 </span>
                             </div>
 
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Piyasa Beklentisi</span>
                                 <span className="text-sm font-black text-blue-100 block mt-1">
                                     {event.forecast || '-'}
                                 </span>
                             </div>
 
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                            <div className="bg-[#00008B] text-white p-4 rounded-2xl border border-[#00008B] shadow-md shadow-[#00008B]/20">
                                 <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Önceki Veri</span>
                                 <span className="text-sm font-black text-blue-100 block mt-1">
                                     {event.previous || '-'}
@@ -196,52 +197,48 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (Historical Releases Bar Chart - TradingView Stili) */}
-                <div className="bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 shadow-xl shadow-[#00008B]/20 space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/15">
+                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (BEYAZ Ana Kutu + Beyazdan Maviye Geçen Gradient Sütunlar) */}
+                <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
-                                <BarChart3 className="w-5 h-5 text-amber-300" />
+                            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                <BarChart3 className="w-5 h-5 text-[#00008B]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-white tracking-tight">Geçmiş Veri Trendi ve Grafik</h3>
-                                <p className="text-[10px] font-bold text-blue-200 uppercase tracking-wider">Aylık Dönemler İtibarıyla Gerçekleşen (Güncel) Veri Grafiği</p>
+                                <h3 className="text-lg font-black text-[#00008B] tracking-tight">Geçmiş Veri Trendi ve Grafik</h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aylık Dönemler İtibarıyla Gerçekleşen (Güncel) Veri Grafiği</p>
                             </div>
                         </div>
 
                         {/* Legend */}
-                        <div className="flex items-center gap-4 text-xs font-bold text-blue-200">
+                        <div className="flex items-center gap-4 text-xs font-bold text-slate-600">
                             <div className="flex items-center gap-1.5">
-                                <div className="w-3.5 h-3.5 rounded-sm bg-blue-400" />
+                                <div className="w-3.5 h-3.5 rounded-sm bg-[#00008B]" />
                                 <span>Güncel (Gerçekleşen)</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3.5 h-3.5 rounded-sm bg-slate-400/50 border border-white/30" />
-                                <span>Tahmin</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Bar Chart Visualizer */}
+                    {/* Bar Chart Visualizer (Beyazdan Maviye Geçen Ton Gradient Sütunlar) */}
                     <div className="py-6 px-2">
-                        <div className="flex items-end justify-between gap-2 md:gap-4 h-64 border-b border-white/20 pb-4">
+                        <div className="flex items-end justify-between gap-2 md:gap-4 h-64 border-b border-slate-200 pb-4">
                             {chartSeries.map((s, idx) => {
                                 const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 15), 100);
                                 return (
                                     <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
                                         {/* Value Tooltip Hover */}
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-white text-[#00008B] font-black text-[10px] px-2 py-1 rounded-md shadow-md pointer-events-none whitespace-nowrap z-20">
+                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-[#00008B] text-white font-black text-[10px] px-2 py-1 rounded-md shadow-md pointer-events-none whitespace-nowrap z-20">
                                             {s.formattedActual}
                                         </div>
 
-                                        {/* Blue Vertical Bar */}
+                                        {/* Beyazdan Maviye Geçen Ton Gradient Sütun */}
                                         <div
                                             style={{ height: `${heightPercent}%` }}
-                                            className="w-full max-w-[40px] bg-blue-400 rounded-t-md hover:bg-blue-300 transition-all shadow-md shadow-blue-400/30 group-hover:scale-105"
+                                            className="w-full max-w-[42px] bg-gradient-to-t from-[#00008B] via-[#00008B] to-blue-400 hover:from-[#0808a3] hover:to-blue-300 rounded-t-xl transition-all shadow-md shadow-[#00008B]/20 group-hover:scale-105"
                                         />
 
                                         {/* Month Label */}
-                                        <span className="text-[10px] font-bold text-blue-200 mt-3 text-center block">
+                                        <span className="text-[10px] font-bold text-slate-600 mt-3 text-center block">
                                             {s.month}
                                         </span>
                                     </div>
