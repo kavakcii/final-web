@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers, ShoppingBag, Target, CreditCard, Zap, Landmark, LandmarkIcon, PiggyBank, Compass } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers, ShoppingBag, Target, CreditCard, Zap, Landmark, LandmarkIcon, PiggyBank, Compass, Home } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
 // Overview Description Map (Türkçe Özellik Açıklamaları)
 const OVERVIEW_TR_DESCRIPTIONS: Record<string, string> = {
-    "Dış Ticaret Dengesi": "Türkiye dış ticaret dengesi 1947 yılından bu yana açık vermektedir. Türkiye'nin başlıca ihracat kalemi kara taşıtları, tekstil, demir-çelik, giyim ve gıda ürünlerinden oluşurken; ithalat kalemleri makine, ulaşım ekipmanları, işlenmiş mallar, mineral yakıtlar, yağlar ve kimyasallardan oluşmaktadır. En büyük ticaret açıkları Çin, Rusya, Almanya, Güney Kore, İsviçre, Hindistan, İran ve Japonya ile verilirken; en büyük ticaret fazlası ise Irak, BAE, Birleşik Krallık, İsrail, Suriye, Kuzey Kıbrıs ve Azerbaycan ile verilmektedir.",
+    "Dış Ticaret Dengesi": "Türkiye dış ticaret dengesi 1947 yılından bu yana açık vermektedir. Türkiye'nin başlıca ihracat kalemi kara taşıtları, tekstil, demir-çelik, giyim ve gıda ürünlerinden oluşurken; ithalat kalemleri makine, ulaşım ekipmanları, işlenmiş mallar, mineral yakıtlar, yağlar ve kimyasallardan oluşmaktadır. En büyük ticaret açıkları Çin, Rusya, Almanya, Güney Kore, İsviçre, Hindistan, İran ve Japonya ile verilerken; en büyük ticaret fazlası ise Irak, BAE, Birleşik Krallık, İsrail, Suriye, Kuzey Kıbrıs ve Azerbaycan ile verilmektedir.",
     "Aylık Tüketici Fiyat Endeksi (TÜFE)": "Tüketici Fiyat Endeksi (TÜFE), hanehalklarının satın aldığı mal ve hizmet sepetinin fiyatlarındaki ortalama değişimini ölçer. Türkiye'de TÜFE verisi enflasyon oranının ana göstergesidir ve TCMB faiz kararları, mevduat faizleri ile borsa değerlemeleri üzerinde doğrudan etkiye sahiptir.",
     "Yıllık Enflasyon Oranı (TÜFE)": "Yıllık TÜFE Enflasyonu, son 12 ay içerisindeki tüketici fiyat seviyesinin yıllık bazdaki artış hızını gösterir. Enflasyondaki düşüş (dezenflasyon) süreci piyasalar ve TL varlıkları açısından olumlu algılanır.",
     "Aylık Üretici Fiyat Endeksi (ÜFE)": "Üretici Fiyat Endeksi (ÜFE), ülke ekonomisinde üretilen malların üretici aşamasındaki fiyat değişimlerini ölçer. ÜFE maliyet artışlarını yansıttığı için ilerleyen aylarda TÜFE enflasyonu üzerinde öncü gösterge niteliğindedir.",
@@ -98,68 +98,145 @@ const THREE_CARD_EDUCATION_MAP: Record<string, EducationThreeCards> = {
     }
 };
 
-// Widget 2: Investor Why Follow Descriptive Data Map
-interface InvestorWhyFollow {
-    centralBankAction: string;
-    bigMoneyMovement: string;
-    personalBenefit: string;
+// Widget 2: "Bu Veri Neleri Etkiler?" Data Map
+interface DataEffects {
+    dailyLifeEffect: string;
+    bankingCreditEffect: string;
+    marketAssetsEffect: string;
 }
 
-const INVESTOR_WHY_FOLLOW_MAP: Record<string, InvestorWhyFollow> = {
+const DATA_EFFECTS_MAP: Record<string, DataEffects> = {
     "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
-        centralBankAction: "Merkez Bankası'nı ekonominin dev su vanasını tutan kurum olarak düşünün. Enflasyon yüksek çıkınca 'Piyasada çok fazla para dolaşıyor, insanların harcamasını durdurmalıyım' der ve vanayı sıkar (faizleri artırır). Vanayı sıkınca kredi almak zorlaşır.",
-        bigMoneyMovement: "Milyon dolarlık dev fonlar haber açıklanacağı saniyede ekran başında pusuda bekler. Eğer faizlerin artacağını anlarlarsa 'Riski bırakıp paramı garanti mevduat faizine veya dolara yatırayım' derler. Borsanın o anda düşmesinin tek sebebi bu dev paraların yer değiştirmesidir.",
-        personalBenefit: "Bu veriyi takip etmek, havanın fırtınalı mı yoksa güneşli mi olacağını önceden görmek gibidir. Dolarınızın, altınınızın veya hissenizin yarın ne tarafa savrulacağını saniyeler öncesinden tahmin etmenizi sağlar."
+        dailyLifeEffect: "TÜFE enflasyonu doğrudan ev kiranızı, market etiketlerini ve maaş zam oranlarınızı etkiler. Rakam yüksek çıktığında önümüzdeki aylarda alışveriş sepetinizin pahalılaşacağını ve alım gücünüzün azalacağını gösterir.",
+        bankingCreditEffect: "Merkez Bankası enflasyonu düşürmek için faiz artırdığında; konut, araç ve ihtiyaç kredisi faizleri tırmanır. Kredi çekip ev/araba almak zorlaşır ancak bankadaki vadeli mevduatınızın faiz getirisi yükselir.",
+        marketAssetsEffect: "Büyük yatırımcılar paralarını enflasyona karşı korumak için saniyeler içinde karar verir. Yüksek faiz beklentisiyle Borsa İstanbul'daki hisseler kısa vadede satış yiyebilir; Dolar/TL ve kuyumcudaki Gram Altın fiyatlarında yukarı yönlü hareketlenme yaşanır."
     },
     "Yıllık Enflasyon Oranı (TÜFE)": {
-        centralBankAction: "Merkez Bankaları yıllık bazdaki enflasyon trendine bakarak uzun vadeli faiz politikasını çizer. Yıllık enflasyon katılaşırsa uzun süre yüksek faiz uygulanır.",
-        bigMoneyMovement: "Yabancı ve yerli kurumsal yatırımcılar paranızın yıllık bazda eriyip erimediğine bakar. Yıllık enflasyon faizden yüksekse parayı korumak için Borsa İstanbul hisselerine veya Altına hücum ederler.",
-        personalBenefit: "Mevduatınızın yıllık bazda size kâr mı ettirdiğini yoksa paranızı erittiğini (Reel Getiri) bilimsel olarak görmenizi sağlar."
+        dailyLifeEffect: "Yıllık bazdaki ev kiralama artış tavanınızı, asgari ücret ve memur maaş güncellemelerini doğrudan etkiler.",
+        bankingCreditEffect: "Bankaların uzun vadeli konut kredisi faiz oranlarını ve mevduat ürünlerinin reel getirisini etkiler.",
+        marketAssetsEffect: "Yıllık enflasyon faizlerin üzerindeyse parayı korumak için hisse senetleri ve altın yatırımlarına hücum yaşanır."
     },
     "Aylık Üretici Fiyat Endeksi (ÜFE)": {
-        centralBankAction: "Merkez Bankası imalatçıların hammadde maliyet yükünü inceleyerek 2 ay sonra raflara yansıyacak tüketici enflasyonunu tahmin eder ve faiz kararını önden kurgular.",
-        bigMoneyMovement: "Sanayi şirketlerine yatırım yapan dev fonlar, imalat maliyetleri arttığında şirket kârlarının düşeceğini anlarlar ve o hisselerden kâr satışı yaparak ayrılırlar.",
-        personalBenefit: "Tüketeceğiniz malların 2 ay sonra pahalılaşıp pahalılaşmayacağını söyler; bütçenizi ve yatırımlarınızı önden korumanıza yardımcı olur."
+        dailyLifeEffect: "Fabrikaların üretim maliyetlerini etkiler. Yüksek ÜFE 1-2 ay sonra tükettiğiniz tüm ürün ve hizmetlerin raf etiketlerine zam olarak yansır.",
+        bankingCreditEffect: "Şirketlerin borçlanma ihtiyacını etkiler. Üretim maliyetleri artan sanayiciler bankalara daha fazla ticari kredi başvurusu yapar.",
+        marketAssetsEffect: "İmalat şirketlerinin kâr marjlarını etkiler. Yüksek maliyet yükü sanayi hisselerini düşürebilir."
     },
     "ISM İmalat PMI Endeksi": {
-        centralBankAction: "Ekonomide durgunluk (resesyon) tehlikesi belirirse Merkez Bankası faizleri düşürerek piyasaya taze para pompalamak zorunda kalır.",
-        bigMoneyMovement: "Küresel dev fonlar fabrikaların çarklarının yavaşladığını gördüğünde sanayi ve imalat hisselerinden çıkıp Altın ve Tahvil gibi limanlara sığınır.",
-        personalBenefit: "Şirket kârlılıklarının ve ekonominin genel yönünü fısıldar; ekonomik kriz risklerini önceden hissetmenizi sağlar."
+        dailyLifeEffect: "İş bulma imkanlarını ve piyasadaki istihdam canlılığını etkiler. Fabrikalar daha çok sipariş aldıkça yeni eleman alımları artar.",
+        bankingCreditEffect: "Ekonomide büyüme veya resesyon tehlikesine göre faiz oranlarını etkiler. PMI düşükse Merkez Bankası kredileri ucuzlatmak için faiz indirir.",
+        marketAssetsEffect: "Sanayi hisselerini ve küresel Dolar gücünü etkiler. Yüksek PMI borsa şirket karlarını uçurur."
     },
     "S&P Global İmalat PMI (Nihai)": {
-        centralBankAction: "Ülke sanayisinin büyüme gücünü ölçen Merkez Bankaları faiz oranlarını ekonomi boğulmayacak şekilde hassasçe ayarlar.",
-        bigMoneyMovement: "Uluslararası fonlar imalat puanı yüksek ülkelere doğrudan sıcak para aktarır; borsa endekslerinde güçlü yükseliş dalgası başlar.",
-        personalBenefit: "İhracat yapan yerli şirketlerin kârlılıklarını öngörüp doğru borsada doğru hisseye yatırım yapmanızı sağlar."
+        dailyLifeEffect: "Fabrikaların çarklarının ne kadar hızlı döndüğünü ve genel ekonomik canlılığı etkiler.",
+        bankingCreditEffect: "Sanayi kredilerinin büyüme hızını ve bankaların ticari kredi iştahını etkiler.",
+        marketAssetsEffect: "İhracatçı şirket hisselerini ve doğrudan yabancı sermaye girişlerini etkiler."
     },
     "Fed Politika Faizi Kararı": {
-        centralBankAction: "ABD Merkez Bankası (Fed) faiz artırdığında dünyadaki tüm Dolar para birimleri ABD'ye geri çağrılır. Faiz indirdiğinde ise para dünyaya dağılır.",
-        bigMoneyMovement: "Dünya üzerindeki trilyon dolarlık fonlar Fed kararı anında pozisyon değiştirir. Yüksek Amerikan faizi Türkiye gibi gelişmekte olan ülkelerden para çıkışına neden olur.",
-        personalBenefit: "Kuyumcudaki Altın fiyatlarının, Amerikan borsalarının ve Türkiye'deki Dolar kurunun yönünü doğrudan bilmenizi sağlar."
+        dailyLifeEffect: "Küresel kredi kartı faizlerini, taksitli borçlanmanızı ve dövizle aldığınız tüm ithal ürünlerin maliyetini etkiler.",
+        bankingCreditEffect: "Dünya genelindeki tüm bankaların faiz politikalarını etkiler. Yüksek Fed faizi küresel borçlanmayı zorlaştırır.",
+        marketAssetsEffect: "Borsa İstanbul, Ons Altın ve Dolar/TL fiyatlarını anında etkiler. Faiz düştüğünde borsalara para akar, faiz yükseldiğinde hisselerden para çıkabilir."
     },
     "TCMB Politika Faizi Kararı": {
-        centralBankAction: "TCMB politika faizini artırdığında TL'nin faiz getirisini güçlendirir, düşürdüğünde piyasaya harcama yapması için para sunar.",
-        bigMoneyMovement: "Yerli ve yabancı yatırımcılar TCMB faizinin Borsa İstanbul kârlılığına olan etkisini hesaplayarak Banka ve Sanayi hisselerinde büyük alım/satım yaparlar.",
-        personalBenefit: "Kredi çekip çekmeyeceğinize veya birikiminizi mevduat mı borsa mı yapacağınıza karar vermenizi sağlar."
+        dailyLifeEffect: "Kredi kartı asgari ödeme faizlerinizi, kredili mevduat hesaplarınızı (KMH) ve taksitli harcamalarınızı doğrudan etkiler.",
+        bankingCreditEffect: "Bankaların konut, taşıt ve mevduat faiz oranlarını tabandan tavanına kadar etkiler. Faiz artarsa borçlanmak zorlaşır, mevduat fonu kazandırır.",
+        marketAssetsEffect: "Borsa İstanbul ve TL döviz kurlarını doğrudan etkiler. Faiz artırımı TL'ye değer kazandırır."
     },
     "Tarım Dışı İstihdam Değişimi (NFP)": {
-        centralBankAction: "Fed halkın istihdam durumuna bakarak 'Ekonomi çok ısındı faiz artırmalıyım' veya 'İşsizlik artıyor faiz indirmeliyim' kararı verir.",
-        bigMoneyMovement: "Döviz ve Emtia (Altın/Gümüş) tüccarları NFP verisi ile Doların küresel gücünü hesaplar; Ons Altında saniyelik 30-40 dolarlık sıçramalar yaşanır.",
-        personalBenefit: "Gram Altın ve Dolar kurunun veri açıklandığı an hangi yöne fırlayacağını görmenizi sağlar."
+        dailyLifeEffect: "Dünya ekonomisindeki istihdam canlılığını ve küresel refah seviyesini etkiler.",
+        bankingCreditEffect: "Amerikan Merkez Bankası'nın (Fed) faiz indirme veya artırma zamanlamasını etkiler.",
+        marketAssetsEffect: "Kuyumcudaki Gram Altın ve Dolar/TL fiyatını saniyeler içinde etkiler. Yüksek veri Doları güçlendirir, Altını geriletebilir."
     },
     "Dış Ticaret Dengesi": {
-        centralBankAction: "Merkez Bankası ülkedeki döviz rezervlerinin durumunu analiz ederek döviz kurlarındaki fırlama risklerini değerlendirir.",
-        bigMoneyMovement: "Dış ticaret açığı büyüdüğünde yabancı yatırımcılar 'Bu ülkeye daha fazla döviz lazım olacak' diyerek Dolar/TL'de yukarı yönlü pozisyon alırlar.",
-        personalBenefit: "Dolar ve Euro kurlarının üzerinde yukarı yönlü baskı oluşup oluşmayacağını önceden öngörmenizi sağlar."
+        dailyLifeEffect: "Ülkeye giren ithal malların, teknolojik cihazların ve akaryakıtın fiyatını etkiler.",
+        bankingCreditEffect: "Ülkenin döviz rezervlerini ve Merkez Bankası'nın döviz kurlarını koruma kapasitesini etkiler.",
+        marketAssetsEffect: "Dolar ve Euro kurunun üzerindeki baskıyı doğrudan etkiler. Dış ticaret açığı büyürse kurlar yukarı yönlenir."
     },
     "İşsizlik Oranı": {
-        centralBankAction: "Halkın iş bulma imkanlarını izleyerek büyümenin ne kadar dengeli olduğunu kontrol eder.",
-        bigMoneyMovement: "İşsizlik arttığında halkın harcama yapamayacağını bilen fonlar Perakende ve Tüketici hisselerinden kâr satışı yapar.",
-        personalBenefit: "Ülke ekonomisinin genel refah seviyesini ve iş bulma piyasasının sağlığını gösterir."
+        dailyLifeEffect: "Halkın genel iş bulma kolaylığını ve şirketlerin maaş teklif seviyelerini etkiler.",
+        bankingCreditEffect: "Tüketici kredileri geri ödeme performanslarını ve taksitli kredi iştahını etkiler.",
+        marketAssetsEffect: "Perakende ve tüketim hisselerinin mağaza cirolarını etkiler."
     },
     "Default": {
-        centralBankAction: "Merkez bankaları ekonomideki dengeleri korumak ve fiyat istikrarını sağlamak için veriyi faiz politikalarına yansıtır.",
-        bigMoneyMovement: "Piyasadaki büyük oyuncular ve fonlar risk-ödül dengesini hesaplayarak portföylerini güvenli ve yüksek getirili varlıklara dağıtır.",
-        personalBenefit: "Piyasalarda havanın ne yöne eseceğini anlayıp birikimlerinizi doğru zamanda doğru varlıkta tutmanızı sağlar."
+        dailyLifeEffect: "Piyasadaki fiyatları, harcama imkanlarını ve yaşam maliyetini etkiler.",
+        bankingCreditEffect: "Kredi ve mevduat faiz oranlarının yönünü etkiler.",
+        marketAssetsEffect: "Borsa, döviz kurları ve altın fiyatlarındaki dengeleri etkiler."
+    }
+};
+
+// Widget 4: Scenario Analysis Event Map
+interface EventScenario {
+    aboveText: string;
+    aboveBist: string;
+    aboveUsd: string;
+    belowText: string;
+    belowBist: string;
+    belowUsd: string;
+}
+
+const EVENT_SCENARIOS_MAP: Record<string, EventScenario> = {
+    "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
+        aboveText: "TCMB'den faiz artırımı veya sıkı para politikası beklentisi doğar. Kredi ve mevduat faizleri yükselme eğilimine girer.",
+        aboveBist: "📉 BIST 100: Yüksek faiz baskısıyla kısa vadeli satış yaşanabilir.",
+        aboveUsd: "📈 Dolar/TL: Enflasyonist baskı ile döviz talebi yukarı yönlenebilir.",
+        belowText: "Dezenflasyon sürecinin hızlandığı algısı güçlenir. TCMB faiz indirimlerinin önü açılır.",
+        belowBist: "📈 BIST 100: Kredi ve borçlanma rahatlamasıyla borsada güçlü alım başlar.",
+        belowUsd: "📉 Dolar/TL: TL varlıklarına güven artar, kur yataylaşır."
+    },
+    "Yıllık Enflasyon Oranı (TÜFE)": {
+        aboveText: "Uzun vadeli enflasyon katılığı endişesi doğar, TCMB faizleri yüksek tutmaya devam eder.",
+        aboveBist: "📉 BIST 100: Sıkılaşma algısı borsa şirketlerinin kârlılık beklentilerini düşürür.",
+        aboveUsd: "📈 Dolar/TL: Enflasyondan korunma talebiyle dövize yönelim artar.",
+        belowText: "Yıllık bazda hayat pahalılığının yavaşladığını kanıtlar, piyasa morali yükselir.",
+        belowBist: "📈 BIST 100: Faizin düşeceği beklentisiyle hisse senetlerinde boğa trendi güçlenir.",
+        belowUsd: "📉 Dolar/TL: Enflasyon riski azaldıkça TL güç kazanır."
+    },
+    "Aylık Üretici Fiyat Endeksi (ÜFE)": {
+        aboveText: "Fabrika çıkış maliyetlerinin arttığını gösterir. 1-2 ay sonra tüketici zamlarının geleceği endişesi yaratır.",
+        aboveBist: "📉 Sanayi Hisseleri: Maliyet artışı sebebiyle marj baskısı oluşur.",
+        aboveUsd: "📈 Dolar/TL: Enflasyonist beklentilerle dövize talep artabilir.",
+        belowText: "Üreticinin maliyet yükünün hafiflediğini kanıtlar. İlerleyen aylarda tüketici enflasyonunun düşeceğine işarettir.",
+        belowBist: "📈 Sanayi Hisseleri: Üretim maliyetleri düştüğü için hisselere alım gelir.",
+        belowUsd: "📉 Dolar/TL: Enflasyon baskısı azaldığı için kur yataylaşır."
+    },
+    "ISM İmalat PMI Endeksi": {
+        aboveText: "ABD sanayisinde çarkların hızlı döndüğünü ve ekonominin güçlü büyüdüğünü gösterir.",
+        aboveBist: "📉 BIST 100 & Altın: Güçlü Amerikan faizi beklentisiyle Ons Altın gerileyebilir.",
+        aboveUsd: "📈 Küresel Dolar (DXY): Dolar dünyada güç kazanır.",
+        belowText: "Sanayide daralma ve ekonomik durgunluk (resesyon) endişesi yaratır.",
+        belowBist: "📈 Ons Altın & Gelişen Borsalar: Fed faiz indirecek beklentisiyle Altın coşabilir.",
+        belowUsd: "📉 Küresel Dolar (DXY): Dolar endeksi güç kaybeder."
+    },
+    "Fed Politika Faizi Kararı": {
+        aboveText: "Sürpriz faiz artırımı piyasadaki Dolar likiditesini kısar, borçlanmayı zorlaştırır.",
+        aboveBist: "📉 Dünya Borsaları & BIST: Risksiz faiz cazip hale geldiği için hisselerden para çıkabilir.",
+        aboveUsd: "📈 Küresel Dolar: Dolar dünyada güç kazanır.",
+        belowText: "Sürpriz faiz indirimi veya faiz artışlarının durması piyasaya likidite bayramı yaşatır.",
+        belowBist: "📈 Dünya Borsaları & BIST: Ucuz kredi ve coşku ile borsalarda sert yükseliş yaşanır.",
+        belowUsd: "📉 Küresel Dolar: Dolar gevşer, sermaye gelişen ülkelere akar."
+    },
+    "TCMB Politika Faizi Kararı": {
+        aboveText: "Şok faiz artırımı TL'nin mevduat getirisini cazip kılar, kredileri zorlaştırır.",
+        aboveBist: "📉 BIST 100: Yüksek faiz borsa şirket değerlemelerini baskılar.",
+        aboveUsd: "📉 Dolar/TL: Yüksek TL faizi sebebiyle döviz satışı yaşanır, kur geriler.",
+        belowText: "Faiz indirimi piyasaya para akışını teşvik eder.",
+        belowBist: "📈 BIST 100: Düşük faiz borsadaki şirket değerlemelerini uçurur.",
+        belowUsd: "📈 Dolar/TL: Mevduat faizi düştüğü için dövize yönelim artabilir."
+    },
+    "Tarım Dışı İstihdam Değişimi (NFP)": {
+        aboveText: "ABD istihdamının aşırı güçlü olduğunu gösterir; Fed'in faizleri uzun süre yüksek tutacağı beklentisi doğar.",
+        aboveBist: "📉 Ons Altın & Gelişen Borsalar: Amerikan faizi yüksek kalacağı için Altın baskılanır.",
+        aboveUsd: "📈 Küresel Dolar: Dolar tüm para birimlerine karşı güçlenir.",
+        belowText: "ABD işgücü piyasasının yavaşladığını ve Fed'in faiz indireceğini müjdeler.",
+        belowBist: "📈 Ons Altın & Gelişen Piyasalar: Faiz indirim beklentisiyle Altın ve BIST 100 coşar.",
+        belowUsd: "📉 Küresel Dolar: Dolar zayıflar."
+    },
+    "Default": {
+        aboveText: "Sıkılaşma ve yüksek faiz algısını artırabilir, döviz ve faiz oranları üzerinde yukarı yönlü baskı oluşturabilir.",
+        aboveBist: "📉 BIST 100: Kısa vadede risk iştahı azalabilir.",
+        aboveUsd: "📈 Dolar/TL: Yukarı yönlü hareketlenebilir.",
+        belowText: "Piyasalarda rahatlama ve borsada olumlu rüzgar estirebilir.",
+        belowBist: "📈 BIST 100: Büyüme ve indirim beklentisiyle borsada coşku yaşanır.",
+        belowUsd: "📉 Dolar/TL: TL varlıklarına talep artar."
     }
 };
 
@@ -308,10 +385,15 @@ export default function EconomicEventDetailPage() {
         THREE_CARD_EDUCATION_MAP[Object.keys(THREE_CARD_EDUCATION_MAP).find(k => event.event.includes(k)) || ""] ||
         THREE_CARD_EDUCATION_MAP["Default"];
 
-    // Widget 2: Investor Why Follow Object
-    const whyFollow = INVESTOR_WHY_FOLLOW_MAP[event.event] ||
-        INVESTOR_WHY_FOLLOW_MAP[Object.keys(INVESTOR_WHY_FOLLOW_MAP).find(k => event.event.includes(k)) || ""] ||
-        INVESTOR_WHY_FOLLOW_MAP["Default"];
+    // Widget 2: "Bu Veri Neleri Etkiler?" Object
+    const dataEffects = DATA_EFFECTS_MAP[event.event] ||
+        DATA_EFFECTS_MAP[Object.keys(DATA_EFFECTS_MAP).find(k => event.event.includes(k)) || ""] ||
+        DATA_EFFECTS_MAP["Default"];
+
+    // Widget 4: Scenario Analysis Object
+    const scenario = EVENT_SCENARIOS_MAP[event.event] ||
+        EVENT_SCENARIOS_MAP[Object.keys(EVENT_SCENARIOS_MAP).find(k => event.event.includes(k)) || ""] ||
+        EVENT_SCENARIOS_MAP["Default"];
 
     // Historical chart series specific to this exact event
     const chartSeries = EVENT_HISTORICAL_SERIES[event.event] || 
@@ -540,7 +622,7 @@ export default function EconomicEventDetailPage() {
                             </div>
                         </div>
 
-                        {/* WIDGET 2: Yatırımcılar Bu Veriyi Neden Yakından Takip Eder? (3 BETİMSELE ÖDAK KARTLI YAPI) */}
+                        {/* WIDGET 2: Bu Veri Neleri Etkiler? (YENİLENMİŞ BAŞLIK VE KART YAPISI) */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
                             <div className="flex items-center justify-between pb-3 border-b border-slate-150">
                                 <div className="flex items-center gap-2.5">
@@ -548,55 +630,55 @@ export default function EconomicEventDetailPage() {
                                         <HelpCircle className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-black text-[#00008B]">Yatırımcılar Bu Veriyi Neden Yakından Takip Eder?</h3>
-                                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Piyasa Psikolojisi, Merkez Bankası Kararları & Paranın Rotasyonu</p>
+                                        <h3 className="text-lg font-black text-[#00008B]">Bu Veri Neleri Etkiler?</h3>
+                                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Gündelik Yaşam, Krediler, Borsa, Dolar ve Altın Üzerindeki Etkileri</p>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* 🎨 3 BETİMSEL ODAK PANELİ (Merkez Bankası + Akıllı Para + Cebiniz İçin Anlamı) */}
+                            {/* 🎨 3 ODAK PANELİ (Gündelik Yaşam + Banka Kredileri + Piyasa Varlıkları) */}
                             <div className="space-y-4">
-                                {/* Panel 1: Merkez Bankası Bu Rakamı Görünce Ne Yapar? */}
+                                {/* Panel 1: Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler */}
                                 <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 flex items-start gap-3.5">
                                     <div className="w-9 h-9 rounded-xl bg-[#00008B] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-[#00008B]/20">
-                                        <Landmark className="w-5 h-5 text-amber-300" />
+                                        <ShoppingBag className="w-5 h-5 text-amber-300" />
                                     </div>
                                     <div className="space-y-1">
                                         <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
-                                            1. Merkez Bankası Bu Rakamı Görünce Ne Yapar? <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md">(Devlet Boyutu)</span>
+                                            1. Gündelik Hayatı ve Yaşam Maliyetinizi Etkiler <span className="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded-md">(Yaşam & Bütçe Boyutu)</span>
                                         </h4>
                                         <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                            {whyFollow.centralBankAction}
+                                            {dataEffects.dailyLifeEffect}
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Panel 2: Zengin Yatırımcılar ve Büyük Fonlar Neden Pusuda Bekler? */}
+                                {/* Panel 2: Banka Kredilerini ve Mevduat Faizlerini Etkiler */}
                                 <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 flex items-start gap-3.5">
                                     <div className="w-9 h-9 rounded-xl bg-indigo-900 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-indigo-900/20">
-                                        <PiggyBank className="w-5 h-5 text-indigo-300" />
+                                        <CreditCard className="w-5 h-5 text-indigo-300" />
                                     </div>
                                     <div className="space-y-1">
                                         <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-2">
-                                            2. Zengin Yatırımcılar ve Dev Fonlar Neden Pusuda Bekler? <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md">(Piyasa Boyutu)</span>
+                                            2. Banka Kredilerini ve Mevduat Faizlerini Etkiler <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-md">(Bankacılık & Kredi Boyutu)</span>
                                         </h4>
                                         <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                            {whyFollow.bigMoneyMovement}
+                                            {dataEffects.bankingCreditEffect}
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* Panel 3: Bunu Bilmek Senin Cebine Ne Kazandırır? */}
+                                {/* Panel 3: Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler */}
                                 <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 flex items-start gap-3.5">
                                     <div className="w-9 h-9 rounded-xl bg-emerald-800 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-md shadow-emerald-800/20">
-                                        <Compass className="w-5 h-5 text-emerald-300" />
+                                        <TrendingUp className="w-5 h-5 text-emerald-300" />
                                     </div>
                                     <div className="space-y-1">
                                         <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-                                            3. Bunu Bilmek Senin Cebine Ne Kazandırır? <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">(Sizin Boyutunuz)</span>
+                                            3. Borsa İstanbul, Dolar ve Altın Fiyatlarını Etkiler <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">(Piyasa & Yatırım Boyutu)</span>
                                         </h4>
                                         <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                            {whyFollow.personalBenefit}
+                                            {dataEffects.marketAssetsEffect}
                                         </p>
                                     </div>
                                 </div>
@@ -635,26 +717,45 @@ export default function EconomicEventDetailPage() {
                             </div>
                         </div>
 
-                        {/* Senaryo Analizi (Beklentinin Üstü / Altı) */}
+                        {/* WIDGET 4: SENARYO ANALİZİ (DİNAMİK HABER BAZLI SENARYOLAR) */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                            <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Senaryo Analizi</h4>
+                            <div className="flex items-center justify-between border-b border-slate-150 pb-3">
+                                <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Senaryo Analizi</h4>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-[#00008B]">Piyasa Yön Tahmini</span>
+                            </div>
                             
-                            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
-                                <div className="flex items-center gap-1.5 text-xs font-black text-emerald-800">
-                                    <TrendingUp className="w-4 h-4 text-emerald-600" /> Beklentinin Üstünde Gelirse
+                            {/* Beklentinin Üstünde Gelirse (Yeşil Kart) */}
+                            <div className="p-4 rounded-2xl bg-emerald-50/90 border border-emerald-200 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-xs font-black text-emerald-900">
+                                        <TrendingUp className="w-4 h-4 text-emerald-600" /> Beklentinin Üstünde Gelirse
+                                    </div>
+                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-200/60 text-emerald-900">Yüksek Veri</span>
                                 </div>
-                                <p className="text-[11px] text-emerald-900 font-medium">
-                                    Piyasalarda sıkılaşma algısını artırabilir, döviz ve faiz oranları üzerinde yukarı yönlü baskı oluşturabilir.
+                                <p className="text-[11px] text-emerald-950 font-medium leading-relaxed">
+                                    {scenario.aboveText}
                                 </p>
+                                <div className="pt-2 border-t border-emerald-200/60 space-y-1 text-[11px] font-bold">
+                                    <div className="text-emerald-900">{scenario.aboveBist}</div>
+                                    <div className="text-emerald-900">{scenario.aboveUsd}</div>
+                                </div>
                             </div>
 
-                            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 space-y-1">
-                                <div className="flex items-center gap-1.5 text-xs font-black text-rose-800">
-                                    <TrendingDown className="w-4 h-4 text-rose-600" /> Beklentinin Altında Gelirse
+                            {/* Beklentinin Altında Gelirse (Kırmızı Kart) */}
+                            <div className="p-4 rounded-2xl bg-rose-50/90 border border-rose-200 space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5 text-xs font-black text-rose-900">
+                                        <TrendingDown className="w-4 h-4 text-rose-600" /> Beklentinin Altında Gelirse
+                                    </div>
+                                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-rose-200/60 text-rose-900">Düşük Veri</span>
                                 </div>
-                                <p className="text-[11px] text-rose-900 font-medium">
-                                    Piyasalarda rahatlama ve borsada olumlu hava yaratabilir.
+                                <p className="text-[11px] text-rose-950 font-medium leading-relaxed">
+                                    {scenario.belowText}
                                 </p>
+                                <div className="pt-2 border-t border-rose-200/60 space-y-1 text-[11px] font-bold">
+                                    <div className="text-rose-900">{scenario.belowBist}</div>
+                                    <div className="text-rose-900">{scenario.belowUsd}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
