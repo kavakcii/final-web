@@ -128,6 +128,20 @@ export async function scrapeEconomicCalendar() {
                 hour12: false
             });
 
+            // Date string (03.08.2026)
+            const dateFormatted = dateObj.toLocaleDateString('tr-TR', {
+                timeZone: 'Europe/Istanbul',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            // Day name (Pazartesi, Salı, etc.)
+            const dateDayName = dateObj.toLocaleDateString('tr-TR', {
+                timeZone: 'Europe/Istanbul',
+                weekday: 'long'
+            });
+
             const countryCode = item.country ? item.country.toUpperCase() : 'TR';
             const countryDisplay = COUNTRY_CODE_DISPLAY[countryCode] || countryCode;
             const flag = FLAG_MAP[countryCode] || '🌐';
@@ -142,12 +156,13 @@ export async function scrapeEconomicCalendar() {
 
             // Is event today in TSİ timezone?
             const todayStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
-            const eventDateStr = dateObj.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
-            const isToday = eventDateStr === todayStr;
+            const isToday = dateFormatted === todayStr;
 
             return {
                 id: item.title + '_' + item.date,
                 time,
+                dateFormatted,
+                dateDayName,
                 country: countryDisplay,
                 flag,
                 event: turkishTitle,
