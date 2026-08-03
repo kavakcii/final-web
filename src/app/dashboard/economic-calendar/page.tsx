@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Calendar, Loader2, Check, Filter, Database, Zap } from "lucide-react";
+import { ArrowLeft, Calendar, Loader2, Check, Filter, Database, Zap, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
@@ -18,10 +18,10 @@ export default function EconomicCalendarPage() {
     const [loading, setLoading] = useState(false);
     const [now, setNow] = useState<Date>(new Date());
 
-    // Multi-Select Country Checkboxes (TR, ABD, EU, UK) - Default: TR and ABD checked
-    const [selectedCountries, setSelectedCountries] = useState<string[]>(['TR', 'ABD']);
+    // All countries selected by default so users can remove what they don't want!
+    const [selectedCountries, setSelectedCountries] = useState<string[]>(['TR', 'ABD', 'EU', 'UK']);
 
-    // Time Horizon Filter (Bugün, Yarın, Bu Hafta, Gelecek Hafta, 3. Hafta, Tüm 3 Hafta)
+    // Time Horizon Filter (Bugün, Yarın, Bu Hafta, Gelecek Hafta, Diğer Hafta, Tümü)
     const [timeTab, setTimeTab] = useState<'today' | 'tomorrow' | 'week0' | 'week1' | 'week2' | 'all'>('all');
 
     const fetchCalendarData = async () => {
@@ -163,7 +163,7 @@ export default function EconomicCalendarPage() {
                                 Özel Ekonomik Takvim
                             </h1>
                             <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center gap-1">
-                                <Zap className="w-3.5 h-3.5" /> 3 HAFTALIK KATALOG DEPOSU
+                                <Zap className="w-3.5 h-3.5" /> KATALOG DEPOSU
                             </span>
                         </div>
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
@@ -171,64 +171,82 @@ export default function EconomicCalendarPage() {
                         </p>
                     </div>
 
-                    {/* Filter Card Box */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
-                        {/* Multi-Select Country Checkboxes (TR, ABD, EU, UK) */}
+                    {/* Filter Card Box - Vertical Grid Box Style */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+                        {/* Multi-Select Country Checkbox Cards (Vertical Grid Box Layout) */}
                         <div>
-                            <span className="text-[11px] font-black text-[#00008B] uppercase tracking-wider block mb-3 flex items-center gap-1.5">
-                                <Filter className="w-3.5 h-3.5" /> Çoklu Ülke Seçimi (İstediğiniz Ülkeleri Aynı Anda Seçebilirsiniz)
-                            </span>
-                            <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
+                                    <Filter className="w-4 h-4 text-[#00008B]" /> Ülke Filtreleri (Çıkarmak İstediğiniz Ülkeye Tıklayın)
+                                </span>
+                                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                    {selectedCountries.length} / 4 Ülke Seçili
+                                </span>
+                            </div>
+
+                            {/* 4 Card Boxes Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
-                                    { code: 'TR', label: 'Türkiye', flag: '🇹🇷' },
-                                    { code: 'ABD', label: 'Amerika Birleşik Devletleri', flag: '🇺🇸' },
-                                    { code: 'EU', label: 'Avrupa Birliği', flag: '🇪🇺' },
-                                    { code: 'UK', label: 'Birleşik Krallık', flag: '🇬🇧' }
+                                    { code: 'TR', label: 'Türkiye', flag: '🇹🇷', desc: 'TCMB & TÜİK Makro Verileri' },
+                                    { code: 'ABD', label: 'Amerika Birleşik Devletleri', flag: '🇺🇸', desc: 'Fed & ISM & İstihdam Verileri' },
+                                    { code: 'EU', label: 'Avrupa Birliği', flag: '🇪🇺', desc: 'ECB & PMI & Enflasyon Verileri' },
+                                    { code: 'UK', label: 'Birleşik Krallık', flag: '🇬🇧', desc: 'BoE & İmalat & GSYH Verileri' }
                                 ].map((country) => {
                                     const isSelected = selectedCountries.includes(country.code);
                                     return (
-                                        <button
+                                        <div
                                             key={country.code}
                                             onClick={() => toggleCountry(country.code)}
-                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-black transition-all border ${
+                                            className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                                                 isSelected
-                                                    ? 'bg-[#00008B] text-white border-[#00008B] shadow-md shadow-[#00008B]/20'
-                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-[#00008B]/40'
+                                                    ? 'bg-[#00008B] text-white border-[#00008B] shadow-lg shadow-[#00008B]/20 ring-2 ring-[#00008B]/30'
+                                                    : 'bg-white text-slate-700 border-slate-200 hover:border-[#00008B]/40 hover:shadow-md'
                                             }`}
                                         >
-                                            <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
-                                                isSelected ? 'bg-white text-[#00008B] border-white' : 'border-slate-300 bg-white'
-                                            }`}>
-                                                {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className="text-2xl">{country.flag}</span>
+                                                <div className={`w-5 h-5 rounded-lg border flex items-center justify-center transition-all ${
+                                                    isSelected ? 'bg-white text-[#00008B] border-white shadow-sm' : 'border-slate-300 bg-white'
+                                                }`}>
+                                                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                </div>
                                             </div>
-                                            <span>{country.flag} {country.label} ({country.code})</span>
-                                        </button>
+
+                                            <div>
+                                                <h4 className={`text-sm font-black tracking-tight ${isSelected ? 'text-white' : 'text-[#00008B]'}`}>
+                                                    {country.label} ({country.code})
+                                                </h4>
+                                                <p className={`text-[10px] font-medium mt-0.5 ${isSelected ? 'text-blue-200' : 'text-slate-400'}`}>
+                                                    {country.desc}
+                                                </p>
+                                            </div>
+                                        </div>
                                     );
                                 })}
                             </div>
                         </div>
 
-                        {/* Time Horizon Filter Tabs (3 Haftalık Kapsam) */}
-                        <div>
-                            <span className="text-[11px] font-black text-[#00008B] uppercase tracking-wider block mb-2">
-                                3 Haftalık Takvim Kapsamı
+                        {/* Time Horizon Filter Buttons (Bugün, Yarın, Bu Hafta, Gelecek Hafta, Diğer Hafta, Tümü) */}
+                        <div className="pt-2 border-t border-slate-200">
+                            <span className="text-xs font-black text-[#00008B] uppercase tracking-wider block mb-3 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Zaman Dilimi Filtresi
                             </span>
-                            <div className="flex flex-wrap items-center gap-2 bg-white p-1 rounded-2xl border border-slate-200 w-fit">
+                            <div className="flex flex-wrap items-center gap-2 bg-white p-1.5 rounded-2xl border border-slate-200 w-fit">
                                 {[
                                     { id: 'today', label: 'Bugün' },
                                     { id: 'tomorrow', label: 'Yarın' },
-                                    { id: 'week0', label: 'Bu Hafta (03-07 Ağust)' },
-                                    { id: 'week1', label: 'Gelecek Hafta (10-14 Ağust)' },
-                                    { id: 'week2', label: '3. Hafta (17-21 Ağust)' },
-                                    { id: 'all', label: 'Tüm 3 Hafta' }
+                                    { id: 'week0', label: 'Bu Hafta' },
+                                    { id: 'week1', label: 'Gelecek Hafta' },
+                                    { id: 'week2', label: 'Diğer Hafta' },
+                                    { id: 'all', label: 'Tümü' }
                                 ].map((tab) => (
                                     <button
                                         key={tab.id}
                                         onClick={() => setTimeTab(tab.id as any)}
-                                        className={`px-3.5 py-2 text-xs font-black rounded-xl transition-all ${
+                                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${
                                             timeTab === tab.id
-                                                ? 'bg-[#00008B] text-white shadow-sm'
-                                                : 'text-slate-500 hover:text-[#00008B]'
+                                                ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20'
+                                                : 'text-slate-500 hover:text-[#00008B] hover:bg-slate-50'
                                         }`}
                                     >
                                         {tab.label}
