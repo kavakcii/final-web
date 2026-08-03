@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, Layers, ShoppingBag, Target, CreditCard, Zap, Landmark, PiggyBank, Compass, MinusCircle, Lightbulb } from "lucide-react";
+import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, ShieldAlert, Sparkles, BookOpen, BarChart3, HelpCircle, ShoppingBag, Target, CreditCard, Zap, MinusCircle, HelpCircleIcon } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 
@@ -163,254 +163,204 @@ const DATA_EFFECTS_MAP: Record<string, DataEffects> = {
     }
 };
 
-// Widget 4: Scenario Analysis Event Map (3 Scenarios + Visual Badges + Action Tip)
-interface ScenarioDetail {
+// Widget 4: Scenario Analysis Event Map (Pure Cause and Effect Narrative)
+interface CauseEffectScenarioDetail {
     title: string;
     badge: string;
-    text: string;
-    bistTag: string;
-    usdTag: string;
-    goldTag: string;
-    actionTip: string;
+    causeText: string;
+    mechanismText: string;
+    resultText: string;
 }
 
-interface EventScenarioGroup {
-    above: ScenarioDetail;
-    inline: ScenarioDetail;
-    below: ScenarioDetail;
+interface EventCauseEffectScenarioGroup {
+    above: CauseEffectScenarioDetail;
+    inline: CauseEffectScenarioDetail;
+    below: CauseEffectScenarioDetail;
 }
 
-const EVENT_SCENARIOS_MAP: Record<string, EventScenarioGroup> = {
+const EVENT_SCENARIOS_MAP: Record<string, EventCauseEffectScenarioGroup> = {
     "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
-            badge: "Yüksek Enflasyon 🔥",
-            text: "TCMB'den faiz artırımı veya ek sıkı para politikası beklentisi doğar. Kredi ve mevduat faizleri yükselme eğilimine girer.",
-            bistTag: "📉 BIST 100: Kısa vadeli satış baskısı",
-            usdTag: "📈 Dolar/TL: Yukarı yönlü talep",
-            goldTag: "📈 Gram Altın: Enflasyondan korunma alımı",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Kredi borçlanmasından kaçınılmalı, yüksek faizli mevduat ve döviz/altın korumalı assetler değerlendirilebilir."
+            badge: "Yüksek Enflasyon Baskısı 🔥",
+            causeText: "🎯 Neden (Sebep): Market ve tüketim sepetindeki fiyat artış hızının piyasanın tahmin ettiğinden daha yüksek gerçekleşmesi.",
+            mechanismText: "⚙️ Mekanizma (Nasıl İşler?): Piyasada harcama iştahının devam ettiği algısı pekişir. Merkez Bankası fiyat istikrarını sağlamak üzere politika faizini artırma baskısı altına girer.",
+            resultText: "📌 Sonuç (Makro Etki): Kredi ve borçlanma maliyetleri yükselir, vadeli mevduat getirileri cazipleşir; şirketler borçlanarak yatırım yapmakta zorlanır ve piyasada sıkılaşma süreci güçlenir."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
-            badge: "Sürpriz Yok / Nötr ⚖️",
-            text: "Piyasa yapıcılar veriyi önceden tam fiyatladığı için piyasada şok yaşanmaz. Mevcut faiz ve döviz dengesi korunur.",
-            bistTag: "⚪ BIST 100: Yatay / Sakin seyir",
-            usdTag: "⚪ Dolar/TL: Dengeli hareket",
-            goldTag: "⚪ Gram Altın: Mevcut trend devam eder",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Portföy dağılımı sabit tutulabilir, yeni piyasa kırılımı beklenmelidir."
+            badge: "Sürpriz Yok / Nötr Seyir ⚖️",
+            causeText: "🎯 Neden (Sebep): Açıklanan verinin piyasadaki analist ve kurumların tahmin ortalamasıyla birebir örtüşmesi.",
+            mechanismText: "⚙️ Mekanizma (Nasıl İşler?): Piyasa yapıcılar verinin olası sonuçlarını haber öncesinde fiyatlara zaten yansıtmıştır.",
+            resultText: "📌 Sonuç (Makro Etki): Beklenmeyen bir şok yaşanmadığı için faiz ve kur dengesinde ani kırılmalar görülmez, mevcut ekonomik trend ve politikalar korunur."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
-            badge: "Dezenflasyon Müjdesi 🚀",
-            text: "Dezenflasyon sürecinin hızlandığı algısı pekişir. TCMB faiz indirimlerinin önü açılır, piyasalar rahatlar.",
-            bistTag: "📈 BIST 100: Güçlü alım rallisi",
-            usdTag: "📉 Dolar/TL: TL varlıklarına güven, kur sakin",
-            goldTag: "⚪ Gram Altın: Sakinleşme",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Düşen faiz ortamından olumlu etkilenecek Sanayi, Bilişim ve Gayrimenkul hisseleri öne çıkarılabilir."
+            badge: "Dezenflasyon İvmesi 🚀",
+            causeText: "🎯 Neden (Sebep): Tüketici fiyat artışlarının tahmin edilenden daha yavaş seyretmesi veya gerilemesi.",
+            mechanismText: "⚙️ Mekanizma (Nasıl İşler?): Hayat pahalılığının hız kestiği ve dezenflasyon sürecinin güçlendiği algısı pekişir. Merkez Bankası'nın faiz indirme esnekliği artar.",
+            resultText: "📌 Sonuç (Makro Etki): Borçlanma maliyetlerinin düşeceği beklentisiyle piyasa rahatlar, şirket kârlılıkları üzerindeki finansman yükü hafifler ve ekonomik aktivite canlılık kazanır."
         }
     },
     "Yıllık Enflasyon Oranı (TÜFE)": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
             badge: "Yıllık Katı Enflasyon 🔥",
-            text: "Uzun vadeli enflasyon katılığı endişesi doğar, TCMB faizleri uzun süre yüksek tutmak zorunda kalır.",
-            bistTag: "📉 BIST 100: Marj ve kârlılık baskısı",
-            usdTag: "📈 Dolar/TL: Korunma amaçlı talep",
-            goldTag: "📈 Gram Altın: Yukarı yönlü destek",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Borsa yatırımlarında borçluluğu düşük, nakit zengini şirketler tercih edilmelidir."
+            causeText: "🎯 Neden (Sebep): 12 aylık toplam enflasyon oranının tahmin edilen düşüş patikasının üzerinde kalması.",
+            mechanismText: "⚙️ Mekanizma (Nasıl İşler?): Enflasyonun katılaştığı düşünülür, Merkez Bankası faizleri uzun süre yüksek tutmak zorunda kalır.",
+            resultText: "📌 Sonuç (Makro Etki): Uzun vadeli kredi faizleri yüksek kalır, harcama gücü baskılanır ve reel gelir kaybı riski sürer."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
-            badge: "Sürpriz Yok ⚖️",
-            text: "Yıllık patika beklentiler doğrultusunda ilerler, piyasada ekstrem pozisyon değişimi görülmez.",
-            bistTag: "⚪ BIST 100: Trend korunur",
-            usdTag: "⚪ Dolar/TL: Yatay seyir",
-            goldTag: "⚪ Gram Altın: Dengeli",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Mevcut borsa ve mevduat ağırlığı dengede tutulmalıdır."
+            badge: "Patikayla Uyumlu ⚖️",
+            causeText: "🎯 Neden: Yıllık bazdaki fiyat artışının beklenen ana senaryoya tam paralel gerçekleşmesi.",
+            mechanismText: "⚙️ Mekanizma: Piyasa fiyatlamalarında ekstra bir beklenti revizyonuna ihtiyaç duyulmaz.",
+            resultText: "📌 Sonuç: Para politikasının mevcut duruşu ve yıllık makro hedefler geçerliliğini korur."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
-            badge: "Yıllık Düşüş Trendi 🚀",
-            text: "Yıllık hayat pahalılığının hız kestiğini kanıtlar, yabancı sermaye girişleri ve piyasa morali yükselir.",
-            bistTag: "📈 BIST 100: Boğa piyasası coşkusu",
-            usdTag: "📉 Dolar/TL: TL değer kazanır",
-            goldTag: "⚪ Gram Altın: Yatay",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Hisse senedi ağırlığı artırılabilir, vadeli mevduat vadeleri uzatılabilir."
+            badge: "Hızlı Gerileme 🚀",
+            causeText: "🎯 Neden: Yıllık enflasyondaki baz etkisinin ve dezenflasyonun tahminlerden hızlı gerçekleşmesi.",
+            mechanismText: "⚙️ Mekanizma: Enflasyonist beklentiler kırılır, paranın zamansal değer kaybı yavaşlar.",
+            resultText: "📌 Sonuç: Merkez Bankası faiz indirim döngüsüne zemin hazırlar, ekonomik güven endeksi yükselir."
         }
     },
     "Aylık Üretici Fiyat Endeksi (ÜFE)": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
-            badge: "Maliyet Artışı 🏭",
-            text: "Fabrika maliyetlerinin yükseldiğini gösterir. 1-2 ay sonra tüketici etiketlerine zam geleceği endişesi yaratır.",
-            bistTag: "📉 Sanayi Hisseleri: Satış baskısı",
-            usdTag: "📈 Dolar/TL: Döviz talebi",
-            goldTag: "📈 Gram Altın: Enflasyon fiyatlaması",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Üretim maliyetlerini son tüketiciye yansıtabilen güçlü perakende şirketlerine kayılabilir."
+            badge: "Üretim Maliyet Baskısı 🏭",
+            causeText: "🎯 Neden: İmalatçıların elektrik, hammadde ve işçilik maliyetlerinin beklenenden hızlı tırmanması.",
+            mechanismText: "⚙️ Mekanizma: Üreticilerin sırtındaki maliyet yükü 1-2 ay içerisinde raflara zam olarak yansıma riski taşır.",
+            resultText: "📌 Sonuç: Gelecek aylara ilişkin tüketici enflasyon beklentileri yükselir, sanayi şirketlerinin kâr marjları baskılanır."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Maliyet Düzeyi Dengeli ⚖️",
-            text: "Üretici maliyetlerinde sürpriz yaşanmaz, imalat hisseleri normal fiyatlamasına devam eder.",
-            bistTag: "⚪ BIST 100: Dengeli",
-            usdTag: "⚪ Dolar/TL: Yatay",
-            goldTag: "⚪ Gram Altın: Sakin",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: İmalat sektörü hisselerinde seçici pozisyon alınabilir."
+            causeText: "🎯 Neden: Fabrika çıkış maliyetlerinin öngörülen seviyelerde seyretmesi.",
+            mechanismText: "⚙️ Mekanizma: Maliyet tarafında ekstra bir fiyatlama baskısı oluşmaz.",
+            resultText: "📌 Sonuç: İmalat sektöründe planlanan üretim maliyetleri ve kârlılık projeksiyonları korunur."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
-            badge: "Üretim Girdilerinde Rahatlama 🍃",
-            text: "Fabrikaların hammadde ve enerji maliyetlerinin hafiflediğini kanıtlar, şirket kâr marjları rahatlar.",
-            bistTag: "📈 Sanayi Hisseleri: Güçlü alım dalgası",
-            usdTag: "📉 Dolar/TL: Sakinleşme",
-            goldTag: "⚪ Gram Altın: Yatay",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: İhracatçı ve imalatçı sanayi hisselerinde alım fırsatları değerlendirilebilir."
+            badge: "Girdi Maliyetlerinde Rahatlama 🍃",
+            causeText: "🎯 Neden: Üretimde kullanılan girdi ve hammadde fiyatlarının gerilemesi.",
+            mechanismText: "⚙️ Mekanizma: Fabrikaların üretim maliyeti hafifler, tüketime yansıyacak zam baskısı azalır.",
+            resultText: "📌 Sonuç: İlerleyen aylarda tüketici enflasyonunun düşeceği beklentisi doğar, üretici kâr marjları rahatlar."
         }
     },
     "ISM İmalat PMI Endeksi": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
-            badge: "Güçlü Büyüme 📈",
-            text: "ABD sanayisinde çarkların hızlı döndüğünü ve ekonominin güçlü büyüdüğünü gösterir.",
-            bistTag: "📉 BIST 100 & Altın: Yüksek Fed faizi endişesiyle baskı",
-            usdTag: "📈 Küresel Dolar (DXY): Dolar güçlenir",
-            goldTag: "📉 Ons Altın: Kâr satışı",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Küresel Dolar varlıkları ve ABD hisseleri öne çıkarılabilir."
+            badge: "Sanayide Güçlü Büyüme 📈",
+            causeText: "🎯 Neden: Fabrikalara gelen yeni siparişlerin ve üretim hacminin beklenenden canlı olması.",
+            mechanismText: "⚙️ Mekanizma: Sanayide çarkların hızlı döndüğü ve ekonomik büyümenin güçlü sürdüğü kanıtlanır.",
+            resultText: "📌 Sonuç: Ekonomide ısınma algısıyla Merkez Bankası'nın faizleri yüksek tutma süresi uzayabilir."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
-            badge: "Dengeli Büyüme ⚖️",
-            text: "Sanayideki büyüme beklentileri karşılar, küresel borsalarda sakin seyir izlenir.",
-            bistTag: "⚪ BIST 100: Yatay",
-            usdTag: "⚪ Küresel Dolar: Dengeli",
-            goldTag: "⚪ Ons Altın: Yatay",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Mevcut küresel portföy dağılımı korunabilir."
+            badge: "Dengeli Üretim Hacmi ⚖️",
+            causeText: "🎯 Neden: İmalat sektörü anket sonuçlarının tahminlerle uyumlu gerçekleşmesi.",
+            mechanismText: "⚙️ Mekanizma: Büyüme temposunda ekstra bir hızlanma veya yavaşlama sinyali oluşmaz.",
+            resultText: "📌 Sonuç: Sanayi üretimi ve istihdam beklentileri mevcut rotasında ilerler."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
-            badge: "Resesyon Riski 📉",
-            text: "Sanayide yavaşlama ve ekonomik durgunluk endişesi yaratır, Fed faiz indirimi beklentisi tavan yapar.",
-            bistTag: "📈 Ons Altın & Gelişen Piyasalar: Faiz indirimi müjdesiyle yükseliş",
-            usdTag: "📉 Küresel Dolar: DXY değer kaybeder",
-            goldTag: "📈 Ons Altın: Güçlü alım rallisi",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Altın ve Gümüş gibi güvenli liman emtialarına kayış düşünülebilir."
+            badge: "Sanayide Yavaşlama Sinyali 📉",
+            causeText: "🎯 Neden: Fabrika siparişlerinin azalması ve üretim bandındaki daralma.",
+            mechanismText: "⚙️ Mekanizma: Sanayide çarkların yavaşladığı ve resesyon (durgunluk) riski belirdiği algısı oluşur.",
+            resultText: "📌 Sonuç: Merkez Bankası ekonomiyi canlandırmak üzere faiz indirimlerini gündeme almak zorunda kalabilir."
         }
     },
     "Fed Politika Faizi Kararı": {
         above: {
-            title: "Sürpriz Faiz Artışı / Şahin Karar",
+            title: "Sürpriz Faiz Artırımı / Şahin Karar",
             badge: "Para Musluğu Sıkılaştı 🔒",
-            text: "Fed beklenenden daha sert duruş sergilerse küresel piyasalarda Dolar likiditesi çekilir.",
-            bistTag: "📉 Dünya Borsaları & BIST: Hisse senetlerinde satış",
-            usdTag: "📈 Dolar Gücü: Küresel Dolar değer kazanır",
-            goldTag: "📉 Ons Altın: Geri çekilme",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Riskli hisse senetlerinde kar satışı yapılıp Amerikan Tahvillerine ve Dolara geçilebilir."
+            causeText: "🎯 Neden: Merkez Bankası'nın enflasyonu dizginlemek için faiz oranını beklenenden yüksek belirlemesi.",
+            mechanismText: "⚙️ Mekanizma: Piyasadaki borçlanma maliyeti tırmanır, paraya erişim zorlaşır.",
+            resultText: "📌 Sonuç: Tüketim harcamaları ve kredi çekme iştahı yavaşlar, vadeli mevduat fonlarının cazibesi artar."
         },
         inline: {
             title: "Beklentilere Paralel Karar",
-            badge: "Piyasa Fiyatladı ⚖️",
-            text: "Fed piyasaların beklediği adımı atar, karardan çok Powell'ın konuşma metni takip edilir.",
-            bistTag: "⚪ Borsalar: Tepki alımları",
-            usdTag: "⚪ Dolar: Dengeli",
-            goldTag: "⚪ Altın: Mevcut bantta",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Karar sonrası Merkez Bankası başkanı yönlendirmeleri izlenmelidir."
+            badge: "Piyasa Beklentisi Karşılandı ⚖️",
+            causeText: "🎯 Neden: Faiz kararının piyasa yapıcıların öngördüğü seviyede açıklanması.",
+            mechanismText: "⚙️ Mekanizma: Piyasa kararı önceden fiyatladığı için karar metnindeki gelecek dönem mesajlarına odaklanılır.",
+            resultText: "📌 Sonuç: Faiz oranlarında şok bir değişim yaşanmaz, mevcut borçlanma koşulları sürer."
         },
         below: {
             title: "Sürpriz Faiz İndirimi / Güvercin Karar",
-            badge: "Piyasaya Likidite Müjdesi 🌊",
-            text: "Fed faiz indirim döngüsünü başlatır veya hızlandırırsa küresel piyasalara para akar.",
-            bistTag: "📈 Dünya Borsaları & BIST: Küresel coşku",
-            usdTag: "📉 Dolar Gücü: Dolar zayıflar",
-            goldTag: "📈 Ons Altın: Tarihi rekor denemeleri",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Borsa İstanbul, Gelişmekte olan ülke fonları ve Ons Altında agresif alım değerlendirilebilir."
+            badge: "Piyasaya Likidite Desteği 🌊",
+            causeText: "🎯 Neden: Merkez Bankası'nın büyümeyi teşvik etmek için faiz indirimi yapması veya indirim sinyali vermesi.",
+            mechanismText: "⚙️ Mekanizma: Kredi maliyetleri ucuzlar, piyasaya taze likidite akışı başlar.",
+            resultText: "📌 Sonuç: Şirketlerin borçlanarak yatırım yapması kolaylaşır, riskli varlıklara yönelim canlılık kazanır."
         }
     },
     "TCMB Politika Faizi Kararı": {
         above: {
             title: "Beklentinin Üstünde Faiz Artırımı",
             badge: "Şok Sıkılaşma 🏛️",
-            text: "TCMB TL'nin cazibesini artırmak için şok faiz artırırsa mevduat getirileri tırmanır.",
-            bistTag: "📉 BIST 100: Kısa vadede faiz baskısıyla geri çekilme",
-            usdTag: "📉 Dolar/TL: Dövize talep düşer, kur geriler",
-            goldTag: "📉 Gram Altın: Kur düşüşüyle geriler",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Türk Lirası mevduat fonları ve Para Piyasası Fonları tercih edilebilir."
+            causeText: "🎯 Neden: TCMB'nin Türk Lirası'nın cazibesini korumak için politika faizini tahminlerin üstünde artırması.",
+            mechanismText: "⚙️ Mekanizma: Bankaların konut, taşıt ve ihtiyaç kredisi faiz oranları tırmanır, mevduat getirileri yükselir.",
+            resultText: "📌 Sonuç: Piyasadaki borçlanma iştahı yavaşlar, Türk Lirası mevduat ürünlerine talep tavan yapar."
         },
         inline: {
             title: "Beklentilerle Paralel Karar",
             badge: "Karar Fiyatlandı ⚖️",
-            text: "TCMB beklentilere paralel hareket eder, piyasa karar sonrası metindeki mesajlara odaklanır.",
-            bistTag: "⚪ BIST 100: Yatay seyir",
-            usdTag: "⚪ Dolar/TL: Sakin",
-            goldTag: "⚪ Gram Altın: Dengeli",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Mevcut TL ve Borsa dengesi muhafaza edilebilir."
+            causeText: "🎯 Neden: Politika faizi kararının piyasanın genel beklentisi doğrultusunda sabit bırakılması veya ayarlanması.",
+            mechanismText: "⚙️ Mekanizma: Finansal kurumlar kararı önden fiyatladığından kredi/mevduat şoku yaşanmaz.",
+            resultText: "📌 Sonuç: Mevcut faiz oranları ve kredi büyüme sınırları geçerliliğini sürdürür."
         },
         below: {
             title: "Faiz İndirimi / Gevşeme",
             badge: "Kredi & Büyüme Desteği 🚀",
-            text: "TCMB faiz indirim sürecini başlatırsa krediler ucuzlar, paranın adresi borsa olur.",
-            bistTag: "📈 BIST 100: Şirket değerlemelerinde uçuş",
-            usdTag: "📈 Dolar/TL: Döviz talebi canlı",
-            goldTag: "📈 Gram Altın: Yükseliş yönlü",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Kredi maliyeti düşecek Sanayi, İnşaat ve Banka hisselerinde uzun vadeli pozisyon alınabilir."
+            causeText: "🎯 Neden: TCMB'nin reel sektörü ve yatırımları desteklemek amacıyla politika faizini düşürmesi.",
+            mechanismText: "⚙️ Mekanizma: Bankaların kredi verme iştahı artar, finansman maliyetleri geriler.",
+            resultText: "📌 Sonuç: Şirketlerin yatırım iştahı artar, bireysel kredi erişimi kolaylaşır."
         }
     },
     "Tarım Dışı İstihdam Değişimi (NFP)": {
         above: {
             title: "Beklentinin Üstünde İstihdam",
-            badge: "Aşırı Sıcak Ekonomi 📊",
-            text: "ABD şirketlerinin yoğun eleman aldığını gösterir. Fed'in faizi yüksek tutacağı beklentisi doğar.",
-            bistTag: "📉 Ons Altın & Gelişen Borsalar: Faiz baskısı",
-            usdTag: "📈 Küresel Dolar: Dolar coşar",
-            goldTag: "📉 Ons Altın: Sert satış",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Ons Altındaki anlık düşüşlerde kademeli alım yapılabilir."
+            badge: "Sıcak İstihdam Piyasası 📊",
+            causeText: "🎯 Neden: Şirketlerin beklenenden çok daha fazla yeni çalışanı işe alması.",
+            mechanismText: "⚙️ Mekanizma: İşgücü piyasasının son derece güçlü olduğu ve ücret artışlarının enflasyonu besleyebileceği düşünülür.",
+            resultText: "📌 Sonuç: Merkez Bankası'nın faiz indirimlerini erteleyeceği beklentisi doğar, küresel borçlanma maliyetleri yüksek kalır."
         },
         inline: {
             title: "Beklentilerle Paralel İstihdam",
-            badge: "Dengeli İşgücü ⚖️",
-            text: "ABD istihdam piyasası makul seviyede ilerler, piyasalarda sert dalgalanma görülmez.",
-            bistTag: "⚪ Piyasalar: Sakin",
-            usdTag: "⚪ Dolar: Dengeli",
-            goldTag: "⚪ Altın: Yatay",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Günlük işlem yerine haftalık kapanışlar takip edilmelidir."
+            badge: "Makul İstihdam Dengesi ⚖️",
+            causeText: "🎯 Neden: Yeni yaratılan iş sayısının beklentiler seviyesinde kalması.",
+            mechanismText: "⚙️ Mekanizma: İstihdam piyasasında aşırı ısınma veya ani soğuma işareti görülmez.",
+            resultText: "📌 Sonuç: Para politikasında değişiklik ihtiyacı doğmaz."
         },
         below: {
             title: "Beklentinin Altında İstihdam",
-            badge: "İstihdamda Soğuma ❄️",
-            text: "ABD istihdamının yavaşladığını ve Fed'in faiz indirmek zorunda kalacağını müjdeler.",
-            bistTag: "📈 Ons Altın & BIST 100: Güçlü alım rallisi",
-            usdTag: "📉 Küresel Dolar: Dolar zayıflar",
-            goldTag: "📈 Ons Altın: Ralli başlatır",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Ons Altın, Gram Altın ve Gümüş yatırımları öne çıkarılabilir."
+            badge: "İstihdamda Soğuma Sinyali ❄️",
+            causeText: "🎯 Neden: Şirketlerin işe alım hızının yavaşlaması veya istihdam kaybı.",
+            mechanismText: "⚙️ Mekanizma: Ekonomik aktivitenin ivme kaybettiği ve işsizlik riskinin arttığı düşünülür.",
+            resultText: "📌 Sonuç: Merkez Bankası'nın faiz indirim sürecini öne çekmesi ve piyasayı desteklemesi gerekliliği doğar."
         }
     },
     "Default": {
         above: {
             title: "Beklentinin Üstünde Gelirse",
-            badge: "Yüksek Veri 📊",
-            text: "Sıkılaşma ve yüksek faiz algısını artırabilir, döviz ve faiz oranları üzerinde yukarı yönlü baskı oluşturabilir.",
-            bistTag: "📉 BIST 100: Satış Baskısı",
-            usdTag: "📈 Dolar/TL: Yukarı Yönlü",
-            goldTag: "📈 Gram Altın: Hareketlenme",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Kısa vadeli riskler minimize edilmeli, likit varlıklarda kalınmalıdır."
+            badge: "Yüksek Veri Gerçekleşmesi 📊",
+            causeText: "🎯 Neden: Makroekonomik göstergenin piyasa tahminlerinin üzerine çıkması.",
+            mechanismText: "⚙️ Mekanizma: Ekonomide sıkılaşma ihtiyacı veya harcama canlılığı algısı oluşur.",
+            resultText: "📌 Sonuç: Faiz oranları ve likidite koşulları üzerinde yukarı yönlü baskı gelişebilir."
         },
         inline: {
             title: "Beklentilerle Paralel Gelirse",
             badge: "Sürpriz Yok ⚖️",
-            text: "Piyasa beklentileri ile uyumlu gerçekleşir, mevcut finansal dengeler korunur.",
-            bistTag: "⚪ BIST 100: Yatay",
-            usdTag: "⚪ Dolar/TL: Sakin",
-            goldTag: "⚪ Gram Altın: Yatay",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Portföy dağılımı sabitleştirilebilir."
+            causeText: "🎯 Neden: Verinin piyasa beklentileriyle tam uyumlu gerçekleşmesi.",
+            mechanismText: "⚙️ Mekanizma: Piyasa yapıcıların tahminleri doğrulanır.",
+            resultText: "📌 Sonuç: Mevcut finansal dengeler ve ekonomik trend korunur."
         },
         below: {
             title: "Beklentinin Altında Gelirse",
-            badge: "Düşük Veri 🚀",
-            text: "Piyasalarda rahatlama ve borsada olumlu rüzgar estirebilir.",
-            bistTag: "📈 BIST 100: Yükseliş İvmesi",
-            usdTag: "📉 Dolar/TL: Sakinleşme",
-            goldTag: "⚪ Gram Altın: Sakin",
-            actionTip: "💡 Yatırımcı Aksiyon İpucu: Borsa ve risk iştahı yüksek varlıklar takibe alınabilir."
+            badge: "Düşük Veri Gerçekleşmesi 🚀",
+            causeText: "🎯 Neden: Göstergenin beklentilerin gerisinde kalması.",
+            mechanismText: "⚙️ Mekanizma: Piyasalarda gevşeme veya teşvik ihtiyacı algısı doğar.",
+            resultText: "📌 Sonuç: Borçlanma maliyetlerinde rahatlama ve ekonomik destek beklentisi güçlenir."
         }
     }
 };
@@ -566,7 +516,7 @@ export default function EconomicEventDetailPage() {
         DATA_EFFECTS_MAP[Object.keys(DATA_EFFECTS_MAP).find(k => event.event.includes(k)) || ""] ||
         DATA_EFFECTS_MAP["Default"];
 
-    // Widget 4: Scenario Analysis Object Group
+    // Widget 4: Scenario Analysis Object Group (Cause and Effect)
     const scenarios = EVENT_SCENARIOS_MAP[event.event] ||
         EVENT_SCENARIOS_MAP[Object.keys(EVENT_SCENARIOS_MAP).find(k => event.event.includes(k)) || ""] ||
         EVENT_SCENARIOS_MAP["Default"];
@@ -864,15 +814,13 @@ export default function EconomicEventDetailPage() {
                         </div>
                     </div>
 
-                    {/* Right Column (1 Col): Affected Parities & Assets Impact Matrix */}
+                    {/* Right Column (1 Col): Scenario Analysis with Full Height Focus */}
                     <div className="space-y-6">
-
-
-                        {/* WIDGET 4: SENARYO ANALİZİ (3 SENARYOLU İNTERAKTİF TAB VE YÖN ROZETLERİ) */}
+                        {/* WIDGET 4: SENARYO ANALİZİ (NEDEN-SONUÇ İLİŞKİLİ ÖĞRETİCİ METİNLER) */}
                         <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
                             <div className="flex items-center justify-between border-b border-slate-150 pb-3">
                                 <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Senaryo Analizi</h4>
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-[#00008B]">İnteraktif Tahmin İnceleme</span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-[#00008B]">Neden - Sonuç İlişkisi</span>
                             </div>
 
                             {/* 3'LÜ İNTERAKTİF SENARYO SEÇİCİ SEKMELERİ (TABS) */}
@@ -911,8 +859,8 @@ export default function EconomicEventDetailPage() {
                                 </button>
                             </div>
                             
-                            {/* AKTİF SEÇİLİ SENARYO DETAY KARTI */}
-                            <div className={`p-4 rounded-2xl border space-y-3 transition-all ${
+                            {/* AKTİF SEÇİLİ SENARYO NEDEN-SONUÇ KARTI */}
+                            <div className={`p-5 rounded-2xl border space-y-4 transition-all ${
                                 activeScenarioTab === 'above'
                                     ? 'bg-emerald-50/90 border-emerald-200'
                                     : activeScenarioTab === 'inline'
@@ -926,7 +874,7 @@ export default function EconomicEventDetailPage() {
                                     }`}>
                                         {currentScenario.title}
                                     </h5>
-                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-md ${
+                                    <span className={`text-[9px] font-black px-2.5 py-1 rounded-md ${
                                         activeScenarioTab === 'above'
                                             ? 'bg-emerald-200/70 text-emerald-900'
                                             : activeScenarioTab === 'inline'
@@ -937,35 +885,34 @@ export default function EconomicEventDetailPage() {
                                     </span>
                                 </div>
 
-                                {/* Açıklama Metni */}
-                                <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                                    {currentScenario.text}
-                                </p>
-
-                                {/* GÖRSEL YÖN ROZETLERİ (BORSA, DOLAR, ALTIN MATRİSİ) */}
-                                <div className="pt-2 border-t border-slate-200/70 space-y-2">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 block">
-                                        • Piyasa Yön Tahminleri
+                                {/* 🎯 NEDEN - SEBEP KUTUSU */}
+                                <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 shadow-xs space-y-1">
+                                    <span className="text-[10px] font-black text-[#00008B] uppercase tracking-wider block">
+                                        {currentScenario.causeText.split(':')[0]}:
                                     </span>
-                                    <div className="flex flex-col gap-1.5 text-[11px] font-bold">
-                                        <div className="p-2 rounded-xl bg-white/80 border border-slate-200/60 shadow-xs flex items-center justify-between text-slate-800">
-                                            <span>{currentScenario.bistTag}</span>
-                                        </div>
-                                        <div className="p-2 rounded-xl bg-white/80 border border-slate-200/60 shadow-xs flex items-center justify-between text-slate-800">
-                                            <span>{currentScenario.usdTag}</span>
-                                        </div>
-                                        <div className="p-2 rounded-xl bg-white/80 border border-slate-200/60 shadow-xs flex items-center justify-between text-slate-800">
-                                            <span>{currentScenario.goldTag}</span>
-                                        </div>
-                                    </div>
+                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                        {currentScenario.causeText.split(':').slice(1).join(':')}
+                                    </p>
                                 </div>
 
-                                {/* 💡 PRATİK AKSİYON İPUCU (YATIRIMCI NE YAPMALI?) */}
-                                <div className="pt-2 border-t border-slate-200/70">
-                                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-950 text-[11px] font-semibold flex items-start gap-2">
-                                        <Lightbulb className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                                        <span>{currentScenario.actionTip}</span>
-                                    </div>
+                                {/* ⚙️ MEKANİZMA - NASIL İŞLER KUTUSU */}
+                                <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 shadow-xs space-y-1">
+                                    <span className="text-[10px] font-black text-indigo-900 uppercase tracking-wider block">
+                                        {currentScenario.mechanismText.split(':')[0]}:
+                                    </span>
+                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                        {currentScenario.mechanismText.split(':').slice(1).join(':')}
+                                    </p>
+                                </div>
+
+                                {/* 📌 SONUÇ - MAKRO ETKİ KUTUSU */}
+                                <div className="p-3 rounded-xl bg-white/90 border border-slate-200/60 shadow-xs space-y-1">
+                                    <span className="text-[10px] font-black text-emerald-900 uppercase tracking-wider block">
+                                        {currentScenario.resultText.split(':')[0]}:
+                                    </span>
+                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                        {currentScenario.resultText.split(':').slice(1).join(':')}
+                                    </p>
                                 </div>
                             </div>
                         </div>
