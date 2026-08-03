@@ -1,5 +1,16 @@
 const ALLOWED_COUNTRIES = new Set(['TR', 'TRY', 'US', 'USD', 'EU', 'EUR', 'GB', 'GBP']);
 
+const COUNTRY_CODE_DISPLAY: Record<string, string> = {
+    USD: 'ABD',
+    US: 'ABD',
+    EUR: 'EU',
+    EU: 'EU',
+    TRY: 'TR',
+    TR: 'TR',
+    GBP: 'UK',
+    GB: 'UK'
+};
+
 const FLAG_MAP: Record<string, string> = {
     USD: '🇺🇸',
     US: '🇺🇸',
@@ -76,7 +87,7 @@ export async function scrapeEconomicCalendar() {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
             },
-            next: { revalidate: 180 } // Cache for 3 mins
+            next: { revalidate: 180 }
         });
 
         if (!response.ok) throw new Error(`Calendar fetch failed with status: ${response.status}`);
@@ -97,7 +108,7 @@ export async function scrapeEconomicCalendar() {
         const events = filteredData.map((item: any) => {
             const dateObj = new Date(item.date);
             
-            // TSİ (Türkiye Saati - Europe/Istanbul UTC+3) conversion
+            // TSİ (Europe/Istanbul UTC+3) time formatting
             const time = dateObj.toLocaleTimeString('tr-TR', {
                 timeZone: 'Europe/Istanbul',
                 hour: '2-digit',
@@ -106,6 +117,7 @@ export async function scrapeEconomicCalendar() {
             });
 
             const countryCode = item.country ? item.country.toUpperCase() : 'TR';
+            const countryDisplay = COUNTRY_CODE_DISPLAY[countryCode] || countryCode;
             const flag = FLAG_MAP[countryCode] || '🌐';
 
             // Map impact string
@@ -114,19 +126,24 @@ export async function scrapeEconomicCalendar() {
                 impactLevel = item.title?.toLowerCase().includes('fed') || item.title?.toLowerCase().includes('tcmb') ? 'critical' : 'high';
             }
 
-            // Translate title to Turkish
             const turkishTitle = translateTitle(item.title);
+
+            // Is event today in TSİ timezone?
+            const todayStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
+            const eventDateStr = dateObj.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' });
+            const isToday = eventDateStr === todayStr;
 
             return {
                 id: item.title + '_' + item.date,
                 time,
-                country: countryCode === 'USD' ? 'US' : countryCode === 'EUR' ? 'EU' : countryCode === 'TRY' ? 'TR' : countryCode === 'GBP' ? 'GB' : countryCode,
+                country: countryDisplay,
                 flag,
                 event: turkishTitle,
                 forecast: item.forecast || '-',
                 previous: item.previous || '-',
                 actual: item.actual || 'Bekleniyor',
                 impact: impactLevel,
+                isToday,
                 originalDate: dateObj
             };
         });
