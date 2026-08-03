@@ -13,6 +13,7 @@ export interface CatalogCalendarEvent {
     isToday?: boolean;
     isTomorrow?: boolean;
     weekOffset: number; // 0 = Bu Hafta, 1 = Gelecek Hafta, 2 = 3. Hafta
+    originalDate?: any;
 }
 
 // 3 Haftalık Kapsamlı Önceden Çevrilmiş ve İndekslenmiş Ekonomik Takvim Kataloğu
