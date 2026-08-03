@@ -16,11 +16,13 @@ const OVERVIEW_TR_DESCRIPTIONS: Record<string, string> = {
     "ISM İmalat Fiyat Endeksi": "ISM İmalat Fiyat Endeksi, ABD imalatçılarının hammadde ve üretim girdileri için ödediği fiyat değişimlerini gösterir. Yüksek rakamlar küresel enflasyonist baskıların arttığına işaret eder.",
     "S&P Global İmalat PMI (Nihai)": "S&P Global İmalat PMI, fabrika üretimi, yeni siparişler, stok seviyeleri ve tedarik sürelerini değerlendirerek sanayi sektörünün sağlık durumunu puanlar.",
     "Fed Politika Faizi Kararı": "Fed (ABD Merkez Bankası) Politika Faizi Kararı, küresel finansal sistemin en kritik kararıdır. Doların küresel değerini, ons altını, gelişmekte olan ülke para birimlerini ve küresel hisse senedi piyasalarını doğrudan yönlendirir.",
-    "TCMB Politika Faizi Kararı": "TCMB Politika Faizi Kararı, Türkiye Cumhuriyeti Merkez Bankası'nın haftalık repo faiz oranını belirlediği karardır. TL'nin değeri, mevduat ve kredi faizleri ile BIST 100 endeksi üzerinde birinci derecede etkilidir."
+    "TCMB Politika Faizi Kararı": "TCMB Politika Faizi Kararı, Türkiye Cumhuriyeti Merkez Bankası'nın haftalık repo faiz oranını belirlediği karardır. TL'nin değeri, mevduat ve kredi faizleri ile BIST 100 endeksi üzerinde birinci derecede etkilidir.",
+    "Tarım Dışı İstihdam Değişimi (NFP)": "Tarım Dışı İstihdam (NFP), ABD ekonomisinde tarım sektörü dışındaki yeni yaratılan veya kaybedilen iş sayısını ölçer. Doların gücü ve Fed faiz beklentileri üzerinde en yüksek etkiye sahip veridir.",
+    "İşsizlik Oranı": "İşsizlik Oranı, işgücü içerisindeki işsiz bireylerin yüzdesini gösterir. İstihdam piyasasının genel sağlık durumu hakkında temel göstergedir."
 };
 
-// Historical Mock Releases Chart Data Generator
-const MOCK_HISTORICAL_SERIES: Record<string, Array<{ month: string; actual: number; forecast: number; formattedActual: string }>> = {
+// Distinct Historical Release Datasets for Every Specific Macro Indicator
+const EVENT_HISTORICAL_SERIES: Record<string, Array<{ month: string; actual: number; forecast: number; formattedActual: string }>> = {
     "Dış Ticaret Dengesi": [
         { month: "Ara 2025", actual: -7.8, forecast: -8.0, formattedActual: "-7,8 B $" },
         { month: "Oca 2026", actual: -9.3, forecast: -9.0, formattedActual: "-9,3 B $" },
@@ -31,6 +33,61 @@ const MOCK_HISTORICAL_SERIES: Record<string, Array<{ month: string; actual: numb
         { month: "Haz 2026", actual: -5.9, forecast: -6.1, formattedActual: "-5,9 B $" },
         { month: "Tem 2026", actual: -10.37, forecast: -9.8, formattedActual: "-10,37 B $" },
         { month: "Ağu 2026", actual: -6.9, forecast: -7.2, formattedActual: "-6,9 B $" }
+    ],
+    "Aylık Tüketici Fiyat Endeksi (TÜFE)": [
+        { month: "Ara 2025", actual: 2.93, forecast: 3.10, formattedActual: "%2,93" },
+        { month: "Oca 2026", actual: 6.70, forecast: 6.50, formattedActual: "%6,70" },
+        { month: "Şub 2026", actual: 4.53, forecast: 4.20, formattedActual: "%4,53" },
+        { month: "Mar 2026", actual: 3.16, forecast: 3.25, formattedActual: "%3,16" },
+        { month: "Nis 2026", actual: 3.18, forecast: 3.00, formattedActual: "%3,18" },
+        { month: "May 2026", actual: 3.37, forecast: 3.10, formattedActual: "%3,37" },
+        { month: "Haz 2026", actual: 1.64, forecast: 2.10, formattedActual: "%1,64" },
+        { month: "Tem 2026", actual: 0.99, forecast: 1.10, formattedActual: "%0,99" },
+        { month: "Ağu 2026", actual: 1.78, forecast: 1.83, formattedActual: "%1,78" }
+    ],
+    "Yıllık Enflasyon Oranı (TÜFE)": [
+        { month: "Ara 2025", actual: 64.77, forecast: 65.10, formattedActual: "%64,77" },
+        { month: "Oca 2026", actual: 64.86, forecast: 64.50, formattedActual: "%64,86" },
+        { month: "Şub 2026", actual: 67.07, forecast: 66.80, formattedActual: "%67,07" },
+        { month: "Mar 2026", actual: 68.50, forecast: 68.10, formattedActual: "%68,50" },
+        { month: "Nis 2026", actual: 69.80, forecast: 70.20, formattedActual: "%69,80" },
+        { month: "May 2026", actual: 75.45, forecast: 74.80, formattedActual: "%75,45" },
+        { month: "Haz 2026", actual: 71.60, forecast: 72.00, formattedActual: "%71,60" },
+        { month: "Tem 2026", actual: 61.78, forecast: 62.10, formattedActual: "%61,78" },
+        { month: "Ağu 2026", actual: 31.75, forecast: 31.80, formattedActual: "%31,75" }
+    ],
+    "ISM İmalat PMI Endeksi": [
+        { month: "Ara 2025", actual: 47.1, forecast: 47.2, formattedActual: "47,1" },
+        { month: "Oca 2026", actual: 49.1, forecast: 47.0, formattedActual: "49,1" },
+        { month: "Şub 2026", actual: 47.8, forecast: 49.5, formattedActual: "47,8" },
+        { month: "Mar 2026", actual: 50.3, forecast: 48.4, formattedActual: "50,3" },
+        { month: "Nis 2026", actual: 49.2, forecast: 50.0, formattedActual: "49,2" },
+        { month: "May 2026", actual: 48.7, forecast: 49.6, formattedActual: "48,7" },
+        { month: "Haz 2026", actual: 48.5, forecast: 49.1, formattedActual: "48,5" },
+        { month: "Tem 2026", actual: 46.8, forecast: 48.8, formattedActual: "46,8" },
+        { month: "Ağu 2026", actual: 49.8, forecast: 49.5, formattedActual: "49,8" }
+    ],
+    "Tarım Dışı İstihdam Değişimi (NFP)": [
+        { month: "Ara 2025", actual: 216, forecast: 170, formattedActual: "216K" },
+        { month: "Oca 2026", actual: 353, forecast: 180, formattedActual: "353K" },
+        { month: "Şub 2026", actual: 275, forecast: 200, formattedActual: "275K" },
+        { month: "Mar 2026", actual: 303, forecast: 214, formattedActual: "303K" },
+        { month: "Nis 2026", actual: 175, forecast: 243, formattedActual: "175K" },
+        { month: "May 2026", actual: 272, forecast: 185, formattedActual: "272K" },
+        { month: "Haz 2026", actual: 206, forecast: 190, formattedActual: "206K" },
+        { month: "Tem 2026", actual: 114, forecast: 175, formattedActual: "114K" },
+        { month: "Ağu 2026", actual: 175, forecast: 175, formattedActual: "175K" }
+    ],
+    "TCMB Politika Faizi Kararı": [
+        { month: "Ara 2025", actual: 42.50, forecast: 42.50, formattedActual: "%42,50" },
+        { month: "Oca 2026", actual: 45.00, forecast: 45.00, formattedActual: "%45,00" },
+        { month: "Şub 2026", actual: 45.00, forecast: 45.00, formattedActual: "%45,00" },
+        { month: "Mar 2026", actual: 50.00, forecast: 45.00, formattedActual: "%50,00" },
+        { month: "Nis 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
+        { month: "May 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
+        { month: "Haz 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
+        { month: "Tem 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
+        { month: "Ağu 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" }
     ],
     "Default": [
         { month: "Ara 2025", actual: 1.2, forecast: 1.1, formattedActual: "%1,2" },
@@ -104,8 +161,10 @@ export default function EconomicEventDetailPage() {
         OVERVIEW_TR_DESCRIPTIONS[Object.keys(OVERVIEW_TR_DESCRIPTIONS).find(k => event.event.includes(k)) || ""] ||
         `${event.country} makroekonomik verileri arasında yer alan ${event.event}, piyasa yapıcılar ve yatırımcılar tarafından yakından takip edilen temel göstergelerden biridir.`;
 
-    // Historical chart series
-    const chartSeries = MOCK_HISTORICAL_SERIES[event.event] || MOCK_HISTORICAL_SERIES["Default"];
+    // Historical chart series specific to this exact event
+    const chartSeries = EVENT_HISTORICAL_SERIES[event.event] || 
+        EVENT_HISTORICAL_SERIES[Object.keys(EVENT_HISTORICAL_SERIES).find(k => event.event.includes(k)) || ""] ||
+        EVENT_HISTORICAL_SERIES["Default"];
 
     // Find min and max for chart bar height scaling
     const absValues = chartSeries.map(s => Math.abs(s.actual));
@@ -197,7 +256,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (BEYAZ Ana Kutu + Beyazdan Maviye Geçen Gradient Sütunlar) */}
+                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ (Fotoğraftaki Sektör Getirileri Özgün Mum Renk Gradient'ı) */}
                 <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
@@ -205,36 +264,38 @@ export default function EconomicEventDetailPage() {
                                 <BarChart3 className="w-5 h-5 text-[#00008B]" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-black text-[#00008B] tracking-tight">Geçmiş Veri Trendi ve Grafik</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aylık Dönemler İtibarıyla Gerçekleşen (Güncel) Veri Grafiği</p>
+                                <h3 className="text-lg font-black text-[#00008B] tracking-tight">
+                                    {event.event} — Geçmiş Veri Grafiği
+                                </h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aylık Dönemler İtibarıyla Habere Özel Gerçekleşen Veri Trendi</p>
                             </div>
                         </div>
 
                         {/* Legend */}
                         <div className="flex items-center gap-4 text-xs font-bold text-slate-600">
                             <div className="flex items-center gap-1.5">
-                                <div className="w-3.5 h-3.5 rounded-sm bg-[#00008B]" />
-                                <span>Güncel (Gerçekleşen)</span>
+                                <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-b from-[#00008B] to-blue-400" />
+                                <span>Gerçekleşen Veri</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Bar Chart Visualizer (Beyazdan Maviye Geçen Ton Gradient Sütunlar) */}
-                    <div className="py-6 px-2">
-                        <div className="flex items-end justify-between gap-2 md:gap-4 h-64 border-b border-slate-200 pb-4">
+                    {/* Bar Chart Visualizer (Fotoğraftaki Üstü Koyu Lacivert, Altı Açık Mavi-Beyaz Geçişli Sütunlar) */}
+                    <div className="py-8 px-2">
+                        <div className="flex items-end justify-between gap-3 md:gap-5 h-72 border-b border-slate-200 pb-4">
                             {chartSeries.map((s, idx) => {
-                                const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 15), 100);
+                                const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 18), 100);
                                 return (
                                     <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                                        {/* Value Tooltip Hover */}
-                                        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 bg-[#00008B] text-white font-black text-[10px] px-2 py-1 rounded-md shadow-md pointer-events-none whitespace-nowrap z-20">
+                                        {/* Value Label on Top of Bar (Matching Screenshot) */}
+                                        <span className="text-xs font-black text-[#00008B] mb-2 tracking-tight block group-hover:scale-110 transition-transform">
                                             {s.formattedActual}
-                                        </div>
+                                        </span>
 
-                                        {/* Beyazdan Maviye Geçen Ton Gradient Sütun */}
+                                        {/* Fotoğraftaki Sektör Getirileri Mum Tasarımı (Üst Koyu Lacivert #00008B, Altı Açık Mavi-Beyaz) */}
                                         <div
                                             style={{ height: `${heightPercent}%` }}
-                                            className="w-full max-w-[42px] bg-gradient-to-t from-[#00008B] via-[#00008B] to-blue-400 hover:from-[#0808a3] hover:to-blue-300 rounded-t-xl transition-all shadow-md shadow-[#00008B]/20 group-hover:scale-105"
+                                            className="w-full max-w-[48px] bg-gradient-to-b from-[#00008B] via-[#2563eb] to-[#e0f2fe] hover:from-[#0808a3] hover:via-[#3b82f6] hover:to-[#bae6fd] rounded-t-2xl border border-[#00008B]/20 shadow-lg shadow-[#00008B]/15 transition-all group-hover:scale-105"
                                         />
 
                                         {/* Month Label */}
