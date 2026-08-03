@@ -100,7 +100,7 @@ function DashboardShell({
                 <div className="flex-1 flex bg-transparent">
                     
                     {/* Sidebar (Premium Frosted Glass) */}
-                    <aside className="w-20 hover:w-64 border-r border-white/40 premium-frost hidden md:flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen">
+                    <aside className="w-24 hover:w-72 border-r border-white/40 premium-frost hidden md:flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen">
                         <div className="absolute inset-0 bg-white/5 pointer-events-none" />
                         <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10 relative z-10">
                             <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
