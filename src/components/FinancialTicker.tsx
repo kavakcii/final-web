@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { ArrowUp, ArrowDown, Activity, Settings, Plus, X, Check, Search, Loader2 } from "lucide-react";
+import { BIST_CATALOG, COMMODITY_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalogs";
 
 interface Quote {
     symbol: string;
@@ -53,11 +54,35 @@ export function FinancialTicker() {
         }
     }, [symbols]);
 
-    // Autocomplete Search Effect
+    // Autocomplete Search Effect (Hisse, Fon, Altın, Gümüş Çapraz Arama)
     useEffect(() => {
         if (!newSymbol || newSymbol.trim().length === 0) {
             setSearchResults([]);
             setShowDropdown(false);
+            return;
+        }
+
+        const query = newSymbol.toLowerCase().trim();
+        const TEFAS_CODES = new Set(TEFAS_CATALOG.map(f => f.symbol.toLowerCase()));
+        const ALL_ASSETS = [...BIST_CATALOG, ...COMMODITY_CATALOG];
+        
+        let filteredMatches = ALL_ASSETS.filter(asset => 
+            asset.symbol.toLowerCase().includes(query) || 
+            asset.name.toLowerCase().includes(query)
+        );
+
+        // Yerel sonuçlar (Fonlar hariç tutulmaz, Ticker'da fonlar da izlenebilir)
+        const localMatches = filteredMatches
+            .map(asset => ({ 
+                symbol: asset.symbol, 
+                shortname: asset.name, 
+                typeDisp: asset.type === 'Fon' ? 'Yatırım Fonu' : asset.type 
+            })).slice(0, 8);
+
+        if (localMatches.length > 0) {
+            setSearchResults(localMatches);
+            setShowDropdown(true);
+            // APİ isteğine gitme
             return;
         }
 
@@ -67,7 +92,7 @@ export function FinancialTicker() {
                 const res = await fetch(`/api/search?q=${newSymbol}`);
                 const data = await res.json();
                 if (data.results) {
-                    setSearchResults(data.results.slice(0, 5));
+                    setSearchResults(data.results.slice(0, 8));
                     setShowDropdown(true);
                 }
             } catch (e) {
@@ -75,7 +100,7 @@ export function FinancialTicker() {
             } finally {
                 setIsSearching(false);
             }
-        }, 300);
+        }, 400);
 
         return () => clearTimeout(delayDebounceFn);
     }, [newSymbol]);
@@ -165,19 +190,19 @@ export function FinancialTicker() {
                         </div>
                         
                         {showDropdown && searchResults.length > 0 && (
-                            <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-100 rounded-lg shadow-xl shadow-blue-900/5 z-50 overflow-hidden">
+                            <div className="absolute top-full left-0 mt-2 w-72 bg-white/98 backdrop-blur-xl border border-blue-200/90 rounded-2xl shadow-2xl shadow-[#00008B]/25 z-[100] overflow-hidden max-h-60 overflow-y-auto">
                                 {searchResults.map((res: any, idx: number) => (
-                                    <button
+                                    <div
                                         key={idx}
                                         onClick={() => handleAddSymbol(res.symbol)}
-                                        className="w-full text-left px-3 py-2 text-xs hover:bg-slate-50 flex items-center justify-between border-b border-slate-50 last:border-0 group transition-colors"
+                                        className="px-4 py-3.5 hover:bg-blue-50/80 cursor-pointer flex justify-between items-center border-b border-slate-100 last:border-0 transition-colors group"
                                     >
                                         <div className="flex flex-col">
-                                            <span className="font-bold text-[#00008B] group-hover:text-blue-600 transition-colors">{res.symbol}</span>
-                                            <span className="text-[10px] text-slate-400 line-clamp-1">{res.shortname}</span>
+                                            <span className="font-black text-[#00008B] text-sm group-hover:text-blue-600 transition-colors">{res.symbol}</span>
+                                            <span className="text-[11px] text-slate-500 font-semibold line-clamp-1">{res.shortname}</span>
                                         </div>
-                                        <span className="text-[9px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded uppercase tracking-widest">{res.typeDisp || res.exchange || 'Hisse'}</span>
-                                    </button>
+                                        <span className="text-[9px] px-2.5 py-1 rounded-lg bg-blue-50 text-[#00008B] font-bold border border-blue-200/50 uppercase tracking-wider">{res.typeDisp || res.exchange || 'Hisse'}</span>
+                                    </div>
                                 ))}
                             </div>
                         )}
