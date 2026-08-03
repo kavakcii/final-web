@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Calendar, Globe2, Loader2, Star, Sparkles } from "lucide-react";
+import { Calendar, Globe2, Loader2, Signal, ChevronRight, SlidersHorizontal } from "lucide-react";
 
 export interface CalendarEvent {
     id?: string;
     time: string;
     country: string;
+    countryName?: string;
     flag?: string;
     event: string;
     actual?: string;
@@ -15,12 +16,22 @@ export interface CalendarEvent {
     impact: 'low' | 'medium' | 'high' | 'critical';
 }
 
+const COUNTRY_NAMES: Record<string, string> = {
+    TR: "Türkiye",
+    TRY: "Türkiye",
+    US: "Amerika Birleşik Devletleri",
+    USD: "Amerika Birleşik Devletleri",
+    EU: "Avrupa Birliği",
+    EUR: "Avrupa Birliği",
+    GB: "Birleşik Krallık",
+    GBP: "Birleşik Krallık"
+};
+
 export function EconomicCalendarWidget() {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<'cards' | 'tradingview'>('cards');
+    const [viewMode, setViewMode] = useState<'table' | 'tradingview'>('table');
     const [filter, setFilter] = useState<'all' | 'TR' | 'US' | 'EU'>('all');
-    const [starFilter, setStarFilter] = useState<'all' | '2-star' | '3-star'>('all');
     const tradingViewContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -41,7 +52,7 @@ export function EconomicCalendarWidget() {
         fetchCalendarData();
     }, []);
 
-    // TradingView Official Embed Script Integration
+    // TradingView Embed Script Integration
     useEffect(() => {
         if (viewMode === 'tradingview' && tradingViewContainerRef.current) {
             tradingViewContainerRef.current.innerHTML = '';
@@ -50,10 +61,10 @@ export function EconomicCalendarWidget() {
             script.async = true;
             script.type = 'text/javascript';
             script.innerHTML = JSON.stringify({
-                colorTheme: "light",
+                colorTheme: "dark",
                 isTransparent: false,
                 width: "100%",
-                height: "480",
+                height: "520",
                 locale: "tr",
                 importanceFilter: "0,1",
                 countryFilter: "tr,us,eu"
@@ -62,196 +73,201 @@ export function EconomicCalendarWidget() {
         }
     }, [viewMode]);
 
-    // Strictly Filtered Events: TR, US, EU & 2-star/3-star
+    // Filter events (TR, US, EU & 2-star/3-star)
     const filteredEvents = events.filter(e => {
-        // Country filter (TR, US, EU)
         if (filter !== 'all') {
             if (filter === 'TR' && e.country !== 'TR' && e.country !== 'TRY') return false;
             if (filter === 'US' && e.country !== 'US' && e.country !== 'USD') return false;
             if (filter === 'EU' && e.country !== 'EU' && e.country !== 'EUR') return false;
         }
-
-        // Star filter (2-star: medium, 3-star: high/critical)
-        if (starFilter === '2-star' && e.impact !== 'medium') return false;
-        if (starFilter === '3-star' && e.impact !== 'high' && e.impact !== 'critical') return false;
-
         return true;
     });
 
-    const getImpactBadge = (impact: string) => {
-        switch (impact) {
-            case 'critical':
-            case 'high':
-                return (
-                    <div className="flex items-center gap-1 bg-amber-500/10 text-amber-600 border border-amber-200/60 px-2 py-0.5 rounded-full text-[9px] font-black">
-                        <span className="flex text-amber-500"><Star className="w-2.5 h-2.5 fill-amber-500" /><Star className="w-2.5 h-2.5 fill-amber-500" /><Star className="w-2.5 h-2.5 fill-amber-500" /></span>
-                        <span>3 Yıldız (Yüksek)</span>
-                    </div>
-                );
-            case 'medium':
-                return (
-                    <div className="flex items-center gap-1 bg-blue-500/10 text-blue-600 border border-blue-200/60 px-2 py-0.5 rounded-full text-[9px] font-black">
-                        <span className="flex text-blue-500"><Star className="w-2.5 h-2.5 fill-blue-500" /><Star className="w-2.5 h-2.5 fill-blue-500" /></span>
-                        <span>2 Yıldız (Orta)</span>
-                    </div>
-                );
-            default:
-                return null;
-        }
+    // Impact Signal Bar Renderer (Matching Screenshot)
+    const renderSignalBars = (impact: string) => {
+        const isHigh = impact === 'high' || impact === 'critical';
+        const isMedium = impact === 'medium';
+
+        return (
+            <div className="flex items-end gap-[2px] h-3.5 w-4" title={isHigh ? "3 Yıldız (Yüksek Etki)" : "2 Yıldız (Orta Etki)"}>
+                <div className={`w-[3px] rounded-xs ${isHigh || isMedium ? 'h-1.5 bg-blue-400' : 'h-1 bg-zinc-700'}`} />
+                <div className={`w-[3px] rounded-xs ${isHigh || isMedium ? 'h-2.5 bg-blue-400' : 'h-1 bg-zinc-700'}`} />
+                <div className={`w-[3px] rounded-xs ${isHigh ? 'h-3.5 bg-blue-400' : 'h-1 bg-zinc-700'}`} />
+            </div>
+        );
     };
 
     return (
-        <div className="w-full bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between transition-all">
+        <div className="w-full bg-[#090a0d] border border-zinc-800/80 rounded-3xl p-6 shadow-2xl text-zinc-100 font-sans flex flex-col justify-between transition-all">
             <div>
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-zinc-800/80">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center">
-                            <Calendar className="w-4 h-4 text-[#00008B]" />
+                        <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                            <Calendar className="w-5 h-5 text-blue-400" />
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h3 className="text-base font-black text-[#00008B] tracking-tight">Ekonomik Takvim</h3>
-                                <span className="text-[9px] font-black bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-full">
-                                    🇹🇷 🇺🇸 🇪🇺 CANLI
+                                <h3 className="text-lg font-black tracking-tight text-white">Ekonomik Takvim</h3>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                    CANLI AKIŞ
                                 </span>
                             </div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sadece TR, US, EU - 2 & 3 Yıldız Verileri</p>
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">
+                                Görsel Tablo Düzeni (TR 🇹🇷 | US 🇺🇸 | EU 🇪🇺)
+                            </p>
                         </div>
                     </div>
 
-                    {/* Controls & View Switcher */}
+                    {/* Controls */}
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* View Switcher Mode */}
-                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                        {/* View Switcher */}
+                        <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-2xl border border-zinc-800">
                             <button
-                                onClick={() => setViewMode('cards')}
-                                className={`px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all ${viewMode === 'cards' ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-500 hover:text-[#00008B]'}`}
+                                onClick={() => setViewMode('table')}
+                                className={`px-3 py-1 text-[10px] font-extrabold rounded-xl transition-all ${viewMode === 'table' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
                             >
-                                Kartlar
+                                Tablo Düzeni
                             </button>
                             <button
                                 onClick={() => setViewMode('tradingview')}
-                                className={`px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all ${viewMode === 'tradingview' ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-500 hover:text-[#00008B]'}`}
+                                className={`px-3 py-1 text-[10px] font-extrabold rounded-xl transition-all ${viewMode === 'tradingview' ? 'bg-blue-600 text-white shadow-md' : 'text-zinc-400 hover:text-white'}`}
                             >
                                 TradingView
                             </button>
                         </div>
 
-                        {viewMode === 'cards' && (
-                            <>
-                                {/* Country Filter (TR, US, EU) */}
-                                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                                    <button
-                                        onClick={() => setFilter('all')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'all' ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-500 hover:text-[#00008B]'}`}
-                                    >
-                                        Tümü
-                                    </button>
-                                    <button
-                                        onClick={() => setFilter('TR')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'TR' ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-500 hover:text-[#00008B]'}`}
-                                    >
-                                        🇹🇷 TR
-                                    </button>
-                                    <button
-                                        onClick={() => setFilter('US')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'US' ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-500 hover:text-[#00008B]'}`}
-                                    >
-                                        🇺🇸 US
-                                    </button>
-                                    <button
-                                        onClick={() => setFilter('EU')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'EU' ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-500 hover:text-[#00008B]'}`}
-                                    >
-                                        🇪🇺 EU
-                                    </button>
-                                </div>
-
-                                {/* Star Filter */}
-                                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                                    <button
-                                        onClick={() => setStarFilter('all')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${starFilter === 'all' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                                    >
-                                        2 & 3 ★
-                                    </button>
-                                    <button
-                                        onClick={() => setStarFilter('3-star')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${starFilter === '3-star' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-500 hover:text-amber-600'}`}
-                                    >
-                                        3 ★
-                                    </button>
-                                    <button
-                                        onClick={() => setStarFilter('2-star')}
-                                        className={`px-2 py-1 text-[10px] font-extrabold rounded-xl transition-all ${starFilter === '2-star' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-blue-600'}`}
-                                    >
-                                        2 ★
-                                    </button>
-                                </div>
-                            </>
+                        {viewMode === 'table' && (
+                            <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-2xl border border-zinc-800">
+                                <button
+                                    onClick={() => setFilter('all')}
+                                    className={`px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'all' ? 'bg-zinc-700 text-white' : 'text-zinc-400 hover:text-white'}`}
+                                >
+                                    Tümü
+                                </button>
+                                <button
+                                    onClick={() => setFilter('TR')}
+                                    className={`px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'TR' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
+                                >
+                                    🇹🇷 TR
+                                </button>
+                                <button
+                                    onClick={() => setFilter('US')}
+                                    className={`px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'US' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
+                                >
+                                    🇺🇸 US
+                                </button>
+                                <button
+                                    onClick={() => setFilter('EU')}
+                                    className={`px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all ${filter === 'EU' ? 'bg-blue-600 text-white' : 'text-zinc-400 hover:text-white'}`}
+                                >
+                                    🇪🇺 EU
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
 
-                {/* View Mode Switch Logic */}
+                {/* View Switcher Logic */}
                 {viewMode === 'tradingview' ? (
-                    <div className="w-full rounded-2xl overflow-hidden min-h-[480px]">
+                    <div className="w-full rounded-2xl overflow-hidden min-h-[500px] border border-zinc-800/80">
                         <div ref={tradingViewContainerRef} className="tradingview-widget-container" />
                     </div>
                 ) : (
-                    /* Cards View Mode */
+                    /* DARK TABULAR VIEW (Matching Screenshot Layout 100%) */
                     loading ? (
-                        <div className="py-12 text-center flex flex-col items-center justify-center gap-2">
-                            <Loader2 className="w-6 h-6 text-[#00008B] animate-spin" />
-                            <span className="text-xs font-bold text-slate-400">Canlı Ekonomik Haberler Yükleniyor...</span>
+                        <div className="py-16 text-center flex flex-col items-center justify-center gap-3">
+                            <Loader2 className="w-7 h-7 text-blue-400 animate-spin" />
+                            <span className="text-xs font-bold text-zinc-400">Ekonomik Takvim Verileri Yükleniyor...</span>
                         </div>
                     ) : filteredEvents.length > 0 ? (
-                        <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-                            {filteredEvents.slice(0, 15).map((item, idx) => (
-                                <div
-                                    key={idx}
-                                    className="p-3.5 rounded-2xl border border-slate-100 hover:border-[#00008B]/20 bg-slate-50/50 hover:bg-white transition-all flex flex-col md:flex-row md:items-center justify-between gap-3 group"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-xs font-black text-[#00008B] bg-white border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
-                                            {item.time}
-                                        </span>
-                                        <span className="text-base">{item.flag || '🌐'}</span>
-                                        <div>
-                                            <h4 className="text-xs font-bold text-slate-800 group-hover:text-[#00008B] transition-colors leading-tight">
-                                                {item.event}
-                                            </h4>
-                                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
-                                                Beklenen: {item.forecast || '-'} | Önceki: {item.previous || '-'}
-                                            </span>
-                                        </div>
-                                    </div>
+                        <div className="overflow-x-auto max-h-[520px] overflow-y-auto pr-1">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-zinc-800/80 text-[10px] font-black text-zinc-400 uppercase tracking-wider pb-2">
+                                        <th className="py-2.5 px-3 w-16 text-zinc-400">Saat</th>
+                                        <th className="py-2.5 px-3 w-40 text-zinc-400">Ülke</th>
+                                        <th className="py-2.5 px-2 w-10 text-center">Etki</th>
+                                        <th className="py-2.5 px-3">Haber Başlığı</th>
+                                        <th className="py-2.5 px-3 text-right w-24">Açıklanan</th>
+                                        <th className="py-2.5 px-3 text-right w-24">Beklenen</th>
+                                        <th className="py-2.5 px-3 text-right w-24">Önceki</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-900/80 text-xs font-medium">
+                                    {filteredEvents.map((item, idx) => {
+                                        const cName = COUNTRY_NAMES[item.country] || item.country;
+                                        const showTime = idx === 0 || filteredEvents[idx - 1].time !== item.time;
 
-                                    <div className="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                                        <div className="text-right">
-                                            <span className="text-[9px] font-bold text-slate-400 block uppercase tracking-wider">Açıklanan</span>
-                                            <span className="text-xs font-black text-[#00008B]">{item.actual || 'Bekleniyor'}</span>
-                                        </div>
-                                        {getImpactBadge(item.impact)}
-                                    </div>
-                                </div>
-                            ))}
+                                        return (
+                                            <tr
+                                                key={idx}
+                                                className="hover:bg-zinc-900/60 transition-colors group border-b border-zinc-900/60"
+                                            >
+                                                {/* Saat */}
+                                                <td className="py-3 px-3 font-bold text-zinc-300 align-top">
+                                                    {showTime ? item.time : ''}
+                                                </td>
+
+                                                {/* Ülke & Bayrak */}
+                                                <td className="py-3 px-3 align-top">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-base">{item.flag || '🌐'}</span>
+                                                        <span className="text-xs font-semibold text-zinc-200 truncate max-w-[130px]">
+                                                            {cName}
+                                                        </span>
+                                                    </div>
+                                                </td>
+
+                                                {/* Etki Sinyal Barları */}
+                                                <td className="py-3 px-2 text-center align-top pt-3.5">
+                                                    <div className="flex justify-center">
+                                                        {renderSignalBars(item.impact)}
+                                                    </div>
+                                                </td>
+
+                                                {/* Haber Başlığı */}
+                                                <td className="py-3 px-3 align-top">
+                                                    <span className="text-xs font-bold text-zinc-100 group-hover:text-blue-400 transition-colors block">
+                                                        {item.event}
+                                                    </span>
+                                                </td>
+
+                                                {/* Açıklanan (Actual) */}
+                                                <td className="py-3 px-3 text-right font-black text-white align-top">
+                                                    {item.actual || '-'}
+                                                </td>
+
+                                                {/* Beklenen (Forecast) */}
+                                                <td className="py-3 px-3 text-right font-semibold text-zinc-400 align-top">
+                                                    {item.forecast || '-'}
+                                                </td>
+
+                                                {/* Önceki (Previous) */}
+                                                <td className="py-3 px-3 text-right font-semibold text-zinc-400 align-top">
+                                                    {item.previous || '-'}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     ) : (
-                        <div className="py-8 text-center text-xs font-bold text-slate-400">
-                            TR, US veya EU için 2 ve 3 yıldızlı haber bulunamadı.
+                        <div className="py-12 text-center text-xs font-bold text-zinc-500">
+                            Seçilen kriterlere uygun veri bulunamadı.
                         </div>
                     )
                 )}
             </div>
 
             {/* Footer */}
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400">
-                <span className="flex items-center gap-1">
-                    <Globe2 className="w-3 h-3 text-[#00008B]/40" /> Türkiye 🇹🇷 | ABD 🇺🇸 | Euro Bölgesi 🇪🇺
+            <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[10px] font-bold text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                    <Globe2 className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Türkiye 🇹🇷 | ABD 🇺🇸 | Euro Bölgesi 🇪🇺 | Birleşik Krallık 🇬🇧</span>
                 </span>
-                <span className="text-[#00008B]/60 hover:text-[#00008B]">2 & 3 Yıldızlı Canlı Veri Akışı</span>
+                <span className="text-blue-400 font-extrabold">2 & 3 Yıldız Canlı Akış</span>
             </div>
         </div>
     );
