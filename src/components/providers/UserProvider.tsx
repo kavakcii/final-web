@@ -64,6 +64,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         }
     }, [isAuthenticated, globalNews.length]);
 
+    // Her 60 saniyede bir canlı fiyatları ve portföy istatistiklerini arka planda güncelle
+    useEffect(() => {
+        if (!isAuthenticated) return;
+        const interval = setInterval(() => {
+            refreshDashboardData();
+        }, 60000);
+        return () => clearInterval(interval);
+    }, [isAuthenticated]);
+
     // Use a ref to track if auth check has completed to avoid closure staleness in timeout
     const isAuthCheckCompleted = React.useRef(false);
 

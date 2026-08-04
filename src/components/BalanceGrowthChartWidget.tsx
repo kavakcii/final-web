@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { TrendingUp, LineChart, Lock, Clock } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { PortfolioService, HistoryRange } from "@/lib/portfolio-service";
+import { useUser } from "@/components/providers/UserProvider";
 
 // Belirli bir aralık için kaç günlük veri geretiği
 const RANGE_DAYS: Record<HistoryRange, number> = {
@@ -34,11 +35,25 @@ function daysBetween(dateStr: string): number {
 }
 
 export function BalanceGrowthChartWidget() {
+    const { myAssets = [], prices = {} } = useUser();
     const [timeRange, setTimeRange] = useState<HistoryRange>('1W');
     const [chartData, setChartData] = useState<{ date: string; balance: number }[]>([]);
     const [firstDate, setFirstDate]   = useState<string | null>(null);
     const [loading, setLoading]       = useState(true);
     const [daysSinceFirst, setDaysSinceFirst] = useState<number>(0);
+
+    // Portföyüm sayfası ile %100 birebir canlı değer hesaplaması
+    const liveTotalValue = useMemo(() => {
+        if (!myAssets || myAssets.length === 0) return 0;
+        let val = 0;
+        myAssets.forEach((asset: any) => {
+            const symKey = asset.symbol ? asset.symbol.toUpperCase().trim() : "";
+            const cleanSymKey = symKey.replace(/\.IS$/, '');
+            const currentPrice = prices[symKey] || prices[cleanSymKey] || asset.avgCost || 0;
+            val += currentPrice * asset.quantity;
+        });
+        return val;
+    }, [myAssets, prices]);
 
     // İlk kayıt tarihini çek → kaç gün geçmiş?
     useEffect(() => {
@@ -96,14 +111,30 @@ export function BalanceGrowthChartWidget() {
         return daysSinceFirst >= RANGE_DAYS[range];
     };
 
-    const latestBalance  = chartData[chartData.length - 1]?.balance ?? 0;
-    const initialBalance = chartData[0]?.balance ?? 1;
+    // Canlı değeri bugünkü son noktaya senkronize et
+    const displayChartData = useMemo(() => {
+        if (chartData.length === 0) return [];
+        const copy = [...chartData];
+        if (liveTotalValue > 0) {
+            const todayLabel = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', timeZone: 'Europe/Istanbul' });
+            const lastIndex = copy.length - 1;
+            if (copy[lastIndex].date === todayLabel) {
+                copy[lastIndex] = { ...copy[lastIndex], balance: liveTotalValue };
+            } else {
+                copy.push({ date: todayLabel, balance: liveTotalValue });
+            }
+        }
+        return copy;
+    }, [chartData, liveTotalValue]);
+
+    const latestBalance  = liveTotalValue > 0 ? liveTotalValue : (displayChartData[displayChartData.length - 1]?.balance ?? 0);
+    const initialBalance = displayChartData[0]?.balance ?? 1;
     const growthPercent  = initialBalance > 0
         ? (((latestBalance - initialBalance) / initialBalance) * 100).toFixed(2)
         : '0.00';
     const isPositive = parseFloat(growthPercent) >= 0;
 
-    const hasData = chartData.length > 0;
+    const hasData = displayChartData.length > 0;
 
     // Yeni kullanıcı durumu: hiç veri yok
     const isNewUser = !firstDate && !loading;
@@ -234,7 +265,7 @@ export function BalanceGrowthChartWidget() {
                             </div>
                             <div className="text-right">
                                 <span className="text-[10px] font-bold text-slate-300 block">
-                                    {chartData.length} günlük veri
+                                    {displayChartData.length} günlük veri
                                 </span>
                             </div>
                         </div>
@@ -242,7 +273,7 @@ export function BalanceGrowthChartWidget() {
                         {/* Chart */}
                         <div className="h-44 w-full pt-2">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                <AreaChart data={displayChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%"  stopColor="#00008B" stopOpacity={0.25} />
