@@ -25,7 +25,7 @@ export function DashboardSummaryCards() {
         myAssets.forEach((asset: any) => {
             const symKey = asset.symbol ? asset.symbol.toUpperCase().trim() : "";
             const cleanSymKey = symKey.replace(/\.IS$/, '');
-            const currentPrice = prices[symKey] || prices[cleanSymKey] || asset.avgCost || 0;
+            const currentPrice = prices[symKey] ?? prices[cleanSymKey] ?? prices[`${cleanSymKey}.IS`] ?? asset.avgCost ?? 0;
 
             val += currentPrice * asset.quantity;
             cost += asset.avgCost * asset.quantity;

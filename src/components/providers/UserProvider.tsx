@@ -96,17 +96,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 if (json.results) {
                     json.results.forEach((r: any) => {
                         if (r.symbol && r.regularMarketPrice) {
-                            priceMap[r.symbol.toUpperCase()] = r.regularMarketPrice;
+                            const symbolUpper = r.symbol.toUpperCase();
+                            priceMap[symbolUpper] = r.regularMarketPrice;
+                            if (symbolUpper.endsWith('.IS')) {
+                                priceMap[symbolUpper.replace('.IS', '')] = r.regularMarketPrice;
+                            }
                         }
                     });
                     setPrices(priceMap);
                 }
 
-                // Calculate stats
+                // Calculate stats (Portföyüm sayfası ile %100 birebir aynı fiyat eşleşmesi)
                 let totalVal = 0;
                 let totalCost = 0;
                 assets.forEach(a => {
-                    const currentPrice = priceMap[a.symbol.toUpperCase()] || a.avgCost;
+                    const symUpper = a.symbol.toUpperCase();
+                    const symClean = symUpper.replace(/\.IS$/, '');
+                    const currentPrice = priceMap[symUpper] ?? priceMap[symClean] ?? priceMap[`${symClean}.IS`] ?? a.avgCost;
+
                     totalVal += currentPrice * a.quantity;
                     totalCost += a.avgCost * a.quantity;
                 });

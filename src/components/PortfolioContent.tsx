@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
+import { useUser } from "@/components/providers/UserProvider";
 import Link from "next/link";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
@@ -210,6 +211,7 @@ const getAssetName = (symbol: string): string => {
 };
 
 export default function PortfolioPage() {
+    const { refreshDashboardData } = useUser();
     const [assets, setAssets] = useState<Asset[]>([]);
     const [prices, setPrices] = useState<Record<string, number>>({});
     const [priceExtremes, setPriceExtremes] = useState<Record<string, {low: number, high: number, current: number, target?: number, rating?: string}>>({});
@@ -724,6 +726,7 @@ export default function PortfolioPage() {
                     console.error("Network/Parse Error:", e);
                 }
             }
+            refreshDashboardData();
         } catch (error) {
             console.error("Failed to load portfolio", error);
         } finally {
