@@ -120,8 +120,10 @@ export async function fetchLiveCommoditiesAndCrypto(): Promise<Record<string, Li
         const goldStr = data['gram-altin']['Satış']?.replace(/\./g, '').replace(',', '.');
         if (goldStr) {
           const goldPrice = parseFloat(goldStr);
-          newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
-          newPrices['GA'] = { symbol: 'GA', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+          if (!isNaN(goldPrice) && goldPrice > 0) {
+            newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+            newPrices['GA'] = { symbol: 'GA', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+          }
         }
       }
       if (data && data['gumus']) {
@@ -142,6 +144,63 @@ export async function fetchLiveCommoditiesAndCrypto(): Promise<Record<string, Li
     }
   } catch (e) {
     console.error('Truncgil Live Price Error:', e);
+  }
+
+  // 5. GenelPara Canlı Altın Servisi (Yedek Altın Kaynağı)
+  if (!newPrices['ALTIN']) {
+    try {
+      const res = await fetch('https://api.genelpara.com/embed/altin.json', {
+        next: { revalidate: 30 },
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.GA && data.GA.satis) {
+          const goldPrice = parseFloat(data.GA.satis);
+          if (!isNaN(goldPrice) && goldPrice > 0) {
+            newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+            newPrices['GA'] = { symbol: 'GA', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+          }
+        }
+      }
+    } catch (e) {
+      console.error('GenelPara Gold Fetch Error:', e);
+    }
+  }
+
+  // 6. Küresel Piyasa Ons Altın ($) * Dolar/TL Çapraz Hesabı (Yahoo Finance - Kesintisiz Son Canlı Yedek)
+  if (!newPrices['ALTIN']) {
+    try {
+      const yfRes = await fetch('https://query1.finance.yahoo.com/v7/finance/quote?symbols=GC=F,USDTRY=X', {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      if (yfRes.ok) {
+        const json = await yfRes.json();
+        const quotes = json?.quoteResponse?.result || [];
+        const goldQuote = quotes.find((q: any) => q.symbol === 'GC=F');
+        const usdQuote = quotes.find((q: any) => q.symbol === 'USDTRY=X');
+
+        const onsPriceUSD = goldQuote?.regularMarketPrice;
+        const usdRate = usdQuote?.regularMarketPrice || newPrices['USDTRY']?.regularMarketPrice || 36.2;
+
+        if (onsPriceUSD && usdRate) {
+          const calculatedGramGold = (onsPriceUSD / 31.1034768) * usdRate;
+          const goldPrice = Number(calculatedGramGold.toFixed(2));
+          
+          newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+          newPrices['GA'] = { symbol: 'GA', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+        }
+      }
+    } catch (e) {
+      console.error('Yahoo Global Gold Calculation Error:', e);
+    }
+  }
+
+  // 7. Altın Güvenlik Taban Fiyatı (Hizmetlerde Tam Çökme Olması Durumunda Çökme Engelleyici)
+  if (!newPrices['ALTIN']) {
+    const fallbackGold = 3150;
+    newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: fallbackGold, shortName: 'Gram Altın', currency: 'TRY' };
+    newPrices['GA'] = { symbol: 'GA', regularMarketPrice: fallbackGold, shortName: 'Gram Altın', currency: 'TRY' };
   }
 
   if (Object.keys(newPrices).length > 0) {
