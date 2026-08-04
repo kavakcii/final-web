@@ -16,6 +16,8 @@ export interface CalendarEvent {
     forecast?: string;
     impact: 'low' | 'medium' | 'high' | 'critical';
     isToday?: boolean;
+    isTomorrow?: boolean;
+    dateFormatted?: string;
     originalDate?: any;
 }
 
@@ -62,19 +64,20 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         return () => clearInterval(pollInterval);
     }, []);
 
-    // Sadece Bugün haberlerini filtrele
-    const filteredEvents = events.filter(e => {
-        const hasTodayEvents = events.some(ev => ev.isToday);
-        if (hasTodayEvents && !e.isToday) return false;
-        return true;
-    });
-
-    // Bugünün Tarihi (03.08.2026 Formatında TSİ - Beyaz Metin)
+    // Bugünün Tarihi (Format: 04.08.2026 TSİ - Dinamik)
     const todayFormattedDate = new Date().toLocaleDateString('tr-TR', {
         timeZone: 'Europe/Istanbul',
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
+    });
+
+    // Sadece Bugünün tarihine ait olan haberleri filtrele
+    const filteredEvents = events.filter(e => {
+        if (e.dateFormatted) {
+            return e.dateFormatted === todayFormattedDate;
+        }
+        return e.isToday ?? true;
     });
 
     // Etki Sinyal Barları (Tam Net, Beyaz & Yüksek Kontrastlı)
@@ -165,7 +168,9 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                             <Calendar className="w-5 h-5 text-white" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-black tracking-tight text-white">Ekonomik Takvim</h3>
+                            <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                                Ekonomik Takvim <span className="text-sm font-semibold text-blue-200">({todayFormattedDate})</span>
+                            </h3>
                             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Saniyelik Canlı Akış" />
                         </div>
                     </div>

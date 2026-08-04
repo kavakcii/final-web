@@ -53,16 +53,37 @@ export async function scrapeEconomicCalendar(): Promise<CatalogCalendarEvent[]> 
                 }
             });
 
-            // Enrich catalog with live actual values ONLY IF event time has actually passed!
+            const todayFormatted = new Date().toLocaleDateString('tr-TR', {
+                timeZone: 'Europe/Istanbul',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            const tomorrowDate = new Date();
+            tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+            const tomorrowFormatted = tomorrowDate.toLocaleDateString('tr-TR', {
+                timeZone: 'Europe/Istanbul',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            // Enrich catalog with live actual values & dynamic isToday / isTomorrow flags
             const enrichedCatalog = ECONOMIC_CALENDAR_CATALOG.map(catItem => {
                 const liveKey = `${catItem.dateFormatted}_${catItem.time}_${catItem.country === 'ABD' ? 'USD' : catItem.country === 'UK' ? 'GBP' : catItem.country}`;
                 const liveItem = liveEventsMap.get(liveKey);
                 const hasTimePassed = isEventTimePassed(catItem.dateFormatted, catItem.time);
 
+                const isToday = catItem.dateFormatted === todayFormatted;
+                const isTomorrow = catItem.dateFormatted === tomorrowFormatted;
+
                 // Strict check: If event time has NOT passed yet, actual is ALWAYS 'Bekleniyor'
                 if (!hasTimePassed) {
                     return {
                         ...catItem,
+                        isToday,
+                        isTomorrow,
                         actual: 'Bekleniyor'
                     };
                 }
@@ -70,11 +91,17 @@ export async function scrapeEconomicCalendar(): Promise<CatalogCalendarEvent[]> 
                 if (liveItem && liveItem.actual && liveItem.actual !== '-') {
                     return {
                         ...catItem,
+                        isToday,
+                        isTomorrow,
                         actual: liveItem.actual
                     };
                 }
 
-                return catItem;
+                return {
+                    ...catItem,
+                    isToday,
+                    isTomorrow
+                };
             });
 
             return enrichedCatalog;
@@ -83,15 +110,40 @@ export async function scrapeEconomicCalendar(): Promise<CatalogCalendarEvent[]> 
         console.error("Live calendar fetch failed, using catalog store:", error);
     }
 
-    // Fallback: Ensure no future event displays actuals
+    const todayFormatted = new Date().toLocaleDateString('tr-TR', {
+        timeZone: 'Europe/Istanbul',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrowFormatted = tomorrowDate.toLocaleDateString('tr-TR', {
+        timeZone: 'Europe/Istanbul',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+
+    // Fallback: Ensure dynamic isToday and no future event displays actuals
     return ECONOMIC_CALENDAR_CATALOG.map(catItem => {
         const hasTimePassed = isEventTimePassed(catItem.dateFormatted, catItem.time);
+        const isToday = catItem.dateFormatted === todayFormatted;
+        const isTomorrow = catItem.dateFormatted === tomorrowFormatted;
+
         if (!hasTimePassed) {
             return {
                 ...catItem,
+                isToday,
+                isTomorrow,
                 actual: 'Bekleniyor'
             };
         }
-        return catItem;
+        return {
+            ...catItem,
+            isToday,
+            isTomorrow
+        };
     });
 }

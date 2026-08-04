@@ -66,6 +66,22 @@ export default function EconomicCalendarPage() {
         }
     };
 
+    const todayFormatted = new Date().toLocaleDateString('tr-TR', {
+        timeZone: 'Europe/Istanbul',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+
+    const tomorrowObj = new Date();
+    tomorrowObj.setDate(tomorrowObj.getDate() + 1);
+    const tomorrowFormatted = tomorrowObj.toLocaleDateString('tr-TR', {
+        timeZone: 'Europe/Istanbul',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+
     // Filtered Events
     const filteredEvents = events.filter(e => {
         // Multi-country filter
@@ -73,11 +89,15 @@ export default function EconomicCalendarPage() {
             return false;
         }
 
-        // Time Horizon filter
+        // Time Horizon filter (Dinamik Tarihli)
         if (timeTab === 'today') {
-            if (!e.isToday && e.dateFormatted !== "03.08.2026") return false;
+            if (e.dateFormatted) {
+                if (e.dateFormatted !== todayFormatted) return false;
+            } else if (!e.isToday) return false;
         } else if (timeTab === 'tomorrow') {
-            if (!e.isTomorrow && e.dateFormatted !== "04.08.2026") return false;
+            if (e.dateFormatted) {
+                if (e.dateFormatted !== tomorrowFormatted) return false;
+            } else if (!e.isTomorrow) return false;
         } else if (timeTab === 'week0') {
             if (e.weekOffset !== 0) return false;
         } else if (timeTab === 'week1') {
