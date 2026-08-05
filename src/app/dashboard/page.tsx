@@ -92,12 +92,6 @@ export default function DashboardPage() {
                         </h1>
                         <p className="text-[#00008B] mt-2 text-xs font-bold tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <Link href="/dashboard/portfolio/correlation" className="flex items-center gap-2 px-6 py-3 bg-[#00008B] rounded-2xl text-white text-[11px] font-bold tracking-[0.15em] uppercase shadow-xl shadow-[#00008B]/20 active:scale-95 transition-all">
-                            <Activity className="w-4 h-4" />
-                            Korelasyon Analizi
-                        </Link>
-                    </div>
                 </div>
 
                 {/* Synchronized Summary Cards Row (Birebir Portföyüm Özeti) */}
