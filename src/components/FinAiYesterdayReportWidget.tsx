@@ -111,8 +111,29 @@ export function FinAiYesterdayReportWidget() {
         return text;
     }, [myAssets, prices]);
 
-    const isPositive = report?.isPositive ?? (liveCalculatedNarrative.includes('+₺') || !liveCalculatedNarrative.includes('-₺'));
-    const narrativeToDisplay = report?.narrativeText || liveCalculatedNarrative;
+    const liveStats = useMemo(() => {
+        let currentTotal = 0;
+        let totalCost = 0;
+        myAssets.forEach((asset: any) => {
+            const symUpper = (asset.symbol || '').toUpperCase();
+            const symClean = symUpper.replace(/\.IS$/, '');
+            const price = prices[symUpper] ?? prices[symClean] ?? prices[`${symClean}.IS`] ?? asset.avgCost ?? 0;
+            currentTotal += price * asset.quantity;
+            totalCost += asset.avgCost * asset.quantity;
+        });
+        const diff = currentTotal - totalCost;
+        const pct = totalCost > 0 ? (diff / totalCost) * 100 : 0;
+        return { diff, pct, isPos: diff >= 0 };
+    }, [myAssets, prices]);
+
+    const isApiEmptyError = report?.narrativeText?.includes("bulunmuyor");
+    const narrativeToDisplay = (myAssets.length > 0 && isApiEmptyError)
+        ? liveCalculatedNarrative
+        : (report?.narrativeText || liveCalculatedNarrative);
+
+    const displayDiffValue = (report?.diffValue !== undefined && report?.diffValue !== 0 && !isApiEmptyError) ? report.diffValue : liveStats.diff;
+    const displayDiffPercent = (report?.diffPercent !== undefined && report?.diffPercent !== 0 && !isApiEmptyError) ? report.diffPercent : liveStats.pct;
+    const isPositive = displayDiffValue >= 0;
 
     return (
         <div className="w-full bg-gradient-to-br from-[#00008B] via-[#04047a] to-[#010142] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between border border-[#00008B] min-h-[260px]">
@@ -131,14 +152,14 @@ export function FinAiYesterdayReportWidget() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {report?.diffValue !== undefined && (
+                        {myAssets.length > 0 && (
                             <span className={`text-xs font-black px-3 py-1 rounded-xl border flex items-center gap-1.5 shadow-sm ${
                                 isPositive
                                     ? 'text-emerald-300 bg-emerald-500/20 border-emerald-400/30'
                                     : 'text-red-300 bg-red-500/20 border-red-400/30'
                             }`}>
                                 {isPositive ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
-                                {isPositive ? '+' : ''}₺{Math.abs(report.diffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{report.diffPercent?.toFixed(2)})
+                                {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(2)})
                             </span>
                         )}
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-200/80 bg-white/5 px-2.5 py-1 rounded-xl border border-white/10">
