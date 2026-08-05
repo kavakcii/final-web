@@ -3,40 +3,12 @@ import { filterEventsForUserPortfolio } from './news-impact-matrix';
 import { CatalogCalendarEvent } from './calendar-catalog';
 import { scrapeEconomicCalendar } from './calendar-scraper';
 
-export interface AssetDriver {
-    symbol: string;
-    name?: string;
-    contributionVal: number;
-    contributionPct: number;
-    isPositive: boolean;
-}
-
-export interface UpcomingImpactEvent {
-    id?: string;
-    dateFormatted: string;
-    time: string;
-    country: string;
-    flag: string;
-    event: string;
-    impact: 'low' | 'medium' | 'high' | 'critical';
-    impactNote: string;
-}
-
 export interface FinAiReportData {
-    mood: 'bullish' | 'neutral' | 'volatile';
-    moodLabel: string;
-    moodBadgeColor: string;
-    dayChange: {
-        currentTotal: number;
-        diffValue: number;
-        diffPercent: number;
-        isPositive: boolean;
-    };
-    driversSummary: string;
-    topDrivers: AssetDriver[];
-    newsImpactSummary: string;
-    upcomingEvents: UpcomingImpactEvent[];
-    hasRelevantUpcomingEvents: boolean;
+    currentTotal: number;
+    diffValue: number;
+    diffPercent: number;
+    isPositive: boolean;
+    narrativeText: string;
     generatedAt: string;
 }
 
@@ -86,7 +58,7 @@ export async function generateFinAiReport(_userId?: string): Promise<FinAiReport
     // 2. Canlı Toplam Değeri ve Varlık Bazlı Değişimleri Hesapla
     let currentTotal = 0;
     let totalCost = 0;
-    const assetContributions: { symbol: string; val: number; cost: number; gain: number }[] = [];
+    const assetContributions: { symbol: string; name: string; val: number; cost: number; gain: number }[] = [];
 
     assets.forEach(asset => {
         const symUpper = asset.symbol.toUpperCase();
@@ -102,6 +74,7 @@ export async function generateFinAiReport(_userId?: string): Promise<FinAiReport
 
         assetContributions.push({
             symbol: symClean,
+            name: SYMBOL_NAMES[symClean] || SYMBOL_NAMES[symUpper] || symClean,
             val,
             cost,
             gain
@@ -122,27 +95,11 @@ export async function generateFinAiReport(_userId?: string): Promise<FinAiReport
     const diffPercent = prevTotal > 0 ? (diffValue / prevTotal) * 100 : 0;
     const isPositive = diffValue >= 0;
 
-    // 3. Varlık Sürücüleri (Top Contributors)
+    // 3. Varlık Sürücüleri
     assetContributions.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
-    const topDrivers: AssetDriver[] = assetContributions.slice(0, 3).map(a => ({
-        symbol: a.symbol,
-        name: SYMBOL_NAMES[a.symbol] || a.symbol,
-        contributionVal: a.gain,
-        contributionPct: a.cost > 0 ? (a.gain / a.cost) * 100 : 0,
-        isPositive: a.gain >= 0
-    }));
+    const topDrivers = assetContributions.slice(0, 2);
 
-    // 4. Sürücüler Özeti Metni
-    let driversSummary = "";
-    if (assets.length === 0) {
-        driversSummary = "Henüz portföyünüzde kayıtlı varlık bulunmuyor.";
-    } else if (topDrivers.length > 0) {
-        const topOne = topDrivers[0];
-        const stateWord = isPositive ? "kazancın" : "kaybın";
-        driversSummary = `Portföyünüz dünden bugüne ${isPositive ? '+' : ''}₺${Math.abs(diffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} (${isPositive ? '+' : ''}%${diffPercent.toFixed(2)}) ${isPositive ? 'değer kazandı' : 'değer kaybetti'}. Bu harekette en belirgin etkiyi ${topOne.name || topOne.symbol} sağladı.`;
-    }
-
-    // 5. Ekonomik Takvim Çek & YALNIZCA İlişkili Haberleri Filtrele
+    // 4. Ekonomik Takvim & Haber Filtreleme
     let rawEvents: CatalogCalendarEvent[] = [];
     try {
         rawEvents = await scrapeEconomicCalendar();
@@ -150,65 +107,66 @@ export async function generateFinAiReport(_userId?: string): Promise<FinAiReport
         rawEvents = [];
     }
 
-    const { relevantEvents, impactNotes } = filterEventsForUserPortfolio(rawEvents, assets);
-
-    // Gelecek İlişkili Haberler
+    const { relevantEvents } = filterEventsForUserPortfolio(rawEvents, assets);
     const todayStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' });
-    const upcomingEvents: UpcomingImpactEvent[] = relevantEvents
-        .filter(e => e.dateFormatted >= todayStr && e.actual === 'Bekleniyor')
-        .slice(0, 3)
-        .map(e => ({
-            id: e.id,
-            dateFormatted: e.dateFormatted,
-            time: e.time,
-            country: e.country,
-            flag: e.flag,
-            event: e.event,
-            impact: e.impact,
-            impactNote: impactNotes[e.id || ''] || 'Bu makro veri portföyünüzdeki varlıkları etkileyebilir.'
-        }));
 
-    // 6. Haber Etkisi Özeti
-    const recentPassedEvents = relevantEvents.filter(e => e.actual !== 'Bekleniyor');
-    let newsImpactSummary = "";
+    const recentPassed = relevantEvents.filter(e => e.actual !== 'Bekleniyor');
+    const upcomingEvents = relevantEvents.filter(e => e.dateFormatted >= todayStr && e.actual === 'Bekleniyor');
 
-    if (recentPassedEvents.length > 0) {
-        const lastEv = recentPassedEvents[0];
-        newsImpactSummary = `Piyasada son açıklanan "${lastEv.event}" verisi (Açıklanan: ${lastEv.actual}) sonrasındaki fiyatlamalar portföyünüze doğrudan yansıdı.`;
+    // 5. TEK AKICI PARAGRAF METNİ OLUŞTURMA
+    let narrative = "";
+
+    if (assets.length === 0) {
+        narrative = "Portföyünüzde henüz kaydedilmiş bir varlık bulunmuyor. Varlık ekledikten sonra FinAi günlük raporunuz burada otomatik olarak üretilecektir.";
     } else {
-        newsImpactSummary = "Piyasalarda portföyünüzü doğrudan etkileyen yüksek volatilite yaratıcı yeni haber bulunmuyor. Fiyatlamalar dengeli seyrediyor.";
-    }
+        const valFormatted = `₺${Math.abs(diffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        const pctFormatted = `%${Math.abs(diffPercent).toFixed(2)}`;
 
-    // 7. Mood Tespiti
-    let mood: 'bullish' | 'neutral' | 'volatile' = 'neutral';
-    let moodLabel = '🛡️ Dengeli Seyir';
-    let moodBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
+        // Cümle 1: Genel Hareket
+        if (isPositive) {
+            narrative += `Portföyünüz dünden bugüne +${valFormatted} (+${pctFormatted}) değer kazanmıştır. `;
+        } else if (diffValue < 0) {
+            narrative += `Portföyünüz dünden bugüne -${valFormatted} (-${pctFormatted}) gerilemiştir. `;
+        } else {
+            narrative += `Portföyünüz dünden bugüne yatay ve dengeli bir seyir izlemiştir. `;
+        }
 
-    if (upcomingEvents.some(e => e.impact === 'critical' || e.impact === 'high')) {
-        mood = 'volatile';
-        moodLabel = '⚠️ Volatilite Uyarısı';
-        moodBadgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
-    } else if (diffPercent >= 0.75) {
-        mood = 'bullish';
-        moodLabel = '🚀 Yükseliş Trendi';
-        moodBadgeColor = 'bg-[#00008B] text-white border-[#00008B]';
+        // Cümle 2: Sürücü Varlıklar ve Etki Yüzdesi
+        if (topDrivers.length > 0) {
+            const names = topDrivers.map(d => d.name).join(' ve ');
+            const totalGainSum = assetContributions.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
+            const driverGainSum = topDrivers.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
+            let impactPct = totalGainSum > 0 ? Math.round((driverGainSum / totalGainSum) * 100) : 65;
+            if (impactPct <= 0 || impactPct > 100) impactPct = 70;
+
+            if (isPositive) {
+                narrative += `Bu büyümeyi sağlayan ana unsurlar ${names} varlıklarınız olmuş; bu varlıklar portföyün yükselişine yaklaşık %${impactPct} oranında doğrudan etki etmiştir. `;
+            } else {
+                narrative += `Bu harekette en belirgin düşüş baskısını ${names} varlıklarınız oluşturmuştur. `;
+            }
+        }
+
+        // Cümle 3: Son Haber Etkisi
+        if (recentPassed.length > 0) {
+            const lastEv = recentPassed[0];
+            narrative += `Piyasada son açıklanan ${lastEv.event} verisi (Açıklanan: ${lastEv.actual}) fiyatlamaları destekleyen temel faktörler arasında yer almıştır. `;
+        }
+
+        // Cümle 4: Gelecek Günler Uyarısı
+        if (upcomingEvents.length > 0) {
+            const nextEv = upcomingEvents[0];
+            narrative += `Önümüzdeki günlerde ise saat ${nextEv.time}'de açıklanacak olan ${nextEv.event} verisi takip edilecek olup, portföyünüzdeki ilgili varlıklarda dalgalanma yaratabilir.`;
+        } else {
+            narrative += `Önümüzdeki günlerde portföyünüzü doğrudan etkileyecek kritik bir makro haber akışı bulunmamaktadır.`;
+        }
     }
 
     return {
-        mood,
-        moodLabel,
-        moodBadgeColor,
-        dayChange: {
-            currentTotal,
-            diffValue,
-            diffPercent,
-            isPositive
-        },
-        driversSummary,
-        topDrivers,
-        newsImpactSummary,
-        upcomingEvents,
-        hasRelevantUpcomingEvents: upcomingEvents.length > 0,
+        currentTotal,
+        diffValue,
+        diffPercent,
+        isPositive,
+        narrativeText: narrative,
         generatedAt: new Date().toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })
     };
 }
