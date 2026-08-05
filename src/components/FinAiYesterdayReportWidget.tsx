@@ -150,24 +150,23 @@ export function FinAiYesterdayReportWidget() {
     const isPositive = displayDiffValue >= 0;
 
     return (
-        <div className="w-full bg-white text-slate-900 rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col justify-between border border-slate-200/80 min-h-[260px]">
-            {/* Background Glow Effects */}
-            <div className="absolute top-0 right-0 w-72 h-72 bg-blue-50/50 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald-50/50 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 flex flex-col justify-between h-full">
+        <div className="w-full bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[320px]">
+            <div className="flex flex-col justify-between h-full">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center shadow-inner">
+                        <div className="w-9 h-9 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shadow-inner">
                             <Sparkles className="w-4.5 h-4.5 text-[#00008B] animate-pulse" />
                         </div>
-                        <h3 className="text-2xl font-bold tracking-tight text-[#00008B]">FinAi Raporu</h3>
+                        <div>
+                            <h3 className="text-base font-black text-[#00008B] tracking-tight">FinAi Raporu</h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Akıllı Portföy Analizi</p>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                         {myAssets.length > 0 && (
-                            <span className={`text-xs font-black px-3 py-1 rounded-xl border flex items-center gap-1.5 shadow-sm ${
+                            <span className={`text-xs font-black px-3 py-1 rounded-2xl border flex items-center gap-1.5 shadow-xs ${
                                 isPositive
                                     ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                                     : 'text-red-700 bg-red-50 border-red-200'
@@ -176,7 +175,7 @@ export function FinAiYesterdayReportWidget() {
                                 {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(2)})
                             </span>
                         )}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-200">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-2xl border border-slate-100">
                             <Clock className="w-3 h-3 text-[#00008B]" />
                             <span>{report?.generatedAt || 'Canlı'}</span>
                         </div>
@@ -185,13 +184,17 @@ export function FinAiYesterdayReportWidget() {
 
                 {/* Loading or Narrative Body */}
                 {!isDataLoaded && loading ? (
-                    <div className="py-10 flex flex-col items-center justify-center gap-3">
+                    <div className="py-12 flex flex-col items-center justify-center gap-3">
                         <Loader2 className="w-7 h-7 text-[#00008B] animate-spin" />
-                        <span className="text-xs font-bold text-slate-600">FinAi Portföy Analizini Hazırlıyor...</span>
+                        <span className="text-xs font-bold text-slate-500">FinAi Portföy Analizini Hazırlıyor...</span>
                     </div>
                 ) : (
-                    <div className="bg-gradient-to-br from-[#00008B] via-[#04047a] to-[#010142] rounded-2xl p-5 shadow-lg border border-[#00008B]">
-                        <p className="text-xs font-semibold leading-relaxed text-white tracking-wide">
+                    <div className="bg-gradient-to-br from-[#00008B] via-[#04047a] to-[#010142] text-white rounded-2xl p-5.5 shadow-md border border-[#00008B] relative overflow-hidden">
+                        {/* Subtle inner background ambient light */}
+                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+
+                        <p className="text-xs font-semibold leading-relaxed text-blue-50/95 tracking-wide relative z-10">
                             {narrativeToDisplay}
                         </p>
                     </div>
