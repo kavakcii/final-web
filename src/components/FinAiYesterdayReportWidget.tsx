@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Sparkles, Clock, Loader2, TrendingUp, TrendingDown, Bot } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
+import { getRotatedDailyNarrative } from "@/lib/finai-templates";
 
 const SYMBOL_NAMES: Record<string, string> = {
     "THYAO": "Türk Hava Yolları",
@@ -108,35 +109,19 @@ export function FinAiYesterdayReportWidget() {
         groupedContributions.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
         const topDrivers = groupedContributions.slice(0, 2);
 
-        const valFormatted = `₺${Math.abs(diffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        const pctFormatted = `%${Math.abs(diffPercent).toFixed(2)}`;
+        const names = topDrivers.map(d => d.name).join(' ve ');
+        const totalGainSum = groupedContributions.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
+        const driverGainSum = topDrivers.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
+        let impactPct = totalGainSum > 0 ? Math.round((driverGainSum / totalGainSum) * 100) : 70;
+        if (impactPct <= 0 || impactPct > 100) impactPct = 70;
 
-        let text = "";
-        if (isPositive && diffValue > 0) {
-            text += `Portföyünüz dünden bugüne +${valFormatted} (+${pctFormatted}) değer kazanmıştır. `;
-        } else if (diffValue < 0) {
-            text += `Portföyünüz dünden bugüne -${valFormatted} (-${pctFormatted}) gerilemiştir. `;
-        } else {
-            text += `Portföyünüz dünden bugüne yatay ve dengeli bir seyir izlemiştir. `;
-        }
-
-        if (topDrivers.length > 0) {
-            const names = topDrivers.map(d => d.name).join(' ve ');
-            const totalGainSum = groupedContributions.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
-            const driverGainSum = topDrivers.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
-            let impactPct = totalGainSum > 0 ? Math.round((driverGainSum / totalGainSum) * 100) : 70;
-            if (impactPct <= 0 || impactPct > 100) impactPct = 70;
-
-            if (isPositive) {
-                text += `Bu büyümeyi sağlayan ana unsurlar ${names} varlıklarınız olmuş; bu varlıklar portföyün yükselişine yaklaşık %${impactPct} oranında doğrudan etki etmiştir. `;
-            } else {
-                text += `Bu harekette en belirgin düşüş baskısını ${names} varlıklarınız oluşturmuştur. `;
-            }
-        }
-
-        text += `Açıklanan makro veriler ve piyasa hareketleri portföyünüze yansımakta olup, takip edilen kritik gelişmeler doğrultusunda varlıklarınız dengeli seyrini korumaktadır.`;
-
-        return text;
+        return getRotatedDailyNarrative({
+            diffValue: Math.abs(diffValue),
+            diffPercent: Math.abs(diffPercent),
+            isPositive,
+            topDriversNames: names || 'ana varlıklarınız',
+            impactPct
+        });
     }, [myAssets, prices, yesterdayBalance]);
 
     const liveStats = useMemo(() => {
