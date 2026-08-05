@@ -93,8 +93,20 @@ export function FinAiYesterdayReportWidget() {
         const diffPercent = baseBalance > 0 ? (diffValue / baseBalance) * 100 : 0;
         const isPositive = diffValue >= 0;
 
-        contributions.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
-        const topDrivers = contributions.slice(0, 2);
+        // Varlıkları sembol/isim bazında grupla (Gram Altın ve Gram Altın gibi mükerrer tekrarları engeller)
+        const groupedMap = new Map<string, { symbol: string; name: string; gain: number }>();
+        contributions.forEach(c => {
+            const key = c.name || c.symbol;
+            if (groupedMap.has(key)) {
+                groupedMap.get(key)!.gain += c.gain;
+            } else {
+                groupedMap.set(key, { ...c });
+            }
+        });
+
+        const groupedContributions = Array.from(groupedMap.values());
+        groupedContributions.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
+        const topDrivers = groupedContributions.slice(0, 2);
 
         const valFormatted = `₺${Math.abs(diffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         const pctFormatted = `%${Math.abs(diffPercent).toFixed(2)}`;
@@ -110,7 +122,7 @@ export function FinAiYesterdayReportWidget() {
 
         if (topDrivers.length > 0) {
             const names = topDrivers.map(d => d.name).join(' ve ');
-            const totalGainSum = contributions.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
+            const totalGainSum = groupedContributions.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
             const driverGainSum = topDrivers.reduce((acc, curr) => acc + Math.max(0, curr.gain), 0);
             let impactPct = totalGainSum > 0 ? Math.round((driverGainSum / totalGainSum) * 100) : 70;
             if (impactPct <= 0 || impactPct > 100) impactPct = 70;
@@ -163,7 +175,7 @@ export function FinAiYesterdayReportWidget() {
                 <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/15">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner">
-                            <Sparkles className="w-4.5 h-4.5 text-amber-300 animate-pulse" />
+                            <Sparkles className="w-4.5 h-4.5 text-white animate-pulse" />
                         </div>
                         <h3 className="text-lg font-black tracking-tight text-white">FinAi Günlük Rapor</h3>
                     </div>
@@ -180,7 +192,7 @@ export function FinAiYesterdayReportWidget() {
                             </span>
                         )}
                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-blue-200/80 bg-white/5 px-2.5 py-1 rounded-xl border border-white/10">
-                            <Clock className="w-3 h-3 text-amber-300" />
+                            <Clock className="w-3 h-3 text-white" />
                             <span>{report?.generatedAt || 'Canlı'}</span>
                         </div>
                     </div>
@@ -189,14 +201,14 @@ export function FinAiYesterdayReportWidget() {
                 {/* Loading or Narrative Body */}
                 {!isDataLoaded && loading ? (
                     <div className="py-10 flex flex-col items-center justify-center gap-3">
-                        <Loader2 className="w-7 h-7 text-amber-300 animate-spin" />
+                        <Loader2 className="w-7 h-7 text-white animate-spin" />
                         <span className="text-xs font-bold text-blue-100">FinAi Portföy Analizini Hazırlıyor...</span>
                     </div>
                 ) : (
                     <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl p-5 shadow-inner">
                         <div className="flex items-center gap-2 mb-2">
-                            <Bot className="w-4 h-4 text-amber-300" />
-                            <span className="text-[11px] font-black text-amber-300 uppercase tracking-widest">FinAi Analist Yorumu</span>
+                            <Bot className="w-4 h-4 text-white" />
+                            <span className="text-[11px] font-black text-white uppercase tracking-widest">FinAi Analist Yorumu</span>
                         </div>
                         <p className="text-xs font-semibold leading-relaxed text-blue-50/95 tracking-wide">
                             {narrativeToDisplay}
