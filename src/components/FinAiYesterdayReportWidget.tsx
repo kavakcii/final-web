@@ -162,7 +162,7 @@ export function FinAiYesterdayReportWidget() {
                         <div className="w-9 h-9 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-inner">
                             <Sparkles className="w-4.5 h-4.5 text-white animate-pulse" />
                         </div>
-                        <h3 className="text-lg font-black tracking-tight text-white">FinAi Günlük Rapor</h3>
+                        <h3 className="text-lg font-black tracking-tight text-white">FinAi Raporu</h3>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -190,12 +190,8 @@ export function FinAiYesterdayReportWidget() {
                         <span className="text-xs font-bold text-blue-100">FinAi Portföy Analizini Hazırlıyor...</span>
                     </div>
                 ) : (
-                    <div className="bg-white/10 backdrop-blur-xl border border-white/15 rounded-2xl p-5 shadow-inner">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Bot className="w-4 h-4 text-white" />
-                            <span className="text-[11px] font-black text-white uppercase tracking-widest">FinAi Analist Yorumu</span>
-                        </div>
-                        <p className="text-xs font-semibold leading-relaxed text-blue-50/95 tracking-wide">
+                    <div className="bg-white rounded-2xl p-5 shadow-lg border border-white/20">
+                        <p className="text-xs font-bold leading-relaxed text-[#00008B] tracking-wide">
                             {narrativeToDisplay}
                         </p>
                     </div>
