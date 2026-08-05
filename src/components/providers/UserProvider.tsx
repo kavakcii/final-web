@@ -151,14 +151,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     }
                 ]);
 
-                // Save snapshot for today with full data
+                // Save snapshot for today with full data & update portfolioHistory state
                 await PortfolioService.saveSnapshot(
                     totalVal,
                     profit,
                     totalCost,
                     Array.from(new Set(assets.map(a => a.symbol))).length
                 );
-                // Widget fetches its own history by range — no global fetch needed
+
+                const history = await PortfolioService.getHistory('1W');
+                setPortfolioHistory(history);
             } else {
                 setStats([
                     { title: "Toplam Portföy", value: "₺0,00", change: "%0", isPositive: true, icon: Wallet, gradient: "from-blue-500/20 to-purple-500/20", border: "border-blue-500/20" },

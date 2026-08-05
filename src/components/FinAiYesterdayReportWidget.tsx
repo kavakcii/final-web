@@ -20,7 +20,7 @@ const SYMBOL_NAMES: Record<string, string> = {
 };
 
 export function FinAiYesterdayReportWidget() {
-    const { user, myAssets = [], prices = {}, isDataLoaded } = useUser();
+    const { user, myAssets = [], prices = {}, portfolioHistory = [], isDataLoaded } = useUser();
     const [report, setReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
@@ -44,7 +44,21 @@ export function FinAiYesterdayReportWidget() {
         fetchReport();
     }, [user?.id, myAssets.length]);
 
-    // Live Client-side Backup Calculation from UserContext
+    // Dünkü kapanış bakiyesini geçmiş veritabanından al
+    const yesterdayBalance = useMemo(() => {
+        if (!portfolioHistory || portfolioHistory.length === 0) return 0;
+        const todayISO = new Date().toISOString().split('T')[0];
+        const pastSnaps = portfolioHistory.filter((h: any) => h.snapshot_date !== todayISO);
+        if (pastSnaps.length > 0) {
+            return Number(pastSnaps[pastSnaps.length - 1].total_value || 0);
+        }
+        if (portfolioHistory.length >= 2) {
+            return Number(portfolioHistory[portfolioHistory.length - 2].total_value || 0);
+        }
+        return 0;
+    }, [portfolioHistory]);
+
+    // Live Client-side Backup Calculation from UserContext (Dünden Bugüne Büyüme)
     const liveCalculatedNarrative = useMemo(() => {
         if (!myAssets || myAssets.length === 0) {
             return "Portföyünüzde henüz kaydedilmiş bir varlık bulunmuyor. Varlık ekledikten sonra FinAi günlük raporunuz burada otomatik olarak üretilecektir.";
@@ -73,8 +87,10 @@ export function FinAiYesterdayReportWidget() {
             });
         });
 
-        const diffValue = currentTotal - totalCost;
-        const diffPercent = totalCost > 0 ? (diffValue / totalCost) * 100 : 0;
+        // Dünden bugüne büyüme tutarı ve oranı (Kapanış Snapshot Kıyaslaması)
+        const baseBalance = yesterdayBalance > 0 ? yesterdayBalance : (totalCost > 0 ? totalCost : currentTotal);
+        const diffValue = currentTotal - baseBalance;
+        const diffPercent = baseBalance > 0 ? (diffValue / baseBalance) * 100 : 0;
         const isPositive = diffValue >= 0;
 
         contributions.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
@@ -84,7 +100,7 @@ export function FinAiYesterdayReportWidget() {
         const pctFormatted = `%${Math.abs(diffPercent).toFixed(2)}`;
 
         let text = "";
-        if (isPositive) {
+        if (isPositive && diffValue > 0) {
             text += `Portföyünüz dünden bugüne +${valFormatted} (+${pctFormatted}) değer kazanmıştır. `;
         } else if (diffValue < 0) {
             text += `Portföyünüz dünden bugüne -${valFormatted} (-${pctFormatted}) gerilemiştir. `;
@@ -109,7 +125,7 @@ export function FinAiYesterdayReportWidget() {
         text += `Açıklanan makro veriler ve piyasa hareketleri portföyünüze yansımakta olup, takip edilen kritik gelişmeler doğrultusunda varlıklarınız dengeli seyrini korumaktadır.`;
 
         return text;
-    }, [myAssets, prices]);
+    }, [myAssets, prices, yesterdayBalance]);
 
     const liveStats = useMemo(() => {
         let currentTotal = 0;
@@ -121,10 +137,11 @@ export function FinAiYesterdayReportWidget() {
             currentTotal += price * asset.quantity;
             totalCost += asset.avgCost * asset.quantity;
         });
-        const diff = currentTotal - totalCost;
-        const pct = totalCost > 0 ? (diff / totalCost) * 100 : 0;
+        const baseBalance = yesterdayBalance > 0 ? yesterdayBalance : (totalCost > 0 ? totalCost : currentTotal);
+        const diff = currentTotal - baseBalance;
+        const pct = baseBalance > 0 ? (diff / baseBalance) * 100 : 0;
         return { diff, pct, isPos: diff >= 0 };
-    }, [myAssets, prices]);
+    }, [myAssets, prices, yesterdayBalance]);
 
     const isApiEmptyError = report?.narrativeText?.includes("bulunmuyor");
     const narrativeToDisplay = (myAssets.length > 0 && isApiEmptyError)
