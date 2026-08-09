@@ -193,12 +193,12 @@ export function FinAiYesterdayReportWidget() {
                         <span className="text-xs font-bold text-slate-500">FinAi Portföy Analizini Hazırlıyor...</span>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col justify-center bg-gradient-to-br from-[#00008B] via-[#04047a] to-[#010142] text-white rounded-2xl p-6 shadow-md border border-[#00008B] relative overflow-hidden min-h-[180px]">
-                        {/* Subtle inner background ambient light */}
-                        <div className="absolute -top-12 -right-12 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
-                        <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="flex-1 flex flex-col justify-center bg-slate-50/80 border border-slate-200/80 text-[#00008B] rounded-2xl p-6 shadow-inner relative overflow-hidden min-h-[180px]">
+                        {/* Subtle ambient light */}
+                        <div className="absolute -top-12 -right-12 w-56 h-56 bg-blue-100/40 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-indigo-100/40 rounded-full blur-2xl pointer-events-none" />
 
-                        <p className="text-sm font-medium leading-relaxed text-blue-50/95 tracking-wide relative z-10">
+                        <p className="text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide relative z-10">
                             {narrativeToDisplay}
                         </p>
                     </div>
