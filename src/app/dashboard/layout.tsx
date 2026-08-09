@@ -19,7 +19,8 @@ import {
     ChevronDown,
     Calendar,
     Coins,
-    Activity
+    Activity,
+    Shield
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FinancialTicker } from "@/components/FinancialTicker";
@@ -38,11 +39,13 @@ function DashboardShell({
 }) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
+    const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const currentFocus = searchParams ? searchParams.get("focus") : null;
+    const currentTab = searchParams ? searchParams.get("tab") : null;
 
     // Consume Context
     const { isAuthenticated, userName, avatarUrl, isDataLoaded } = useUser();
@@ -85,11 +88,17 @@ function DashboardShell({
     }
 
     const portfolioSubItems = [
-        { label: "Portföy Tablosu", focus: "table", icon: FileText },
-        { label: "Bilanço Takvimi", focus: "earnings", icon: Calendar },
-        { label: "Temettü Takvimi", focus: "dividends", icon: Coins },
-        { label: "Fiyat Analizi (52H)", focus: "extremes", icon: Activity },
-        { label: "Varlık Dağılımı", focus: "distribution", icon: PieChart }
+        { label: "Portföy Tablosu", href: "/dashboard/portfolio?focus=table", isSubActive: pathname === "/dashboard/portfolio" && currentFocus === "table", icon: FileText },
+        { label: "Bilanço Takvimi", href: "/dashboard/portfolio?focus=earnings", isSubActive: pathname === "/dashboard/portfolio" && currentFocus === "earnings", icon: Calendar },
+        { label: "Temettü Takvimi", href: "/dashboard/portfolio?focus=dividends", isSubActive: pathname === "/dashboard/portfolio" && currentFocus === "dividends", icon: Coins },
+        { label: "Fiyat Analizi (52H)", href: "/dashboard/portfolio?focus=extremes", isSubActive: pathname === "/dashboard/portfolio" && currentFocus === "extremes", icon: Activity },
+        { label: "Varlık Dağılımı", href: "/dashboard/portfolio?focus=distribution", isSubActive: pathname === "/dashboard/portfolio" && currentFocus === "distribution", icon: PieChart }
+    ];
+
+    const settingsSubItems = [
+        { label: "Profil & Kimlik", href: "/dashboard/settings?tab=account", isSubActive: pathname === "/dashboard/settings" && (currentTab === "account" || !currentTab), icon: User },
+        { label: "Bildirim & Alarmlar", href: "/dashboard/settings?tab=notifications", isSubActive: pathname === "/dashboard/settings" && currentTab === "notifications", icon: Bell },
+        { label: "Güvenlik & Hesap", href: "/dashboard/settings?tab=security", isSubActive: pathname === "/dashboard/settings" && currentTab === "security", icon: Shield }
     ];
 
     const menuItems = [
@@ -98,12 +107,21 @@ function DashboardShell({
             icon: PieChart, 
             label: "Portföyüm", 
             href: "/dashboard/portfolio",
-            subItems: portfolioSubItems 
+            subItems: portfolioSubItems,
+            isExpanded: isPortfolioExpanded,
+            toggleExpand: () => setIsPortfolioExpanded(prev => !prev)
         },
         { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis" },
         { icon: LayoutGrid, label: "Varlıklar", href: "/dashboard/data" },
         { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },
-        { icon: Settings, label: "Ayarlar", href: "/dashboard/settings" }
+        { 
+            icon: Settings, 
+            label: "Ayarlar", 
+            href: "/dashboard/settings",
+            subItems: settingsSubItems,
+            isExpanded: isSettingsExpanded,
+            toggleExpand: () => setIsSettingsExpanded(prev => !prev)
+        }
     ];
 
     return (
@@ -160,7 +178,7 @@ function DashboardShell({
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        setIsPortfolioExpanded(prev => !prev);
+                                                        item.toggleExpand();
                                                     }}
                                                     title="Alt Başlıkları Aç/Kapat"
                                                     className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-1.5 rounded-xl flex items-center justify-center shrink-0 ${
@@ -169,13 +187,13 @@ function DashboardShell({
                                                             : 'hover:bg-[#00008B]/15 text-[#00008B]'
                                                     }`}
                                                 >
-                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isPortfolioExpanded ? 'rotate-180 text-blue-600' : ''}`} />
+                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${item.isExpanded ? 'rotate-180 text-blue-600' : ''}`} />
                                                 </button>
                                             </div>
 
                                             {/* Sub Menu Items - Clean Nested Tree List */}
                                             <AnimatePresence>
-                                                {isPortfolioExpanded && (
+                                                {item.isExpanded && (
                                                     <motion.div
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: "auto" }}
@@ -184,18 +202,17 @@ function DashboardShell({
                                                     >
                                                         {item.subItems.map((sub, sIdx) => {
                                                             const SubIcon = sub.icon;
-                                                            const isSubActive = pathname === "/dashboard/portfolio" && currentFocus === sub.focus;
                                                             return (
                                                                 <Link
                                                                     key={sIdx}
-                                                                    href={`/dashboard/portfolio?focus=${sub.focus}`}
+                                                                    href={sub.href}
                                                                     className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap ${
-                                                                        isSubActive 
+                                                                        sub.isSubActive 
                                                                             ? 'bg-[#00008B] text-white shadow-sm font-bold' 
                                                                             : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-[#00008B]/10'
                                                                     }`}
                                                                 >
-                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isSubActive ? 'text-white' : 'text-[#00008B]/70'}`} />
+                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${sub.isSubActive ? 'text-white' : 'text-[#00008B]/70'}`} />
                                                                     <span className="truncate">{sub.label}</span>
                                                                 </Link>
                                                             );
