@@ -12,7 +12,10 @@ import {
   TrendingUp,
   Brain,
   Target,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  Users
 } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -54,7 +57,7 @@ export default function HomeClient() {
       id: 1,
       initials: 'AY',
       name: 'Ahmet Yılmaz',
-      role: '',
+      role: 'Bireysel Yatırımcı',
       quote: "Hisse ve fonlarımı tek ekrandan takip ediyorum. Portföy yönetimi artık çok daha kolay.",
       tags: [{ text: 'BIST', type: 'featured' as const }, { text: 'Portföy', type: 'default' as const }],
       stats: [{ icon: TrendingUp, text: 'Aktif' }],
@@ -64,7 +67,7 @@ export default function HomeClient() {
       id: 2,
       initials: 'ZK',
       name: 'Zeynep Kara',
-      role: '',
+      role: 'Fon Yatırımcısı',
       quote: "TEFAS fonlarını kolayca analiz edip portföyüme ekliyorum. Arayüzü çok sade ve kullanışlı.",
       tags: [{ text: 'Bireysel', type: 'featured' as const }, { text: 'TEFAS', type: 'default' as const }],
       stats: [{ icon: Brain, text: 'AI Asistan' }],
@@ -74,11 +77,41 @@ export default function HomeClient() {
       id: 3,
       initials: 'MT',
       name: 'Mehmet Tekin',
-      role: '',
+      role: 'Yatırımcı',
       quote: "AI asistan sayesinde korelasyon analizlerimi hızlıca yapıp portföyümü dengeliyorum.",
-      tags: [{ text: 'Yatırımcı', type: 'featured' as const }],
+      tags: [{ text: 'Strateji', type: 'featured' as const }, { text: 'Korelasyon', type: 'default' as const }],
       stats: [{ icon: Target, text: 'Verimli' }],
       avatarGradient: 'linear-gradient(135deg, #4338ca, #3730a3)',
+    },
+    {
+      id: 4,
+      initials: 'CD',
+      name: 'Canan Demir',
+      role: 'BIST Portföy Yöneticisi',
+      quote: "Olası senaryo testleri sayesinde piyasadaki sert dalgalanmalara karşı önceden strateji geliştirebiliyorum.",
+      tags: [{ text: 'Senaryo Analizi', type: 'featured' as const }],
+      stats: [{ icon: ShieldCheck, text: 'Güvenli' }],
+      avatarGradient: 'linear-gradient(135deg, #00008B, #2563eb)',
+    },
+    {
+      id: 5,
+      initials: 'BÇ',
+      name: 'Burak Çelik',
+      role: 'Hisse Senedi Yatırımcısı',
+      quote: "KAP ve piyasa haberlerini yapay zeka süzgecinden geçirip anında bildirmesi harika bir zaman kazancı.",
+      tags: [{ text: 'Anlık Haber', type: 'featured' as const }, { text: 'KAP', type: 'default' as const }],
+      stats: [{ icon: Zap, text: 'Hızlı' }],
+      avatarGradient: 'linear-gradient(135deg, #1d4ed8, #3b82f6)',
+    },
+    {
+      id: 6,
+      initials: 'EA',
+      name: 'Elif Aydın',
+      role: 'Uzun Vadeli Yatırımcı',
+      quote: "Kişiye özel risk testi ile yatırım karakterimi netleştirip kendime en uygun varlık dağılımını keşfettim.",
+      tags: [{ text: 'Risk Testi', type: 'featured' as const }, { text: 'Karakter', type: 'default' as const }],
+      stats: [{ icon: Users, text: 'Kişisel' }],
+      avatarGradient: 'linear-gradient(135deg, #312e81, #4338ca)',
     },
   ];
 
@@ -203,8 +236,8 @@ export default function HomeClient() {
         {/* 
             TESTIMONIALS
         */}
-        <section className="w-full bg-white pt-24 pb-20 relative z-20">
-            <InfiniteMovingCards items={testimonialsData} direction="right" speed="slow" />
+        <section className="w-full bg-white pt-16 pb-16 relative z-20 overflow-hidden">
+            <InfiniteMovingCards items={testimonialsData} direction="right" speed="slow" className="w-full max-w-none" />
         </section>
 
         {/* 

@@ -38,6 +38,13 @@ export const InfiniteMovingCards = ({
         if (containerRef.current && scrollerRef.current) {
             const scrollerContent = Array.from(scrollerRef.current.children);
 
+            // Duplicate items twice to ensure unbroken stream across wide screens
+            scrollerContent.forEach((item) => {
+                const duplicatedItem = item.cloneNode(true);
+                if (scrollerRef.current) {
+                    scrollerRef.current.appendChild(duplicatedItem);
+                }
+            });
             scrollerContent.forEach((item) => {
                 const duplicatedItem = item.cloneNode(true);
                 if (scrollerRef.current) {
@@ -68,11 +75,11 @@ export const InfiniteMovingCards = ({
     const getSpeed = () => {
         if (containerRef.current) {
             if (speed === "fast") {
-                containerRef.current.style.setProperty("--animation-duration", "20s");
+                containerRef.current.style.setProperty("--animation-duration", "25s");
             } else if (speed === "normal") {
-                containerRef.current.style.setProperty("--animation-duration", "40s");
+                containerRef.current.style.setProperty("--animation-duration", "45s");
             } else {
-                containerRef.current.style.setProperty("--animation-duration", "80s");
+                containerRef.current.style.setProperty("--animation-duration", "90s");
             }
         }
     };
@@ -80,22 +87,22 @@ export const InfiniteMovingCards = ({
         <div
             ref={containerRef}
             className={cn(
-                "scroller relative z-20  max-w-7xl overflow-hidden  [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]",
+                "scroller relative z-20 w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_4%,white_96%,transparent)]",
                 className
             )}
         >
             <ul
                 ref={scrollerRef}
                 className={cn(
-                    " flex min-w-full shrink-0 gap-4 py-2 w-max flex-nowrap will-change-transform",
-                    start && "animate-scroll ",
+                    "flex min-w-full shrink-0 gap-5 py-3 w-max flex-nowrap will-change-transform",
+                    start && "animate-scroll",
                     pauseOnHover && "hover:[animation-play-state:paused]"
                 )}
             >
                 {items.map((item, idx) => (
                     <li
-                        className="w-[55vw] md:w-[350px] max-w-full relative rounded-xl border-none bg-white shadow-xl hover:shadow-2xl transition-all duration-300 px-6 py-6"
-                        key={item.name}
+                        className="w-[85vw] sm:w-[360px] md:w-[400px] max-w-full relative rounded-2xl border border-slate-100 bg-white shadow-lg hover:shadow-2xl transition-all duration-300 px-6 py-6 shrink-0"
+                        key={`${item.name}-${idx}`}
                     >
                         <blockquote>
                             <div className="flex items-center gap-3 mb-3">
