@@ -139,7 +139,7 @@ export default function AboutPage() {
               <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
                 <div className="flex items-center gap-3 text-sm font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-[#00008B] shrink-0" />
-                  <span>Sıfır finansal okuryazarlıkla dahi güvenle başlama imkanı</span>
+                  <span>Finansal okuryazar olmasanız bile yatırıma güvenle başlama imkanı</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm font-bold text-slate-800">
                   <CheckCircle2 className="w-4 h-4 text-[#00008B] shrink-0" />
@@ -161,21 +161,21 @@ export default function AboutPage() {
                   <TrendingUp className="w-7 h-7" />
                 </div>
                 <h3 className="text-2xl font-black text-white mb-4 tracking-tight">Vizyonumuz</h3>
-                <p className="text-white/80 font-medium leading-relaxed text-base">
-                  FinAi platformunu Türkiye’de yatırım yapan ve tasarruflarını değerlendirmek isteyen milyonlarca insana ulaştırmak. 
-                  Yapay zeka tabanlı şeffaf analiz teknolojisini herkes için erişilebilir kılarak, ülkemizin genel finansal 
-                  okuryazarlık ve yatırım kültürü seviyesini en üst seviyelere taşımak.
+                <p className="text-white/90 font-medium leading-relaxed text-base">
+                  FinAi platformunu Türkiye’de tasarruf ve yatırım yapan milyonlarca insana ulaştırmak; 
+                  yapay zeka destekli akıllı piyasa analizini herkes için standart hale getirerek, 
+                  ülkemizin finansal okuryazarlık seviyesini zirveye taşımak.
                 </p>
               </div>
 
               <div className="mt-8 pt-6 border-t border-white/10 flex flex-col gap-3">
                 <div className="flex items-center gap-3 text-sm font-bold text-white">
                   <CheckCircle2 className="w-4 h-4 text-blue-300 shrink-0" />
-                  <span>Milyonlarca yatırımcıya ulaşan finansal bilinç hareketi</span>
+                  <span>Milyonlarca yatırımcıya ulaşan finansal bilinç ve yetkinlik hareketi</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm font-bold text-white">
                   <CheckCircle2 className="w-4 h-4 text-blue-300 shrink-0" />
-                  <span>Teknolojiyle demokratikleşen profesyonel piyasa analitiği</span>
+                  <span>Yapay zeka gücüyle herkes için rasyonel ve erişilebilir piyasa analitiği</span>
                 </div>
               </div>
             </motion.div>
@@ -224,7 +224,7 @@ export default function AboutPage() {
               </div>
               <h4 className="text-lg font-bold text-[#00008B] mb-2">Yapay Zeka ve Şeffaflık</h4>
               <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                Yapay zekanın sunduğu tüm analizleri kapalı bir kutu olarak değil; neyin nereden geldiğini açık ve net cümlelerle açıklayarak paylaşıyoruz.
+                Yapay zekanın sunduğu tüm analizlerde neyin nereden geldiğini açık ve net cümlelerle açıklayarak paylaşıyoruz.
               </p>
             </motion.div>
 
@@ -256,7 +256,7 @@ export default function AboutPage() {
               <div className="w-12 h-12 rounded-xl bg-blue-100/70 text-[#00008B] flex items-center justify-center mb-4">
                 <BookOpen className="w-6 h-6" />
               </div>
-              <h4 className="text-lg font-bold text-[#00008B] mb-2">Sürekli Finansal Eğitim</h4>
+              <h4 className="text-lg font-bold text-[#00008B] mb-2">Finansal Okuryazarlık</h4>
               <p className="text-sm text-slate-600 font-medium leading-relaxed">
                 Kullanıcının platformu kullandıkça piyasayı daha iyi okuyan, bilinçli ve bağımsız bir yatırımcı haline gelmesini destekliyoruz.
               </p>
