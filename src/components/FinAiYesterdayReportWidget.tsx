@@ -154,17 +154,21 @@ export function FinAiYesterdayReportWidget() {
     const isPositive = displayDiffValue >= 0;
 
     return (
-        <div className="w-full bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[320px]">
-            <div className="flex flex-col justify-between h-full space-y-4">
+        <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-3xl p-6.5 shadow-sm flex flex-col justify-between min-h-[320px] relative overflow-hidden">
+            {/* Subtle background ambient lights */}
+            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shadow-inner">
+                        <div className="w-9 h-9 rounded-2xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center shadow-inner">
                             <Sparkles className="w-4.5 h-4.5 text-[#00008B] animate-pulse" />
                         </div>
                         <div>
                             <h3 className="text-base font-black text-[#00008B] tracking-tight">FinAi Raporu</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Akıllı Portföy Analizi</p>
+                            <p className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest">Akıllı Portföy Analizi</p>
                         </div>
                     </div>
 
@@ -179,26 +183,22 @@ export function FinAiYesterdayReportWidget() {
                                 {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(2)})
                             </span>
                         )}
-                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-2xl border border-slate-100">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#00008B]/70 bg-white/70 px-2.5 py-1 rounded-2xl border border-slate-200/60 shadow-xs">
                             <Clock className="w-3 h-3 text-[#00008B]" />
                             <span>{report?.generatedAt || 'Canlı'}</span>
                         </div>
                     </div>
                 </div>
 
-                {/* Loading or Narrative Body (Filled Height) */}
+                {/* Direct Narrative Body (No nested inner box) */}
                 {!isDataLoaded && loading ? (
                     <div className="flex-1 py-12 flex flex-col items-center justify-center gap-3">
                         <Loader2 className="w-7 h-7 text-[#00008B] animate-spin" />
-                        <span className="text-xs font-bold text-slate-500">FinAi Portföy Analizini Hazırlıyor...</span>
+                        <span className="text-xs font-bold text-[#00008B]/70">FinAi Portföy Analizini Hazırlıyor...</span>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col justify-center bg-slate-50/80 border border-slate-200/80 text-[#00008B] rounded-2xl p-6 shadow-inner relative overflow-hidden min-h-[180px]">
-                        {/* Subtle ambient light */}
-                        <div className="absolute -top-12 -right-12 w-56 h-56 bg-blue-100/40 rounded-full blur-2xl pointer-events-none" />
-                        <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-indigo-100/40 rounded-full blur-2xl pointer-events-none" />
-
-                        <p className="text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide relative z-10">
+                    <div className="flex-1 flex flex-col justify-center py-3">
+                        <p className="text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide">
                             {narrativeToDisplay}
                         </p>
                     </div>
