@@ -137,11 +137,11 @@ function DashboardShell({
                                 
                                 if (item.subItems) {
                                     return (
-                                        <div key={idx} className="space-y-1.5">
-                                            <div className={`flex items-center justify-between px-3.5 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav backdrop-blur-md border ${
+                                        <div key={idx} className="space-y-1">
+                                            <div className={`flex items-center justify-between px-3.5 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${
                                                 isActive 
-                                                    ? 'text-white bg-[#00008B] border-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
-                                                    : 'text-[#00008B] hover:text-[#00008B] hover:bg-white/70 bg-white/40 border-white/50 shadow-sm'
+                                                    ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
+                                                    : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
                                             }`}>
                                                 {/* Direct Link to Portfolio Page */}
                                                 <Link 
@@ -163,10 +163,10 @@ function DashboardShell({
                                                         setIsPortfolioExpanded(prev => !prev);
                                                     }}
                                                     title="Alt Başlıkları Aç/Kapat"
-                                                    className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-1.5 rounded-xl flex items-center justify-center shrink-0 border ${
+                                                    className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-1.5 rounded-xl flex items-center justify-center shrink-0 ${
                                                         isActive 
-                                                            ? 'hover:bg-white/20 text-white border-white/20' 
-                                                            : 'hover:bg-[#00008B]/10 text-[#00008B] border-blue-200/50 bg-white/40'
+                                                            ? 'hover:bg-white/20 text-white' 
+                                                            : 'hover:bg-[#00008B]/15 text-[#00008B]'
                                                     }`}
                                                 >
                                                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isPortfolioExpanded ? 'rotate-180 text-blue-600' : ''}`} />
@@ -208,10 +208,10 @@ function DashboardShell({
                                 }
 
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav backdrop-blur-md border ${
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${
                                         isActive 
-                                            ? 'text-white bg-[#00008B] border-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
-                                            : 'text-[#00008B] hover:text-[#00008B] hover:bg-white/70 bg-white/40 border-white/50 shadow-sm'
+                                            ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
+                                            : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
                                     }`}>
                                         <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B] transition-colors'}`} />
                                         <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold">
