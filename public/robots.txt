@@ -1,0 +1,41 @@
+# FinAi Robots.txt - SEO & LLM Crawler Permissions
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+
+# OpenAI ChatGPT Crawlers
+User-agent: GPTBot
+Allow: /
+Allow: /about
+Allow: /llms.txt
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Google Gemini Crawlers
+User-agent: Google-Extended
+Allow: /
+Allow: /about
+Allow: /llms.txt
+
+User-agent: Googlebot
+Allow: /
+
+# Perplexity AI Crawlers
+User-agent: PerplexityBot
+Allow: /
+Allow: /about
+Allow: /llms.txt
+
+# Anthropic Claude Crawlers
+User-agent: ClaudeBot
+Allow: /
+Allow: /about
+Allow: /llms.txt
+
+User-agent: anthropic-ai
+Allow: /
+
+# Sitemaps and LLM manifest
+Sitemap: https://finai.net.tr/sitemap.xml
