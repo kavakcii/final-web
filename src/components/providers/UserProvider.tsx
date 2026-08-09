@@ -67,6 +67,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Her 60 saniyede bir canlı fiyatları ve portföy istatistiklerini arka planda güncelle
     useEffect(() => {
         if (!isAuthenticated) return;
+        // İlk açılışta anında fiyatları ön yükle (SessionStorage cache desteğiyle)
+        const cachedPrices = sessionStorage.getItem('finai_global_prices');
+        if (cachedPrices) {
+            try {
+                setPrices(JSON.parse(cachedPrices));
+            } catch {}
+        }
+
+        refreshDashboardData();
+
         const interval = setInterval(() => {
             refreshDashboardData();
         }, 60000);
@@ -104,6 +114,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                         }
                     });
                     setPrices(priceMap);
+                    sessionStorage.setItem('finai_global_prices', JSON.stringify(priceMap));
                 }
 
                 // Calculate stats (Portföyüm sayfası ile %100 birebir aynı fiyat eşleşmesi)
@@ -125,8 +136,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     {
                         title: "Toplam Portföy",
                         value: `₺${totalVal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                        change: `${profitPercent >= 0 ? '+' : ''}%${profitPercent.toFixed(1)}`,
-                        isPositive: profit >= 0,
+                        change: `${profitPercent >= 0 ? '+' : ''}%${profitPercent.toFixed(2)}`,
+                        isPositive: profitPercent >= 0,
                         icon: Wallet,
                         gradient: "from-blue-500/20 to-purple-500/20",
                         border: "border-blue-500/20"
@@ -151,13 +162,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     }
                 ]);
 
-                // Save snapshot for today with full data & update portfolioHistory state
-                await PortfolioService.saveSnapshot(
-                    totalVal,
-                    profit,
-                    totalCost,
-                    Array.from(new Set(assets.map(a => a.symbol))).length
-                );
+                // Sadece geçerli ve çekilmiş fiyatlar varsa istemci snapshot'ı kaydet (Gündüz koruması)
+                if (Object.keys(priceMap).length > 0 && totalVal > 0) {
+                    await PortfolioService.saveSnapshot(
+                        totalVal,
+                        profit,
+                        totalCost,
+                        Array.from(new Set(assets.map(a => a.symbol))).length
+                    );
+                }
 
                 const history = await PortfolioService.getHistory('1W');
                 setPortfolioHistory(history);
