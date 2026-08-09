@@ -60,7 +60,7 @@ export default function Navbar() {
                                 whileTap={{ scale: 0.95 }}
                                 className="cursor-pointer px-6 py-2.5 text-sm font-bold text-white bg-[#00008B] hover:bg-black rounded-full shadow-[0_8px_30px_-5px_rgba(0,0,139,0.4)] transition-all hidden sm:block"
                             >
-                                Giriş Yap
+                                Panele Git
                             </motion.a>
                         </Link>
                     ) : (
@@ -134,7 +134,7 @@ export default function Navbar() {
                                     onClick={() => setIsOpen(false)}
                                     className="block w-full text-center px-4 py-3.5 text-base font-bold text-[#00008B] bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 rounded-2xl transition-all"
                                 >
-                                    {isAuthenticated ? "Giriş Yap" : "Giriş Yap"}
+                                    {isAuthenticated ? "Panele Git" : "Giriş Yap"}
                                 </Link>
                             </div>
                         </div>

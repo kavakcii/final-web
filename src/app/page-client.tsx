@@ -14,9 +14,20 @@ import {
   Target,
   ArrowRight
 } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@/components/providers/UserProvider";
 
 export default function HomeClient() {
+  const { isAuthenticated } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated === true) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, router]);
+
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -25,6 +36,18 @@ export default function HomeClient() {
 
   const blobY1 = useTransform(scrollYProgress, [0, 1], [0, 300]);
   const blobY2 = useTransform(scrollYProgress, [0, 1], [0, -200]);
+
+  // Oturumu açık kullanıcılar için sayfa içeriğini göstermeden doğrudan dashboard'a aktar
+  if (isAuthenticated === true) {
+    return (
+      <div className="min-h-screen w-full bg-white flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Image src="/logo.png" alt="FinAi Logo" width={64} height={64} className="animate-pulse object-contain" priority />
+          <p className="text-sm font-semibold text-[#00008B] tracking-wide">Yönlendiriliyorsunuz...</p>
+        </div>
+      </div>
+    );
+  }
 
   const testimonialsData = [
     {

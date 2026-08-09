@@ -36,7 +36,6 @@ function LoginContent() {
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
-  // URL'de '?tab=register' varsa isLoginMode false olacak şekilde bailat.
   const isRegisterTab = searchParams.get('tab') === 'register';
   const [isLoginMode, setIsLoginMode] = useState(!isRegisterTab);
 
@@ -53,7 +52,7 @@ function LoginContent() {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.push("/dashboard");
+        router.replace("/dashboard");
       }
     };
     checkSession();
@@ -71,7 +70,6 @@ function LoginContent() {
 
   // Canlı E-posta Kontrolü (Debounced)
   useEffect(() => {
-    // Sadece kayıt modunda ve geçerli bir mail formatındayken kontrol et
     if (isLoginMode || !emailValue || !emailValue.includes("@")) {
       setEmailError("");
       setIsCheckingEmail(false);
@@ -82,8 +80,6 @@ function LoginContent() {
 
     const checkEmail = async () => {
       try {
-        // Supabase tarafında 'profiles' tablosunda e-posta kontrolü
-        // Not: auth.users doğrudan sorgulanamadığı için her zaman bir profiles tablosu önerilir.
         const { data, error } = await supabase
           .from('profiles')
           .select('email')
@@ -102,14 +98,13 @@ function LoginContent() {
           setEmailError("");
         }
       } catch (err) {
-        // Hata durumunda formu engellememek için hatayı sessizce geç
         console.error("Email check logic error:", err);
       } finally {
         setIsCheckingEmail(false);
       }
     };
 
-    const timer = setTimeout(checkEmail, 200); // 200ms - Neredeyse anlık hissettirir
+    const timer = setTimeout(checkEmail, 200);
     return () => clearTimeout(timer);
   }, [emailValue, isLoginMode]);
 
@@ -135,9 +130,8 @@ function LoginContent() {
       
       if (data.session) {
          setIsOtpSuccess(true);
-         // 1.5 saniye bekletme (FinAi'ye hoşgeldiniz mesajını görmesi için)
          setTimeout(() => {
-           router.push("/dashboard");
+           router.replace("/dashboard");
            addToast("Hesabınız doğrulandı, hoş geldiniz!", "success");
          }, 3000);
       } else {
@@ -192,7 +186,6 @@ function LoginContent() {
       const confirmPassword = formData.get("confirmPassword") as string;
       const kvkk = formData.get("kvkk") as string;
 
-      // İsimleri Otomatik Düzeltme
       const formatName = (n: string) => n.trim().charAt(0).toUpperCase() + n.trim().slice(1).toLowerCase();
       const formatSurname = (n: string) => n.trim().toUpperCase();
 
@@ -204,17 +197,12 @@ function LoginContent() {
         return;
       }
       
-      // Katı İsim ve Soyisim Kontrolü
       const nameRegex = /^[a-zA-ZğüşıöçĞÜŞİÖÇ\s]{2,}$/;
       
-      // Rastgele Karakter Dizisi Kontrolü (Gelişmiş)
       const isRandomPattern = (str: string) => {
         const lower = str.toLowerCase().replace(/\s/g, '');
-        // 1. Aynı harfin 3 kez üst üste tekrarlanması (aaaa, bbbb)
         if (/(.)\1\1/.test(lower)) return true;
-        // 2. Sesli harf içermemesi (asdf, ghjk gibi anlamsız girişleri engeller)
         if (!/[aeıioöuü]/.test(lower)) return true;
-        // 3. Çok yaygın klavye dizileri
         const commonPatterns = ['asdf', 'qwerty', 'zxcv', 'jklm'];
         if (commonPatterns.some(p => lower.includes(p))) return true;
         return false;
@@ -254,13 +242,12 @@ function LoginContent() {
       if (isLoginMode) {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
           if (error) {
-            // Şifre Yanlış Kontrolü
             if (error.message.includes("Invalid login credentials")) {
                throw new Error("Hatalı e-posta veya şifre girdiniz.");
             }
             throw error;
           }
-          router.push("/dashboard");
+          router.replace("/dashboard");
       } else {
           const firstName = formData.get("firstName") as string;
           const lastName = formData.get("lastName") as string;
@@ -284,21 +271,18 @@ function LoginContent() {
             throw error;
           }
 
-          // Supabase bazen sessizce başarılı döner ama identities boşsa kullanıcı zaten vardır
           if (data.user && data.user.identities && data.user.identities.length === 0) {
             throw new Error("Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın.");
           }
 
           if (data.user && !data.session) {
-             // Opsiyonel e-posta onayı (OTP) aktif demektir
              setVerificationEmail(email);
              setIsVerifyingOtp(true);
              setResendTimer(45);
              addToast("E-postanıza 6 haneli bir doğrulama kodu gönderildi.", "success");
-             return; // Dashboard'a yönlendirmeyi atla
+             return;
           } else {
-             // OTP kapalıysa direkt dashboard'a at
-             router.push("/dashboard");
+             router.replace("/dashboard");
           }
       }
     } catch (error: any) {
