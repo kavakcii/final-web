@@ -173,14 +173,14 @@ function DashboardShell({
                                                 </button>
                                             </div>
 
-                                            {/* Sub Menu Items */}
+                                            {/* Sub Menu Items - Clean Nested Tree List */}
                                             <AnimatePresence>
                                                 {isPortfolioExpanded && (
                                                     <motion.div
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: "auto" }}
                                                         exit={{ opacity: 0, height: 0 }}
-                                                        className="pl-3 md:pl-2 space-y-1.5 overflow-hidden opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300"
+                                                        className="ml-6 pl-3 border-l-2 border-[#00008B]/20 space-y-1 py-1 overflow-hidden transition-all duration-300 hidden group-hover:block"
                                                     >
                                                         {item.subItems.map((sub, sIdx) => {
                                                             const SubIcon = sub.icon;
@@ -189,13 +189,13 @@ function DashboardShell({
                                                                 <Link
                                                                     key={sIdx}
                                                                     href={`/dashboard/portfolio?focus=${sub.focus}`}
-                                                                    className={`flex items-center gap-2.5 px-3.5 py-2.5 text-[10px] md:text-[11px] font-bold rounded-xl transition-all whitespace-nowrap backdrop-blur-md border ${
+                                                                    className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-all whitespace-nowrap ${
                                                                         isSubActive 
-                                                                            ? 'bg-[#00008B] text-white border-[#00008B] shadow-md shadow-[#00008B]/20' 
-                                                                            : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-white/80 bg-white/30 border-white/40 shadow-xs'
+                                                                            ? 'bg-[#00008B] text-white shadow-sm font-bold' 
+                                                                            : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-[#00008B]/10'
                                                                     }`}
                                                                 >
-                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isSubActive ? 'text-white' : 'text-[#00008B]/80'}`} />
+                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isSubActive ? 'text-white' : 'text-[#00008B]/70'}`} />
                                                                     <span className="truncate">{sub.label}</span>
                                                                 </Link>
                                                             );
