@@ -1,32 +1,26 @@
 import { NextResponse } from "next/server";
-import { ECONOMIC_CALENDAR_CATALOG } from "@/lib/calendar-catalog";
+import { scrapeEconomicCalendar } from "@/lib/calendar-scraper";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Monthly Economic Calendar Auto-Sync Cron Route
- * Scheduled to run on the 1st of every month at 00:01 TSİ (UTC+3)
- * Cron expression: 1 0 1 * *
+ * Nokta Atışı Tam Haber Saati & Otomatik Takvim Güncelleme Cron Rotası
+ * Haber saati geldiğinde (10:00, 11:30, 14:00, 15:30, 17:30 TSİ)
+ * canlı verileri kazıyıp açıklanan rakamları sisteme kaydeder.
  */
 export async function GET(request: Request) {
     try {
+        const events = await scrapeEconomicCalendar();
         const now = new Date();
-        const currentMonth = now.getMonth() + 1;
-        const currentYear = now.getFullYear();
 
-        // 4-Week Economic Data Fetch Log
-        console.log(`[MONTHLY CRON AUTO-FETCH] Executed at ${now.toISOString()} for Month: ${currentMonth}/${currentYear}`);
-
-        // Return current 4-week catalog events (In production, integrates with external provider)
         return NextResponse.json({
             success: true,
-            message: `Her ayın 1'i saat 00:01 otomatik 4 haftalık veri güncellemesi tamamlandı (${currentMonth}/${currentYear}).`,
+            message: `Nokta atışı haber saati güncellemesi tamamlandı.`,
             timestamp: now.toISOString(),
-            eventCount: ECONOMIC_CALENDAR_CATALOG.length,
-            events: ECONOMIC_CALENDAR_CATALOG
+            eventCount: events.length
         });
     } catch (error: any) {
-        console.error("[MONTHLY CRON ERROR]", error);
+        console.error("[EVENT CRON ERROR]", error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
