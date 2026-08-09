@@ -37,7 +37,7 @@ function DashboardShell({
     children: React.ReactNode;
 }) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(true);
+    const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const pathname = usePathname();
@@ -107,54 +107,69 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex relative selection:bg-blue-500/30 font-sans bg-transparent">
-            {/* Luminous Light Leaks */}
-            <div className="absolute left-[10%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-50 blur-[140px] pointer-events-none" />
-            <div className="absolute right-[-5%] bottom-[-5%] -z-10 h-[500px] w-[500px] rounded-full bg-slate-50 blur-[120px] pointer-events-none" />
+        <div className="min-h-screen flex relative selection:bg-blue-500/30 font-sans bg-slate-50/50">
+            {/* Luminous Light Leaks & Glowing Spheres Behind Sidebar */}
+            <div className="fixed left-[-5%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-300/30 blur-[150px] pointer-events-none animate-pulse" />
+            <div className="fixed left-[15%] bottom-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-indigo-300/20 blur-[130px] pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex bg-transparent">
                     
-                    {/* Sidebar (Premium Frosted Glass & Translucent Aesthetic) */}
-                    <aside className="w-36 md:w-24 md:hover:w-80 border-r border-white/50 bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,139,0.08)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden">
-                        <div className="absolute inset-0 bg-white/10 pointer-events-none" />
-                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/20 relative z-10">
+                    {/* Sidebar (Ultra-Crystal Glassmorphism Aesthetic) */}
+                    <aside className="w-36 md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
+                        {/* Glass Reflection & Ambient Glow */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-white/40 pointer-events-none" />
+                        <div className="absolute -left-16 top-1/4 w-36 h-36 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
+
+                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
                             <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
-                                <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.1)]" />
+                                <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.15)]" />
                                 <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-0 md:translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap">
                                     FinAi<span className="text-blue-600">.</span>
                                 </span>
                             </Link>
                         </div>
 
-                        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-none relative z-10">
+                        <nav className="flex-1 px-3 py-4 space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 
                                 if (item.subItems) {
                                     return (
-                                        <div key={idx} className="space-y-1">
-                                            <div className={`flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/10 bg-white/30 backdrop-blur-md'}`}>
+                                        <div key={idx} className="space-y-1.5">
+                                            <div className={`flex items-center justify-between px-3.5 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav backdrop-blur-md border ${
+                                                isActive 
+                                                    ? 'text-white bg-[#00008B] border-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
+                                                    : 'text-[#00008B] hover:text-[#00008B] hover:bg-white/70 bg-white/40 border-white/50 shadow-sm'
+                                            }`}>
+                                                {/* Direct Link to Portfolio Page */}
                                                 <Link 
                                                     href={item.href} 
-                                                    className="flex items-center flex-1 min-w-0"
+                                                    className="flex items-center flex-1 min-w-0 pr-2"
                                                 >
-                                                    <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/70 group-hover/nav:text-[#00008B] transition-colors'}`} />
-                                                    <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate">
+                                                    <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B] transition-colors'}`} />
+                                                    <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold">
                                                         {item.label}
                                                     </span>
                                                 </Link>
+
+                                                {/* Chevron Dropdown Toggle Button */}
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         e.stopPropagation();
-                                                        setIsPortfolioExpanded(!isPortfolioExpanded);
+                                                        setIsPortfolioExpanded(prev => !prev);
                                                     }}
-                                                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 text-[#00008B]/70 hover:text-[#00008B]"
+                                                    title="Alt Başlıkları Aç/Kapat"
+                                                    className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-1.5 rounded-xl flex items-center justify-center shrink-0 border ${
+                                                        isActive 
+                                                            ? 'hover:bg-white/20 text-white border-white/20' 
+                                                            : 'hover:bg-[#00008B]/10 text-[#00008B] border-blue-200/50 bg-white/40'
+                                                    }`}
                                                 >
-                                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isPortfolioExpanded ? 'rotate-180' : ''}`} />
+                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isPortfolioExpanded ? 'rotate-180 text-blue-600' : ''}`} />
                                                 </button>
                                             </div>
 
@@ -165,7 +180,7 @@ function DashboardShell({
                                                         initial={{ opacity: 0, height: 0 }}
                                                         animate={{ opacity: 1, height: "auto" }}
                                                         exit={{ opacity: 0, height: 0 }}
-                                                        className="pl-3 md:pl-2 space-y-1 overflow-hidden opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300"
+                                                        className="pl-3 md:pl-2 space-y-1.5 overflow-hidden opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300"
                                                     >
                                                         {item.subItems.map((sub, sIdx) => {
                                                             const SubIcon = sub.icon;
@@ -174,13 +189,13 @@ function DashboardShell({
                                                                 <Link
                                                                     key={sIdx}
                                                                     href={`/dashboard/portfolio?focus=${sub.focus}`}
-                                                                    className={`flex items-center gap-2.5 px-3.5 py-2.5 text-[10px] md:text-[11px] font-bold rounded-xl transition-all whitespace-nowrap backdrop-blur-md ${
+                                                                    className={`flex items-center gap-2.5 px-3.5 py-2.5 text-[10px] md:text-[11px] font-bold rounded-xl transition-all whitespace-nowrap backdrop-blur-md border ${
                                                                         isSubActive 
-                                                                            ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20' 
-                                                                            : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-white/60 bg-white/20'
+                                                                            ? 'bg-[#00008B] text-white border-[#00008B] shadow-md shadow-[#00008B]/20' 
+                                                                            : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-white/80 bg-white/30 border-white/40 shadow-xs'
                                                                     }`}
                                                                 >
-                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isSubActive ? 'text-white' : 'text-[#00008B]/70'}`} />
+                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isSubActive ? 'text-white' : 'text-[#00008B]/80'}`} />
                                                                     <span className="truncate">{sub.label}</span>
                                                                 </Link>
                                                             );
@@ -193,9 +208,13 @@ function DashboardShell({
                                 }
 
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/10 bg-white/30 backdrop-blur-md'}`}>
-                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/70 group-hover/nav:text-[#00008B] transition-colors'}`} />
-                                        <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate">
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav backdrop-blur-md border ${
+                                        isActive 
+                                            ? 'text-white bg-[#00008B] border-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
+                                            : 'text-[#00008B] hover:text-[#00008B] hover:bg-white/70 bg-white/40 border-white/50 shadow-sm'
+                                    }`}>
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B] transition-colors'}`} />
+                                        <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold">
                                             {item.label}
                                         </span>
                                     </Link>
