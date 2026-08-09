@@ -129,29 +129,6 @@ export default function EconomicCalendarPage() {
             const status = getActualVsForecastStatus(item);
             const isPulsing = isEventWithin30Minutes(item);
 
-            if (isPulsing) {
-                if (status === 'above') {
-                    return (
-                        <span className="font-black text-white bg-emerald-500 px-2.5 py-1 rounded-xl shadow-lg shadow-emerald-500/50 animate-pulse flex items-center justify-end gap-1 text-xs">
-                            <span>▲</span> {item.actual}
-                        </span>
-                    );
-                } else if (status === 'below') {
-                    return (
-                        <span className="font-black text-white bg-rose-500 px-2.5 py-1 rounded-xl shadow-lg shadow-rose-500/50 animate-pulse flex items-center justify-end gap-1 text-xs">
-                            <span>▼</span> {item.actual}
-                        </span>
-                    );
-                } else {
-                    return (
-                        <span className="font-black text-white bg-slate-700 px-2.5 py-1 rounded-xl shadow-lg shadow-slate-500/50 animate-pulse flex items-center justify-end gap-1 text-xs">
-                            {item.actual}
-                        </span>
-                    );
-                }
-            }
-
-            // Static after 30 minutes
             if (status === 'above') {
                 return (
                     <span className="font-black text-emerald-400 flex items-center justify-end gap-0.5">
