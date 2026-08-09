@@ -15,14 +15,17 @@ import {
     Database,
     FileText,
     Newspaper,
-    Bot,
     LayoutGrid,
-    Brain
+    ChevronDown,
+    Calendar,
+    Coins,
+    Activity
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { FinancialTicker } from "@/components/FinancialTicker";
 
 import { supabase } from "@/lib/supabase";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { UserProvider, useUser } from "@/components/providers/UserProvider";
 import { AuthComponent } from "@/components/ui/sign-up";
 import { ToastProvider } from "@/components/providers/ToastProvider";
@@ -34,9 +37,12 @@ function DashboardShell({
     children: React.ReactNode;
 }) {
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(true);
     const profileRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const currentFocus = searchParams ? searchParams.get("focus") : null;
 
     // Consume Context
     const { isAuthenticated, userName, avatarUrl, isDataLoaded } = useUser();
@@ -78,12 +84,23 @@ function DashboardShell({
         );
     }
 
+    const portfolioSubItems = [
+        { label: "Portföy Tablosu", focus: "table", icon: FileText },
+        { label: "Bilanço Takvimi", focus: "earnings", icon: Calendar },
+        { label: "Temettü Takvimi", focus: "dividends", icon: Coins },
+        { label: "Fiyat Analizi (52H)", focus: "extremes", icon: Activity },
+        { label: "Varlık Dağılımı", focus: "distribution", icon: PieChart }
+    ];
+
     const menuItems = [
         { icon: Home, label: "Ana Sayfa", href: "/dashboard" },
-        { icon: PieChart, label: "Portföyüm", href: "/dashboard/portfolio" },
+        { 
+            icon: PieChart, 
+            label: "Portföyüm", 
+            href: "/dashboard/portfolio",
+            subItems: portfolioSubItems 
+        },
         { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis" },
-        { icon: Brain, label: "Karakter Testi", href: "/dashboard/behavioral" },
-        { icon: Bot, label: "FinAi Robotum", href: "/dashboard/reports" },
         { icon: LayoutGrid, label: "Varlıklar", href: "/dashboard/data" },
         { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },
         { icon: Settings, label: "Ayarlar", href: "/dashboard/settings" }
@@ -99,10 +116,10 @@ function DashboardShell({
             <div className="relative z-10 w-full flex mx-auto max-w-[1920px]">
                 <div className="flex-1 flex bg-transparent">
                     
-                    {/* Sidebar (Premium Frosted Glass) */}
-                    <aside className="w-32 md:w-24 md:hover:w-72 border-r border-white/40 premium-frost flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen">
-                        <div className="absolute inset-0 bg-white/5 pointer-events-none" />
-                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/10 relative z-10">
+                    {/* Sidebar (Premium Frosted Glass & Translucent Aesthetic) */}
+                    <aside className="w-36 md:w-24 md:hover:w-80 border-r border-white/50 bg-white/40 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(0,0,139,0.08)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden">
+                        <div className="absolute inset-0 bg-white/10 pointer-events-none" />
+                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/20 relative z-10">
                             <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
                                 <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.1)]" />
                                 <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-0 md:translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap">
@@ -111,12 +128,73 @@ function DashboardShell({
                             </Link>
                         </div>
 
-                        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto scrollbar-none">
+                        <nav className="flex-1 px-3 py-4 space-y-2 overflow-y-auto scrollbar-none relative z-10">
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
+                                
+                                if (item.subItems) {
+                                    return (
+                                        <div key={idx} className="space-y-1">
+                                            <div className={`flex items-center justify-between px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/10 bg-white/30 backdrop-blur-md'}`}>
+                                                <Link 
+                                                    href={item.href} 
+                                                    className="flex items-center flex-1 min-w-0"
+                                                >
+                                                    <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/70 group-hover/nav:text-[#00008B] transition-colors'}`} />
+                                                    <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate">
+                                                        {item.label}
+                                                    </span>
+                                                </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setIsPortfolioExpanded(!isPortfolioExpanded);
+                                                    }}
+                                                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1 text-[#00008B]/70 hover:text-[#00008B]"
+                                                >
+                                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isPortfolioExpanded ? 'rotate-180' : ''}`} />
+                                                </button>
+                                            </div>
+
+                                            {/* Sub Menu Items */}
+                                            <AnimatePresence>
+                                                {isPortfolioExpanded && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: "auto" }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        className="pl-3 md:pl-2 space-y-1 overflow-hidden opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300"
+                                                    >
+                                                        {item.subItems.map((sub, sIdx) => {
+                                                            const SubIcon = sub.icon;
+                                                            const isSubActive = pathname === "/dashboard/portfolio" && currentFocus === sub.focus;
+                                                            return (
+                                                                <Link
+                                                                    key={sIdx}
+                                                                    href={`/dashboard/portfolio?focus=${sub.focus}`}
+                                                                    className={`flex items-center gap-2.5 px-3.5 py-2.5 text-[10px] md:text-[11px] font-bold rounded-xl transition-all whitespace-nowrap backdrop-blur-md ${
+                                                                        isSubActive 
+                                                                            ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20' 
+                                                                            : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-white/60 bg-white/20'
+                                                                    }`}
+                                                                >
+                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 ${isSubActive ? 'text-white' : 'text-[#00008B]/70'}`} />
+                                                                    <span className="truncate">{sub.label}</span>
+                                                                </Link>
+                                                            );
+                                                        })}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    );
+                                }
+
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/5'}`}>
-                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/60 group-hover/nav:text-[#00008B] transition-colors'}`} />
+                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${isActive ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.3)]' : 'text-[#00008B] hover:text-[#00008B] hover:bg-blue-500/10 bg-white/30 backdrop-blur-md'}`}>
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/70 group-hover/nav:text-[#00008B] transition-colors'}`} />
                                         <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate">
                                             {item.label}
                                         </span>
@@ -197,10 +275,14 @@ function DashboardShell({
     );
 }
 
+import { Suspense } from "react";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     return (
         <ToastProvider>
-            <DashboardShell>{children}</DashboardShell>
+            <Suspense fallback={null}>
+                <DashboardShell>{children}</DashboardShell>
+            </Suspense>
         </ToastProvider>
     );
 }

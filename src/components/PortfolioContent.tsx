@@ -8,6 +8,7 @@ import { PortfolioService, Asset } from "@/lib/portfolio-service";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import { useUser } from "@/components/providers/UserProvider";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { HalkarzDividendItem } from "@/app/api/halkarz-dividends/route";
 import { HalkarzEarningsItem } from "@/app/api/halkarz-earnings/route";
 import { generateDynamicAnalysis } from "@/utils/riskAnalyzer";
@@ -226,7 +227,16 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
+    const searchParams = useSearchParams();
+    const focusQuery = searchParams ? searchParams.get("focus") : null;
+
     const [focusedWidget, setFocusedWidget] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (focusQuery) {
+            setFocusedWidget(focusQuery);
+        }
+    }, [focusQuery]);
     const [distributionView, setDistributionView] = useState<'donut' | 'heatmap' | 'sector'>('donut');
     const [hoveredSlice, setHoveredSlice] = useState<string | null>(null);
     const [showGuide, setShowGuide] = useState(false);
