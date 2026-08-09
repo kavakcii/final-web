@@ -154,33 +154,9 @@ export function BalanceGrowthChartWidget() {
                         </div>
                     </div>
 
-                    {/* Zaman Filtresi */}
-                    <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                        {(['1W', '1M', '3M', 'YTD', '1Y'] as HistoryRange[]).map((range) => {
-                            const unlocked = isRangeUnlocked(range);
-                            const isActive = timeRange === range;
-                            return (
-                                <button
-                                    key={range}
-                                    onClick={() => { if (unlocked) setTimeRange(range); }}
-                                    title={
-                                        unlocked
-                                            ? RANGE_LABELS[range]
-                                            : `${RANGE_DAYS[range]} günlük veri birikince açılır`
-                                    }
-                                    className={`relative px-2.5 py-1 text-[10px] font-extrabold rounded-xl transition-all flex items-center gap-1 ${
-                                        isActive && unlocked
-                                            ? 'bg-[#00008B] text-white shadow-sm'
-                                            : unlocked
-                                                ? 'text-slate-500 hover:text-[#00008B]'
-                                                : 'text-slate-300 cursor-not-allowed'
-                                    }`}
-                                >
-                                    {!unlocked && <Lock className="w-2.5 h-2.5" />}
-                                    {range}
-                                </button>
-                            );
-                        })}
+                    {/* Tüm Günler Etiketi */}
+                    <div className="flex items-center gap-1 text-[10px] font-extrabold text-[#00008B] bg-[#00008B]/5 px-3 py-1.5 rounded-2xl border border-[#00008B]/10">
+                        <span>Tüm Günler</span>
                     </div>
                 </div>
 

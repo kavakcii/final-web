@@ -115,12 +115,16 @@ export function FinAiYesterdayReportWidget() {
         let impactPct = totalGainSum > 0 ? Math.round((driverGainSum / totalGainSum) * 100) : 70;
         if (impactPct <= 0 || impactPct > 100) impactPct = 70;
 
+        const todayDay = new Date().getDay();
+        const isMarketClosed = todayDay === 0 || todayDay === 6 || (diffValue === 0 && diffPercent === 0);
+
         return getRotatedDailyNarrative({
             diffValue: Math.abs(diffValue),
             diffPercent: Math.abs(diffPercent),
             isPositive,
             topDriversNames: names || 'ana varlıklarınız',
-            impactPct
+            impactPct,
+            isMarketClosed
         });
     }, [myAssets, prices, yesterdayBalance]);
 
@@ -151,9 +155,9 @@ export function FinAiYesterdayReportWidget() {
 
     return (
         <div className="w-full bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[320px]">
-            <div className="flex flex-col justify-between h-full">
+            <div className="flex flex-col justify-between h-full space-y-4">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shadow-inner">
                             <Sparkles className="w-4.5 h-4.5 text-[#00008B] animate-pulse" />
@@ -182,19 +186,19 @@ export function FinAiYesterdayReportWidget() {
                     </div>
                 </div>
 
-                {/* Loading or Narrative Body */}
+                {/* Loading or Narrative Body (Filled Height) */}
                 {!isDataLoaded && loading ? (
-                    <div className="py-12 flex flex-col items-center justify-center gap-3">
+                    <div className="flex-1 py-12 flex flex-col items-center justify-center gap-3">
                         <Loader2 className="w-7 h-7 text-[#00008B] animate-spin" />
                         <span className="text-xs font-bold text-slate-500">FinAi Portföy Analizini Hazırlıyor...</span>
                     </div>
                 ) : (
-                    <div className="bg-gradient-to-br from-[#00008B] via-[#04047a] to-[#010142] text-white rounded-2xl p-5.5 shadow-md border border-[#00008B] relative overflow-hidden">
+                    <div className="flex-1 flex flex-col justify-center bg-gradient-to-br from-[#00008B] via-[#04047a] to-[#010142] text-white rounded-2xl p-6 shadow-md border border-[#00008B] relative overflow-hidden min-h-[180px]">
                         {/* Subtle inner background ambient light */}
-                        <div className="absolute -top-12 -right-12 w-48 h-48 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
-                        <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -top-12 -right-12 w-56 h-56 bg-blue-400/10 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute -bottom-12 -left-12 w-56 h-56 bg-emerald-400/10 rounded-full blur-2xl pointer-events-none" />
 
-                        <p className="text-xs font-semibold leading-relaxed text-blue-50/95 tracking-wide relative z-10">
+                        <p className="text-sm font-medium leading-relaxed text-blue-50/95 tracking-wide relative z-10">
                             {narrativeToDisplay}
                         </p>
                     </div>
