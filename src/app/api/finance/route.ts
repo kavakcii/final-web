@@ -9,12 +9,25 @@ const yahooFinance = new YahooFinanceClass({ suppressNotices: ['yahooSurvey'] })
 
 import { fetchLiveCommoditiesAndCrypto } from '@/lib/commodities-crypto';
 
+// Global Server-Side Price Cache (45-second memory storage)
+const globalServerPriceCache = new Map<string, { data: any; timestamp: number }>();
+const SERVER_CACHE_TTL_MS = 45 * 1000;
+
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const symbolsParam = searchParams.get('symbols');
 
     if (!symbolsParam) {
         return NextResponse.json({ error: 'Symbols parameter is required' }, { status: 400 });
+    }
+
+    const cacheKey = symbolsParam.toUpperCase().trim();
+    const now = Date.now();
+    const cached = globalServerPriceCache.get(cacheKey);
+
+    // Fast-return if cache is fresh
+    if (cached && (now - cached.timestamp < SERVER_CACHE_TTL_MS)) {
+        return NextResponse.json({ results: cached.data, isCached: true });
     }
 
     const rawSymbols = symbolsParam.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -162,6 +175,10 @@ export async function GET(request: Request) {
         } catch (e) {
             console.error('TEFAS fetch error:', e);
         }
+    }
+
+    if (results.length > 0) {
+        globalServerPriceCache.set(cacheKey, { data: results, timestamp: now });
     }
 
     return NextResponse.json({ results });

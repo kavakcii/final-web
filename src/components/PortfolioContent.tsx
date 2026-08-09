@@ -214,8 +214,28 @@ const getAssetName = (symbol: string): string => {
 export default function PortfolioPage() {
     const { refreshDashboardData } = useUser();
     const [assets, setAssets] = useState<Asset[]>([]);
-    const [prices, setPrices] = useState<Record<string, number>>({});
-    const [priceExtremes, setPriceExtremes] = useState<Record<string, {low: number, high: number, current: number, target?: number, rating?: string}>>({});
+    
+    // Instant 0-second Client-Side LocalStorage Price Cache
+    const [prices, setPrices] = useState<Record<string, number>>(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('final_portfolio_prices_cache');
+                if (cached) return JSON.parse(cached);
+            } catch (e) {}
+        }
+        return {};
+    });
+
+    const [priceExtremes, setPriceExtremes] = useState<Record<string, {low: number, high: number, current: number, target?: number, rating?: string}>>(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('final_portfolio_extremes_cache');
+                if (cached) return JSON.parse(cached);
+            } catch (e) {}
+        }
+        return {};
+    });
+
     const [earningsDates, setEarningsDates] = useState<Record<string, number>>({});
     const [halkarzDividends, setHalkarzDividends] = useState<HalkarzDividendItem[]>([]);
     const [halkarzEarnings, setHalkarzEarnings] = useState<HalkarzEarningsItem[]>([]);
@@ -731,6 +751,11 @@ export default function PortfolioPage() {
                         setPrices(priceMap);
                         setPriceExtremes(extremesMap);
                         setEarningsDates(earningsMap);
+
+                        try {
+                            localStorage.setItem('final_portfolio_prices_cache', JSON.stringify(priceMap));
+                            localStorage.setItem('final_portfolio_extremes_cache', JSON.stringify(extremesMap));
+                        } catch (e) {}
                     }
                 } catch (e) {
                     console.error("Network/Parse Error:", e);
