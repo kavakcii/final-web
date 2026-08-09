@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
 
 // Import new Tubelight Navbar and Icons
 import { TubelightNavbar } from "@/components/ui/tubelight-navbar";
-import { Home, Compass, Info, ShieldCheck } from "lucide-react";
+import { Home, Compass, Info, ShieldCheck, Users } from "lucide-react";
 import { Menu as LucideMenu, X } from "lucide-react";
 import { FinAiLogo } from "@/components/ui/logo";
 
@@ -30,9 +30,10 @@ export default function Navbar() {
     }, []);
 
     const navItems = [
-        { name: 'Ana Sayfa', url: '#hero', icon: Home },
-        { name: 'Özellikler', url: '#features', icon: Compass },
-        { name: 'Merak Ettikleriniz', url: '#faq', icon: Info },
+        { name: 'Ana Sayfa', url: '/#hero', icon: Home },
+        { name: 'Özellikler', url: '/#features', icon: Compass },
+        { name: 'Hakkımızda', url: '/about', icon: Users },
+        { name: 'Merak Ettikleriniz', url: '/#faq', icon: Info },
     ];
 
     if (isAuthPage) return null;

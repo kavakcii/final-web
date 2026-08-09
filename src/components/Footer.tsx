@@ -29,9 +29,9 @@ export default function Footer() {
                     <div>
                         <h3 className="font-bold mb-4 text-white">Şirket</h3>
                         <ul className="space-y-2 text-sm text-white/80 font-medium">
-                            <li><Link href="#hero" className="hover:underline transition-colors text-white/80 hover:text-white">Hakkımızda</Link></li>
-                            <li><Link href="#" className="hover:underline transition-colors text-white/80 hover:text-white">Kullanım Şartları</Link></li>
-                            <li><Link href="#" className="hover:underline transition-colors text-white/80 hover:text-white">KVKK Aydınlatma Metni</Link></li>
+                            <li><Link href="/about" className="hover:underline transition-colors text-white/80 hover:text-white">Hakkımızda</Link></li>
+                            <li><Link href="/legal/terms" className="hover:underline transition-colors text-white/80 hover:text-white">Kullanım Şartları</Link></li>
+                            <li><Link href="/legal/kvkk" className="hover:underline transition-colors text-white/80 hover:text-white">KVKK Aydınlatma Metni</Link></li>
                         </ul>
                     </div>
 
