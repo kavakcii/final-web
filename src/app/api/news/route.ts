@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
-import * as cheerio from 'cheerio';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -18,13 +17,11 @@ export interface EnrichedNewsItem {
     sentiment: 'bullish' | 'bearish' | 'neutral';
     impact: 'critical' | 'high' | 'medium';
     tickers: string[];
-    aiSummary?: string;
-    imageUrl?: string;
     readTime?: string;
     isHot?: boolean;
 }
 
-// Memory Cache with 3 minutes TTL for high-speed response
+// Memory Cache with 3 minutes TTL
 let cachedNews: { timestamp: number; items: EnrichedNewsItem[]; userId?: string | null } | null = null;
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
@@ -57,7 +54,7 @@ const KNOWN_TICKERS = [
     'ISCTR', 'YKBNK', 'KCHOL', 'SAHOL', 'PETKM', 'EKGYO', 'ENKAI', 'HEKTS', 'SASA',
     'TTKOM', 'TCELL', 'TOASO', 'ARCLK', 'VESTL', 'KOZAL', 'KOZAA', 'ASTOR', 'KONTUR',
     'ALARK', 'ODAS', 'PGSUS', 'DOAS', 'GUBRF', 'MGROS', 'CIMSA', 'ISGYO', 'HALKB',
-    'VAKBN', 'SOKM', 'AEFES', 'TABGD', 'REEDR', 'EUPWR', 'CWENE', 'ALFAS', 'BTC', 'ETH', 'ALTIN', 'BRENT'
+    'VAKBN', 'SOKM', 'AEFES', 'TABGD', 'REEDR', 'EUPWR', 'CWENE', 'ALFAS', 'BTC', 'ETH', 'ALTIN', 'BRENT', 'XAU', 'XAG'
 ];
 
 function extractTickers(text: string): string[] {
@@ -80,7 +77,7 @@ function detectSentiment(title: string, desc: string): 'bullish' | 'bearish' | '
     const bullishWords = [
         'rekor', 'yükseliş', 'artış', 'kar açıkladı', 'büyüme', 'kazanç', 'anlaşma', 'ihale',
         'zirve', 'fırladı', 'tırmandı', 'olumlu', 'temettü', 'hedef yükseltti', 'ralli', 'al tavsiyesi',
-        'güçlendi', 'güçlü', 'arttı', 'sıçradı', 'fırsat', 'beklentiyi aştı', 'halka arz'
+        'güçlendi', 'güçlü', 'arttı', 'sıçradı', 'fırsat', 'beklentiyi aştı', 'halka arz', 'sözleşme imzaladı'
     ];
     
     const bearishWords = [
@@ -100,11 +97,11 @@ function detectSentiment(title: string, desc: string): 'bullish' | 'bearish' | '
     return 'neutral';
 }
 
-function categorizeNews(title: string, desc: string, source: string): { category: EnrichedNewsItem['category']; label: string } {
+function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNewsItem['category'], defaultLabel: string): { category: EnrichedNewsItem['category']; label: string } {
     const text = `${title} ${desc}`.toLowerCase();
 
-    if (text.includes('kap ') || text.includes('bildirim') || text.includes('halka arz') || text.includes('pay alım') || text.includes('özel durum')) {
-        return { category: 'kap', label: 'KAP Bildirimleri' };
+    if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc') || text.includes('altcoin')) {
+        return { category: 'crypto', label: 'Kripto Varlıklar' };
     }
     if (text.includes('altın') || text.includes('petrol') || text.includes('brent') || text.includes('gümüş') || text.includes('emtia') || text.includes('ons')) {
         return { category: 'commodity', label: 'Altın & Emtia' };
@@ -112,14 +109,14 @@ function categorizeNews(title: string, desc: string, source: string): { category
     if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq') || text.includes('s&p') || text.includes('ecb') || text.includes('küresel')) {
         return { category: 'global', label: 'Küresel Piyasalar' };
     }
-    if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc')) {
-        return { category: 'crypto', label: 'Kripto' };
+    if (text.includes('kap ') || text.includes('bildirim') || text.includes('halka arz') || text.includes('pay alım') || text.includes('özel durum')) {
+        return { category: 'kap', label: 'KAP & Şirketler' };
     }
     if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe')) {
         return { category: 'macro', label: 'Makro Ekonomi' };
     }
 
-    return { category: 'bist', label: 'Borsa İstanbul' };
+    return { category: defaultCategory, label: defaultLabel };
 }
 
 export async function GET(request: Request) {
@@ -146,7 +143,7 @@ export async function GET(request: Request) {
             });
         }
 
-        // 1. Fetch User Portfolio symbols
+        // 1. Kullanıcının Portföyündeki Hisse ve Varlıkları Çek
         let userSymbols: string[] = [];
         if (userId) {
             try {
@@ -162,14 +159,27 @@ export async function GET(request: Request) {
             }
         }
 
-        // 2. 3 SAYGIN & RESMİ HABER KAYNAĞI:
-        // 1: Bloomberg HT (Türkiye'nin 1 numaralı ekonomi kanalı)
-        // 2: AA Finans / Ekonomi (Anadolu Ajansı Resmi Ekonomi & Şirket Servisi)
-        // 3: Ekonomim / Dünya Gazetesi (Türkiye'nin köklü ekonomi gazetesi)
-        const primaryFeeds = [
-            { source: 'Bloomberg HT', url: 'https://www.bloomberght.com/rss' },
-            { source: 'AA Finans', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
-            { source: 'Ekonomim', url: 'https://www.ekonomim.com/rss' }
+        // 2. KATEGORİ BAZLI 3'ER GÜVENİLİR & ENGELSİZ HABER KAYNAĞI
+        const verifiedFeeds: { source: string; category: EnrichedNewsItem['category']; label: string; url: string }[] = [
+            // Borsa İstanbul & Şirketler (3 Kaynak)
+            { source: 'AA Finans', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
+            { source: 'Ekonomim', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.ekonomim.com/rss' },
+            { source: 'Dünya Gazetesi', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.dunya.com/rss' },
+
+            // Makro Ekonomi & Para Politikası (3 Kaynak)
+            { source: 'Bloomberg HT', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.bloomberght.com/rss' },
+            { source: 'AA Ekonomi', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
+            { source: 'Ekonomim', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.ekonomim.com/rss' },
+
+            // Küresel Piyasalar (3 Kaynak)
+            { source: 'AA Dünya', category: 'global', label: 'Küresel Piyasalar', url: 'https://www.aa.com.tr/tr/rss/default?cat=dunya' },
+            { source: 'Dünya Gazetesi', category: 'global', label: 'Küresel Piyasalar', url: 'https://www.dunya.com/rss' },
+            { source: 'Bloomberg HT', category: 'global', label: 'Küresel Piyasalar', url: 'https://www.bloomberght.com/rss' },
+
+            // Kripto Varlıklar (3 Kaynak)
+            { source: 'BTCHaber', category: 'crypto', label: 'Kripto Varlıklar', url: 'https://www.btchaber.com/feed/' },
+            { source: 'Uzmancoin', category: 'crypto', label: 'Kripto Varlıklar', url: 'https://uzmancoin.com/feed/' },
+            { source: 'Koin Bülteni', category: 'crypto', label: 'Kripto Varlıklar', url: 'https://koinbulteni.com/feed/' }
         ];
 
         const parser = new XMLParser({
@@ -182,7 +192,7 @@ export async function GET(request: Request) {
         const allItems: EnrichedNewsItem[] = [];
 
         const results = await Promise.allSettled(
-            primaryFeeds.map(async (feed) => {
+            verifiedFeeds.map(async (feed) => {
                 const res = await fetch(feed.url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -206,14 +216,12 @@ export async function GET(request: Request) {
 
                     const tickers = extractTickers(`${rawTitle} ${cleanDesc}`);
                     const sentiment = detectSentiment(rawTitle, cleanDesc);
-                    const catInfo = categorizeNews(rawTitle, cleanDesc, feed.source);
+                    const catInfo = categorizeNews(rawTitle, cleanDesc, feed.category, feed.label);
 
-                    let finalCategory = catInfo.category;
-                    let finalCategoryLabel = catInfo.label;
-
+                    // Portföy eşleşmesi: Kullanıcının portföyündeki hisselerden biri bu haberde geçiyor mu?
+                    let isPortfolioMatch = false;
                     if (userSymbols.length > 0 && tickers.some(t => userSymbols.includes(t))) {
-                        finalCategory = 'portfolio';
-                        finalCategoryLabel = 'Portföyüm';
+                        isPortfolioMatch = true;
                     }
 
                     let baseSlug = slugify(rawTitle);
@@ -233,13 +241,13 @@ export async function GET(request: Request) {
                         pubDate: pubDate,
                         source: feed.source,
                         description: cleanDesc || rawTitle,
-                        category: finalCategory,
-                        categoryLabel: finalCategoryLabel,
+                        category: isPortfolioMatch ? 'portfolio' : catInfo.category,
+                        categoryLabel: isPortfolioMatch ? 'Portföyüm' : catInfo.label,
                         sentiment: sentiment,
-                        impact: (finalCategory === 'kap' || sentiment !== 'neutral') ? 'high' : 'medium',
+                        impact: (catInfo.category === 'kap' || isPortfolioMatch || sentiment !== 'neutral') ? 'high' : 'medium',
                         tickers: tickers,
                         readTime: '3 dk okuma',
-                        isHot: sentiment !== 'neutral' || finalCategory === 'kap'
+                        isHot: isPortfolioMatch || sentiment !== 'neutral'
                     };
 
                     return enriched;
@@ -258,7 +266,7 @@ export async function GET(request: Request) {
             }
         }
 
-        // Sort by date newest first
+        // Sort chronologically (En son gelişen haber en üstte)
         allItems.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
         // Update Cache

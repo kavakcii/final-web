@@ -106,18 +106,21 @@ function NewsContent() {
         });
     }, [news, selectedCategory]);
 
-    // Separate Featured Hero Stories and Stream News
-    const featuredStory = useMemo(() => {
-        return news.find(n => n.isHot || n.impact === 'high') || news[0];
-    }, [news]);
+    // Separate Featured Hero Stories and Stream News (Portföyde olan hisselerin en son haberleri öncelikli)
+    const { featuredStory, subStories } = useMemo(() => {
+        const portfolioMatches = news.filter(n => n.category === 'portfolio');
+        const otherHotNews = news.filter(n => n.category !== 'portfolio');
 
-    const subStories = useMemo(() => {
-        return news.filter(n => n.id !== featuredStory?.id).slice(0, 2);
-    }, [news, featuredStory]);
+        let pool = [...portfolioMatches, ...otherHotNews];
+        const main = pool[0] || null;
+        const subs = pool.slice(1, 3);
+
+        return { featuredStory: main, subStories: subs };
+    }, [news]);
 
     const streamNews = useMemo(() => {
         if (selectedCategory === 'all') {
-            const featuredIds = new Set([featuredStory?.id, ...subStories.map(s => s.id)]);
+            const featuredIds = new Set([featuredStory?.id, ...subStories.map(s => s.id)].filter(Boolean));
             return filteredNews.filter(n => !featuredIds.has(n.id));
         }
         return filteredNews;

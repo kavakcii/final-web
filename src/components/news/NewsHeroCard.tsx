@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, TrendingDown, Minus, Clock, ExternalLink, FileText, ArrowRight } from "lucide-react";
+import { Sparkles, TrendingUp, TrendingDown, Minus, Clock, FileText, ArrowRight } from "lucide-react";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 
 interface NewsHeroCardProps {
@@ -36,7 +36,7 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="lg:col-span-7 bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-[#00008B]/25 relative overflow-hidden flex flex-col justify-between group border border-white/10"
             >
-                {/* Background Ambient Glow & Patterns */}
+                {/* Background Ambient Glow */}
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
 
