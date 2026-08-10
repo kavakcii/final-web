@@ -117,19 +117,40 @@ function detectSentiment(title: string, desc: string): 'bullish' | 'bearish' | '
 function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNewsItem['category'], defaultLabel: string): { category: EnrichedNewsItem['category']; label: string } {
     const text = `${title} ${desc}`.toLowerCase();
 
+    // 1. Kripto
     if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc') || text.includes('altcoin')) {
         return { category: 'crypto', label: 'Kripto Varlıklar' };
     }
+    // 2. KAP & Resmi Şirket Bildirimleri (AA Finans & Borsa Masası)
+    if (
+        text.includes('kap ') || 
+        text.includes('bildirim') || 
+        text.includes('halka arz') || 
+        text.includes('pay alım') || 
+        text.includes('özel durum') || 
+        text.includes('sözleşme') || 
+        text.includes('ihale') || 
+        text.includes('genel kurul') || 
+        text.includes('sermaye artır') || 
+        text.includes('kar payı') || 
+        text.includes('temettü') || 
+        text.includes('finansal rapor') ||
+        text.includes('milyon tl') ||
+        text.includes('milyar tl') ||
+        text.includes('ortaklık')
+    ) {
+        return { category: 'kap', label: 'KAP & Şirketler' };
+    }
+    // 3. Altın & Emtia
     if (text.includes('altın') || text.includes('petrol') || text.includes('brent') || text.includes('gümüş') || text.includes('emtia') || text.includes('ons')) {
         return { category: 'commodity', label: 'Altın & Emtia' };
     }
+    // 4. Küresel Piyasalar
     if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq') || text.includes('s&p') || text.includes('ecb') || text.includes('küresel') || text.includes('lübnan') || text.includes('israil') || text.includes('gazze') || text.includes('abd ')) {
         return { category: 'global', label: 'Küresel Piyasalar' };
     }
-    if (text.includes('kap ') || text.includes('bildirim') || text.includes('halka arz') || text.includes('pay alım') || text.includes('özel durum')) {
-        return { category: 'kap', label: 'KAP & Şirketler' };
-    }
-    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe') || text.includes('bakan şimşek')) {
+    // 5. Makro Ekonomi
+    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe') || text.includes('bakan şimşek') || text.includes('sanayi üretim')) {
         return { category: 'macro', label: 'Makro Ekonomi' };
     }
 

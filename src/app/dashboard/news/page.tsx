@@ -141,7 +141,7 @@ function NewsContent() {
     }, [streamNews, currentPage]);
 
     const kapNewsOnly = useMemo(() => {
-        return news.filter(n => n.category === 'kap' || n.category === 'bist');
+        return news.filter(n => n.category === 'kap' || (n.category === 'bist' && n.tickers && n.tickers.length > 0));
     }, [news]);
 
     // Top Breaking news ticker items (3 items filling the full horizontal width)
