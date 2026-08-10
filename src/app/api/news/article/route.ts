@@ -3,6 +3,23 @@ import * as cheerio from 'cheerio';
 
 export const dynamic = 'force-dynamic';
 
+function decodeHtmlEntities(str: string): string {
+    if (!str) return '';
+    return str
+        .replace(/&#8217;|&#39;|&apos;/g, "'")
+        .replace(/&#8216;/g, "'")
+        .replace(/&#8220;|&#8221;|&quot;/g, '"')
+        .replace(/&#8230;/g, '...')
+        .replace(/&#8211;|&#8212;/g, '-')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
+        .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+        .trim();
+}
+
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
@@ -29,10 +46,11 @@ export async function GET(request: Request) {
         $('script, style, iframe, nav, footer, header, aside, form, .ads, .sidebar, .comments, .social-share, .related, .tags, .author-info, [role="navigation"], [role="banner"]').remove();
 
         // 2. Başlık ve görsel
-        const title = $('h1').first().text().trim() || 
-                      $('meta[property="og:title"]').attr('content') || 
-                      $('title').text().trim() || "FinAi Ekonomi Masası Özel Haberi";
+        let rawTitle = $('h1').first().text().trim() || 
+                       $('meta[property="og:title"]').attr('content') || 
+                       $('title').text().trim() || "FinAi Ekonomi Masası Özel Haberi";
 
+        const title = decodeHtmlEntities(rawTitle);
         const image = $('meta[property="og:image"]').attr('content') || $('article img').first().attr('src') || null;
 
         // 3. Ham Paragrafları ve Tabloları ayıkla
@@ -44,9 +62,9 @@ export async function GET(request: Request) {
             $(tbl).find('tr').each((_, tr) => {
                 const cells = $(tr).find('th, td').map((_, cell) => $(cell).text().trim().replace(/\s+/g, ' ')).get().filter(Boolean);
                 if (cells.length >= 2) {
-                    rows.push(`• ${cells.join(' : ')}`);
+                    rows.push(`• ${decodeHtmlEntities(cells.join(' : '))}`);
                 } else if (cells.length === 1 && cells[0].length > 10) {
-                    rows.push(`📌 ${cells[0]}`);
+                    rows.push(`📌 ${decodeHtmlEntities(cells[0])}`);
                 }
             });
             if (rows.length > 0) {
@@ -56,7 +74,15 @@ export async function GET(request: Request) {
 
         // Paragrafları tara
         $('article p, main p, .content p, .news-detail p, .news-content p, .story-body p, p').each((_, el) => {
-            const text = $(el).text().trim().replace(/\s+/g, ' ');
+            let text = $(el).text().trim().replace(/\s+/g, ' ');
+            text = decodeHtmlEntities(text);
+
+            // Bot imza metinlerini temizle
+            text = text
+                .replace(/isimli makale.*?tarafından hazırlanmış.*?yayınlanmıştır\.?/gi, '')
+                .replace(/Haberin devamı için tıklayınız\.?/gi, '')
+                .trim();
+
             if (text.length > 35 && !text.toLowerCase().includes('çerez') && !text.toLowerCase().includes('abone') && !text.toLowerCase().includes('tıklayın') && !paragraphs.includes(text)) {
                 paragraphs.push(text);
             }
@@ -66,9 +92,9 @@ export async function GET(request: Request) {
         if (paragraphs.length === 0) {
             const metaDesc = $('meta[property="og:description"]').attr('content') || $('meta[name="description"]').attr('content');
             if (metaDesc) {
-                paragraphs.push(metaDesc);
+                paragraphs.push(decodeHtmlEntities(metaDesc));
             } else {
-                paragraphs.push("Bu bildirimin detayları FinAi masası tarafından hazırlanmaktadır. İlgili KAP açıklamasına resmi kaynaklardan ulaşabilirsiniz.");
+                paragraphs.push("Bu haberin ayrıntıları FinAi masası tarafından hazırlanmaktadır.");
             }
         }
 

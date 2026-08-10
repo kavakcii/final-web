@@ -26,6 +26,75 @@ export interface EnrichedNewsItem {
 let cachedNews: { timestamp: number; items: EnrichedNewsItem[]; userId?: string | null } | null = null;
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
+// 1. Kapsamlı HTML Entity Decoder
+function decodeHtmlEntities(str: string): string {
+    if (!str) return '';
+    return str
+        .replace(/&#8217;|&#39;|&apos;/g, "'")
+        .replace(/&#8216;/g, "'")
+        .replace(/&#8220;|&#8221;|&quot;/g, '"')
+        .replace(/&#8230;/g, '...')
+        .replace(/&#8211;|&#8212;/g, '-')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec))
+        .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+        .trim();
+}
+
+// 2. Akıllı Başlık Temizleyici & Normalizasyon
+function cleanTitleText(title: string): string {
+    let clean = decodeHtmlEntities(title);
+    
+    // Gürültülü ön ekleri temizle
+    clean = clean
+        .replace(/^(?:SON DAKİKA|FLAŞ|HABERLER|HABER|DUYURU|ÖZEL HABER|CANLI)\s*[-:–]\s*/i, '')
+        .replace(/^(?:BİLGİLENDİRME|DİKKAT)\s*[-:–]\s*/i, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    // Tamamı BÜYÜK HARFLERLE yazılmışsa düzelt (Örn: "FED FAİZ KARARINI AÇIKLADI" -> "Fed Faiz Kararını Açıkladı")
+    if (clean.length > 15 && clean === clean.toUpperCase() && /[A-ZĞÜŞİÖÇ]/.test(clean)) {
+        clean = clean
+            .toLowerCase()
+            .split(' ')
+            .map(word => {
+                if (word.length === 0) return '';
+                // BIST kodları veya kısaltmalar büyük kalsın
+                if (['abd', 'fed', 'tcmb', 'bist', 'kap', 'thyao', 'asels', 'btc', 'eth', 'tl', 'usd', 'eur'].includes(word)) {
+                    return word.toUpperCase();
+                }
+                return word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1);
+            })
+            .join(' ');
+    }
+
+    return clean;
+}
+
+// 3. Akıllı Açıklama ve Çöp Metin Temizleyici
+function cleanDescriptionText(desc: string): string {
+    let clean = decodeHtmlEntities(desc);
+
+    // HTML taglerini kaldır
+    clean = clean.replace(/<[^>]*>/g, ' ');
+
+    // RSS sitelerinin otomatik eklediği imza ve bot çöp metinlerini temizle
+    clean = clean
+        .replace(/isimli makale.*?tarafından hazırlanmış.*?yayınlanmıştır\.?/gi, '')
+        .replace(/Haberin devamı için tıklayınız\.?/gi, '')
+        .replace(/Detaylar haberimizde\.?/gi, '')
+        .replace(/Ayrıntılar için tıklayın\.?/gi, '')
+        .replace(/Kaynak:.*$/gi, '')
+        .replace(/Yazının devamı.*$/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return clean;
+}
+
 function slugify(text: string): string {
     const trMap: Record<string, string> = {
         'çÇ': 'c',
@@ -36,7 +105,7 @@ function slugify(text: string): string {
         'öÖ': 'o'
     };
 
-    let slug = text;
+    let slug = decodeHtmlEntities(text);
     for (const key of Object.keys(trMap)) {
         slug = slug.replace(new RegExp(`[${key}]`, 'g'), trMap[key]);
     }
@@ -229,11 +298,14 @@ export async function GET(request: Request) {
                     const link = (item.link || '').trim();
                     const pubDate = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString();
                     const rawDesc = (item.description || '').trim();
-                    const cleanDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
 
-                    const catInfo = categorizeNews(rawTitle, cleanDesc, feed.category, feed.label);
-                    const affected = extractAffectedAssets(rawTitle, cleanDesc);
-                    const sentiment = detectSentiment(rawTitle, cleanDesc);
+                    // TEMİZLEME VE NORMALİZASYON
+                    const cleanTitle = cleanTitleText(rawTitle);
+                    const cleanDesc = cleanDescriptionText(rawDesc) || cleanTitle;
+
+                    const catInfo = categorizeNews(cleanTitle, cleanDesc, feed.category, feed.label);
+                    const affected = extractAffectedAssets(cleanTitle, cleanDesc);
+                    const sentiment = detectSentiment(cleanTitle, cleanDesc);
 
                     // Portföy eşleşmesi
                     let isPortfolioMatch = false;
@@ -241,7 +313,7 @@ export async function GET(request: Request) {
                         isPortfolioMatch = true;
                     }
 
-                    let baseSlug = slugify(rawTitle);
+                    let baseSlug = slugify(cleanTitle);
                     let uniqueSlug = baseSlug;
                     let counter = 1;
                     while (seenSlugs.has(uniqueSlug)) {
@@ -253,11 +325,11 @@ export async function GET(request: Request) {
                     const enriched: EnrichedNewsItem = {
                         id: uniqueSlug,
                         slug: uniqueSlug,
-                        title: rawTitle,
+                        title: cleanTitle,
                         link: link,
                         pubDate: pubDate,
                         source: feed.source,
-                        description: cleanDesc || rawTitle,
+                        description: cleanDesc,
                         category: isPortfolioMatch ? 'portfolio' : catInfo.category,
                         categoryLabel: isPortfolioMatch ? 'Portföyüm' : catInfo.label,
                         sentiment: sentiment,
