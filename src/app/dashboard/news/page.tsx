@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense, useMemo } from "react";
+import { useState, useEffect, Suspense, useMemo, useRef } from "react";
 import Link from "next/link";
 import { 
     Newspaper, 
@@ -17,20 +17,22 @@ import {
     Flame,
     Radio,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    ChevronDown,
+    Filter,
+    Check
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 import { NewsHeroCard } from "@/components/news/NewsHeroCard";
 import { NewsCard } from "@/components/news/NewsCard";
-import { NewsSentimentWidget } from "@/components/news/NewsSentimentWidget";
 import { KapLiveFeedWidget } from "@/components/news/KapLiveFeedWidget";
 
-const CATEGORY_TABS = [
+const CATEGORY_OPTIONS = [
     { id: 'all', label: 'Tüm Haberler', sectionTitle: 'Günün Önemli Haberleri', icon: Newspaper },
     { id: 'portfolio', label: 'Portföyüm', sectionTitle: 'Portföyünüze Özel Haberler', icon: PieChart },
     { id: 'bist', label: 'Borsa İstanbul', sectionTitle: 'Borsa İstanbul Gelişmeleri', icon: TrendingUp },
-    { id: 'kap', label: 'KAP & Şirketler', sectionTitle: 'KAP & Şirket Bildirimleri', icon: Building2 },
     { id: 'commodity', label: 'Altın & Emtia', sectionTitle: 'Altın & Emtia Piyasaları', icon: Flame },
     { id: 'macro', label: 'Makro Ekonomi', sectionTitle: 'Makro Ekonomi & Para Politikası', icon: Zap },
     { id: 'global', label: 'Küresel Piyasalar', sectionTitle: 'Küresel Piyasa Gelişmeleri', icon: Globe },
@@ -47,16 +49,12 @@ function NewsContent() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [sentimentDist, setSentimentDist] = useState({
-        bullish: 60,
-        bearish: 25,
-        neutral: 15,
-        total: 0
-    });
 
     // Filter & Pagination states
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     const fetchNewsData = async (isManualRefresh = false) => {
         if (isManualRefresh) setRefreshing(true);
@@ -73,9 +71,6 @@ function NewsContent() {
 
             if (data.success && Array.isArray(data.data)) {
                 setNews(data.data);
-                if (data.sentimentDistribution) {
-                    setSentimentDist(data.sentimentDistribution);
-                }
             } else {
                 setError(data.error || "Haber akışı yüklenemedi.");
             }
@@ -92,10 +87,22 @@ function NewsContent() {
         fetchNewsData();
     }, [user]);
 
+    // Close dropdown on outside click
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     // Handle Category change & reset page
     const handleCategoryChange = (catId: string) => {
         setSelectedCategory(catId);
         setCurrentPage(1);
+        setIsDropdownOpen(false);
     };
 
     // Filter news client-side
@@ -106,7 +113,7 @@ function NewsContent() {
         });
     }, [news, selectedCategory]);
 
-    // Separate Featured Hero Stories and Stream News (Portföyde olan hisselerin en son haberleri öncelikli)
+    // Separate Featured Hero Stories and Stream News (Portföyde olan hisselerin en güncel haberleri öncelikli)
     const { featuredStory, subStories } = useMemo(() => {
         const portfolioMatches = news.filter(n => n.category === 'portfolio');
         const otherHotNews = news.filter(n => n.category !== 'portfolio');
@@ -134,7 +141,7 @@ function NewsContent() {
     }, [streamNews, currentPage]);
 
     const kapNewsOnly = useMemo(() => {
-        return news.filter(n => n.category === 'kap');
+        return news.filter(n => n.category === 'kap' || n.category === 'bist');
     }, [news]);
 
     // Top Breaking news ticker items (Exact 3 items, strictly no horizontal scrollbar)
@@ -143,16 +150,16 @@ function NewsContent() {
     }, [news]);
 
     const currentTabInfo = useMemo(() => {
-        return CATEGORY_TABS.find(t => t.id === selectedCategory) || CATEGORY_TABS[0];
+        return CATEGORY_OPTIONS.find(t => t.id === selectedCategory) || CATEGORY_OPTIONS[0];
     }, [selectedCategory]);
 
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen pb-28 max-w-[1600px] mx-auto relative">
 
-            {/* Top Breaking Ticker Bar (Strictly No Scrollbar, 2-3 headlines) */}
+            {/* Top Breaking Ticker Bar (Ultra Estetik Glassmorphism, 2-3 Başlık) */}
             {breakingHeadlines.length > 0 && (
-                <div className="bg-[#00008B] text-white rounded-2xl p-2.5 px-4 flex items-center gap-3 shadow-lg shadow-[#00008B]/15 overflow-hidden">
-                    <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
+                <div className="bg-gradient-to-r from-[#00008B] via-[#0505a5] to-[#0a1e3d] border border-white/10 text-white rounded-2xl p-2.5 px-4 flex items-center gap-3 shadow-xl shadow-[#00008B]/15 overflow-hidden backdrop-blur-xl">
+                    <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse shadow-md shadow-red-500/30">
                         <Radio className="w-3.5 h-3.5" /> CANLI AKIŞ
                     </div>
                     <div className="flex items-center gap-6 text-xs font-semibold text-blue-100 truncate overflow-hidden">
@@ -171,21 +178,18 @@ function NewsContent() {
             )}
 
             {/* Header Area */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-1">
                 <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-1.5">
                         <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest">
-                            FinAi Ekonomi Masası
-                        </span>
-                        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase tracking-widest flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 fill-current" /> Bloomberg HT • AA Finans • Ekonomim
+                            FinAi Haber Masası
                         </span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-black text-[#00008B] tracking-tight">
-                        Piyasa & Haber İstihbaratı
+                        Piyasa Haberleri
                     </h1>
-                    <p className="text-[#00008B]/60 mt-1.5 font-bold uppercase text-[11px] tracking-[0.2em]">
-                        Borsa İstanbul, KAP Bildirimleri, Şirket Gelişmeleri ve Küresel Piyasalar
+                    <p className="text-[#00008B]/60 mt-1 font-bold uppercase text-[11px] tracking-[0.2em]">
+                        Borsa, Şirket ve Finans Gelişmeleri
                     </p>
                 </div>
 
@@ -203,30 +207,6 @@ function NewsContent() {
                 </div>
             </div>
 
-            {/* Category Filter Tabs */}
-            <div className="overflow-x-auto scrollbar-none pb-1">
-                <div className="flex items-center gap-2 min-w-max bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60">
-                    {CATEGORY_TABS.map((tab) => {
-                        const Icon = tab.icon;
-                        const isSelected = selectedCategory === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => handleCategoryChange(tab.id)}
-                                className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-                                    isSelected
-                                        ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20'
-                                        : 'text-[#00008B]/70 hover:text-[#00008B] hover:bg-white/60'
-                                }`}
-                            >
-                                <Icon className="w-3.5 h-3.5" />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
-
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-28 space-y-4">
                     <div className="relative">
@@ -234,7 +214,7 @@ function NewsContent() {
                         <Sparkles className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
                     </div>
                     <p className="text-[#00008B] font-bold text-sm opacity-50">
-                        Bloomberg HT, AA Finans ve Ekonomim haberleri derleniyor...
+                        Güncel piyasa haberleri derleniyor...
                     </p>
                 </div>
             ) : error ? (
@@ -255,21 +235,68 @@ function NewsContent() {
                         />
                     )}
 
-                    {/* Main Content: 8 Columns + 4 Columns Grid */}
+                    {/* Main Content: 8 Columns (Stream + Filter Dropdown) + 4 Columns (KAP Panel) */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         
-                        {/* Left Side: Stream News Grid (8 Cols) */}
+                        {/* Left Side: Stream News Grid with Dropdown Filter (8 Cols) */}
                         <div className="lg:col-span-8 space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-[#00008B]" />
-                                    <h2 className="text-lg font-black text-[#00008B] uppercase tracking-wide">
+                            
+                            {/* Section Title & Dropdown Filter Bar */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-3 h-3 rounded-full bg-[#00008B]" />
+                                    <h2 className="text-lg md:text-xl font-black text-[#00008B] tracking-tight">
                                         {currentTabInfo.sectionTitle}
                                     </h2>
                                 </div>
-                                <span className="text-xs font-bold text-slate-400">
-                                    Toplam {streamNews.length} Haber (Sayfa {currentPage} / {totalPages})
-                                </span>
+
+                                {/* Dropdown Filter Menu */}
+                                <div className="relative" ref={dropdownRef}>
+                                    <button
+                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-[#00008B]/40 rounded-2xl text-xs font-black text-[#00008B] shadow-sm hover:shadow-md transition-all cursor-pointer"
+                                    >
+                                        <Filter className="w-3.5 h-3.5 text-[#00008B]" />
+                                        <span className="text-slate-400 font-bold">Kategori:</span>
+                                        <span className="text-[#00008B]">{currentTabInfo.label}</span>
+                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {isDropdownOpen && (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 z-50 overflow-hidden"
+                                            >
+                                                <div className="space-y-1">
+                                                    {CATEGORY_OPTIONS.map((option) => {
+                                                        const Icon = option.icon;
+                                                        const isSelected = selectedCategory === option.id;
+                                                        return (
+                                                            <button
+                                                                key={option.id}
+                                                                onClick={() => handleCategoryChange(option.id)}
+                                                                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
+                                                                    isSelected 
+                                                                        ? 'bg-[#00008B] text-white shadow-md' 
+                                                                        : 'text-slate-700 hover:bg-slate-50 hover:text-[#00008B]'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-2">
+                                                                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-[#00008B]'}`} />
+                                                                    <span>{option.label}</span>
+                                                                </div>
+                                                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
                             </div>
 
                             {paginatedNews.length > 0 ? (
@@ -330,12 +357,8 @@ function NewsContent() {
                             )}
                         </div>
 
-                        {/* Right Side: KAP Feed + Sentiment Index (4 Cols) */}
-                        <div className="lg:col-span-4 space-y-6 sticky top-24">
-                            {/* Sentiment Index Bar */}
-                            <NewsSentimentWidget distribution={sentimentDist} />
-
-                            {/* KAP Live Feed */}
+                        {/* Right Side: Genişletilmiş KAP & Şirket Bildirimleri Paneli (4 Cols) */}
+                        <div className="lg:col-span-4 sticky top-24">
                             <KapLiveFeedWidget
                                 kapNews={kapNewsOnly}
                             />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, ExternalLink, FileText, TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react";
+import { Clock, FileText, ArrowRight } from "lucide-react";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 
 interface NewsCardProps {
@@ -26,6 +26,10 @@ export function NewsCard({ item, index }: NewsCardProps) {
         }
     };
 
+    const assets = item.affectedAssets && item.affectedAssets.length > 0
+        ? item.affectedAssets
+        : (item.tickers || []);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 15 }}
@@ -33,39 +37,21 @@ export function NewsCard({ item, index }: NewsCardProps) {
             transition={{ delay: Math.min(index * 0.04, 0.3) }}
             className="bg-white rounded-3xl p-6 border border-slate-200/80 hover:border-[#00008B]/40 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group h-full relative"
         >
-            {/* Top Bar: Category & Sentiment */}
+            {/* Top Bar: Etkilenen Varlıklar & Kategori */}
             <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[9px] font-black text-[#00008B] bg-[#00008B]/5 px-3 py-1 rounded-full uppercase tracking-wider">
-                    {item.categoryLabel}
-                </span>
-
-                <div className="flex items-center gap-2">
-                    {item.sentiment === 'bullish' ? (
-                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" /> Boğa
-                        </span>
-                    ) : item.sentiment === 'bearish' ? (
-                        <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                            <TrendingDown className="w-3 h-3" /> Ayı
-                        </span>
-                    ) : (
-                        <span className="text-[9px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <Minus className="w-2.5 h-2.5" /> Nötr
-                        </span>
-                    )}
-                </div>
-            </div>
-
-            {/* Tickers */}
-            {item.tickers && item.tickers.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                    {item.tickers.map((sym, sIdx) => (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
+                    {assets.map((asset, sIdx) => (
                         <span key={sIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                            #{sym}
+                            #{asset}
                         </span>
                     ))}
                 </div>
-            )}
+
+                <span className="text-[9px] font-black text-[#00008B] bg-[#00008B]/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                    {item.categoryLabel}
+                </span>
+            </div>
 
             {/* Title */}
             <Link href={`/dashboard/news/${item.slug}`} className="block mb-3">
