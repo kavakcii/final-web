@@ -1,16 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, ExternalLink, FileText, TrendingUp, TrendingDown, Minus, Sparkles } from "lucide-react";
+import { Clock, ExternalLink, FileText, TrendingUp, TrendingDown, Minus, ArrowRight } from "lucide-react";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 
 interface NewsCardProps {
     item: EnrichedNewsItem;
     index: number;
-    onOpenArticle: (url: string) => void;
 }
 
-export function NewsCard({ item, index, onOpenArticle }: NewsCardProps) {
+export function NewsCard({ item, index }: NewsCardProps) {
     const formatTimeAgo = (dateStr: string) => {
         try {
             const date = new Date(dateStr);
@@ -68,16 +68,15 @@ export function NewsCard({ item, index, onOpenArticle }: NewsCardProps) {
             )}
 
             {/* Title */}
-            <h3 
-                onClick={() => onOpenArticle(item.link)}
-                className="text-base font-bold text-[#00008B] leading-snug group-hover:text-blue-700 transition-colors cursor-pointer line-clamp-3 mb-3"
-            >
-                {item.title}
-            </h3>
+            <Link href={`/dashboard/news/${item.slug}`} className="block mb-3">
+                <h3 className="text-base font-bold text-[#00008B] leading-snug group-hover:text-blue-700 transition-colors line-clamp-3">
+                    {item.title}
+                </h3>
+            </Link>
 
-            {/* AI Summary / Description */}
+            {/* Description */}
             <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-3 mb-5">
-                {item.aiSummary || item.description}
+                {item.description}
             </p>
 
             {/* Bottom Controls */}
@@ -91,22 +90,13 @@ export function NewsCard({ item, index, onOpenArticle }: NewsCardProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => onOpenArticle(item.link)}
-                        className="px-3.5 py-2 bg-[#00008B] hover:bg-[#0808a3] text-white text-[11px] font-black rounded-xl shadow-md shadow-[#00008B]/20 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
+                    <Link
+                        href={`/dashboard/news/${item.slug}`}
+                        className="px-4 py-2 bg-[#00008B] hover:bg-[#0808a3] text-white text-[11px] font-black rounded-xl shadow-md shadow-[#00008B]/20 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
                     >
                         <FileText className="w-3.5 h-3.5" />
-                        AI Özet
-                    </button>
-                    <a
-                        href={item.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="p-2 text-slate-400 hover:text-[#00008B] hover:bg-slate-100 rounded-xl transition-colors"
-                        title="Orijinal Kaynağı Aç"
-                    >
-                        <ExternalLink className="w-4 h-4" />
-                    </a>
+                        Haberi Oku <ArrowRight className="w-3 h-3" />
+                    </Link>
                 </div>
             </div>
         </motion.div>

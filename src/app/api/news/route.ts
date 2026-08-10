@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export interface EnrichedNewsItem {
     id: string;
+    slug: string;
     title: string;
     link: string;
     pubDate: string;
@@ -23,11 +24,34 @@ export interface EnrichedNewsItem {
     isHot?: boolean;
 }
 
-// Memory Cache with 3 minutes TTL for blazing fast response
+// Memory Cache with 3 minutes TTL for high-speed response
 let cachedNews: { timestamp: number; items: EnrichedNewsItem[]; userId?: string | null } | null = null;
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
-// Known BIST and global stock symbols for automatic regex extraction
+export function slugify(text: string): string {
+    const trMap: Record<string, string> = {
+        'çÇ': 'c',
+        'ğĞ': 'g',
+        'şŞ': 's',
+        'üÜ': 'u',
+        'ıİ': 'i',
+        'öÖ': 'o'
+    };
+
+    let slug = text;
+    for (const key of Object.keys(trMap)) {
+        slug = slug.replace(new RegExp(`[${key}]`, 'g'), trMap[key]);
+    }
+
+    return slug
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .slice(0, 100);
+}
+
 const KNOWN_TICKERS = [
     'THYAO', 'ASELS', 'EREGL', 'TUPRS', 'FROTO', 'SISE', 'BIMAS', 'AKBNK', 'GARAN',
     'ISCTR', 'YKBNK', 'KCHOL', 'SAHOL', 'PETKM', 'EKGYO', 'ENKAI', 'HEKTS', 'SASA',
@@ -56,7 +80,7 @@ function detectSentiment(title: string, desc: string): 'bullish' | 'bearish' | '
     const bullishWords = [
         'rekor', 'yükseliş', 'artış', 'kar açıkladı', 'büyüme', 'kazanç', 'anlaşma', 'ihale',
         'zirve', 'fırladı', 'tırmandı', 'olumlu', 'temettü', 'hedef yükseltti', 'ralli', 'al tavsiyesi',
-        'güçlendi', 'güçlü', 'arttı', 'sıçradı', 'fırsat', 'beklentiyi aştı'
+        'güçlendi', 'güçlü', 'arttı', 'sıçradı', 'fırsat', 'beklentiyi aştı', 'halka arz'
     ];
     
     const bearishWords = [
@@ -76,34 +100,26 @@ function detectSentiment(title: string, desc: string): 'bullish' | 'bearish' | '
     return 'neutral';
 }
 
-function generateSmartAiSummary(title: string, desc: string, tickers: string[], sentiment: string): string {
-    const cleanDesc = desc.replace(/<[^>]*>/g, '').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
-    const tickerText = tickers.length > 0 ? `[${tickers.join(', ')}] ` : '';
-    
-    if (cleanDesc.length > 40 && !cleanDesc.includes('...')) {
-        return `${tickerText}${cleanDesc.slice(0, 180)}...`;
+function categorizeNews(title: string, desc: string, source: string): { category: EnrichedNewsItem['category']; label: string } {
+    const text = `${title} ${desc}`.toLowerCase();
+
+    if (text.includes('kap ') || text.includes('bildirim') || text.includes('halka arz') || text.includes('pay alım') || text.includes('özel durum')) {
+        return { category: 'kap', label: 'KAP Bildirimleri' };
+    }
+    if (text.includes('altın') || text.includes('petrol') || text.includes('brent') || text.includes('gümüş') || text.includes('emtia') || text.includes('ons')) {
+        return { category: 'commodity', label: 'Altın & Emtia' };
+    }
+    if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq') || text.includes('s&p') || text.includes('ecb') || text.includes('küresel')) {
+        return { category: 'global', label: 'Küresel Piyasalar' };
+    }
+    if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc')) {
+        return { category: 'crypto', label: 'Kripto' };
+    }
+    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe')) {
+        return { category: 'macro', label: 'Makro Ekonomi' };
     }
 
-    if (sentiment === 'bullish') {
-        return `${tickerText}${title} gelişmesi, ilgili sektörde ve piyasalarda yukarı yönlü pozitif fiyatlama beklentisini artırdı.`;
-    } else if (sentiment === 'bearish') {
-        return `${tickerText}${title} haberi, piyasalarda temkinli duruşu ve ilgili varlıklarda satış baskısını beraberinde getirebilir.`;
-    }
-
-    return `${tickerText}${title} gelişmesi analistler tarafından yakından izleniyor ve piyasa dengeleri üzerinde nötr etki bırakması bekleniyor.`;
-}
-
-function extractImageFromHtml(htmlSnippet: string): string | undefined {
-    try {
-        const $ = cheerio.load(htmlSnippet);
-        const src = $('img').first().attr('src');
-        if (src && (src.startsWith('http') || src.startsWith('//'))) {
-            return src.startsWith('//') ? `https:${src}` : src;
-        }
-    } catch {
-        // ignore
-    }
-    return undefined;
+    return { category: 'bist', label: 'Borsa İstanbul' };
 }
 
 export async function GET(request: Request) {
@@ -112,7 +128,7 @@ export async function GET(request: Request) {
         const userId = searchParams.get('userId');
         const categoryParam = searchParams.get('category') || 'all';
         const searchQuery = searchParams.get('search') || '';
-        const limitParam = parseInt(searchParams.get('limit') || '40', 10);
+        const limitParam = parseInt(searchParams.get('limit') || '50', 10);
         const forceRefresh = searchParams.get('refresh') === 'true';
 
         // Check in-memory cache
@@ -130,7 +146,7 @@ export async function GET(request: Request) {
             });
         }
 
-        // 1. Fetch User Portfolio symbols if userId present
+        // 1. Fetch User Portfolio symbols
         let userSymbols: string[] = [];
         if (userId) {
             try {
@@ -146,44 +162,15 @@ export async function GET(request: Request) {
             }
         }
 
-        type QueryCategory = 'all' | 'portfolio' | 'kap' | 'bist' | 'macro' | 'commodity' | 'global' | 'crypto';
-
-        // 2. Multi-channel Search Query Configurations
-        const queries: { category: QueryCategory; label: string; query: string }[] = [
-            // BIST & KAP
-            { category: 'kap', label: 'KAP Bildirimleri', query: 'KAP+Kamuyu+Aydınlatma+Platformu+OR+Özel+Durum+Açıklaması+bloomberg' },
-            { category: 'bist', label: 'Borsa İstanbul', query: 'Borsa+İstanbul+BIST100+hisse+haberleri+bloomberght' },
-            
-            // Macro Economy
-            { category: 'macro', label: 'Makro Ekonomi', query: 'TCMB+faiz+enflasyon+Merkez+Bankası+ekonomi+bloomberg+ht' },
-            
-            // Commodities (Gold / Energy)
-            { category: 'commodity', label: 'Altın & Emtia', query: 'gram+altın+fiyatları+ons+petrol+brent+bloomberg' },
-            
-            // Global Markets
-            { category: 'global', label: 'Küresel Piyasalar', query: 'Fed+faiz+Wall+Street+Nasdaq+Dow+Jones+kuresel+piyasalar' },
-            
-            // Crypto
-            { category: 'crypto', label: 'Kripto', query: 'Bitcoin+Ethereum+kripto+para+piyasasi+haberleri' }
+        // 2. 3 SAYGIN & RESMİ HABER KAYNAĞI:
+        // 1: Bloomberg HT (Türkiye'nin 1 numaralı ekonomi kanalı)
+        // 2: AA Finans / Ekonomi (Anadolu Ajansı Resmi Ekonomi & Şirket Servisi)
+        // 3: Ekonomim / Dünya Gazetesi (Türkiye'nin köklü ekonomi gazetesi)
+        const primaryFeeds = [
+            { source: 'Bloomberg HT', url: 'https://www.bloomberght.com/rss' },
+            { source: 'AA Finans', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
+            { source: 'Ekonomim', url: 'https://www.ekonomim.com/rss' }
         ];
-
-        // Add user-specific portfolio queries if available
-        if (userSymbols.length > 0) {
-            const topSymbols = userSymbols.slice(0, 4);
-            topSymbols.forEach(sym => {
-                queries.push({
-                    category: 'portfolio',
-                    label: 'Portföyüm',
-                    query: `${sym}+hisse+haber+borsa`
-                });
-            });
-        } else {
-            queries.push({
-                category: 'portfolio',
-                label: 'Portföyüm',
-                query: 'THYAO+ASELS+EREGL+TUPRS+hisse'
-            });
-        }
 
         const parser = new XMLParser({
             ignoreAttributes: false,
@@ -191,13 +178,12 @@ export async function GET(request: Request) {
         });
 
         const seenUrls = new Set<string>();
+        const seenSlugs = new Set<string>();
         const allItems: EnrichedNewsItem[] = [];
 
-        // Fetch RSS in parallel
         const results = await Promise.allSettled(
-            queries.map(async (q) => {
-                const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(q.query)}&hl=tr&gl=TR&ceid=TR:tr`;
-                const res = await fetch(rssUrl, {
+            primaryFeeds.map(async (feed) => {
+                const res = await fetch(feed.url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                     },
@@ -207,60 +193,53 @@ export async function GET(request: Request) {
                 if (!res.ok) return [];
                 const xmlText = await res.text();
                 const parsed = parser.parse(xmlText);
-                const rawItems = Array.isArray(parsed.rss?.channel?.item) 
-                    ? parsed.rss.channel.item 
+                const rawItems = Array.isArray(parsed.rss?.channel?.item)
+                    ? parsed.rss.channel.item
                     : [parsed.rss?.channel?.item].filter(Boolean);
 
-                return rawItems.map((item: any, idx: number) => {
+                return rawItems.map((item: any) => {
                     const rawTitle = (item.title || '').trim();
                     const link = (item.link || '').trim();
                     const pubDate = item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString();
                     const rawDesc = (item.description || '').trim();
+                    const cleanDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
 
-                    // Split publisher from title (Google News format: "Title - Publisher")
-                    let title = rawTitle;
-                    let source = 'FinAi Haber';
-                    if (rawTitle.includes(' - ')) {
-                        const parts = rawTitle.split(' - ');
-                        source = parts.pop() || source;
-                        title = parts.join(' - ');
-                    } else if (item.source) {
-                        source = typeof item.source === 'object' ? item.source['#text'] || 'FinAi Haber' : item.source;
-                    }
+                    const tickers = extractTickers(`${rawTitle} ${cleanDesc}`);
+                    const sentiment = detectSentiment(rawTitle, cleanDesc);
+                    const catInfo = categorizeNews(rawTitle, cleanDesc, feed.source);
 
-                    const cleanDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-                    const tickers = extractTickers(`${title} ${cleanDesc}`);
-                    const sentiment = detectSentiment(title, cleanDesc);
-                    const isHot = idx === 0 || sentiment !== 'neutral' || q.category === 'kap';
-                    const impact: 'critical' | 'high' | 'medium' = (q.category === 'kap' || sentiment !== 'neutral') ? 'high' : 'medium';
-                    const imageUrl = extractImageFromHtml(rawDesc);
+                    let finalCategory = catInfo.category;
+                    let finalCategoryLabel = catInfo.label;
 
-                    // Check if ticker matches user's portfolio
-                    let finalCategory = q.category;
-                    let finalCategoryLabel = q.label;
                     if (userSymbols.length > 0 && tickers.some(t => userSymbols.includes(t))) {
                         finalCategory = 'portfolio';
                         finalCategoryLabel = 'Portföyüm';
                     }
 
-                    const aiSummary = generateSmartAiSummary(title, cleanDesc, tickers, sentiment);
+                    let baseSlug = slugify(rawTitle);
+                    let uniqueSlug = baseSlug;
+                    let counter = 1;
+                    while (seenSlugs.has(uniqueSlug)) {
+                        uniqueSlug = `${baseSlug}-${counter}`;
+                        counter++;
+                    }
+                    seenSlugs.add(uniqueSlug);
 
                     const enriched: EnrichedNewsItem = {
-                        id: Buffer.from(link || title).toString('base64').slice(0, 24),
-                        title,
-                        link,
-                        pubDate,
-                        source,
-                        description: cleanDesc || title,
+                        id: uniqueSlug,
+                        slug: uniqueSlug,
+                        title: rawTitle,
+                        link: link,
+                        pubDate: pubDate,
+                        source: feed.source,
+                        description: cleanDesc || rawTitle,
                         category: finalCategory,
                         categoryLabel: finalCategoryLabel,
-                        sentiment,
-                        impact,
-                        tickers,
-                        aiSummary,
-                        imageUrl,
-                        readTime: '2 dk okuma',
-                        isHot
+                        sentiment: sentiment,
+                        impact: (finalCategory === 'kap' || sentiment !== 'neutral') ? 'high' : 'medium',
+                        tickers: tickers,
+                        readTime: '3 dk okuma',
+                        isHot: sentiment !== 'neutral' || finalCategory === 'kap'
                     };
 
                     return enriched;
@@ -279,7 +258,7 @@ export async function GET(request: Request) {
             }
         }
 
-        // Sort by publish date descending
+        // Sort by date newest first
         allItems.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
         // Update Cache
@@ -333,7 +312,7 @@ function filterNews(items: EnrichedNewsItem[], category: string, search: string)
 }
 
 function calculateSentimentDistribution(items: EnrichedNewsItem[]) {
-    if (!items || items.length === 0) return { bullish: 50, bearish: 25, neutral: 25, total: 0 };
+    if (!items || items.length === 0) return { bullish: 55, bearish: 25, neutral: 20, total: 0 };
     
     let bull = 0;
     let bear = 0;

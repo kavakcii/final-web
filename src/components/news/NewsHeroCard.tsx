@@ -1,16 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, TrendingDown, Minus, Clock, ExternalLink, FileText, Bookmark, Share2 } from "lucide-react";
+import { Sparkles, TrendingUp, TrendingDown, Minus, Clock, ExternalLink, FileText, ArrowRight } from "lucide-react";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 
 interface NewsHeroCardProps {
     mainNews: EnrichedNewsItem;
     subNews: EnrichedNewsItem[];
-    onOpenArticle: (url: string) => void;
 }
 
-export function NewsHeroCard({ mainNews, subNews, onOpenArticle }: NewsHeroCardProps) {
+export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
     if (!mainNews) return null;
 
     const formatTimeAgo = (dateStr: string) => {
@@ -78,12 +78,14 @@ export function NewsHeroCard({ mainNews, subNews, onOpenArticle }: NewsHeroCardP
                         </div>
                     )}
 
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-tight text-white group-hover:text-blue-100 transition-colors">
-                        {mainNews.title}
-                    </h2>
+                    <Link href={`/dashboard/news/${mainNews.slug}`} className="block group/link">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl font-black leading-tight tracking-tight text-white group-hover/link:text-yellow-300 transition-colors">
+                            {mainNews.title}
+                        </h2>
+                    </Link>
 
                     <p className="text-white/80 text-sm sm:text-base font-medium leading-relaxed line-clamp-3">
-                        {mainNews.aiSummary || mainNews.description}
+                        {mainNews.description}
                     </p>
                 </div>
 
@@ -99,26 +101,23 @@ export function NewsHeroCard({ mainNews, subNews, onOpenArticle }: NewsHeroCardP
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => onOpenArticle(mainNews.link)}
+                        <Link
+                            href={`/dashboard/news/${mainNews.slug}`}
                             className="px-6 py-3 bg-white text-[#00008B] hover:bg-blue-50 text-xs font-black rounded-2xl shadow-xl shadow-white/10 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                         >
                             <FileText className="w-4 h-4" />
-                            FinAi AI Okuma & Analiz
-                        </button>
+                            Haberi Oku <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Side 2-3 Spotlight Cards (5 Cols) */}
+            {/* Side 2 Spotlight Cards (5 Cols) */}
             <div className="lg:col-span-5 flex flex-col gap-4">
                 {subNews.slice(0, 2).map((item, idx) => (
-                    <motion.div
+                    <Link
                         key={item.id || idx}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                        onClick={() => onOpenArticle(item.link)}
+                        href={`/dashboard/news/${item.slug}`}
                         className="flex-1 bg-white border border-slate-200/80 hover:border-[#00008B]/40 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
                     >
                         <div className="flex items-center justify-between mb-3">
@@ -145,17 +144,17 @@ export function NewsHeroCard({ mainNews, subNews, onOpenArticle }: NewsHeroCardP
                                 {item.title}
                             </h3>
                             <p className="text-xs text-slate-500 font-medium mt-2 line-clamp-2 leading-relaxed">
-                                {item.aiSummary || item.description}
+                                {item.description}
                             </p>
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                             <span className="font-bold text-slate-400 text-[11px]">{item.source}</span>
                             <span className="text-[#00008B] font-black text-[11px] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                                İncele <ExternalLink className="w-3 h-3" />
+                                Haberi Oku <ArrowRight className="w-3 h-3" />
                             </span>
                         </div>
-                    </motion.div>
+                    </Link>
                 ))}
             </div>
         </div>

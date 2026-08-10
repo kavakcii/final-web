@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense, useMemo } from "react";
+import Link from "next/link";
 import { 
     Newspaper, 
     Search, 
@@ -18,15 +19,12 @@ import {
     Flame,
     Radio
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
-import { useSearchParams, useRouter } from "next/navigation";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 import { NewsHeroCard } from "@/components/news/NewsHeroCard";
 import { NewsCard } from "@/components/news/NewsCard";
 import { NewsSentimentWidget } from "@/components/news/NewsSentimentWidget";
 import { KapLiveFeedWidget } from "@/components/news/KapLiveFeedWidget";
-import { SmartReaderModal } from "@/components/news/SmartReaderModal";
 
 const CATEGORY_TABS = [
     { id: 'all', label: 'Tüm Akış', icon: Newspaper },
@@ -41,8 +39,6 @@ const CATEGORY_TABS = [
 
 function NewsContent() {
     const { user } = useUser();
-    const searchParams = useSearchParams();
-    const router = useRouter();
 
     // Data states
     const [news, setNews] = useState<EnrichedNewsItem[]>([]);
@@ -59,20 +55,6 @@ function NewsContent() {
     // Filter states
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState<string>('');
-
-    // Modal / Article Reader states
-    const [analyzingUrl, setAnalyzingUrl] = useState<string | null>(null);
-    const [articleData, setArticleData] = useState<any | null>(null);
-    const [analysisLoading, setAnalysisLoading] = useState(false);
-    const [analysisError, setAnalysisError] = useState<string | null>(null);
-
-    // Initial query param check
-    useEffect(() => {
-        const urlParam = searchParams?.get('url');
-        if (urlParam) {
-            handleOpenArticle(urlParam);
-        }
-    }, [searchParams]);
 
     const fetchNewsData = async (isManualRefresh = false) => {
         if (isManualRefresh) setRefreshing(true);
@@ -108,38 +90,7 @@ function NewsContent() {
         fetchNewsData();
     }, [user]);
 
-    const handleOpenArticle = async (url: string) => {
-        setAnalyzingUrl(url);
-        setAnalysisLoading(true);
-        setAnalysisError(null);
-        setArticleData(null);
-
-        try {
-            const res = await fetch(`/api/news/analyze?url=${encodeURIComponent(url)}`);
-            const data = await res.json();
-
-            if (data.success && data.content) {
-                setArticleData(data.content);
-            } else {
-                setAnalysisError(data.error || "Haber içeriği yüklenemedi.");
-            }
-        } catch (err) {
-            setAnalysisError("Bağlantı hatası oluştu.");
-        } finally {
-            setAnalysisLoading(false);
-        }
-    };
-
-    const closeArticle = () => {
-        setAnalyzingUrl(null);
-        setArticleData(null);
-        setAnalysisError(null);
-        if (searchParams?.get('url')) {
-            router.replace('/dashboard/news');
-        }
-    };
-
-    // Filter news client-side for ultra-fast tab switching
+    // Filter news client-side for instant tab switching
     const filteredNews = useMemo(() => {
         return news.filter(item => {
             const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
@@ -177,37 +128,28 @@ function NewsContent() {
 
     // Top Breaking news ticker items
     const breakingHeadlines = useMemo(() => {
-        return news.slice(0, 4);
+        return news.slice(0, 5);
     }, [news]);
 
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen pb-28 max-w-[1600px] mx-auto relative">
-            
-            {/* Modal: Smart Reader */}
-            <SmartReaderModal
-                url={analyzingUrl}
-                isLoading={analysisLoading}
-                error={analysisError}
-                articleData={articleData}
-                onClose={closeArticle}
-            />
 
             {/* Top Breaking Ticker Bar */}
             {breakingHeadlines.length > 0 && (
                 <div className="bg-[#00008B] text-white rounded-2xl p-2.5 px-4 flex items-center gap-3 shadow-lg shadow-[#00008B]/15 overflow-hidden">
-                    <div className="flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
-                        <Radio className="w-3.5 h-3.5" /> CANLI SON DAKİKA
+                    <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
+                        <Radio className="w-3.5 h-3.5" /> CANLI AKIŞ
                     </div>
                     <div className="overflow-x-auto whitespace-nowrap scrollbar-none flex items-center gap-6 text-xs font-semibold text-blue-100">
                         {breakingHeadlines.map((item, idx) => (
-                            <button
+                            <Link
                                 key={idx}
-                                onClick={() => handleOpenArticle(item.link)}
-                                className="hover:text-yellow-300 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+                                href={`/dashboard/news/${item.slug}`}
+                                className="hover:text-yellow-300 transition-colors flex items-center gap-2 shrink-0"
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
                                 <span className="font-bold">{item.title}</span>
-                            </button>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -218,17 +160,17 @@ function NewsContent() {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest">
-                            FinAi Haber Masası
+                            FinAi Ekonomi Masası
                         </span>
                         <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase tracking-widest flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 fill-current" /> Yapay Zeka İstihbarat Ağı
+                            <Sparkles className="w-3 h-3 fill-current" /> Bloomberg HT • AA Finans • Ekonomim
                         </span>
                     </div>
                     <h1 className="text-3xl md:text-5xl font-black text-[#00008B] tracking-tight">
                         Piyasa & Haber İstihbaratı
                     </h1>
                     <p className="text-[#00008B]/60 mt-1.5 font-bold uppercase text-[11px] tracking-[0.2em]">
-                        KAP Bildirimleri, BIST 100, Portföy Eşleşmeleri ve Küresel Makro Veriler
+                        Borsa İstanbul, KAP Bildirimleri, Şirket Gelişmeleri ve Küresel Piyasalar
                     </p>
                 </div>
 
@@ -288,7 +230,7 @@ function NewsContent() {
                         <Sparkles className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
                     </div>
                     <p className="text-[#00008B] font-bold text-sm opacity-50">
-                        Çok kaynaklı haberler derleniyor ve yapay zeka duyarlılık analizi hesaplanıyor...
+                        Bloomberg HT, AA Finans ve Ekonomim haberleri derleniyor...
                     </p>
                 </div>
             ) : error ? (
@@ -306,7 +248,6 @@ function NewsContent() {
                         <NewsHeroCard
                             mainNews={featuredStory}
                             subNews={subStories}
-                            onOpenArticle={handleOpenArticle}
                         />
                     )}
 
@@ -334,7 +275,6 @@ function NewsContent() {
                                             key={item.id || idx}
                                             item={item}
                                             index={idx}
-                                            onOpenArticle={handleOpenArticle}
                                         />
                                     ))}
                                 </div>
@@ -355,7 +295,6 @@ function NewsContent() {
                             {/* KAP Live Feed */}
                             <KapLiveFeedWidget
                                 kapNews={kapNewsOnly}
-                                onOpenArticle={handleOpenArticle}
                             />
                         </div>
 
