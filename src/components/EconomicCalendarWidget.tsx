@@ -153,30 +153,30 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
     return (
         <div
             onClick={handleCardClick}
-            className={`w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 shadow-xl shadow-[#00008B]/20 font-sans flex flex-col justify-between transition-all relative overflow-hidden group ${
+            className={`w-full bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl shadow-[#00008B]/20 font-sans flex flex-col justify-between transition-all relative overflow-hidden group min-w-0 ${
                 !isDetailedPage ? 'cursor-pointer hover:border-white/30' : ''
             }`}
         >
             {/* Background Glow */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10">
+            <div className="relative z-10 min-w-0">
                 {/* Clean Header */}
-                <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/15">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md">
-                            <Calendar className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-between mb-4 sm:mb-5 pb-3 sm:pb-4 border-b border-white/15">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shrink-0">
+                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                                Ekonomik Takvim <span className="text-sm font-semibold text-blue-200">({todayFormattedDate})</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <h3 className="text-base sm:text-xl font-black tracking-tight text-white flex items-center gap-1.5 sm:gap-2 truncate">
+                                Ekonomik Takvim <span className="text-xs sm:text-sm font-semibold text-blue-200">({todayFormattedDate})</span>
                             </h3>
-                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Saniyelik Canlı Akış" />
+                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Saniyelik Canlı Akış" />
                         </div>
                     </div>
 
                     {!isDetailedPage && (
-                        <div className="text-xs font-bold text-white flex items-center gap-1 hover:underline transition-all">
+                        <div className="text-xs font-bold text-white flex items-center gap-1 hover:underline transition-all shrink-0">
                             Detaylar <ArrowRight className="w-3.5 h-3.5" />
                         </div>
                     )}
@@ -189,8 +189,8 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                         <span className="text-xs font-bold text-blue-200">Bugünün Canlı Ekonomik Haberleri Yükleniyor...</span>
                     </div>
                 ) : filteredEvents.length > 0 ? (
-                    <div className="overflow-x-auto max-h-[500px] overflow-y-auto pr-1">
-                        <table className="w-full text-left border-collapse">
+                    <div className="overflow-x-auto max-h-[500px] overflow-y-auto pr-1 w-full scrollbar-thin">
+                        <table className="w-full text-left border-collapse min-w-[500px]">
                             <thead>
                                 <tr className="border-b border-white/15 text-[10px] font-black text-blue-200 uppercase tracking-wider pb-2">
                                     <th className="py-2.5 px-3 w-16 text-blue-200">Saat</th>

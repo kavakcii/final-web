@@ -58,8 +58,8 @@ export function FinancialTicker() {
     }
 
     return (
-        <div className="w-full bg-slate-50 border-b border-slate-100 backdrop-blur-md relative h-12 flex items-center">
-            <div className="flex items-center justify-evenly px-4 py-3 w-full">
+        <div className="w-full bg-slate-50 border-b border-slate-100 backdrop-blur-md relative h-10 md:h-12 flex items-center overflow-x-auto scrollbar-none">
+            <div className="flex items-center justify-start md:justify-evenly px-4 py-2 min-w-max md:w-full gap-6 md:gap-2">
                 {FIXED_SYMBOLS.map((sym, index) => {
                     const quote = data.find(q => 
                         q.symbol.toUpperCase() === sym.toUpperCase() || 
@@ -84,10 +84,10 @@ export function FinancialTicker() {
                         <div key={sym} className="flex items-center gap-2">
                             {index > 0 && <div className="w-px h-4 bg-slate-200 -ml-1 hidden md:block" />}
                             <span className="text-[10px] font-bold text-[#00008B]/50 whitespace-nowrap uppercase tracking-widest">{name}</span>
-                            <span className="text-sm font-black text-[#00008B] whitespace-nowrap">
+                            <span className="text-xs md:text-sm font-black text-[#00008B] whitespace-nowrap">
                                 {price > 0 ? `₺${price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Canlı...'}
                             </span>
-                            <div className={`flex items-center text-xs font-bold whitespace-nowrap ${isPositive ? "text-emerald-600" : "text-red-600"}`}>
+                            <div className={`flex items-center text-[10px] md:text-xs font-bold whitespace-nowrap ${isPositive ? "text-emerald-600" : "text-red-600"}`}>
                                 {isPositive ? <ArrowUp className="w-3 h-3 mr-0.5" /> : <ArrowDown className="w-3 h-3 mr-0.5" />}
                                 %{Math.abs(quote.regularMarketChangePercent || 0).toFixed(2)}
                             </div>

@@ -54,7 +54,7 @@ export function DashboardSummaryCards() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
             {/* TOPLAM VARLIK DEĞERİ KARTI - LACİVERT BG */}
-            <div className="bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 shadow-xl shadow-[#00008B]/15 relative overflow-hidden group">
+            <div className="bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-5 sm:p-6 shadow-xl shadow-[#00008B]/15 relative overflow-hidden group">
                 <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export function DashboardSummaryCards() {
                         <span className="text-white/80 text-[10px] font-black uppercase tracking-widest">Toplam Varlık Değeri</span>
                     </div>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter mt-2">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tighter mt-2 truncate">
                     {formatCurrency(totalValue)}
                 </h2>
                 <div className="flex items-center gap-2 mt-4">
@@ -75,7 +75,7 @@ export function DashboardSummaryCards() {
 
             {/* NET KÂR / ZARAR KARTI - KARDA YEŞİL, ZARARDA KIRMIZI BG */}
             <div className={cn(
-                "rounded-3xl p-6 shadow-xl text-white border transition-all relative overflow-hidden group",
+                "rounded-3xl p-5 sm:p-6 shadow-xl text-white border transition-all relative overflow-hidden group",
                 totalProfit >= 0
                     ? "bg-emerald-600 border-emerald-500 shadow-emerald-900/10"
                     : "bg-rose-600 border-rose-500 shadow-rose-900/10"
@@ -88,12 +88,12 @@ export function DashboardSummaryCards() {
                         </div>
                         <span className="text-white/90 text-[10px] font-black uppercase tracking-widest">Net Kâr / Zarar</span>
                     </div>
-                    <div className="px-3 py-1 rounded-xl text-xs font-black bg-white/20 text-white border border-white/30 backdrop-blur-md">
+                    <div className="px-2.5 py-1 rounded-xl text-xs font-black bg-white/20 text-white border border-white/30 backdrop-blur-md">
                         {totalProfit >= 0 ? "+" : ""}{profitRatio.toFixed(2)}%
                     </div>
                 </div>
-                <div className="mt-3">
-                    <span className="text-3xl md:text-4xl font-black tracking-tight block text-white">
+                <div className="mt-2 sm:mt-3">
+                    <span className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight block text-white truncate">
                         {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
                     </span>
                 </div>

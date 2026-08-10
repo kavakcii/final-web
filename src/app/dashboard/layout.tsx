@@ -131,11 +131,11 @@ function DashboardShell({
             <div className="fixed left-[15%] bottom-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-indigo-300/20 blur-[130px] pointer-events-none" />
 
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
-            <div className="relative z-10 w-full flex mx-auto max-w-[1920px]">
-                <div className="flex-1 flex bg-transparent">
+            <div className="relative z-10 w-full flex mx-auto max-w-[1920px] overflow-x-hidden min-h-screen">
+                <div className="flex-1 flex bg-transparent min-w-0">
                     
-                    {/* Sidebar (Ultra-Crystal Glassmorphism Aesthetic) */}
-                    <aside className="w-36 md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
+                    {/* Desktop Sidebar (Ultra-Crystal Glassmorphism Aesthetic - Hidden on Mobile) */}
+                    <aside className="hidden md:flex md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
                         {/* Glass Reflection & Ambient Glow */}
                         <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-white/40 pointer-events-none" />
                         <div className="absolute -left-16 top-1/4 w-36 h-36 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
@@ -250,17 +250,24 @@ function DashboardShell({
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1 relative flex flex-col min-w-0 bg-transparent">
+                    <main className="flex-1 relative flex flex-col min-w-0 bg-transparent overflow-x-hidden">
                         {/* Header (Glassified) */}
-                        <header className="h-16 border-b border-slate-100 flex items-center justify-between px-6 sticky top-0 z-40 bg-white/40 backdrop-blur-xl flex-shrink-0 relative">
-                            <h1 className="text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
-                            <div className="flex items-center space-x-4">
+                        <header className="h-14 md:h-16 border-b border-slate-100 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
+                            <div className="flex items-center gap-2.5">
+                                <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
+                                    <FinAiLogo showText={false} className="h-7 w-7 shrink-0 drop-shadow-[0_0_10px_rgba(0,0,139,0.15)]" />
+                                    <span className="text-lg font-black tracking-tight text-[#00008B]">FinAi</span>
+                                </Link>
+                                <h1 className="hidden md:block text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
+                            </div>
+                            
+                            <div className="flex items-center space-x-3 md:space-x-4">
                                 <div className="relative hidden sm:block">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B]/40" />
                                     <input
                                         type="text"
                                         placeholder="Komut veya varlık ara..."
-                                        className="bg-slate-50 border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#00008B]/20 w-72 text-[#00008B] placeholder:text-[#00008B]/30 transition-all hover:bg-slate-100/50"
+                                        className="bg-slate-50 border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#00008B]/20 w-48 lg:w-72 text-[#00008B] placeholder:text-[#00008B]/30 transition-all hover:bg-slate-100/50"
                                     />
                                 </div>
 
@@ -301,11 +308,47 @@ function DashboardShell({
 
                         <FinancialTicker />
 
-                        <div className="flex-1 bg-transparent p-0 relative">
+                        <div className="flex-1 bg-transparent p-0 relative min-w-0">
                             {children}
                         </div>
                     </main>
                 </div>
+            </div>
+
+            {/* Mobile Bottom Navigation Bar (Modern Mobile App Navigation) */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/80 shadow-[0_-4px_25px_rgba(0,0,139,0.08)] px-2 py-1.5 pb-safe">
+                <nav className="flex items-center justify-around">
+                    {menuItems.map((item, idx) => {
+                        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                        const Icon = item.icon;
+                        return (
+                            <Link
+                                key={idx}
+                                href={item.href}
+                                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+                                    isActive 
+                                        ? 'text-[#00008B] font-extrabold' 
+                                        : 'text-slate-400 hover:text-slate-600 font-medium'
+                                }`}
+                            >
+                                <div className={`p-1 rounded-xl transition-all ${
+                                    isActive ? 'bg-[#00008B]/10 scale-105' : ''
+                                }`}>
+                                    <Icon className={`w-5 h-5 ${isActive ? 'text-[#00008B]' : 'text-slate-400'}`} />
+                                </div>
+                                <span className="text-[9px] tracking-tight mt-0.5 whitespace-nowrap">
+                                    {item.label}
+                                </span>
+                                {isActive && (
+                                    <motion.div 
+                                        layoutId="mobileActiveIndicator"
+                                        className="w-1 h-1 bg-[#00008B] rounded-full mt-0.5"
+                                    />
+                                )}
+                            </Link>
+                        );
+                    })}
+                </nav>
             </div>
         </div>
     );

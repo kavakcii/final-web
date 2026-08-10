@@ -140,22 +140,22 @@ export function BalanceGrowthChartWidget() {
     const isNewUser = !firstDate && !loading;
 
     return (
-        <div className="w-full bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[320px]">
+        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col justify-between min-h-[300px] sm:min-h-[320px] min-w-0">
             <div>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center">
+                    <div className="flex items-center gap-2.5 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shrink-0">
                             <LineChart className="w-4 h-4 text-[#00008B]" />
                         </div>
                         <div>
-                            <h3 className="text-base font-black text-[#00008B] tracking-tight">Varlık Gelişim Grafiği</h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Günlük Kapanış Değeri</p>
+                            <h3 className="text-sm sm:text-base font-black text-[#00008B] tracking-tight">Varlık Gelişim Grafiği</h3>
+                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Günlük Kapanış Değeri</p>
                         </div>
                     </div>
 
                     {/* Tüm Günler Etiketi */}
-                    <div className="flex items-center gap-1 text-[10px] font-extrabold text-[#00008B] bg-[#00008B]/5 px-3 py-1.5 rounded-2xl border border-[#00008B]/10">
+                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-[#00008B] bg-[#00008B]/5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-[#00008B]/10">
                         <span>Tüm Günler</span>
                     </div>
                 </div>
@@ -227,7 +227,7 @@ export function BalanceGrowthChartWidget() {
                                     {RANGE_LABELS[timeRange]} Değişim
                                 </span>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-2xl font-black text-[#00008B]">
+                                    <span className="text-xl sm:text-2xl font-black text-[#00008B]">
                                         ₺{latestBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </span>
                                     <span className={`flex items-center gap-0.5 text-xs font-black px-2 py-0.5 rounded-lg border ${

@@ -60,10 +60,10 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-hidden">
+        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-x-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
 
-            <div className="w-full max-w-[1600px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
+            <div className="w-full max-w-[1600px] mx-auto px-4 py-5 sm:px-6 md:px-10 lg:py-10 space-y-6 md:space-y-8 relative z-10 mb-20 md:mb-12">
                 <AnimatePresence>
                     {!isDataLoaded && (
                         <motion.div
@@ -85,13 +85,13 @@ export default function DashboardPage() {
                 </AnimatePresence>
 
                 {/* Header Welcome Area */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 md:gap-4 relative z-10">
                     <div>
-                        <h1 className="text-4xl font-bold text-[#00008B] flex items-center gap-3 tracking-tight">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#00008B] flex items-center gap-2 sm:gap-3 tracking-tight">
                             Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
                             <motion.span animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}>👋</motion.span>
                         </h1>
-                        <p className="text-[#00008B] mt-2 text-xs font-bold tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                        <p className="text-[#00008B] mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                     </div>
                 </div>
 
