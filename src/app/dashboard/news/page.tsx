@@ -4,9 +4,7 @@ import { useState, useEffect, Suspense, useMemo } from "react";
 import Link from "next/link";
 import { 
     Newspaper, 
-    Search, 
     RefreshCw, 
-    Filter, 
     Zap, 
     Sparkles, 
     TrendingUp, 
@@ -17,7 +15,9 @@ import {
     Loader2, 
     AlertCircle, 
     Flame,
-    Radio
+    Radio,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import { EnrichedNewsItem } from "@/app/api/news/route";
@@ -27,15 +27,17 @@ import { NewsSentimentWidget } from "@/components/news/NewsSentimentWidget";
 import { KapLiveFeedWidget } from "@/components/news/KapLiveFeedWidget";
 
 const CATEGORY_TABS = [
-    { id: 'all', label: 'Tüm Akış', icon: Newspaper },
-    { id: 'portfolio', label: 'Portföyüm', icon: PieChart },
-    { id: 'kap', label: 'KAP Bildirimleri', icon: Building2 },
-    { id: 'bist', label: 'Borsa İstanbul', icon: TrendingUp },
-    { id: 'commodity', label: 'Altın & Emtia', icon: Flame },
-    { id: 'macro', label: 'Makro Ekonomi', icon: Zap },
-    { id: 'global', label: 'Küresel Piyasalar', icon: Globe },
-    { id: 'crypto', label: 'Kripto', icon: Coins }
+    { id: 'all', label: 'Tüm Haberler', sectionTitle: 'Günün Önemli Haberleri', icon: Newspaper },
+    { id: 'portfolio', label: 'Portföyüm', sectionTitle: 'Portföyünüze Özel Haberler', icon: PieChart },
+    { id: 'bist', label: 'Borsa İstanbul', sectionTitle: 'Borsa İstanbul Gelişmeleri', icon: TrendingUp },
+    { id: 'kap', label: 'KAP & Şirketler', sectionTitle: 'KAP & Şirket Bildirimleri', icon: Building2 },
+    { id: 'commodity', label: 'Altın & Emtia', sectionTitle: 'Altın & Emtia Piyasaları', icon: Flame },
+    { id: 'macro', label: 'Makro Ekonomi', sectionTitle: 'Makro Ekonomi & Para Politikası', icon: Zap },
+    { id: 'global', label: 'Küresel Piyasalar', sectionTitle: 'Küresel Piyasa Gelişmeleri', icon: Globe },
+    { id: 'crypto', label: 'Kripto Varlıklar', sectionTitle: 'Kripto Para Haberleri', icon: Coins }
 ];
+
+const ITEMS_PER_PAGE = 6;
 
 function NewsContent() {
     const { user } = useUser();
@@ -52,9 +54,9 @@ function NewsContent() {
         total: 0
     });
 
-    // Filter states
+    // Filter & Pagination states
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
-    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
 
     const fetchNewsData = async (isManualRefresh = false) => {
         if (isManualRefresh) setRefreshing(true);
@@ -90,20 +92,19 @@ function NewsContent() {
         fetchNewsData();
     }, [user]);
 
-    // Filter news client-side for instant tab switching
+    // Handle Category change & reset page
+    const handleCategoryChange = (catId: string) => {
+        setSelectedCategory(catId);
+        setCurrentPage(1);
+    };
+
+    // Filter news client-side
     const filteredNews = useMemo(() => {
         return news.filter(item => {
-            const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
-            const s = searchQuery.toLowerCase().trim();
-            const matchSearch = !s || 
-                item.title.toLowerCase().includes(s) || 
-                item.description.toLowerCase().includes(s) ||
-                item.tickers.some(t => t.toLowerCase().includes(s)) ||
-                item.source.toLowerCase().includes(s);
-
-            return matchCategory && matchSearch;
+            if (selectedCategory === 'all') return true;
+            return item.category === selectedCategory;
         });
-    }, [news, selectedCategory, searchQuery]);
+    }, [news, selectedCategory]);
 
     // Separate Featured Hero Stories and Stream News
     const featuredStory = useMemo(() => {
@@ -115,40 +116,51 @@ function NewsContent() {
     }, [news, featuredStory]);
 
     const streamNews = useMemo(() => {
-        if (selectedCategory === 'all' && !searchQuery) {
+        if (selectedCategory === 'all') {
             const featuredIds = new Set([featuredStory?.id, ...subStories.map(s => s.id)]);
             return filteredNews.filter(n => !featuredIds.has(n.id));
         }
         return filteredNews;
-    }, [filteredNews, featuredStory, subStories, selectedCategory, searchQuery]);
+    }, [filteredNews, featuredStory, subStories, selectedCategory]);
+
+    // Pagination calculations
+    const totalPages = Math.max(1, Math.ceil(streamNews.length / ITEMS_PER_PAGE));
+    const paginatedNews = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return streamNews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [streamNews, currentPage]);
 
     const kapNewsOnly = useMemo(() => {
         return news.filter(n => n.category === 'kap');
     }, [news]);
 
-    // Top Breaking news ticker items
+    // Top Breaking news ticker items (Exact 3 items, strictly no horizontal scrollbar)
     const breakingHeadlines = useMemo(() => {
-        return news.slice(0, 5);
+        return news.slice(0, 3);
     }, [news]);
+
+    const currentTabInfo = useMemo(() => {
+        return CATEGORY_TABS.find(t => t.id === selectedCategory) || CATEGORY_TABS[0];
+    }, [selectedCategory]);
 
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen pb-28 max-w-[1600px] mx-auto relative">
 
-            {/* Top Breaking Ticker Bar */}
+            {/* Top Breaking Ticker Bar (Strictly No Scrollbar, 2-3 headlines) */}
             {breakingHeadlines.length > 0 && (
                 <div className="bg-[#00008B] text-white rounded-2xl p-2.5 px-4 flex items-center gap-3 shadow-lg shadow-[#00008B]/15 overflow-hidden">
                     <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
                         <Radio className="w-3.5 h-3.5" /> CANLI AKIŞ
                     </div>
-                    <div className="overflow-x-auto whitespace-nowrap scrollbar-none flex items-center gap-6 text-xs font-semibold text-blue-100">
+                    <div className="flex items-center gap-6 text-xs font-semibold text-blue-100 truncate overflow-hidden">
                         {breakingHeadlines.map((item, idx) => (
                             <Link
                                 key={idx}
                                 href={`/dashboard/news/${item.slug}`}
-                                className="hover:text-yellow-300 transition-colors flex items-center gap-2 shrink-0"
+                                className="hover:text-yellow-300 transition-colors flex items-center gap-2 truncate shrink-0"
                             >
-                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                                <span className="font-bold">{item.title}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
+                                <span className="font-bold truncate max-w-[280px] sm:max-w-md">{item.title}</span>
                             </Link>
                         ))}
                     </div>
@@ -156,7 +168,7 @@ function NewsContent() {
             )}
 
             {/* Header Area */}
-            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-2">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest">
@@ -174,23 +186,12 @@ function NewsContent() {
                     </p>
                 </div>
 
-                {/* Right Controls: Search & Refresh */}
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative min-w-[240px] sm:min-w-[280px]">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B]/40" />
-                        <input
-                            type="text"
-                            placeholder="Haber veya hisse ara (#THYAO)..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-white border border-slate-200/80 rounded-2xl py-2.5 pl-10 pr-4 text-xs font-bold text-[#00008B] placeholder:text-[#00008B]/40 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 transition-all shadow-sm"
-                        />
-                    </div>
-
+                {/* Right Controls: Refresh Button */}
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => fetchNewsData(true)}
                         disabled={refreshing || loading}
-                        className="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-black text-[#00008B] shadow-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                        className="px-5 py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-black text-[#00008B] shadow-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                         title="Verileri Yenile"
                     >
                         <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
@@ -208,7 +209,7 @@ function NewsContent() {
                         return (
                             <button
                                 key={tab.id}
-                                onClick={() => setSelectedCategory(tab.id)}
+                                onClick={() => handleCategoryChange(tab.id)}
                                 className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                                     isSelected
                                         ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20'
@@ -243,8 +244,8 @@ function NewsContent() {
                 </div>
             ) : (
                 <div className="space-y-10">
-                    {/* Hero Big Story (Only on 'all' tab without active search) */}
-                    {selectedCategory === 'all' && !searchQuery && featuredStory && (
+                    {/* Hero Big Story (Only on 'all' tab) */}
+                    {selectedCategory === 'all' && featuredStory && (
                         <NewsHeroCard
                             mainNews={featuredStory}
                             subNews={subStories}
@@ -260,29 +261,68 @@ function NewsContent() {
                                 <div className="flex items-center gap-2">
                                     <div className="w-2.5 h-2.5 rounded-full bg-[#00008B]" />
                                     <h2 className="text-lg font-black text-[#00008B] uppercase tracking-wide">
-                                        {CATEGORY_TABS.find(t => t.id === selectedCategory)?.label} Akışı
+                                        {currentTabInfo.sectionTitle}
                                     </h2>
                                 </div>
                                 <span className="text-xs font-bold text-slate-400">
-                                    {streamNews.length} Gelişme Listeleniyor
+                                    Toplam {streamNews.length} Haber (Sayfa {currentPage} / {totalPages})
                                 </span>
                             </div>
 
-                            {streamNews.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {streamNews.map((item, idx) => (
-                                        <NewsCard
-                                            key={item.id || idx}
-                                            item={item}
-                                            index={idx}
-                                        />
-                                    ))}
+                            {paginatedNews.length > 0 ? (
+                                <div className="space-y-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {paginatedNews.map((item, idx) => (
+                                            <NewsCard
+                                                key={item.id || idx}
+                                                item={item}
+                                                index={idx}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Pagination Controls (1, 2, 3, 4 ...) */}
+                                    {totalPages > 1 && (
+                                        <div className="flex items-center justify-center gap-2 pt-6 border-t border-slate-100">
+                                            <button
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage === 1}
+                                                className="p-2.5 rounded-xl border border-slate-200 bg-white text-[#00008B] font-black disabled:opacity-30 hover:bg-slate-50 transition-all flex items-center gap-1 text-xs"
+                                            >
+                                                <ChevronLeft className="w-4 h-4" /> Önceki
+                                            </button>
+
+                                            <div className="flex items-center gap-1.5">
+                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() => setCurrentPage(pageNum)}
+                                                        className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
+                                                            currentPage === pageNum
+                                                                ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20 scale-105'
+                                                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                        }`}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <button
+                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={currentPage === totalPages}
+                                                className="p-2.5 rounded-xl border border-slate-200 bg-white text-[#00008B] font-black disabled:opacity-30 hover:bg-slate-50 transition-all flex items-center gap-1 text-xs"
+                                            >
+                                                Sonraki <ChevronRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="bg-white border border-slate-200/80 rounded-3xl p-16 text-center space-y-3">
-                                    <Filter className="w-8 h-8 text-slate-300 mx-auto" />
-                                    <h3 className="text-sm font-black text-[#00008B]">Bu kriterlere uygun haber bulunamadı</h3>
-                                    <p className="text-xs text-slate-400">Arama kelimenizi değiştirebilir veya başka bir kategori seçebilirsiniz.</p>
+                                    <Newspaper className="w-8 h-8 text-slate-300 mx-auto" />
+                                    <h3 className="text-sm font-black text-[#00008B]">Bu kategoride henüz haber bulunmuyor</h3>
+                                    <p className="text-xs text-slate-400">Diğer kategorileri inceleyebilirsiniz.</p>
                                 </div>
                             )}
                         </div>
