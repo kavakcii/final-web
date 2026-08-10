@@ -153,7 +153,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
     return (
         <div
             onClick={handleCardClick}
-            className={`w-full bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-xl shadow-[#00008B]/20 font-sans flex flex-col justify-between transition-all relative overflow-hidden group min-w-0 ${
+            className={`w-full h-full bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-xl shadow-[#00008B]/20 font-sans flex flex-col justify-between min-h-[220px] sm:min-h-[300px] transition-all relative overflow-hidden group min-w-0 ${
                 !isDetailedPage ? 'cursor-pointer hover:border-white/30' : ''
             }`}
         >

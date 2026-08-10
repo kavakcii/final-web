@@ -55,7 +55,7 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
         return (
             <div className="flex flex-col gap-2.5 sm:gap-3 w-full h-full justify-between">
                 {/* TOPLAM VARLIK DEĞERİ KARTI - LACİVERT BG */}
-                <div className="bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg shadow-[#00008B]/15 relative overflow-hidden group flex-1 flex flex-col justify-between">
+                <div className="bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-lg shadow-[#00008B]/15 relative overflow-hidden group flex-1 min-h-[110px] sm:min-h-[130px] flex flex-col justify-between">
                     <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
                     <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1.5 sm:gap-2">
@@ -65,7 +65,7 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
                             <span className="text-white/80 text-[8px] sm:text-[10px] font-black uppercase tracking-widest">Toplam Varlık</span>
                         </div>
                     </div>
-                    <h2 className="text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tighter my-0.5 truncate">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter my-0.5 truncate">
                         {formatCurrency(totalValue)}
                     </h2>
                     <div className="flex items-center gap-1.5 mt-1">
@@ -76,7 +76,7 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
 
                 {/* NET KÂR / ZARAR KARTI - KARDA YEŞİL, ZARARDA KIRMIZI BG */}
                 <div className={cn(
-                    "rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-lg text-white border transition-all relative overflow-hidden group flex-1 flex flex-col justify-between",
+                    "rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-lg text-white border transition-all relative overflow-hidden group flex-1 min-h-[110px] sm:min-h-[130px] flex flex-col justify-between",
                     totalProfit >= 0
                         ? "bg-emerald-600 border-emerald-500 shadow-emerald-900/10"
                         : "bg-rose-600 border-rose-500 shadow-rose-900/10"
@@ -94,7 +94,7 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
                         </div>
                     </div>
                     <div className="my-0.5">
-                        <span className="text-lg sm:text-2xl md:text-3xl font-black tracking-tight block text-white truncate">
+                        <span className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight block text-white truncate">
                             {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
                         </span>
                     </div>

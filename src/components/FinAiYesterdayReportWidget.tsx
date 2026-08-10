@@ -154,7 +154,7 @@ export function FinAiYesterdayReportWidget() {
     const isPositive = displayDiffValue >= 0;
 
     return (
-        <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex flex-col justify-between h-full min-w-0 relative overflow-hidden">
+        <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[230px] sm:min-h-[270px] min-w-0 relative overflow-hidden">
             {/* Subtle background ambient lights */}
             <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl pointer-events-none" />

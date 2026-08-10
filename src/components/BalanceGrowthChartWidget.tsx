@@ -140,7 +140,7 @@ export function BalanceGrowthChartWidget() {
     const isNewUser = !firstDate && !loading;
 
     return (
-        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex flex-col justify-between h-full min-w-0">
+        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[230px] sm:min-h-[270px] min-w-0">
             <div>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2 sm:mb-4">
@@ -175,7 +175,7 @@ export function BalanceGrowthChartWidget() {
 
                 {/* --- Yüklenme Durumu --- */}
                 {!isNewUser && loading && (
-                    <div className="flex items-center justify-center h-32 sm:h-44">
+                    <div className="flex items-center justify-center h-36 sm:h-48">
                         <div className="w-5 h-5 border-2 border-[#00008B] border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
@@ -215,7 +215,7 @@ export function BalanceGrowthChartWidget() {
                         </div>
 
                         {/* Chart */}
-                        <div className="h-32 sm:h-44 w-full pt-1">
+                        <div className="h-36 sm:h-48 w-full pt-1">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={displayChartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                                     <defs>
