@@ -4,14 +4,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
 
-export interface StructuredSummary {
-    mainEvent: string;
-    keyData: string;
-    strategicImpact: string;
-}
-
 // In-memory summary cache (url -> summary)
-const summaryCache = new Map<string, StructuredSummary>();
+const summaryCache = new Map<string, string>();
 
 function decodeHtmlEntities(str: string): string {
     if (!str) return '';
@@ -30,40 +24,21 @@ function decodeHtmlEntities(str: string): string {
         .trim();
 }
 
-// 2. Yedek: Kural Tabanlı Finansal NLP Sentezleyici (Sıfır Maliyet, Anlık & Kesintisiz)
-function nlpFallbackSummarize(title: string, paragraphs: string[], description?: string): StructuredSummary {
-    const firstP = paragraphs[0] || description || title;
-    const mainEvent = firstP.length > 200 ? firstP.slice(0, 195) + '...' : firstP;
-
-    // Rakam, tutar, oran içeren en güçlü cümleyi bul
-    let keyData = '';
-    const numberSentences = paragraphs.flatMap(p => p.split(/(?<=[.!?])\s+/)).filter(s => 
-        /\b(?:\d+[\.,]?\d*|\d+)\s*(?:milyon|milyar|bin|dolar|tl|lira|euro|btc|yüzde|%|puan|baz)/i.test(s)
-    );
-    if (numberSentences.length > 0 && numberSentences[0] !== firstP) {
-        keyData = numberSentences[0].trim();
-    } else {
-        keyData = `${title} gelişmesi kapsamında ilgili tutarlar, fiyat seviyeleri ve işlem hacimleri yakından izlenmektedir.`;
+// 2. Yedek: Akıcı Birleşik Paragraf NLP Sentezleyici
+function nlpFallbackSummarize(title: string, paragraphs: string[], description?: string): string {
+    const p1 = paragraphs[0] || description || title;
+    const p2 = paragraphs[1] || '';
+    
+    let combined = p1;
+    if (p2 && p2.length > 30 && !combined.includes(p2)) {
+        combined += ` ${p2}`;
     }
 
-    // Stratejik etkiyi son paragraftan veya analizden çıkar
-    const lastP = paragraphs[paragraphs.length - 1] || '';
-    let strategicImpact = '';
-    if (lastP && lastP !== firstP && lastP.length > 30) {
-        strategicImpact = lastP.length > 180 ? lastP.slice(0, 175) + '...' : lastP;
-    } else {
-        strategicImpact = 'Bu gelişme ilgili sektör, şirket bilançoları ve piyasa dengesi açısından stratejik önem taşımaktadır.';
-    }
-
-    return {
-        mainEvent: decodeHtmlEntities(mainEvent),
-        keyData: decodeHtmlEntities(keyData.length > 200 ? keyData.slice(0, 195) + '...' : keyData),
-        strategicImpact: decodeHtmlEntities(strategicImpact)
-    };
+    return decodeHtmlEntities(combined.trim());
 }
 
-// 1. Birincil: Gemini Flash Hibrit Özet Motoru
-async function generateStructuredSummary(title: string, paragraphs: string[], description?: string): Promise<StructuredSummary> {
+// 1. Birincil: Gemini Flash Akıcı Paragraf Özeti
+async function generateUnifiedSummary(title: string, paragraphs: string[], description?: string): Promise<string> {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return nlpFallbackSummarize(title, paragraphs, description);
@@ -73,32 +48,19 @@ async function generateStructuredSummary(title: string, paragraphs: string[], de
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `Sen FinAi Kıdemli Finans Editörüsün. Aşağıdaki haber metnini yatırımcılar için 3 maddelik zengin ve profesyonel bir yönetici özeti haline getir.
-SADECE aşağıdaki JSON formatında geçerli bir JSON döndür, başka hiçbir şey yazma:
-{
-  "mainEvent": "Haberin 1-2 cümlelik en temel ana gelişmesi",
-  "keyData": "Haberdeki kritik rakamlar, parasal tutar, oran veya sayısal boyut",
-  "strategicImpact": "Bu hamlenin/gelişmenin piyasaya veya şirkete nihai stratejik etkisi"
-}
+        const prompt = `Sen FinAi Kıdemli Finans Editörüsün. Aşağıdaki haber metnini yatırımcıların tek bakışta anlayacağı, akıcı, tek parça ve net bir haber özeti paragrafı haline getir.
+Maddeleme, başlık veya liste yapma. Doğrudan tek bir akıcı ve profesyonel Türkçe paragraf yaz.
 
 Haber Başlığı: ${title}
 Haber Metni:
-${paragraphs.slice(0, 6).join('\n\n')}`;
+${paragraphs.slice(0, 5).join('\n\n')}`;
 
         const result = await model.generateContent(prompt);
         const text = result.response.text().trim();
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.mainEvent && parsed.keyData && parsed.strategicImpact) {
-                return {
-                    mainEvent: decodeHtmlEntities(parsed.mainEvent),
-                    keyData: decodeHtmlEntities(parsed.keyData),
-                    strategicImpact: decodeHtmlEntities(parsed.strategicImpact)
-                };
-            }
+        if (text && text.length > 20) {
+            return decodeHtmlEntities(text);
         }
-        throw new Error("Invalid format");
+        throw new Error("Empty response");
     } catch {
         return nlpFallbackSummarize(title, paragraphs, description);
     }
@@ -182,11 +144,11 @@ export async function GET(request: Request) {
             }
         }
 
-        // 4. Hibrit Yapılandırılmış Özet Üretimi (Gemini Flash + NLP Fallback + Cache)
-        let structuredSummary = summaryCache.get(url);
-        if (!structuredSummary) {
-            structuredSummary = await generateStructuredSummary(title, paragraphs, fallbackDesc);
-            summaryCache.set(url, structuredSummary);
+        // 4. Akıcı Birleşik Haber Özeti (Cache Destekli)
+        let unifiedSummary = summaryCache.get(url);
+        if (!unifiedSummary) {
+            unifiedSummary = await generateUnifiedSummary(title, paragraphs, fallbackDesc);
+            summaryCache.set(url, unifiedSummary);
         }
 
         return NextResponse.json({
@@ -195,7 +157,7 @@ export async function GET(request: Request) {
                 title,
                 image,
                 paragraphs,
-                structuredSummary,
+                summary: unifiedSummary,
                 sourceUrl: url
             }
         });

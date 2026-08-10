@@ -15,13 +15,12 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { EnrichedNewsItem } from "@/app/api/news/route";
-import { StructuredSummary } from "@/app/api/news/article/route";
 
 interface ArticleDetail {
     title: string;
     image?: string | null;
     paragraphs: string[];
-    structuredSummary?: StructuredSummary;
+    summary?: string;
     sourceUrl: string;
 }
 
@@ -63,7 +62,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
 
                 setNewsItem(currentItem);
 
-                // 2. Haberin tam ham metnini ve yapılandırılmış özetini çek
+                // 2. Haberin tam ham metnini ve akıcı özetini çek
                 const articleRes = await fetch(`/api/news/article?url=${encodeURIComponent(currentItem.link)}&desc=${encodeURIComponent(currentItem.description)}`);
                 const articleJson = await articleRes.json();
 
@@ -74,11 +73,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                     setArticle({
                         title: currentItem.title,
                         paragraphs: [currentItem.description],
-                        structuredSummary: {
-                            mainEvent: currentItem.description,
-                            keyData: `${currentItem.title} kapsamında piyasa verileri takip ediliyor.`,
-                            strategicImpact: 'Bu gelişme ilgili piyasa dinamikleri açısından yakından izlenmektedir.'
-                        },
+                        summary: currentItem.description,
                         sourceUrl: currentItem.link
                     });
                 }
@@ -126,11 +121,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
         !newsItem?.categoryLabel.toLowerCase().includes(a.toLowerCase())
     );
 
-    const summary = article?.structuredSummary || {
-        mainEvent: newsItem?.description || '',
-        keyData: `${newsItem?.title} gelişmesinde piyasa verileri izleniyor.`,
-        strategicImpact: 'Bu hamle şirket ve piyasa dengesi açısından stratejik önem taşımaktadır.'
-    };
+    const summaryText = article?.summary || newsItem?.description || '';
 
     return (
         <div className="min-h-screen bg-slate-50/50 text-[#00008B] pb-24">
@@ -284,56 +275,24 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                             </div>
                         </motion.article>
 
-                        {/* SAĞ TARAF: %35 - 40 GENİŞLİK (Yapılandırılmış 3 Maddelik Özet Widget'ı + Kritik Gelişmeler) */}
+                        {/* SAĞ TARAF: %35 - 40 GENİŞLİK (FinAi Haber Özeti + Kritik Gelişmeler) */}
                         <div className="lg:col-span-4 flex flex-col justify-between gap-6 h-full">
                             
-                            {/* WIDGET 1: Yapılandırılmış 3 Maddelik Zengin Özet (Toplam Yüksekliğin %60'ı) */}
-                            <div className="flex-[6] bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-3xl p-6 md:p-7 shadow-xl shadow-[#00008B]/20 border border-white/10 relative overflow-hidden flex flex-col justify-between space-y-4">
+                            {/* WIDGET 1: FinAi Haber Özeti (Doğrudan Akıcı Büyük Paragraf Metni) */}
+                            <div className="flex-[6] bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-[#00008B]/20 border border-white/10 relative overflow-hidden flex flex-col justify-start space-y-4">
                                 <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
 
                                 <div className="relative z-10 pb-3 border-b border-white/10">
                                     <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                                        Özet
+                                        FinAi Haber Özeti
                                     </h3>
                                 </div>
 
-                                {/* 3 Maddelik Zengin & Yapılandırılmış Yatırımcı Özeti */}
-                                <div className="relative z-10 space-y-3.5 text-xs text-blue-100/90 leading-relaxed font-medium">
-                                    
-                                    {/* 1. Ana Gelişme */}
-                                    <div className="space-y-1">
-                                        <span className="text-[10px] font-black text-yellow-300 uppercase tracking-wider block">
-                                            📌 Ana Gelişme
-                                        </span>
-                                        <p className="text-xs leading-relaxed text-white font-medium">
-                                            {summary.mainEvent}
-                                        </p>
-                                    </div>
-
-                                    {/* 2. Kritik Veri & Rakamlar */}
-                                    <div className="space-y-1 pt-1 border-t border-white/5">
-                                        <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider block">
-                                            📊 Kritik Veri & Rakamlar
-                                        </span>
-                                        <p className="text-xs leading-relaxed text-blue-100">
-                                            {summary.keyData}
-                                        </p>
-                                    </div>
-
-                                    {/* 3. Stratejik Etki / Sonuç */}
-                                    <div className="space-y-1 pt-1 border-t border-white/5">
-                                        <span className="text-[10px] font-black text-blue-300 uppercase tracking-wider block">
-                                            🎯 Stratejik Etki
-                                        </span>
-                                        <p className="text-xs leading-relaxed text-blue-200">
-                                            {summary.strategicImpact}
-                                        </p>
-                                    </div>
-
-                                </div>
-
-                                <div className="relative z-10 pt-2 text-[9px] text-blue-300/60 font-semibold text-right">
-                                    FinAi Intelligence
+                                {/* Doğrudan Büyük, Birleşik ve Akıcı Paragraf Metni */}
+                                <div className="relative z-10 text-sm sm:text-[15px] text-blue-100 leading-relaxed font-normal pt-1">
+                                    <p className="leading-relaxed">
+                                        {summaryText}
+                                    </p>
                                 </div>
                             </div>
 
