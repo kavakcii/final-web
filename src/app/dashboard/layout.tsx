@@ -134,13 +134,13 @@ function DashboardShell({
             <div className="relative z-10 w-full flex mx-auto max-w-[1920px] overflow-x-hidden min-h-screen">
                 <div className="flex-1 flex bg-transparent min-w-0">
                     
-                    {/* Always Visible Compact Sidebar (w-14 on Mobile, Expanding on Desktop) */}
-                    <aside className="w-14 md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
+                    {/* Always Visible Compact Sidebar (w-14 sm:w-16 on Mobile, Expanding on Desktop) */}
+                    <aside className="w-14 sm:w-16 md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
                         {/* Glass Reflection & Ambient Glow */}
                         <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-white/40 pointer-events-none" />
                         <div className="absolute -left-16 top-1/4 w-36 h-36 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
-                        <div className="p-3 md:p-6 flex items-center justify-center md:justify-start h-14 md:h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
+                        <div className="p-2 sm:p-3 md:p-6 flex items-center justify-center md:justify-start h-14 md:h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
                             <Link href="/" className="flex items-center justify-center md:justify-start gap-3 w-full overflow-hidden group/logo">
                                 <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.15)]" />
                                 <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap hidden md:inline-block">
@@ -149,7 +149,7 @@ function DashboardShell({
                             </Link>
                         </div>
 
-                        <nav className="flex-1 px-1.5 md:px-3 py-3 md:py-4 space-y-2 md:space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
+                        <nav className="flex-1 px-1.5 sm:px-2 md:px-3 py-4 md:py-6 space-y-3.5 sm:space-y-4 md:space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 
@@ -239,7 +239,7 @@ function DashboardShell({
                             })}
                         </nav>
 
-                        <div className="p-2 md:p-4 border-t border-white/10 shrink-0">
+                        <div className="p-2 sm:p-3 md:p-4 border-t border-white/10 shrink-0">
                             <button onClick={handleLogout} className="flex items-center justify-center md:justify-start px-2 md:px-4 py-2.5 md:py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
                                 <span className="opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block">

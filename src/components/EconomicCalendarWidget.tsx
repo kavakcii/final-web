@@ -153,7 +153,7 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
     return (
         <div
             onClick={handleCardClick}
-            className={`w-full bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl shadow-[#00008B]/20 font-sans flex flex-col justify-between transition-all relative overflow-hidden group min-w-0 ${
+            className={`w-full bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-xl shadow-[#00008B]/20 font-sans flex flex-col justify-between transition-all relative overflow-hidden group min-w-0 ${
                 !isDetailedPage ? 'cursor-pointer hover:border-white/30' : ''
             }`}
         >
@@ -162,47 +162,47 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
 
             <div className="relative z-10 min-w-0">
                 {/* Clean Header */}
-                <div className="flex items-center justify-between mb-4 sm:mb-5 pb-3 sm:pb-4 border-b border-white/15">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shrink-0">
-                            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                <div className="flex items-center justify-between mb-2 sm:mb-5 pb-2 sm:pb-4 border-b border-white/15">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-lg sm:rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center backdrop-blur-md shrink-0">
+                            <Calendar className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
                         </div>
-                        <div className="flex items-center gap-2 min-w-0">
-                            <h3 className="text-base sm:text-xl font-black tracking-tight text-white flex items-center gap-1.5 sm:gap-2 truncate">
-                                Ekonomik Takvim <span className="text-xs sm:text-sm font-semibold text-blue-200">({todayFormattedDate})</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                            <h3 className="text-xs sm:text-xl font-black tracking-tight text-white flex items-center gap-1 sm:gap-2 truncate">
+                                Ekonomik Takvim <span className="text-[10px] sm:text-sm font-semibold text-blue-200">({todayFormattedDate})</span>
                             </h3>
-                            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Saniyelik Canlı Akış" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" title="Saniyelik Canlı Akış" />
                         </div>
                     </div>
 
                     {!isDetailedPage && (
-                        <div className="text-xs font-bold text-white flex items-center gap-1 hover:underline transition-all shrink-0">
-                            Detaylar <ArrowRight className="w-3.5 h-3.5" />
+                        <div className="text-[10px] sm:text-xs font-bold text-white flex items-center gap-1 hover:underline transition-all shrink-0">
+                            Detaylar <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         </div>
                     )}
                 </div>
 
                 {/* Tablo Görünümü */}
                 {loading ? (
-                    <div className="py-16 text-center flex flex-col items-center justify-center gap-3">
-                        <Loader2 className="w-7 h-7 text-white animate-spin" />
-                        <span className="text-xs font-bold text-blue-200">Bugünün Canlı Ekonomik Haberleri Yükleniyor...</span>
+                    <div className="py-8 sm:py-16 text-center flex flex-col items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 sm:w-7 sm:h-7 text-white animate-spin" />
+                        <span className="text-[10px] sm:text-xs font-bold text-blue-200">Haberler Yükleniyor...</span>
                     </div>
                 ) : filteredEvents.length > 0 ? (
-                    <div className="overflow-x-auto max-h-[500px] overflow-y-auto pr-1 w-full scrollbar-thin">
-                        <table className="w-full text-left border-collapse min-w-[500px]">
+                    <div className="overflow-x-auto max-h-[170px] sm:max-h-[500px] overflow-y-auto pr-1 w-full scrollbar-thin">
+                        <table className="w-full text-left border-collapse min-w-[480px]">
                             <thead>
-                                <tr className="border-b border-white/15 text-[10px] font-black text-blue-200 uppercase tracking-wider pb-2">
-                                    <th className="py-2.5 px-3 w-16 text-blue-200">Saat</th>
-                                    <th className="py-2.5 px-3 w-20 text-blue-200">Ülke</th>
-                                    <th className="py-2.5 px-2 w-12 text-center text-blue-200">Etki</th>
-                                    <th className="py-2.5 px-3 text-blue-200">Haber Başlığı</th>
-                                    <th className="py-2.5 px-3 text-right w-24 text-blue-200">Açıklanan</th>
-                                    <th className="py-2.5 px-3 text-right w-24 text-blue-200">Beklenen</th>
-                                    <th className="py-2.5 px-3 text-right w-24 text-blue-200">Önceki</th>
+                                <tr className="border-b border-white/15 text-[9px] sm:text-[10px] font-black text-blue-200 uppercase tracking-wider pb-1.5">
+                                    <th className="py-1.5 px-2 w-14 text-blue-200">Saat</th>
+                                    <th className="py-1.5 px-2 w-16 text-blue-200">Ülke</th>
+                                    <th className="py-1.5 px-1.5 w-10 text-center text-blue-200">Etki</th>
+                                    <th className="py-1.5 px-2 text-blue-200">Haber Başlığı</th>
+                                    <th className="py-1.5 px-2 text-right w-20 text-blue-200">Açıklanan</th>
+                                    <th className="py-1.5 px-2 text-right w-20 text-blue-200">Beklenen</th>
+                                    <th className="py-1.5 px-2 text-right w-20 text-blue-200">Önceki</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-white/10 text-xs font-medium">
+                            <tbody className="divide-y divide-white/10 text-[11px] sm:text-xs font-medium">
                                 {filteredEvents.slice(0, 15).map((item, idx) => (
                                     <tr
                                         key={idx}
@@ -210,46 +210,46 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                                         className="hover:bg-white/15 cursor-pointer transition-colors group border-b border-white/10"
                                     >
                                         {/* Saat */}
-                                        <td className="py-3.5 px-3 font-bold text-white align-top">
+                                        <td className="py-2 px-2 font-bold text-white align-top">
                                             {item.time}
                                         </td>
 
                                         {/* Ülke Kısaltması (TR, ABD, EU, UK) */}
-                                        <td className="py-3.5 px-3 align-top">
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-sm">{item.flag || '🌐'}</span>
-                                                <span className="text-xs font-black text-white">
+                                        <td className="py-2 px-2 align-top">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-xs">{item.flag || '🌐'}</span>
+                                                <span className="text-[11px] font-black text-white">
                                                     {item.country}
                                                 </span>
                                             </div>
                                         </td>
 
-                                        {/* Etki Sinyal Barları (Tam Net & Beyaz) */}
-                                        <td className="py-3.5 px-2 text-center align-top pt-4">
+                                        {/* Etki Sinyal Barları */}
+                                        <td className="py-2 px-1.5 text-center align-top pt-2.5">
                                             <div className="flex justify-center">
                                                 {renderSignalBars(item.impact)}
                                             </div>
                                         </td>
 
-                                        {/* Haber Başlığı (%100 Türkçe & Tam Beyaz) */}
-                                        <td className="py-3.5 px-3 align-top">
-                                            <span className="text-xs font-bold text-white block leading-snug">
+                                        {/* Haber Başlığı */}
+                                        <td className="py-2 px-2 align-top">
+                                            <span className="text-[11px] font-bold text-white block leading-tight">
                                                 {item.event}
                                             </span>
                                         </td>
 
-                                        {/* Açıklanan (Beklenenden Yüksekse YEŞİL ▲, Düşükse KIRMIZI ▼) */}
-                                        <td className="py-3.5 px-3 text-right align-top">
+                                        {/* Açıklanan */}
+                                        <td className="py-2 px-2 text-right align-top">
                                             {renderActualValue(item)}
                                         </td>
 
                                         {/* Beklenen (Forecast) */}
-                                        <td className="py-3.5 px-3 text-right font-semibold text-blue-200 align-top">
+                                        <td className="py-2 px-2 text-right font-semibold text-blue-200 align-top">
                                             {item.forecast || '-'}
                                         </td>
 
                                         {/* Önceki (Previous) */}
-                                        <td className="py-3.5 px-3 text-right font-semibold text-blue-200 align-top">
+                                        <td className="py-2 px-2 text-right font-semibold text-blue-200 align-top">
                                             {item.previous || '-'}
                                         </td>
                                     </tr>
@@ -258,14 +258,14 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                         </table>
                     </div>
                 ) : (
-                    <div className="py-12 text-center text-xs font-bold text-blue-200">
+                    <div className="py-8 text-center text-xs font-bold text-blue-200">
                         Bugün için açıklanan kritik haber bulunmamaktadır.
                     </div>
                 )}
             </div>
 
-            {/* Footer - Bugünün Tarihi (Tam Beyaz Metin) */}
-            <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[11px] font-bold text-white">
+            {/* Footer - Bugünün Tarihi */}
+            <div className="mt-2 pt-2 border-t border-white/15 flex items-center justify-between text-[9px] sm:text-[11px] font-bold text-white">
                 <span className="flex items-center gap-1.5 font-black tracking-wider text-white">
                     Tarih: {todayFormattedDate}
                 </span>

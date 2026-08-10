@@ -60,10 +60,10 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-x-hidden">
+        <div className="flex flex-col min-h-[calc(100vh-3.5rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-x-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
 
-            <div className="w-full max-w-[1600px] mx-auto px-4 py-5 sm:px-6 md:px-10 lg:py-10 space-y-6 md:space-y-8 relative z-10 mb-20 md:mb-12">
+            <div className="w-full max-w-[1600px] mx-auto px-2.5 py-3 sm:px-6 md:px-10 lg:py-8 space-y-2.5 sm:space-y-4 md:space-y-8 relative z-10 pb-4 md:pb-10">
                 <AnimatePresence>
                     {!isDataLoaded && (
                         <motion.div
@@ -72,26 +72,26 @@ export default function DashboardPage() {
                             exit={{ opacity: 0 }}
                             className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md"
                         >
-                            <div className="w-full max-w-md p-10 rounded-[2.5rem] bg-white border border-slate-100 text-[#00008B] shadow-2xl text-center">
-                                <div className="w-24 h-24 mx-auto mb-8 relative">
-                                    <Loader2 className="w-24 h-24 text-[#00008B] animate-spin opacity-20" />
-                                    <TrendingUp className="w-10 h-10 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
+                            <div className="w-full max-w-md p-8 sm:p-10 rounded-[2.5rem] bg-white border border-slate-100 text-[#00008B] shadow-2xl text-center">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 sm:mb-8 relative">
+                                    <Loader2 className="w-20 h-20 sm:w-24 sm:h-24 text-[#00008B] animate-spin opacity-20" />
+                                    <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
                                 </div>
-                                <h2 className="text-2xl font-black mb-2 tracking-tighter">FinAi Hazırlanıyor</h2>
-                                <p className="text-sm font-bold text-slate-400 animate-pulse">{loadingMessages[loadingStep]}</p>
+                                <h2 className="text-xl sm:text-2xl font-black mb-2 tracking-tighter">FinAi Hazırlanıyor</h2>
+                                <p className="text-xs sm:text-sm font-bold text-slate-400 animate-pulse">{loadingMessages[loadingStep]}</p>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {/* Header Welcome Area */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 md:gap-4 relative z-10">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-1 md:gap-4 relative z-10">
                     <div>
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#00008B] flex items-center gap-2 sm:gap-3 tracking-tight">
+                        <h1 className="text-lg sm:text-2xl md:text-4xl font-bold text-[#00008B] flex items-center gap-1.5 sm:gap-3 tracking-tight">
                             Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
                             <motion.span animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}>👋</motion.span>
                         </h1>
-                        <p className="text-[#00008B] mt-1 sm:mt-2 text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                        <p className="text-[#00008B] mt-0.5 sm:mt-1 text-[8px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
                     </div>
                 </div>
 
