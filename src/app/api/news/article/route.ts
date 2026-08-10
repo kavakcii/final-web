@@ -35,29 +35,32 @@ export async function GET(request: Request) {
 
         const image = $('meta[property="og:image"]').attr('content') || $('article img').first().attr('src') || null;
 
-        // 3. Ham Paragrafları ayıkla
+        // 3. Ham Paragrafları ve Tabloları ayıkla
         let paragraphs: string[] = [];
 
-        // Önce ana içerik alanını bul
-        const contentContainers = $('article, main, .content, .news-detail, .news-content, .story-body, .article-body, #content');
-        if (contentContainers.length > 0) {
-            contentContainers.find('p').each((_, el) => {
-                const text = $(el).text().trim();
-                if (text.length > 45 && !text.toLowerCase().includes('çerez') && !text.toLowerCase().includes('abone')) {
-                    paragraphs.push(text);
+        // Tablo satırlarını (Bilanço / KAP Tabloları) düzenle
+        $('table').each((_, tbl) => {
+            const rows: string[] = [];
+            $(tbl).find('tr').each((_, tr) => {
+                const cells = $(tr).find('th, td').map((_, cell) => $(cell).text().trim().replace(/\s+/g, ' ')).get().filter(Boolean);
+                if (cells.length >= 2) {
+                    rows.push(`• ${cells.join(' : ')}`);
+                } else if (cells.length === 1 && cells[0].length > 10) {
+                    rows.push(`📌 ${cells[0]}`);
                 }
             });
-        }
+            if (rows.length > 0) {
+                paragraphs.push(...rows);
+            }
+        });
 
-        // Eğer bulunamadıysa tüm p etiketlerini tara
-        if (paragraphs.length === 0) {
-            $('p').each((_, el) => {
-                const text = $(el).text().trim();
-                if (text.length > 45 && !text.toLowerCase().includes('çerez') && !text.toLowerCase().includes('abone') && !text.toLowerCase().includes('tıklayın')) {
-                    paragraphs.push(text);
-                }
-            });
-        }
+        // Paragrafları tara
+        $('article p, main p, .content p, .news-detail p, .news-content p, .story-body p, p').each((_, el) => {
+            const text = $(el).text().trim().replace(/\s+/g, ' ');
+            if (text.length > 35 && !text.toLowerCase().includes('çerez') && !text.toLowerCase().includes('abone') && !text.toLowerCase().includes('tıklayın') && !paragraphs.includes(text)) {
+                paragraphs.push(text);
+            }
+        });
 
         // Eğer hala çok kısaysa meta description fallback
         if (paragraphs.length === 0) {
@@ -65,7 +68,7 @@ export async function GET(request: Request) {
             if (metaDesc) {
                 paragraphs.push(metaDesc);
             } else {
-                paragraphs.push("Bu haberin metni hazırlanmaktadır. Ayrıntılar için kaynak bağlantısını ziyaret edebilirsiniz.");
+                paragraphs.push("Bu bildirimin detayları FinAi masası tarafından hazırlanmaktadır. İlgili KAP açıklamasına resmi kaynaklardan ulaşabilirsiniz.");
             }
         }
 

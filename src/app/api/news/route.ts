@@ -122,7 +122,7 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
     if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc') || text.includes('altcoin')) {
         return { category: 'crypto', label: 'Kripto Varlıklar' };
     }
-    // 2. KAP & Resmi Şirket Bildirimleri
+    // 2. KAP & Resmi Şirket Bildirimleri (Sorumluluk Beyanları, Bilanço, İhale, Sözleşme vb.)
     if (
         text.includes('kap ') || 
         text.includes('bildirim') || 
@@ -136,9 +136,9 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
         text.includes('kar payı') || 
         text.includes('temettü') || 
         text.includes('finansal rapor') ||
-        text.includes('milyon tl') ||
-        text.includes('milyar tl') ||
-        text.includes('ortaklık')
+        text.includes('sorumluluk beyanı') ||
+        text.includes('bilanço') ||
+        text.includes('faaliyet raporu')
     ) {
         return { category: 'kap', label: 'KAP & Şirketler' };
     }
@@ -158,37 +158,37 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
     return { category: defaultCategory, label: defaultLabel };
 }
 
-// Bloomberg HT Doğrudan Piyasa Haberlerini Kazıma Fonksiyonu
-async function fetchBloombergHTLiveMarket(): Promise<{ title: string; link: string; description: string; pubDate: string }[]> {
+// Canlı KAP Bildirimleri (Bilanço, Sorumluluk Beyanları, Sözleşmeler, Raporlar)
+async function fetchLiveKapDisclosures(): Promise<{ title: string; link: string; description: string; pubDate: string }[]> {
     try {
-        const res = await fetch('https://www.bloomberght.com/piyasalar', {
+        const res = await fetch('https://uzmanpara.milliyet.com.tr/kap-haberleri/', {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             },
-            next: { revalidate: 300 }
+            next: { revalidate: 180 }
         });
         if (!res.ok) return [];
         const html = await res.text();
         const $ = cheerio.load(html);
 
         const items: { title: string; link: string; description: string; pubDate: string }[] = [];
-        $('a[href*="-378"], a[href*="/haberler/"]').each((_, el) => {
+        $('a[href*="/kap-haberi/"]').each((_, el) => {
             const href = $(el).attr('href');
             const title = $(el).text().trim().replace(/\s+/g, ' ');
-            if (href && title.length > 25 && !title.toLowerCase().includes('canlı yayın') && !title.toLowerCase().includes('reklam')) {
-                const fullUrl = href.startsWith('http') ? href : `https://www.bloomberght.com${href}`;
-                if (fullUrl.includes('bloomberght.com/') && !items.some(it => it.link === fullUrl)) {
+            if (href && title.length > 10) {
+                const fullUrl = href.startsWith('http') ? href : `https://uzmanpara.milliyet.com.tr${href}`;
+                if (!items.some(it => it.link === fullUrl)) {
                     items.push({
                         title,
                         link: fullUrl,
-                        description: title,
+                        description: `KAP Bildirimi: ${title}`,
                         pubDate: new Date().toISOString()
                     });
                 }
             }
         });
 
-        return items.slice(0, 10);
+        return items.slice(0, 15);
     } catch {
         return [];
     }
@@ -232,24 +232,24 @@ export async function GET(request: Request) {
             }
         }
 
-        // 2. KATEGORİ BAZLI DOĞRULANMIŞ HABER KAYNAKLARI (RSS + Canlı Bloomberg HT)
+        // 2. KATEGORİ BAZLI DOĞRULANMIŞ HABER KAYNAKLARI (Dengeli ve Gürültüsüz)
         const verifiedFeeds: { source: string; category: EnrichedNewsItem['category']; label: string; url: string }[] = [
-            // Borsa İstanbul & Şirketler
+            // Borsa İstanbul & Şirketler (3 Güvenilir Kaynak)
             { source: 'AA Finans', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
             { source: 'Ekonomim', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.ekonomim.com/rss' },
             { source: 'Dünya Gazetesi', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.dunya.com/rss' },
 
-            // Makro Ekonomi & Para Politikası
-            { source: 'Bloomberg HT', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.bloomberght.com/rss' },
+            // Makro Ekonomi & Para Politikası (3 Güvenilir Kaynak)
             { source: 'AA Ekonomi', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
+            { source: 'Bloomberg HT', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.bloomberght.com/rss' },
             { source: 'Ekonomim', category: 'macro', label: 'Makro Ekonomi', url: 'https://www.ekonomim.com/rss' },
 
-            // Küresel Piyasalar
+            // Küresel Piyasalar (3 Güvenilir Kaynak)
             { source: 'AA Dünya', category: 'global', label: 'Küresel Piyasalar', url: 'https://www.aa.com.tr/tr/rss/default?cat=dunya' },
             { source: 'Dünya Gazetesi', category: 'global', label: 'Küresel Piyasalar', url: 'https://www.dunya.com/rss' },
             { source: 'Bloomberg HT', category: 'global', label: 'Küresel Piyasalar', url: 'https://www.bloomberght.com/rss' },
 
-            // Kripto Varlıklar
+            // Kripto Varlıklar (3 Güvenilir Kaynak)
             { source: 'BTCHaber', category: 'crypto', label: 'Kripto Varlıklar', url: 'https://www.btchaber.com/feed/' },
             { source: 'Uzmancoin', category: 'crypto', label: 'Kripto Varlıklar', url: 'https://uzmancoin.com/feed/' },
             { source: 'Koin Bülteni', category: 'crypto', label: 'Kripto Varlıklar', url: 'https://koinbulteni.com/feed/' }
@@ -341,13 +341,12 @@ export async function GET(request: Request) {
             }
         }
 
-        // Bloomberg HT Doğrudan Canlı Piyasa Haberlerini de Ekle
+        // 3. KAP & Şirket Bildirimlerini Doğrudan Canlı Akış Olarak Ekle (Bilanço, Sorumluluk Beyanları, Raporlar)
         try {
-            const bhtLive = await fetchBloombergHTLiveMarket();
-            for (const item of bhtLive) {
+            const kapLive = await fetchLiveKapDisclosures();
+            for (const item of kapLive) {
                 if (item.link && !seenUrls.has(item.link)) {
                     seenUrls.add(item.link);
-                    const catInfo = categorizeNews(item.title, item.description, 'bist', 'Borsa İstanbul');
                     const affected = extractAffectedAssets(item.title, item.description);
                     const sentiment = detectSentiment(item.title, item.description);
 
@@ -366,21 +365,21 @@ export async function GET(request: Request) {
                         title: item.title,
                         link: item.link,
                         pubDate: item.pubDate,
-                        source: 'Bloomberg HT',
+                        source: 'KAP Bildirimi',
                         description: item.description,
-                        category: catInfo.category,
-                        categoryLabel: catInfo.label,
+                        category: 'kap',
+                        categoryLabel: 'KAP & Şirketler',
                         sentiment: sentiment,
                         impact: 'high',
                         tickers: affected,
                         affectedAssets: affected,
-                        readTime: '3 dk okuma',
+                        readTime: '2 dk okuma',
                         isHot: true
                     });
                 }
             }
         } catch (e) {
-            console.error("BHT live scrape error:", e);
+            console.error("KAP live feed error:", e);
         }
 
         // Sort chronologically (En güncel haber en üstte)
