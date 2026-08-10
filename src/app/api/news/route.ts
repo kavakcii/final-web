@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
-import * as cheerio from 'cheerio';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -13,7 +12,7 @@ export interface EnrichedNewsItem {
     pubDate: string;
     source: string;
     description: string;
-    category: 'all' | 'portfolio' | 'kap' | 'bist' | 'macro' | 'commodity' | 'global' | 'crypto';
+    category: 'all' | 'portfolio' | 'bist' | 'macro' | 'commodity' | 'global' | 'crypto';
     categoryLabel: string;
     sentiment: 'bullish' | 'bearish' | 'neutral';
     impact: 'critical' | 'high' | 'medium';
@@ -122,76 +121,20 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
     if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc') || text.includes('altcoin')) {
         return { category: 'crypto', label: 'Kripto Varlıklar' };
     }
-    // 2. KAP & Resmi Şirket Bildirimleri (Sorumluluk Beyanları, Bilanço, İhale, Sözleşme vb.)
-    if (
-        text.includes('kap ') || 
-        text.includes('bildirim') || 
-        text.includes('halka arz') || 
-        text.includes('pay alım') || 
-        text.includes('özel durum') || 
-        text.includes('sözleşme') || 
-        text.includes('ihale') || 
-        text.includes('genel kurul') || 
-        text.includes('sermaye artır') || 
-        text.includes('kar payı') || 
-        text.includes('temettü') || 
-        text.includes('finansal rapor') ||
-        text.includes('sorumluluk beyanı') ||
-        text.includes('bilanço') ||
-        text.includes('faaliyet raporu')
-    ) {
-        return { category: 'kap', label: 'KAP & Şirketler' };
-    }
-    // 3. Altın & Emtia
+    // 2. Altın & Emtia
     if (text.includes('altın') || text.includes('petrol') || text.includes('brent') || text.includes('gümüş') || text.includes('emtia') || text.includes('ons')) {
         return { category: 'commodity', label: 'Altın & Emtia' };
     }
-    // 4. Küresel Piyasalar
+    // 3. Küresel Piyasalar
     if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq') || text.includes('s&p') || text.includes('ecb') || text.includes('küresel') || text.includes('lübnan') || text.includes('israil') || text.includes('gazze') || text.includes('abd ')) {
         return { category: 'global', label: 'Küresel Piyasalar' };
     }
-    // 5. Makro Ekonomi
+    // 4. Makro Ekonomi
     if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe') || text.includes('bakan şimşek') || text.includes('sanayi üretim')) {
         return { category: 'macro', label: 'Makro Ekonomi' };
     }
 
     return { category: defaultCategory, label: defaultLabel };
-}
-
-// Canlı KAP Bildirimleri (Bilanço, Sorumluluk Beyanları, Sözleşmeler, Raporlar)
-async function fetchLiveKapDisclosures(): Promise<{ title: string; link: string; description: string; pubDate: string }[]> {
-    try {
-        const res = await fetch('https://uzmanpara.milliyet.com.tr/kap-haberleri/', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            },
-            next: { revalidate: 180 }
-        });
-        if (!res.ok) return [];
-        const html = await res.text();
-        const $ = cheerio.load(html);
-
-        const items: { title: string; link: string; description: string; pubDate: string }[] = [];
-        $('a[href*="/kap-haberi/"]').each((_, el) => {
-            const href = $(el).attr('href');
-            const title = $(el).text().trim().replace(/\s+/g, ' ');
-            if (href && title.length > 10) {
-                const fullUrl = href.startsWith('http') ? href : `https://uzmanpara.milliyet.com.tr${href}`;
-                if (!items.some(it => it.link === fullUrl)) {
-                    items.push({
-                        title,
-                        link: fullUrl,
-                        description: `KAP Bildirimi: ${title}`,
-                        pubDate: new Date().toISOString()
-                    });
-                }
-            }
-        });
-
-        return items.slice(0, 15);
-    } catch {
-        return [];
-    }
 }
 
 export async function GET(request: Request) {
@@ -318,7 +261,7 @@ export async function GET(request: Request) {
                         category: isPortfolioMatch ? 'portfolio' : catInfo.category,
                         categoryLabel: isPortfolioMatch ? 'Portföyüm' : catInfo.label,
                         sentiment: sentiment,
-                        impact: (catInfo.category === 'kap' || isPortfolioMatch || sentiment !== 'neutral') ? 'high' : 'medium',
+                        impact: (isPortfolioMatch || sentiment !== 'neutral') ? 'high' : 'medium',
                         tickers: affected,
                         affectedAssets: affected,
                         readTime: '3 dk okuma',
@@ -339,47 +282,6 @@ export async function GET(request: Request) {
                     }
                 }
             }
-        }
-
-        // 3. KAP & Şirket Bildirimlerini Doğrudan Canlı Akış Olarak Ekle (Bilanço, Sorumluluk Beyanları, Raporlar)
-        try {
-            const kapLive = await fetchLiveKapDisclosures();
-            for (const item of kapLive) {
-                if (item.link && !seenUrls.has(item.link)) {
-                    seenUrls.add(item.link);
-                    const affected = extractAffectedAssets(item.title, item.description);
-                    const sentiment = detectSentiment(item.title, item.description);
-
-                    let baseSlug = slugify(item.title);
-                    let uniqueSlug = baseSlug;
-                    let counter = 1;
-                    while (seenSlugs.has(uniqueSlug)) {
-                        uniqueSlug = `${baseSlug}-${counter}`;
-                        counter++;
-                    }
-                    seenSlugs.add(uniqueSlug);
-
-                    allItems.push({
-                        id: uniqueSlug,
-                        slug: uniqueSlug,
-                        title: item.title,
-                        link: item.link,
-                        pubDate: item.pubDate,
-                        source: 'KAP Bildirimi',
-                        description: item.description,
-                        category: 'kap',
-                        categoryLabel: 'KAP & Şirketler',
-                        sentiment: sentiment,
-                        impact: 'high',
-                        tickers: affected,
-                        affectedAssets: affected,
-                        readTime: '2 dk okuma',
-                        isHot: true
-                    });
-                }
-            }
-        } catch (e) {
-            console.error("KAP live feed error:", e);
         }
 
         // Sort chronologically (En güncel haber en üstte)

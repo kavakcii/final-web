@@ -11,7 +11,6 @@ import {
     Globe, 
     Coins, 
     PieChart, 
-    Building2, 
     Loader2, 
     AlertCircle, 
     Flame,
@@ -27,7 +26,6 @@ import { useUser } from "@/components/providers/UserProvider";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 import { NewsHeroCard } from "@/components/news/NewsHeroCard";
 import { NewsCard } from "@/components/news/NewsCard";
-import { KapLiveFeedWidget } from "@/components/news/KapLiveFeedWidget";
 
 const CATEGORY_OPTIONS = [
     { id: 'all', label: 'Tüm Haberler', sectionTitle: 'Günün Önemli Haberleri', icon: Newspaper },
@@ -140,10 +138,6 @@ function NewsContent() {
         return streamNews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
     }, [streamNews, currentPage]);
 
-    const kapNewsOnly = useMemo(() => {
-        return news.filter(n => n.category === 'kap');
-    }, [news]);
-
     // Top Breaking news ticker items (3 items filling the full horizontal width)
     const breakingHeadlines = useMemo(() => {
         return news.slice(0, 3);
@@ -236,135 +230,123 @@ function NewsContent() {
                         />
                     )}
 
-                    {/* Main Content: 8 Columns (Stream + Filter Dropdown) + 4 Columns (KAP Panel) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Main Content: Full Width Stream with Dropdown Filter (3-Column Responsive Grid) */}
+                    <div className="space-y-6">
                         
-                        {/* Left Side: Stream News Grid with Dropdown Filter (8 Cols) */}
-                        <div className="lg:col-span-8 space-y-6">
-                            
-                            {/* Section Title & Dropdown Filter Bar */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-3 h-3 rounded-full bg-[#00008B]" />
-                                    <h2 className="text-lg md:text-xl font-black text-[#00008B] tracking-tight">
-                                        {currentTabInfo.sectionTitle}
-                                    </h2>
-                                </div>
-
-                                {/* Dropdown Filter Menu */}
-                                <div className="relative" ref={dropdownRef}>
-                                    <button
-                                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-[#00008B]/40 rounded-2xl text-xs font-black text-[#00008B] shadow-sm hover:shadow-md transition-all cursor-pointer"
-                                    >
-                                        <Filter className="w-3.5 h-3.5 text-[#00008B]" />
-                                        <span className="text-slate-400 font-bold">Kategori:</span>
-                                        <span className="text-[#00008B]">{currentTabInfo.label}</span>
-                                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                                    </button>
-
-                                    <AnimatePresence>
-                                        {isDropdownOpen && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                                className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 z-50 overflow-hidden"
-                                            >
-                                                <div className="space-y-1">
-                                                    {CATEGORY_OPTIONS.map((option) => {
-                                                        const Icon = option.icon;
-                                                        const isSelected = selectedCategory === option.id;
-                                                        return (
-                                                            <button
-                                                                key={option.id}
-                                                                onClick={() => handleCategoryChange(option.id)}
-                                                                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
-                                                                    isSelected 
-                                                                        ? 'bg-[#00008B] text-white shadow-md' 
-                                                                        : 'text-slate-700 hover:bg-slate-50 hover:text-[#00008B]'
-                                                                }`}
-                                                            >
-                                                                <div className="flex items-center gap-2">
-                                                                    <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-[#00008B]'}`} />
-                                                                    <span>{option.label}</span>
-                                                                </div>
-                                                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                        {/* Section Title & Dropdown Filter Bar */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-3 h-3 rounded-full bg-[#00008B]" />
+                                <h2 className="text-lg md:text-xl font-black text-[#00008B] tracking-tight">
+                                    {currentTabInfo.sectionTitle}
+                                </h2>
                             </div>
 
-                            {paginatedNews.length > 0 ? (
-                                <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {paginatedNews.map((item, idx) => (
-                                            <NewsCard
-                                                key={item.id || idx}
-                                                item={item}
-                                                index={idx}
-                                            />
-                                        ))}
-                                    </div>
+                            {/* Dropdown Filter Menu */}
+                            <div className="relative" ref={dropdownRef}>
+                                <button
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-[#00008B]/40 rounded-2xl text-xs font-black text-[#00008B] shadow-sm hover:shadow-md transition-all cursor-pointer"
+                                >
+                                    <Filter className="w-3.5 h-3.5 text-[#00008B]" />
+                                    <span className="text-slate-400 font-bold">Kategori:</span>
+                                    <span className="text-[#00008B]">{currentTabInfo.label}</span>
+                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                </button>
 
-                                    {/* Pagination Controls (1, 2, 3, 4 ...) */}
-                                    {totalPages > 1 && (
-                                        <div className="flex items-center justify-center gap-2 pt-6 border-t border-slate-100">
-                                            <button
-                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                                                disabled={currentPage === 1}
-                                                className="p-2.5 rounded-xl border border-slate-200 bg-white text-[#00008B] font-black disabled:opacity-30 hover:bg-slate-50 transition-all flex items-center gap-1 text-xs"
-                                            >
-                                                <ChevronLeft className="w-4 h-4" /> Önceki
-                                            </button>
-
-                                            <div className="flex items-center gap-1.5">
-                                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                                                    <button
-                                                        key={pageNum}
-                                                        onClick={() => setCurrentPage(pageNum)}
-                                                        className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
-                                                            currentPage === pageNum
-                                                                ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20 scale-105'
-                                                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                        }`}
-                                                    >
-                                                        {pageNum}
-                                                    </button>
-                                                ))}
+                                <AnimatePresence>
+                                    {isDropdownOpen && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                            className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl p-2 z-50 overflow-hidden"
+                                        >
+                                            <div className="space-y-1">
+                                                {CATEGORY_OPTIONS.map((option) => {
+                                                    const Icon = option.icon;
+                                                    const isSelected = selectedCategory === option.id;
+                                                    return (
+                                                        <button
+                                                            key={option.id}
+                                                            onClick={() => handleCategoryChange(option.id)}
+                                                            className={`w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${
+                                                                isSelected 
+                                                                    ? 'bg-[#00008B] text-white shadow-md' 
+                                                                    : 'text-slate-700 hover:bg-slate-50 hover:text-[#00008B]'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-center gap-2">
+                                                                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-[#00008B]'}`} />
+                                                                <span>{option.label}</span>
+                                                            </div>
+                                                            {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
-
-                                            <button
-                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                                                disabled={currentPage === totalPages}
-                                                className="p-2.5 rounded-xl border border-slate-200 bg-white text-[#00008B] font-black disabled:opacity-30 hover:bg-slate-50 transition-all flex items-center gap-1 text-xs"
-                                            >
-                                                Sonraki <ChevronRight className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                        </motion.div>
                                     )}
-                                </div>
-                            ) : (
-                                <div className="bg-white border border-slate-200/80 rounded-3xl p-16 text-center space-y-3">
-                                    <Newspaper className="w-8 h-8 text-slate-300 mx-auto" />
-                                    <h3 className="text-sm font-black text-[#00008B]">Bu kategoride henüz haber bulunmuyor</h3>
-                                    <p className="text-xs text-slate-400">Diğer kategorileri inceleyebilirsiniz.</p>
-                                </div>
-                            )}
+                                </AnimatePresence>
+                            </div>
                         </div>
 
-                        {/* Right Side: Genişletilmiş KAP & Şirket Bildirimleri Paneli (4 Cols) */}
-                        <div className="lg:col-span-4 sticky top-24">
-                            <KapLiveFeedWidget
-                                kapNews={kapNewsOnly}
-                            />
-                        </div>
+                        {paginatedNews.length > 0 ? (
+                            <div className="space-y-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {paginatedNews.map((item, idx) => (
+                                        <NewsCard
+                                            key={item.id || idx}
+                                            item={item}
+                                            index={idx}
+                                        />
+                                    ))}
+                                </div>
 
+                                {/* Pagination Controls (1, 2, 3, 4 ...) */}
+                                {totalPages > 1 && (
+                                    <div className="flex items-center justify-center gap-2 pt-6 border-t border-slate-100">
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                            disabled={currentPage === 1}
+                                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-[#00008B] font-black disabled:opacity-30 hover:bg-slate-50 transition-all flex items-center gap-1 text-xs"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" /> Önceki
+                                        </button>
+
+                                        <div className="flex items-center gap-1.5">
+                                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${
+                                                        currentPage === pageNum
+                                                            ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20 scale-105'
+                                                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                            disabled={currentPage === totalPages}
+                                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-[#00008B] font-black disabled:opacity-30 hover:bg-slate-50 transition-all flex items-center gap-1 text-xs"
+                                        >
+                                            Sonraki <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-white border border-slate-200/80 rounded-3xl p-16 text-center space-y-3">
+                                <Newspaper className="w-8 h-8 text-slate-300 mx-auto" />
+                                <h3 className="text-sm font-black text-[#00008B]">Bu kategoride henüz haber bulunmuyor</h3>
+                                <p className="text-xs text-slate-400">Diğer kategorileri inceleyebilirsiniz.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
