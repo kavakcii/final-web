@@ -28,7 +28,7 @@ export interface EnrichedNewsItem {
 let cachedNews: { timestamp: number; items: EnrichedNewsItem[]; userId?: string | null } | null = null;
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
-export function slugify(text: string): string {
+function slugify(text: string): string {
     const trMap: Record<string, string> = {
         'çÇ': 'c',
         'ğĞ': 'g',
