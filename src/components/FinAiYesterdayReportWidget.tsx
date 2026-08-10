@@ -192,8 +192,8 @@ export function FinAiYesterdayReportWidget() {
                         <span className="text-[10px] font-bold text-[#00008B]/70">Rapor Hazırlanıyor...</span>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col justify-center py-1">
-                        <p className="text-[10px] sm:text-xs md:text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide line-clamp-6 sm:line-clamp-none">
+                    <div className="flex-1 flex flex-col justify-start pt-1.5 sm:pt-2">
+                        <p className="text-[11px] sm:text-xs md:text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide line-clamp-6 sm:line-clamp-none">
                             {narrativeToDisplay}
                         </p>
                     </div>

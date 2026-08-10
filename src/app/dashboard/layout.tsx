@@ -20,7 +20,9 @@ import {
     Calendar,
     Coins,
     Activity,
-    Shield
+    Shield,
+    Menu,
+    X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FinancialTicker } from "@/components/FinancialTicker";
@@ -37,6 +39,7 @@ function DashboardShell({
 }: {
     children: React.ReactNode;
 }) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isPortfolioExpanded, setIsPortfolioExpanded] = useState(false);
     const [isSettingsExpanded, setIsSettingsExpanded] = useState(false);
@@ -134,14 +137,14 @@ function DashboardShell({
             <div className="relative z-10 w-full flex mx-auto max-w-[1920px] overflow-x-hidden min-h-screen">
                 <div className="flex-1 flex bg-transparent min-w-0">
                     
-                    {/* Always Visible Compact Sidebar (w-14 sm:w-16 on Mobile, Expanding on Desktop) */}
-                    <aside className="w-14 sm:w-16 md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
+                    {/* Always Visible Expanding Sidebar on Desktop / Tablet (Hidden on Mobile) */}
+                    <aside className="hidden md:flex md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
                         {/* Glass Reflection & Ambient Glow */}
                         <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-white/40 pointer-events-none" />
                         <div className="absolute -left-16 top-1/4 w-36 h-36 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
-                        <div className="p-2 sm:p-3 md:p-6 flex items-center justify-center md:justify-start h-14 md:h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
-                            <Link href="/" className="flex items-center justify-center md:justify-start gap-3 w-full overflow-hidden group/logo">
+                        <div className="p-3 md:p-6 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
+                            <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo">
                                 <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.15)]" />
                                 <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap hidden md:inline-block">
                                     FinAi<span className="text-blue-600">.</span>
@@ -149,14 +152,14 @@ function DashboardShell({
                             </Link>
                         </div>
 
-                        <nav className="flex-1 px-1.5 sm:px-2 md:px-3 py-4 md:py-6 space-y-3.5 sm:space-y-4 md:space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
+                        <nav className="flex-1 px-2 md:px-3 py-4 md:py-6 space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 
                                 if (item.subItems) {
                                     return (
                                         <div key={idx} className="space-y-1">
-                                            <div className={`flex items-center justify-center md:justify-between px-2 md:px-3.5 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav ${
+                                            <div className={`flex items-center justify-between px-3 md:px-3.5 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav ${
                                                 isActive 
                                                     ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
                                                     : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
@@ -164,7 +167,7 @@ function DashboardShell({
                                                 {/* Direct Link to Portfolio Page */}
                                                 <Link 
                                                     href={item.href} 
-                                                    className="flex items-center justify-center md:justify-start flex-1 min-w-0"
+                                                    className="flex items-center justify-start flex-1 min-w-0"
                                                 >
                                                     <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B] transition-colors'}`} />
                                                     <span className="opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block">
@@ -225,7 +228,7 @@ function DashboardShell({
                                 }
 
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center justify-center md:justify-start px-2 md:px-4 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav ${
+                                    <Link key={idx} href={item.href} className={`flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav ${
                                         isActive 
                                             ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
                                             : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
@@ -239,8 +242,8 @@ function DashboardShell({
                             })}
                         </nav>
 
-                        <div className="p-2 sm:p-3 md:p-4 border-t border-white/10 shrink-0">
-                            <button onClick={handleLogout} className="flex items-center justify-center md:justify-start px-2 md:px-4 py-2.5 md:py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out">
+                        <div className="p-3 md:p-4 border-t border-white/10 shrink-0">
+                            <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
                                 <span className="opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block">
                                     Çıkış Yap
@@ -253,7 +256,16 @@ function DashboardShell({
                     <main className="flex-1 relative flex flex-col min-w-0 bg-transparent overflow-x-hidden">
                         {/* Header (Glassified) */}
                         <header className="h-12 md:h-16 border-b border-slate-100 flex items-center justify-between px-3 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
-                            <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setIsMobileMenuOpen(true)}
+                                    className="md:hidden p-1.5 -ml-1 text-[#00008B] hover:bg-[#00008B]/10 rounded-xl transition-all"
+                                    aria-label="Menüyü Aç"
+                                >
+                                    <Menu className="w-5 h-5 text-[#00008B]" />
+                                </button>
+                                <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
+                            </div>
                             
                             <div className="flex items-center space-x-2 md:space-x-4">
                                 <div className="relative hidden sm:block">
@@ -299,6 +311,141 @@ function DashboardShell({
                                 </div>
                             </div>
                         </header>
+
+                        {/* Mobile Drawer (Animasyonlu Açılır Çekmece Menü) */}
+                        <AnimatePresence>
+                            {isMobileMenuOpen && (
+                                <>
+                                    {/* Arka Plan Karartması */}
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] md:hidden"
+                                    />
+
+                                    {/* Soldan Kayan Menü */}
+                                    <motion.div
+                                        initial={{ x: "-100%" }}
+                                        animate={{ x: 0 }}
+                                        exit={{ x: "-100%" }}
+                                        transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                                        className="fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-2xl border-r border-slate-200/80 shadow-2xl z-[80] flex flex-col p-4 md:hidden"
+                                    >
+                                        {/* Drawer Başlık & Kapatma Butonu */}
+                                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2.5">
+                                                <FinAiLogo showText={false} className="h-8 w-8" />
+                                                <span className="text-xl font-black tracking-tighter text-[#00008B]">
+                                                    FinAi<span className="text-blue-600">.</span>
+                                                </span>
+                                            </Link>
+                                            <button
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                className="p-1.5 text-slate-400 hover:text-[#00008B] hover:bg-slate-100 rounded-xl transition-all"
+                                                aria-label="Menüyü Kapat"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                        </div>
+
+                                        {/* Menü Linkleri */}
+                                        <nav className="flex-1 py-3 space-y-1.5 overflow-y-auto scrollbar-none">
+                                            {menuItems.map((item, idx) => {
+                                                const isActive = pathname === item.href;
+                                                const ItemIcon = item.icon;
+
+                                                if (item.subItems) {
+                                                    return (
+                                                        <div key={idx} className="space-y-1">
+                                                            <div className={`flex items-center justify-between px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                                                                isActive 
+                                                                    ? 'text-white bg-[#00008B] shadow-md' 
+                                                                    : 'text-[#00008B] hover:bg-[#00008B]/10'
+                                                            }`}>
+                                                                <Link
+                                                                    href={item.href}
+                                                                    onClick={() => setIsMobileMenuOpen(false)}
+                                                                    className="flex items-center gap-3 flex-1 min-w-0"
+                                                                >
+                                                                    <ItemIcon className="w-5 h-5 flex-shrink-0" />
+                                                                    <span className="text-xs uppercase font-extrabold tracking-wider">{item.label}</span>
+                                                                </Link>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+                                                                        item.toggleExpand();
+                                                                    }}
+                                                                    className="p-1 rounded-lg hover:bg-black/10"
+                                                                >
+                                                                    <ChevronDown className={`w-4 h-4 transition-transform ${item.isExpanded ? 'rotate-180' : ''}`} />
+                                                                </button>
+                                                            </div>
+
+                                                            {item.isExpanded && (
+                                                                <div className="ml-4 pl-3 border-l-2 border-[#00008B]/20 space-y-1 py-1">
+                                                                    {item.subItems.map((sub, sIdx) => {
+                                                                        const SubIcon = sub.icon;
+                                                                        return (
+                                                                            <Link
+                                                                                key={sIdx}
+                                                                                href={sub.href}
+                                                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                                                className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg transition-all ${
+                                                                                    sub.isSubActive
+                                                                                        ? 'bg-[#00008B] text-white shadow-sm'
+                                                                                        : 'text-[#00008B]/80 hover:bg-[#00008B]/10'
+                                                                                }`}
+                                                                            >
+                                                                                <SubIcon className="w-4 h-4 flex-shrink-0" />
+                                                                                <span>{sub.label}</span>
+                                                                            </Link>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <Link
+                                                        key={idx}
+                                                        href={item.href}
+                                                        onClick={() => setIsMobileMenuOpen(false)}
+                                                        className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                                                            isActive
+                                                                ? 'text-white bg-[#00008B] shadow-md'
+                                                                : 'text-[#00008B] hover:bg-[#00008B]/10'
+                                                        }`}
+                                                    >
+                                                        <ItemIcon className="w-5 h-5 flex-shrink-0" />
+                                                        <span className="text-xs uppercase font-extrabold tracking-wider">{item.label}</span>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </nav>
+
+                                        {/* Çıkış Yap */}
+                                        <div className="pt-2 border-t border-slate-100">
+                                            <button
+                                                onClick={() => {
+                                                    setIsMobileMenuOpen(false);
+                                                    handleLogout();
+                                                }}
+                                                className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all w-full text-left"
+                                            >
+                                                <LogOut className="w-5 h-5 flex-shrink-0" />
+                                                <span className="text-xs uppercase tracking-wider">Çıkış Yap</span>
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
 
                         <FinancialTicker />
 

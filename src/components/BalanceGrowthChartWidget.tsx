@@ -140,10 +140,11 @@ export function BalanceGrowthChartWidget() {
     const isNewUser = !firstDate && !loading;
 
     return (
-        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[230px] sm:min-h-[270px] min-w-0">
+        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 pb-2 sm:pb-3 shadow-sm flex flex-col justify-between h-full min-h-[230px] sm:min-h-[270px] min-w-0">
+            {/* Top Section: Header & Stat */}
             <div>
                 {/* Header */}
-                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-1.5 sm:gap-3">
                         <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-lg sm:rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shrink-0">
                             <LineChart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00008B]" />
@@ -190,89 +191,88 @@ export function BalanceGrowthChartWidget() {
                     </div>
                 )}
 
-                {/* --- Grafik --- */}
+                {/* İstatistik */}
                 {!isNewUser && !loading && hasData && (
-                    <>
-                        {/* İstatistik */}
-                        <div className="flex items-center justify-between mb-2 px-0.5">
-                            <div>
-                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                    Değişim
+                    <div className="flex items-center justify-between mb-1 px-0.5">
+                        <div>
+                            <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                Değişim
+                            </span>
+                            <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
+                                <span className="text-sm sm:text-2xl font-black text-[#00008B] truncate">
+                                    ₺{latestBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                 </span>
-                                <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
-                                    <span className="text-sm sm:text-2xl font-black text-[#00008B] truncate">
-                                        ₺{latestBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                    </span>
-                                    <span className={`flex items-center text-[9px] sm:text-xs font-black px-1 sm:px-2 py-0.5 rounded border ${
-                                        isPositive
-                                            ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
-                                            : 'text-red-500 bg-red-50 border-red-200'
-                                    }`}>
-                                        {isPositive ? '+' : ''}{growthPercent}%
-                                    </span>
-                                </div>
+                                <span className={`flex items-center text-[9px] sm:text-xs font-black px-1 sm:px-2 py-0.5 rounded border ${
+                                    isPositive
+                                        ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+                                        : 'text-red-500 bg-red-50 border-red-200'
+                                }`}>
+                                    {isPositive ? '+' : ''}{growthPercent}%
+                                </span>
                             </div>
                         </div>
-
-                        {/* Chart */}
-                        <div className="h-36 sm:h-48 w-full pt-1">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={displayChartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                                    <defs>
-                                        <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%"  stopColor="#00008B" stopOpacity={0.25} />
-                                            <stop offset="95%" stopColor="#00008B" stopOpacity={0.0}  />
-                                        </linearGradient>
-                                    </defs>
-                                    <XAxis
-                                        dataKey="date"
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: "#94a3b8", fontSize: 8, fontWeight: 700 }}
-                                        interval="preserveStartEnd"
-                                    />
-                                    <YAxis
-                                        axisLine={false}
-                                        tickLine={false}
-                                        tick={{ fill: "#94a3b8", fontSize: 8, fontWeight: 700 }}
-                                        width={42}
-                                        domain={['dataMin', 'dataMax']}
-                                        tickFormatter={(v: number) => v >= 1000000 ? `₺${(v/1000000).toFixed(1)}M` : v >= 1000 ? `₺${(v/1000).toFixed(0)}k` : `₺${v}`}
-                                        tickCount={4}
-                                    />
-                                    <Tooltip
-                                        contentStyle={{
-                                            backgroundColor: '#00008B',
-                                            borderColor:     '#00008B',
-                                            borderRadius:    '12px',
-                                            color:           '#ffffff',
-                                            fontSize:        '10px',
-                                            fontWeight:      'bold',
-                                            boxShadow:       '0 10px 25px -5px rgba(0, 0, 139, 0.3)'
-                                        }}
-                                        labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: 2 }}
-                                        itemStyle={{ color: '#ffffff' }}
-                                        formatter={(value: any) => [
-                                            `₺${Number(value).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
-                                            ''
-                                        ]}
-                                    />
-                                    <Area
-                                        type="monotone"
-                                        dataKey="balance"
-                                        stroke="#00008B"
-                                        strokeWidth={2.5}
-                                        fillOpacity={1}
-                                        fill="url(#colorBalance)"
-                                        dot={false}
-                                        activeDot={{ r: 4, fill: '#00008B', strokeWidth: 2, stroke: '#fff' }}
-                                    />
-                                </AreaChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </>
+                    </div>
                 )}
             </div>
+
+            {/* --- Grafik: Kartın Tabanına Kadar Uzanır --- */}
+            {!isNewUser && !loading && hasData && (
+                <div className="flex-1 w-full min-h-[140px] pt-1 -mb-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={displayChartData} margin={{ top: 5, right: 2, left: -22, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%"  stopColor="#00008B" stopOpacity={0.25} />
+                                    <stop offset="95%" stopColor="#00008B" stopOpacity={0.0}  />
+                                </linearGradient>
+                            </defs>
+                            <XAxis
+                                dataKey="date"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: "#94a3b8", fontSize: 8, fontWeight: 700 }}
+                                interval="preserveStartEnd"
+                            />
+                            <YAxis
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: "#94a3b8", fontSize: 8, fontWeight: 700 }}
+                                width={42}
+                                domain={['dataMin', 'dataMax']}
+                                tickFormatter={(v: number) => v >= 1000000 ? `₺${(v/1000000).toFixed(1)}M` : v >= 1000 ? `₺${(v/1000).toFixed(0)}k` : `₺${v}`}
+                                tickCount={4}
+                            />
+                            <Tooltip
+                                contentStyle={{
+                                    backgroundColor: '#00008B',
+                                    borderColor:     '#00008B',
+                                    borderRadius:    '12px',
+                                    color:           '#ffffff',
+                                    fontSize:        '10px',
+                                    fontWeight:      'bold',
+                                    boxShadow:       '0 10px 25px -5px rgba(0, 0, 139, 0.3)'
+                                }}
+                                labelStyle={{ color: '#ffffff', fontWeight: 'bold', marginBottom: 2 }}
+                                itemStyle={{ color: '#ffffff' }}
+                                formatter={(value: any) => [
+                                    `₺${Number(value).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`,
+                                    ''
+                                ]}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="balance"
+                                stroke="#00008B"
+                                strokeWidth={2.5}
+                                fillOpacity={1}
+                                fill="url(#colorBalance)"
+                                dot={false}
+                                activeDot={{ r: 4, fill: '#00008B', strokeWidth: 2, stroke: '#fff' }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
         </div>
     );
 }
