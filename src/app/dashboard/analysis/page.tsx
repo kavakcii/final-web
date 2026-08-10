@@ -751,7 +751,7 @@ function AnalysisContent() {
                         <div className="space-y-4">
                             <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-amber-500" />
-                                Olası Gelecek Senaryoları & Piyasa Tepkisi (Eğer X olursa -> Y olur)
+                                Olası Gelecek Senaryoları & Piyasa Tepkisi (Eğer X olursa &rarr; Y olur)
                             </h4>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
