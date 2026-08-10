@@ -59,8 +59,8 @@ export function KapLiveFeedWidget({ kapNews }: KapLiveFeedWidgetProps) {
                                     <div className="flex items-center justify-between text-[10px] font-bold text-blue-200 mb-1.5">
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             {assets.map((asset, aIdx) => (
-                                                <span key={aIdx} className="text-yellow-400 font-black bg-white/10 px-2 py-0.5 rounded-md">
-                                                    #{asset}
+                                                <span key={aIdx} className="text-yellow-400 font-black bg-white/10 px-2.5 py-0.5 rounded-md">
+                                                    {asset}
                                                 </span>
                                             ))}
                                         </div>

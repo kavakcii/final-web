@@ -63,7 +63,7 @@ function extractAffectedAssets(title: string, desc: string, category: string): s
     const text = `${title} ${desc}`.toLowerCase();
     const upper = `${title} ${desc}`.toUpperCase();
 
-    // 1. Hisse kodlarını tara
+    // 1. Doğrudan hisse kodlarını tespit et (Hashtag'siz temiz kod)
     KNOWN_TICKERS.forEach(ticker => {
         const regex = new RegExp(`\\b${ticker}\\b`, 'i');
         if (regex.test(upper) || upper.includes(`(${ticker})`) || upper.includes(`[${ticker}]`)) {
@@ -71,29 +71,29 @@ function extractAffectedAssets(title: string, desc: string, category: string): s
         }
     });
 
-    // 2. Varlık türlerini tespit et
-    if (text.includes('altın') || text.includes('gram altın') || text.includes('çeyrek')) found.add('ALTIN');
-    if (text.includes('ons ') || text.includes('ons altın')) found.add('ONS');
-    if (text.includes('petrol') || text.includes('brent')) found.add('BRENT');
-    if (text.includes('gümüş')) found.add('GÜMÜŞ');
-    if (text.includes('dolar') || text.includes('usd') || text.includes('döviz')) found.add('USD/TRY');
-    if (text.includes('euro') || text.includes('eur')) found.add('EUR/TRY');
-    if (text.includes('bitcoin') || text.includes('btc')) found.add('BTC');
-    if (text.includes('ethereum') || text.includes('eth')) found.add('ETH');
-    if (text.includes('bist 100') || text.includes('bist100') || text.includes('borsa istanbul')) found.add('BIST100');
-    if (text.includes('faiz') || text.includes('tcmb') || text.includes('enflasyon')) found.add('TCMB');
-    if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq')) found.add('FED/ABD');
+    // 2. Varlık veya piyasa türünü belirle (Hashtag'siz profesyonel Türkçe etiketler)
+    if (text.includes('altın') || text.includes('gram altın') || text.includes('çeyrek')) found.add('Altın');
+    if (text.includes('ons ') || text.includes('ons altın')) found.add('Ons Altın');
+    if (text.includes('petrol') || text.includes('brent')) found.add('Brent Petrol');
+    if (text.includes('gümüş')) found.add('Gümüş');
+    if (text.includes('dolar') || text.includes('usd') || text.includes('döviz')) found.add('Dolar/TL');
+    if (text.includes('euro') || text.includes('eur')) found.add('Euro/TL');
+    if (text.includes('bitcoin') || text.includes('btc')) found.add('Bitcoin');
+    if (text.includes('ethereum') || text.includes('eth')) found.add('Ethereum');
+    if (text.includes('bist 100') || text.includes('bist100') || text.includes('borsa istanbul')) found.add('BIST 100');
+    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon')) found.add('TCMB / Faiz');
+    if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq')) found.add('Fed / Wall Street');
 
     if (found.size === 0) {
-        if (category === 'bist') found.add('BIST100');
-        else if (category === 'commodity') found.add('ALTIN/EMTİA');
-        else if (category === 'crypto') found.add('KRİPTO');
-        else if (category === 'macro') found.add('MAKRO/TL');
-        else if (category === 'global') found.add('KÜRESEL');
-        else found.add('PİYASA');
+        if (category === 'bist') found.add('Borsa İstanbul');
+        else if (category === 'commodity') found.add('Altın & Emtia');
+        else if (category === 'crypto') found.add('Kripto Piyasası');
+        else if (category === 'macro') found.add('Makro Ekonomi');
+        else if (category === 'global') found.add('Küresel Çapta');
+        else found.add('Genel Piyasa');
     }
 
-    return Array.from(found).slice(0, 3);
+    return Array.from(found).slice(0, 2);
 }
 
 function detectSentiment(title: string, desc: string): 'bullish' | 'bearish' | 'neutral' {
@@ -131,13 +131,13 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
     if (text.includes('altın') || text.includes('petrol') || text.includes('brent') || text.includes('gümüş') || text.includes('emtia') || text.includes('ons')) {
         return { category: 'commodity', label: 'Altın & Emtia' };
     }
-    if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq') || text.includes('s&p') || text.includes('ecb') || text.includes('küresel')) {
+    if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq') || text.includes('s&p') || text.includes('ecb') || text.includes('küresel') || text.includes('lübnan') || text.includes('israil') || text.includes('gazze') || text.includes('abd ')) {
         return { category: 'global', label: 'Küresel Piyasalar' };
     }
     if (text.includes('kap ') || text.includes('bildirim') || text.includes('halka arz') || text.includes('pay alım') || text.includes('özel durum')) {
         return { category: 'kap', label: 'KAP & Şirketler' };
     }
-    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe')) {
+    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon') || text.includes('tüfe') || text.includes('cari açık') || text.includes('bütçe') || text.includes('bakan şimşek')) {
         return { category: 'macro', label: 'Makro Ekonomi' };
     }
 
@@ -243,7 +243,7 @@ export async function GET(request: Request) {
 
                     // Portföy eşleşmesi
                     let isPortfolioMatch = false;
-                    if (userSymbols.length > 0 && affected.some(t => userSymbols.includes(t))) {
+                    if (userSymbols.length > 0 && affected.some(t => userSymbols.includes(t.toUpperCase()))) {
                         isPortfolioMatch = true;
                     }
 

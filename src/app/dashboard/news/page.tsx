@@ -144,7 +144,7 @@ function NewsContent() {
         return news.filter(n => n.category === 'kap' || n.category === 'bist');
     }, [news]);
 
-    // Top Breaking news ticker items (Exact 3 items, strictly no horizontal scrollbar)
+    // Top Breaking news ticker items (3 items filling the full horizontal width)
     const breakingHeadlines = useMemo(() => {
         return news.slice(0, 3);
     }, [news]);
@@ -156,21 +156,22 @@ function NewsContent() {
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen pb-28 max-w-[1600px] mx-auto relative">
 
-            {/* Top Breaking Ticker Bar (Ultra Estetik Glassmorphism, 2-3 Başlık) */}
+            {/* Top Breaking Ticker Bar (Dengeli 3 Eşit Kolon, Tam Genişlik Doldurma) */}
             {breakingHeadlines.length > 0 && (
-                <div className="bg-gradient-to-r from-[#00008B] via-[#0505a5] to-[#0a1e3d] border border-white/10 text-white rounded-2xl p-2.5 px-4 flex items-center gap-3 shadow-xl shadow-[#00008B]/15 overflow-hidden backdrop-blur-xl">
-                    <div className="flex items-center gap-1.5 shrink-0 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse shadow-md shadow-red-500/30">
+                <div className="bg-gradient-to-r from-[#00008B] via-[#0505a5] to-[#0a1e3d] border border-white/10 text-white rounded-2xl p-2.5 px-4 flex flex-col md:flex-row items-stretch md:items-center gap-3 shadow-xl shadow-[#00008B]/15 overflow-hidden backdrop-blur-xl w-full">
+                    <div className="flex items-center gap-1.5 shrink-0 px-3 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse shadow-md shadow-red-500/30 w-fit">
                         <Radio className="w-3.5 h-3.5" /> CANLI AKIŞ
                     </div>
-                    <div className="flex items-center gap-6 text-xs font-semibold text-blue-100 truncate overflow-hidden">
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 flex-1 items-center divide-y md:divide-y-0 md:divide-x divide-white/10 text-xs font-semibold text-blue-100">
                         {breakingHeadlines.map((item, idx) => (
                             <Link
                                 key={idx}
                                 href={`/dashboard/news/${item.slug}`}
-                                className="hover:text-yellow-300 transition-colors flex items-center gap-2 truncate shrink-0"
+                                className={`hover:text-yellow-300 transition-colors flex items-center gap-2 truncate ${idx > 0 ? 'md:pl-4 pt-1 md:pt-0' : ''}`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
-                                <span className="font-bold truncate max-w-[280px] sm:max-w-md">{item.title}</span>
+                                <span className="font-bold truncate" title={item.title}>{item.title}</span>
                             </Link>
                         ))}
                     </div>

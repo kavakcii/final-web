@@ -43,7 +43,7 @@ export function NewsCard({ item, index }: NewsCardProps) {
                     <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
                     {assets.map((asset, sIdx) => (
                         <span key={sIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                            #{asset}
+                            {asset}
                         </span>
                     ))}
                 </div>

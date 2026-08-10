@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Clock, FileText, ArrowRight, Tag } from "lucide-react";
+import { Clock, FileText, ArrowRight } from "lucide-react";
 import { EnrichedNewsItem } from "@/app/api/news/route";
 
 interface NewsHeroCardProps {
@@ -44,7 +44,7 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
                 <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none" />
 
-                {/* Top Badges: Portföyünüzdeki Gelişmeler & Etkilenen Varlıklar */}
+                {/* Top Badges */}
                 <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 mb-6">
                     <span className="px-3.5 py-1.5 bg-white/10 text-white text-[10px] font-black rounded-full uppercase tracking-widest backdrop-blur-md border border-white/20">
                         {mainNews.category === 'portfolio' ? 'Portföyünüzdeki Gelişmeler' : 'Günün Öne Çıkanı'}
@@ -55,7 +55,7 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
                             <span className="text-[10px] font-bold text-blue-200/80 uppercase">Etkilenen:</span>
                             {assets.map((asset, idx) => (
                                 <span key={idx} className="px-2.5 py-0.5 bg-yellow-400 text-yellow-950 text-[10px] font-black rounded-lg shadow-sm">
-                                    #{asset}
+                                    {asset}
                                 </span>
                             ))}
                         </div>
@@ -116,7 +116,7 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
                                     <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
                                     {subAssets.slice(0, 2).map((a, aIdx) => (
                                         <span key={aIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                                            #{a}
+                                            {a}
                                         </span>
                                     ))}
                                 </div>
