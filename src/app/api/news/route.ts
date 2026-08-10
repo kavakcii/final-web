@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { XMLParser } from 'fast-xml-parser';
+import * as cheerio from 'cheerio';
 import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -71,7 +72,7 @@ function extractAffectedAssets(title: string, desc: string): string[] {
         }
     });
 
-    // 2. Sadece SPESİFİK finansal varlıkları tespit et (Kategori tekrarı yapmayan spesifik enstrümanlar)
+    // 2. Sadece SPESİFİK finansal varlıkları tespit et
     if (text.includes('gram altın') || text.includes('çeyrek altın')) found.add('Gram Altın');
     else if (text.includes('ons altın') || text.includes('ons ')) found.add('Ons Altın');
     else if (text.includes('altın')) found.add('Altın');
@@ -121,7 +122,7 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
     if (text.includes('bitcoin') || text.includes('kripto') || text.includes('ethereum') || text.includes('btc') || text.includes('altcoin')) {
         return { category: 'crypto', label: 'Kripto Varlıklar' };
     }
-    // 2. KAP & Resmi Şirket Bildirimleri (AA Finans & Borsa Masası)
+    // 2. KAP & Resmi Şirket Bildirimleri
     if (
         text.includes('kap ') || 
         text.includes('bildirim') || 
@@ -155,6 +156,42 @@ function categorizeNews(title: string, desc: string, defaultCategory: EnrichedNe
     }
 
     return { category: defaultCategory, label: defaultLabel };
+}
+
+// Bloomberg HT Doğrudan Piyasa Haberlerini Kazıma Fonksiyonu
+async function fetchBloombergHTLiveMarket(): Promise<{ title: string; link: string; description: string; pubDate: string }[]> {
+    try {
+        const res = await fetch('https://www.bloomberght.com/piyasalar', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            next: { revalidate: 300 }
+        });
+        if (!res.ok) return [];
+        const html = await res.text();
+        const $ = cheerio.load(html);
+
+        const items: { title: string; link: string; description: string; pubDate: string }[] = [];
+        $('a[href*="-378"], a[href*="/haberler/"]').each((_, el) => {
+            const href = $(el).attr('href');
+            const title = $(el).text().trim().replace(/\s+/g, ' ');
+            if (href && title.length > 25 && !title.toLowerCase().includes('canlı yayın') && !title.toLowerCase().includes('reklam')) {
+                const fullUrl = href.startsWith('http') ? href : `https://www.bloomberght.com${href}`;
+                if (fullUrl.includes('bloomberght.com/') && !items.some(it => it.link === fullUrl)) {
+                    items.push({
+                        title,
+                        link: fullUrl,
+                        description: title,
+                        pubDate: new Date().toISOString()
+                    });
+                }
+            }
+        });
+
+        return items.slice(0, 10);
+    } catch {
+        return [];
+    }
 }
 
 export async function GET(request: Request) {
@@ -195,7 +232,7 @@ export async function GET(request: Request) {
             }
         }
 
-        // 2. KATEGORİ BAZLI DOĞRULANMIŞ HABER KAYNAKLARI
+        // 2. KATEGORİ BAZLI DOĞRULANMIŞ HABER KAYNAKLARI (RSS + Canlı Bloomberg HT)
         const verifiedFeeds: { source: string; category: EnrichedNewsItem['category']; label: string; url: string }[] = [
             // Borsa İstanbul & Şirketler
             { source: 'AA Finans', category: 'bist', label: 'Borsa İstanbul', url: 'https://www.aa.com.tr/tr/rss/default?cat=ekonomi' },
@@ -227,6 +264,7 @@ export async function GET(request: Request) {
         const seenSlugs = new Set<string>();
         const allItems: EnrichedNewsItem[] = [];
 
+        // RSS Kaynaklarını Çek
         const results = await Promise.allSettled(
             verifiedFeeds.map(async (feed) => {
                 const res = await fetch(feed.url, {
@@ -301,6 +339,48 @@ export async function GET(request: Request) {
                     }
                 }
             }
+        }
+
+        // Bloomberg HT Doğrudan Canlı Piyasa Haberlerini de Ekle
+        try {
+            const bhtLive = await fetchBloombergHTLiveMarket();
+            for (const item of bhtLive) {
+                if (item.link && !seenUrls.has(item.link)) {
+                    seenUrls.add(item.link);
+                    const catInfo = categorizeNews(item.title, item.description, 'bist', 'Borsa İstanbul');
+                    const affected = extractAffectedAssets(item.title, item.description);
+                    const sentiment = detectSentiment(item.title, item.description);
+
+                    let baseSlug = slugify(item.title);
+                    let uniqueSlug = baseSlug;
+                    let counter = 1;
+                    while (seenSlugs.has(uniqueSlug)) {
+                        uniqueSlug = `${baseSlug}-${counter}`;
+                        counter++;
+                    }
+                    seenSlugs.add(uniqueSlug);
+
+                    allItems.push({
+                        id: uniqueSlug,
+                        slug: uniqueSlug,
+                        title: item.title,
+                        link: item.link,
+                        pubDate: item.pubDate,
+                        source: 'Bloomberg HT',
+                        description: item.description,
+                        category: catInfo.category,
+                        categoryLabel: catInfo.label,
+                        sentiment: sentiment,
+                        impact: 'high',
+                        tickers: affected,
+                        affectedAssets: affected,
+                        readTime: '3 dk okuma',
+                        isHot: true
+                    });
+                }
+            }
+        } catch (e) {
+            console.error("BHT live scrape error:", e);
         }
 
         // Sort chronologically (En güncel haber en üstte)
