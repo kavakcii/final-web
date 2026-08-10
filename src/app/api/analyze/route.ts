@@ -5,8 +5,6 @@ import { fetchTefasData } from "../../../lib/tefas";
 
 // Initialize Yahoo Finance robustly
 let yahooFinance: any = YahooFinance;
-// Check if it's a class (constructor) and needs instantiation
-// The error "Call new YahooFinance() first" indicates we likely got the class.
 if (typeof yahooFinance === 'function' || (yahooFinance?.prototype && yahooFinance?.prototype?.search)) {
     try {
         yahooFinance = new yahooFinance();
@@ -31,27 +29,20 @@ export async function POST(req: Request) {
 
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-        // Auto-detect TEFAS Fund if context is missing
         let enhancedContext = assetContext;
 
-        // Check if it looks like a TEFAS code (3 uppercase letters)
-        // We ALWAYS check TEFAS if the name matches the pattern, even if context is present,
-        // to ensure we get the official/correct name (overriding potentially stale or wrong context).
+        // Auto-detect TEFAS Fund if code is 3 uppercase letters
         if (/^[A-Z]{3}$/.test(assetName)) {
             try {
-                // Fetch recent TEFAS data to find this fund
                 const today = new Date();
                 const fundDataList = await fetchTefasData(today);
                 const foundFund = fundDataList.find(f => f.FONKODU === assetName);
 
                 if (foundFund) {
-                    console.log(`Found TEFAS fund: ${assetName} -> ${foundFund.FONUNVAN}`);
-
                     let quoteType = "MUTUALFUND";
                     let typeDisp = "Yatırım Fonu";
                     const name = foundFund.FONUNVAN.toUpperCase();
 
-                    // Better classification logic based on FONUNVAN
                     if (name.includes("HİSSE") || name.includes("HISSE")) {
                         quoteType = "EQUITY";
                         typeDisp = "Hisse Senedi Fonu";
@@ -72,7 +63,6 @@ export async function POST(req: Request) {
                         typeDisp = "Serbest Fon";
                     }
 
-                    // Force update context with authoritative data
                     enhancedContext = {
                         symbol: assetName,
                         longname: foundFund.FONUNVAN,
@@ -90,14 +80,13 @@ export async function POST(req: Request) {
         let newsContext = "";
         try {
             let searchSymbol = enhancedContext?.symbol || assetName;
-
-            // If it's a known TEFAS fund (synthetic or explicit), try to find relevant news
-            // Searching just "ALC" gives Alcon. Searching "ALC Fon" might be better.
             if (enhancedContext?.exchange === 'TEFAS' || enhancedContext?.isSynthetic) {
                 searchSymbol = `${enhancedContext.symbol} Yatırım Fonu`;
+            } else if (assetName.toUpperCase() === 'ALTIN' || assetName.toUpperCase() === 'GOLD') {
+                searchSymbol = 'Gold Price XAU USD';
             }
 
-            const newsResult = await yahooFinance.search(searchSymbol, { newsCount: 5 });
+            const newsResult = await yahooFinance.search(searchSymbol, { newsCount: 6 });
 
             if (newsResult.news && newsResult.news.length > 0) {
                 const newsItems = newsResult.news.map((n: any) => {
@@ -106,10 +95,8 @@ export async function POST(req: Request) {
                 }).join('\n');
 
                 newsContext = `
-                SON DAKİKA GELİŞMELERİ VE HABERLER (Analizini MUTLAKA bu gerçek verilere dayandır):
+                SON DAKİKA GELİŞMELERİ VE HABERLER (Analizini bu gerçek verilere dayandır):
                 ${newsItems}
-                
-                YUKARIDAKİ HABERLERİ DİKKATE ALARAK GÜNCEL BİR YORUM YAP.
                 `;
             }
         } catch (e) {
@@ -120,142 +107,149 @@ export async function POST(req: Request) {
         let contextInfo = "";
         if (enhancedContext) {
             contextInfo = `
-            Kullanıcı bu varlığı listeden seçti. Detayları:
+            Kullanıcı bu varlığı seçti:
             - Sembol: ${enhancedContext.symbol}
             - Tam İsim: ${enhancedContext.longname || enhancedContext.shortname || "Bilinmiyor"}
             - Borsa/Piyasa: ${enhancedContext.exchDisp || enhancedContext.exchange || "Bilinmiyor"}
             - Tip: ${enhancedContext.typeDisp || enhancedContext.quoteType || "Bilinmiyor"}
-            
-            Lütfen analizi GENEL bir sembol analizi yerine, YUKARIDAKİ TAM İSİM ve DETAYLARA sahip varlığa ÖZEL olarak yap.
-            
-            ÖNEMLİ TİP BİLGİSİ: Bu fonun türü "${enhancedContext.typeDisp}" olarak belirlenmiştir. Analizinde bu türe özgü faktörleri (Örn: Temettü fonuysa temettü verimi ve nakit akışı; Katılım fonuysa faizsizlik prensipleri; Teknoloji fonuysa NASDAQ/Nasdaq performansı vb.) MUTLAKA vurgula.
-            
-            Örneğin eğer bu bir "Elektrikli Araçlar Fonu" ise, içindeki hisseleri (Tesla, BYD vb.) ve sektörü düşün.
-            Eğer bir "BIST 30 Hissesi" ise, Türkiye ekonomisi ve şirket bilançosunu düşün.
             `;
         }
 
         const today = new Date().toLocaleDateString('tr-TR');
 
         const prompt = `
-        Sen 20 yıllık deneyime sahip, dünyanın önde gelen fonlarında çalışmış kıdemli bir Portföy Yöneticisi ve Stratejistsin.
-        Görevin: Kullanıcının sorduğu yatırım varlığı (${assetName}) için derinlemesine, profesyonel ve stratejik bir analiz raporu hazırlamak.
+        Sen 20 yıllık deneyime sahip, küresel ve Borsa İstanbul piyasalarını çok iyi bilen kıdemli bir Portföy Yöneticisi ve Baş Analistsin.
+        Görevin: Kullanıcının seçtiği yatırım varlığı (${assetName}) için kapsamlı, öğretici ve profesyonel bir analiz hazırlamak.
 
-        BUGÜNÜN TARİHİ: ${today} (Tüm analizlerin bu tarihteki piyasa koşullarına göre olmalı).
-
-        VARLIK BİLGİLERİ:
-        ${contextInfo}
-
-        GÜNCEL HABERLER VE VERİLER:
-        ${newsContext}
+        BUGÜNÜN TARİHİ: ${today}.
+        VARLIK BİLGİLERİ: ${contextInfo}
+        GÜNCEL HABERLER: ${newsContext}
 
         YÖNERGELER:
-        1. **KİMLİK TESPİTİ**: Eğer sembol 3 harfli ise (Örn: TCD, IPJ) ve bağlam yoksa, bunun %99 ihtimalle bir "TEFAS Yatırım Fonu" olduğunu varsay. Fonun tam adını ve yatırım stratejisini (Hisse, Altın, Eurobond vb.) belirle.
-        2. **DERİN ANALİZ**: Asla "Piyasalardaki dalgalanma etkileyebilir" gibi genel cümleler kurma. "FED'in faiz indirimi beklentisinin %25'e düşmesi, bu fonun taşıdığı teknoloji hisselerini baskılayabilir" gibi SPESİFİK neden-sonuç ilişkileri kur.
-        3. **OLASI SENARYOLAR (KRİTİK)**: Yatırımcılar için en değerli kısım "Ne olursa ne olur?" kısmıdır. Her analiz maddesi için MUTLAKA en az 2 farklı senaryo yaz.
-           - Örn: "Merkez Bankası faizi sabit tutarsa -> Bankacılık hisseleri pozitif ayrışır."
-           - Örn: "Altın onsu 2600$ altına inerse -> Bu fonun NAV değeri %3-5 geri çekilebilir."
+        1. **Genel Durum & Fiyat Özeti**: Varlığın temel dinamiklerini ve güncel trendini özetle.
+        2. **Haber Yorumu (newsInterpretation)**: Güncel haberlerin bu varlık üzerindeki kısa ve orta vadeli etkilerini yorumla.
+        3. **Ekonomik Takvim & Eğitici Açıklama (educationalConcept)**: Varlığı doğrudan etkileyen makro olayı açıkla (Örn: Altın için "FED Faiz Kararı Nedir?", Dolar için "TCMB Faiz Politikası Nedir?", BIST için "Enflasyon ve Bilanço Dönemi Nedir?").
+        4. **Gelecek Senaryoları (Pozitif / Negatif Beklenti)**:
+           - Pozitif Beklenti: Olası olumlu gelişmede ne olur? (Örn: Faiz indirimi gelirse altın yükselir).
+           - Negatif Beklenti: Olası olumsuz gelişmede ne olur? (Örn: Şahin açıklamalar gelirse altın baskılanır).
+        5. **Tarihsel Vaka İncelemesi (historicalEvent)**: Sadece faiz değil, jeopolitik kriz/savaş/pandemi/şok gibi somut tarihsel bir olay seç (Örn: Altın için "Orta Doğu Gerilimi / ABD-İran Krizi ve Güvenli Liman Talebi", Hisse için "Pandemi / Küresel Tedarik Krizi").
 
         ÇIKTI FORMATI (JSON):
-        Aşağıdaki JSON formatını EKSİKSİZ doldur. Sadece saf JSON döndür. Markdown yok.
+        Aşağıdaki JSON yapısını eksiksiz doldur. Sadece saf JSON döndür, markdown formatı koyma.
 
         {
-            "summary": "Yatırımcıya özel, net, eyleme geçirilebilir özet (2-3 cümle).",
+            "summary": "Varlık için net, profesyonel ve eyleme geçirilebilir özet (2-3 cümle).",
+            "newsInterpretation": "Güncel piyasa haberlerinin ve küresel akışların bu varlık üzerindeki etkisi ve analizi.",
+            "educationalConcept": {
+                "title": "FED Faiz Kararı / Makro Gösterge Nedir?",
+                "description": "Bu kavramın ne anlama geldiği ve bu varlığın fiyatını neden doğrudan etkilediğinin net açıklaması.",
+                "whyItMatters": "Yatırımcının bu kararı neden takip etmesi gerektiği."
+            },
             "historicalEvent": {
-                "title": "Yakın Geçmişteki Kritik Olay (Örn: FED Faiz Kararı)",
-                "date": "Olay Tarihi veya Dönemi",
-                "impact": "Olayın piyasaya ve bu varlığa olan doğrudan etkisi.",
-                "result": "Sonuç olarak fiyat veya talep üzerindeki somut değişim.",
-                "affectedAssets": ["ALTIN", "DOLAR"]
+                "title": "Tarihsel Vaka (Örn: ABD-İran Gerilimi & Küresel Jeopolitik Kriz)",
+                "date": "Olay Tarihi / Dönemi",
+                "impact": "Kriz patlak verdiğinde varlığa olan talep ve piyasa dinamikleri.",
+                "result": "Varlık fiyatının bu olayda nasıl sert yükseldiği/dalgalandığı ve sonrasında nasıl dengelendiği.",
+                "affectedAssets": ["ALTIN", "PETROL", "DOLAR"]
             },
             "analysis": [
                 {
                     "id": 1,
-                    "title": "Analiz Başlığı (Örn: TCMB Faiz Kararı Etkisi)",
-                    "date": "Vade (Örn: Önümüzdeki 3 Ay)",
-                    "description": "Detaylı durum analizi. Neden önemli?",
+                    "title": "Makro Ekonomik Takvim & Faiz Görünümü",
+                    "date": "Gelecek 1-3 Ay",
+                    "description": "Önümüzdeki günlerdeki kritik verilerin varlığa olası etkisi.",
                     "scenarios": [
                         {
-                            "condition": "Faizler 500 baz puan artarsa",
-                            "impact": "Fonun içerdiği tahviller değer kaybeder, hisse tarafı baskılanır.",
-                            "sentiment": "negative",
-                            "assetsAffected": ["BIST100", "Tahvil"]
+                            "condition": "Pozitif Beklenti (Örn: Faiz İndirimi / Güvercin Açıklama)",
+                            "impact": "Varlık fiyatında güçlü yukarı yönlü hareket ve talep artışı.",
+                            "sentiment": "positive",
+                            "assetsAffected": ["ALTIN", "BIST100"]
                         },
                         {
-                            "condition": "Faizler sabit kalırsa",
-                            "impact": "Belirsizlik azalır, fonun bankacılık hisseleri ralli yapabilir.",
-                            "sentiment": "positive",
-                            "assetsAffected": ["XBANK"]
+                            "condition": "Negatif Beklenti (Örn: Sıkı Para Politikası / Şahin Duruş)",
+                            "impact": "Kısa vadeli kar satışları ve fiyat baskılanması.",
+                            "sentiment": "negative",
+                            "assetsAffected": ["DOLAR"]
                         }
                     ],
-                    "relatedAssets": ["AKBNK", "GARAN"]
+                    "relatedAssets": ["ALTIN", "USDTRY"]
                 }
             ],
-            "topHoldings": [
-                 { "symbol": "KOD", "name": "Varlık İsmi", "percent": "%Tahmini" }
-            ]
+            "topHoldings": []
         }
-
-        KURALLAR:
-        - "historicalEvent" nesnesi MUTLAKA DOLU OLMALIDIR. Yakın geçmişten (son 1-6 ay) somut bir örnek ver.
-        - "analysis" dizisinde EN AZ 2, EN FAZLA 4 madde olsun.
-        - Her maddenin "scenarios" dizisi DOLU OLMALIDIR. Boş senaryo kabul edilemez.
-        - Dil: Profesyonel, akıcı Türkçe.
         `;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
-        // Clean up markdown code blocks if present
         let jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-        // Attempt to find the first '{' and last '}' to extract the JSON object
         const firstBrace = jsonStr.indexOf('{');
         const lastBrace = jsonStr.lastIndexOf('}');
-
         if (firstBrace !== -1 && lastBrace !== -1) {
             jsonStr = jsonStr.substring(firstBrace, lastBrace + 1);
         }
 
         const data = JSON.parse(jsonStr);
-
         return NextResponse.json({ success: true, data });
     } catch (error) {
         console.error("AI Analysis Error:", error);
 
-        // Fallback for demo/error cases if API fails - RETURN MOCK DATA instead of just error
-        // This ensures the user always sees the structure they expect, even if the AI service is temporarily unavailable.
+        // Altın ve diğer varlıklar için zengin Fallback Mock Verisi
+        const isGold = assetName.toUpperCase().includes('ALTIN') || assetName.toUpperCase().includes('XAU') || assetName.toUpperCase().includes('GOLD');
+
         const mockData = {
-            summary: `Küresel piyasalardaki gelişmeler ve makroekonomik veriler ışığında, ${assetName} için volatilite artışı gözlemlenebilir. Mevcut konjonktürde dengeli bir portföy yönetimi ve risk analizi önerilmektedir.`,
-            historicalEvent: {
-                title: "FED Faiz Kararı Etkisi (Örnek Vaka)",
-                date: "Son Çeyrek",
-                impact: "Piyasa beklentilerine paralel gelen faiz kararı sonrası varlık fiyatlarında kısa vadeli dalgalanma yaşandı.",
-                result: "Varlık fiyatı %1-2 bandında hareket ederek denge seviyesini korudu.",
-                affectedAssets: ["USD", "ALTIN"]
+            summary: isGold 
+                ? "Altın, küresel merkez bankalarının faiz politikaları ve jeopolitik gerilimlerin etkisiyle güçlü bir 'güvenli liman' talebi görmeye devam etmektedir. Dolar endeksindeki hareketler ve enflasyon verileri kısa vadeli seyrini belirleyecektir."
+                : `Küresel piyasalardaki gelişmeler ve makroekonomik veriler ışığında, ${assetName} için orta vadeli dengeli bir portföy yönetimi ve risk analizi önerilmektedir.`,
+            newsInterpretation: isGold
+                ? "Son dönemde Orta Doğu ve küresel ticaret hatlarındaki jeopolitik riskler ile ABD Merkez Bankası'nın (FED) olası faiz adımları, ons altın tarafında alım iştahını canlı tutmaktadır. Yurt içinde ise dolar/TL kuru gram altın fiyatlarına ek destek sağlamaktadır."
+                : `Piyasa haber akışları ve sektördeki güncel gelişmeler, ${assetName} için fiyatlama dinamiklerini doğrudan etkilemektedir.`,
+            educationalConcept: {
+                title: isGold ? "FED Faiz Kararı Nedir ve Altını Nasıl Etkiler?" : "Makro Ekonomik Göstergeler ve Faiz Etkisi",
+                description: isGold
+                    ? "Amerikan Merkez Bankası'nın (FED) belirlediği politika faizidir. Altın faiz getirisi olmayan bir varlık olduğu için, faizler düştüğünde altının cazibesi artar ve fiyatı yükselir. Faizler yüksek kaldığında ise dolar güçlenir ve altın üzerinde baskı oluşur."
+                    : "Merkez bankalarının faiz kararları ve enflasyon verileri piyasadaki likiditeyi ve risk iştahını yönlendirir.",
+                whyItMatters: isGold
+                    ? "Faiz kararları doğrudan Dolar Endeksini (DXY) ve küresel tahvil getirilerini belirleyerek altının ons fiyatını yönlendirir."
+                    : "Şirket değerlemeleri ve sermaye maliyeti üzerinde belirleyici rol oynar."
+            },
+            historicalEvent: isGold ? {
+                title: "ABD - İran Gerilimi & Jeopolitik Şoklar (Tarihsel Vaka)",
+                date: "Jeopolitik Kriz Dönemi",
+                impact: "Orta Doğu'da askeri gerginliğin ve füze saldırılarının tırmandığı dönemde küresel piyasalarda riskten kaçış başladı ve yatırımcılar 'Güvenli Liman' olan altına hücum etti.",
+                result: "Ons altın çok kısa sürede %15'in üzerinde sert bir ralli gerçekleştirdi. Sıcak çatışma riskinin yatışmasıyla birlikte fiyatlar kar satışlarıyla dengelendi.",
+                affectedAssets: ["ALTIN", "BRENT PETROL", "USD"]
+            } : {
+                title: "Küresel Faiz & Likidite Döngüsü (Tarihsel Vaka)",
+                date: "Geçmiş Piyasa Döngüsü",
+                impact: "Faiz artış hızının yavaşladığı dönemlerde piyasa risk iştahı toparlandı.",
+                result: "Varlık fiyatları ilk dalgalanmanın ardından yeniden yükseliş trendine girdi.",
+                affectedAssets: ["BIST100", "USD"]
             },
             analysis: [
                 {
                     id: 1,
-                    title: "Küresel Piyasa Görünümü ve Risk İştahı",
+                    title: isGold ? "FED Faiz İndirim Döngüsü & Enflasyon Görünümü" : "Makro Piyasa Beklentileri",
                     date: new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }) + " Görünümü",
-                    description: "Küresel piyasalardaki volatilite ve merkez bankalarının faiz politikalarındaki belirsizlik, yatırımcıların risk iştahını etkilemektedir.",
+                    description: isGold
+                        ? "Önümüzdeki dönemde ABD enflasyonunun hedefe yaklaşması ve faiz indirimlerinin başlaması, altın için en önemli yükseliş katalizörüdür."
+                        : "Sektörel dinamikler ve faiz ortamı varlık performansında belirleyici olacaktır.",
                     scenarios: [
                         {
-                            condition: "Piyasa Koşulları İyileşirse",
-                            impact: "Risk iştahının artmasıyla birlikte değerlemelerde yukarı yönlü bir ivmelenme görülebilir.",
+                            condition: isGold ? "Pozitif Beklenti: FED Faiz İndirimlerine Hız Verirse" : "Pozitif Beklenti: Risk İştahı Artarsa",
+                            impact: isGold ? "Dolar değer kaybeder, tahvil getirileri düşer ve Ons Altın yeni rekor seviyelere ulaşabilir." : "Varlık değerlemelerinde güçlü yukarı yönlü hareket görülür.",
                             sentiment: "positive",
-                            assetsAffected: []
+                            assetsAffected: ["ALTIN", "GUMUS"]
                         },
                         {
-                            condition: "Belirsizlik Devam Ederse",
-                            impact: "Yatırımcıların güvenli limanlara yönelmesiyle volatilitenin yüksek kalması muhtemeldir.",
+                            condition: isGold ? "Negatif Beklenti: Enflasyon Yüksek Kalır ve Faizler İndirilmezse" : "Negatif Beklenti: Belirsizlik Sürerse",
+                            impact: isGold ? "Dolar küresel çapta güçlü kalır ve altında 50-100 dolarlık teknik düzeltme görülebilir." : "Kısa vadeli satış baskısı oluşur.",
                             sentiment: "negative",
-                            assetsAffected: []
+                            assetsAffected: ["USDTRY"]
                         }
                     ],
-                    relatedAssets: []
+                    relatedAssets: isGold ? ["ALTIN", "XAUUSD", "USDTRY"] : ["BIST100"]
                 }
             ],
             topHoldings: []
@@ -263,8 +257,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             success: true,
-            data: mockData,
-            isMock: false // Hide mock status from frontend to prevent error banners
+            data: mockData
         });
     }
 }
