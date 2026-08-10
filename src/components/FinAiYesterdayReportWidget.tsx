@@ -154,51 +154,46 @@ export function FinAiYesterdayReportWidget() {
     const isPositive = displayDiffValue >= 0;
 
     return (
-        <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-2xl sm:rounded-3xl p-4 sm:p-6.5 shadow-sm flex flex-col justify-between min-h-[280px] sm:min-h-[320px] relative overflow-hidden min-w-0">
+        <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex flex-col justify-between h-full min-w-0 relative overflow-hidden">
             {/* Subtle background ambient lights */}
             <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col justify-between h-full space-y-4 min-w-0">
+            <div className="relative z-10 flex flex-col justify-between h-full space-y-2 sm:space-y-4 min-w-0">
                 {/* Header */}
-                <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center shadow-inner shrink-0">
-                            <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#00008B] animate-pulse" />
+                <div className="flex items-center justify-between gap-1.5 flex-wrap sm:flex-nowrap">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-lg sm:rounded-2xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center shadow-inner shrink-0">
+                            <Sparkles className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#00008B] animate-pulse" />
                         </div>
                         <div>
-                            <h3 className="text-sm sm:text-base font-black text-[#00008B] tracking-tight">FinAi Raporu</h3>
-                            <p className="text-[9px] sm:text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest">Akıllı Portföy Analizi</p>
+                            <h3 className="text-xs sm:text-base font-black text-[#00008B] tracking-tight truncate">FinAi Raporu</h3>
+                            <p className="text-[8px] sm:text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest hidden sm:block">Akıllı Portföy Analizi</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="flex items-center gap-1">
                         {myAssets.length > 0 && (
-                            <span className={`text-[10px] sm:text-xs font-black px-2.5 py-1 sm:px-3 rounded-xl sm:rounded-2xl border flex items-center gap-1 shadow-xs ${
+                            <span className={`text-[8px] sm:text-xs font-black px-1.5 py-0.5 sm:px-3 rounded sm:rounded-2xl border flex items-center gap-0.5 shadow-xs ${
                                 isPositive
                                     ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
                                     : 'text-red-700 bg-red-50 border-red-200'
                             }`}>
-                                {isPositive ? <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> : <TrendingDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
-                                {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(2)})
+                                {isPositive ? '+' : ''}%{displayDiffPercent.toFixed(1)}
                             </span>
                         )}
-                        <div className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-bold text-[#00008B]/70 bg-white/70 px-2 py-1 sm:px-2.5 rounded-xl sm:rounded-2xl border border-slate-200/60 shadow-xs">
-                            <Clock className="w-3 h-3 text-[#00008B]" />
-                            <span>{report?.generatedAt || 'Canlı'}</span>
-                        </div>
                     </div>
                 </div>
 
-                {/* Direct Narrative Body (No nested inner box) */}
+                {/* Direct Narrative Body */}
                 {!isDataLoaded && loading ? (
-                    <div className="flex-1 py-12 flex flex-col items-center justify-center gap-3">
-                        <Loader2 className="w-7 h-7 text-[#00008B] animate-spin" />
-                        <span className="text-xs font-bold text-[#00008B]/70">FinAi Portföy Analizini Hazırlıyor...</span>
+                    <div className="flex-1 py-8 flex flex-col items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 text-[#00008B] animate-spin" />
+                        <span className="text-[10px] font-bold text-[#00008B]/70">Rapor Hazırlanıyor...</span>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col justify-center py-3">
-                        <p className="text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide">
+                    <div className="flex-1 flex flex-col justify-center py-1">
+                        <p className="text-[10px] sm:text-xs md:text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide line-clamp-6 sm:line-clamp-none">
                             {narrativeToDisplay}
                         </p>
                     </div>

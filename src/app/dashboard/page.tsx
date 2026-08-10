@@ -95,50 +95,57 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Synchronized Summary Cards Row (Birebir Portföyüm Özeti) */}
-                <div className="w-full">
-                    <DashboardSummaryCards />
-                </div>
-
-                {/* Main Dashboard Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                    {/* Left & Middle Column (8 Cols) */}
-                    <div className="lg:col-span-8 space-y-8">
-                        {/* Varlık Gelişim Grafiği Widget */}
-                        <BalanceGrowthChartWidget />
-
-                        {/* Ekonomik Takvim Widget */}
-                        <EconomicCalendarWidget />
+                {/* 1. KATMAN: %60 Varlık Kartları (Alt Alta) / %40 Gündem Haberleri */}
+                <div className="grid grid-cols-12 gap-2.5 sm:gap-4 md:gap-6 items-stretch w-full">
+                    {/* %60 Sol Bölüm (Toplam Varlık ve Net Kâr/Zarar) */}
+                    <div className="col-span-7 flex flex-col min-w-0">
+                        <DashboardSummaryCards layout="stacked" />
                     </div>
 
-                    {/* Right Column (4 Cols) */}
-                    <div className="lg:col-span-4 space-y-8">
-                        {/* FinAI Dünün Özeti & Günlük Analiz Kutusu */}
-                        <FinAiYesterdayReportWidget />
-
-                        {/* Son Gündem Haber Özeti */}
-                        <div className="w-full bg-white border border-slate-100 rounded-[2rem] p-6 shadow-sm">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <Newspaper className="w-4 h-4 text-[#00008B]" />
-                                    <h3 className="text-[11px] font-black text-[#00008B] uppercase tracking-widest">Gündem</h3>
+                    {/* %40 Sağ Bölüm (Gündem Son Haberler) */}
+                    <div className="col-span-5 flex flex-col min-w-0">
+                        <div className="w-full h-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex flex-col justify-between overflow-hidden">
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-1.5 sm:gap-2">
+                                        <Newspaper className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00008B]" />
+                                        <h3 className="text-[9px] sm:text-[11px] font-black text-[#00008B] uppercase tracking-widest">Gündem</h3>
+                                    </div>
+                                    <Link href="/dashboard/news" className="text-[8px] sm:text-[9px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümü</Link>
                                 </div>
-                                <Link href="/dashboard/news" className="text-[9px] font-black text-slate-300 hover:text-[#00008B] transition-colors uppercase tracking-widest">Tümünü Gör</Link>
-                            </div>
-                            <div className="grid grid-cols-1 gap-y-3">
-                                {news && news.length > 0 ? news.slice(0, 4).map((item, idx) => (
-                                    <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-2 hover:border-[#00008B]/20 transition-all">
-                                        <div className="flex flex-col gap-0.5">
-                                            <span className="text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">{new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
-                                            <h4 className="text-[10px] font-bold text-slate-600 leading-tight group-hover:text-[#00008B] transition-colors line-clamp-2">{item.title}</h4>
-                                        </div>
-                                    </Link>
-                                )) : (
-                                    <p className="text-[10px] text-slate-300 py-4 text-center font-bold">Haberler yükleniyor...</p>
-                                )}
+                                <div className="grid grid-cols-1 gap-y-1.5 sm:gap-y-2 overflow-y-auto max-h-[175px] sm:max-h-[220px] scrollbar-none pr-0.5">
+                                    {news && news.length > 0 ? news.slice(0, 4).map((item, idx) => (
+                                        <Link key={idx} href={`/dashboard/news?url=${encodeURIComponent(item.link)}`} className="group border-b border-slate-50 pb-1.5 hover:border-[#00008B]/20 transition-all">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-[7px] sm:text-[8px] font-black text-[#00008B]/30 uppercase tracking-widest leading-none">{new Date(item.pubDate).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                <h4 className="text-[9px] sm:text-[10px] font-bold text-slate-600 leading-tight group-hover:text-[#00008B] transition-colors line-clamp-2">{item.title}</h4>
+                                            </div>
+                                        </Link>
+                                    )) : (
+                                        <p className="text-[9px] text-slate-300 py-3 text-center font-bold">Haberler yükleniyor...</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
+
+                {/* 2. KATMAN: %100 Satır içinde %60 Varlık Gelişim Grafiği / %40 FinAi Raporu */}
+                <div className="grid grid-cols-12 gap-2.5 sm:gap-4 md:gap-6 items-stretch w-full">
+                    {/* %60 Sol Bölüm (Varlık Gelişim Çizgi Grafiği) */}
+                    <div className="col-span-7 flex flex-col min-w-0">
+                        <BalanceGrowthChartWidget />
+                    </div>
+
+                    {/* %40 Sağ Bölüm (FinAi Raporu) */}
+                    <div className="col-span-5 flex flex-col min-w-0">
+                        <FinAiYesterdayReportWidget />
+                    </div>
+                </div>
+
+                {/* 3. KATMAN: %100 Ekonomik Takvim */}
+                <div className="w-full min-w-0">
+                    <EconomicCalendarWidget />
                 </div>
             </div>
         </div>

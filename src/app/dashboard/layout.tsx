@@ -134,29 +134,29 @@ function DashboardShell({
             <div className="relative z-10 w-full flex mx-auto max-w-[1920px] overflow-x-hidden min-h-screen">
                 <div className="flex-1 flex bg-transparent min-w-0">
                     
-                    {/* Desktop Sidebar (Ultra-Crystal Glassmorphism Aesthetic - Hidden on Mobile) */}
-                    <aside className="hidden md:flex md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
+                    {/* Always Visible Compact Sidebar (w-14 on Mobile, Expanding on Desktop) */}
+                    <aside className="w-14 md:w-24 md:hover:w-80 border-r border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] flex flex-col transition-all duration-500 ease-in-out group z-50 shrink-0 min-h-screen sticky top-0 h-screen overflow-hidden relative">
                         {/* Glass Reflection & Ambient Glow */}
                         <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-white/40 pointer-events-none" />
                         <div className="absolute -left-16 top-1/4 w-36 h-36 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
 
-                        <div className="p-6 flex items-center h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
-                            <Link href="/" className="flex items-center gap-3 w-full overflow-hidden group/logo">
-                                <FinAiLogo showText={false} className="h-10 w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.15)]" />
-                                <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-0 md:translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap">
+                        <div className="p-3 md:p-6 flex items-center justify-center md:justify-start h-14 md:h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
+                            <Link href="/" className="flex items-center justify-center md:justify-start gap-3 w-full overflow-hidden group/logo">
+                                <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-transform duration-500 group-hover/logo:scale-110 drop-shadow-[0_0_15px_rgba(0,0,139,0.15)]" />
+                                <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 transition-all duration-500 transform translate-x-[-10px] md:group-hover:translate-x-0 whitespace-nowrap hidden md:inline-block">
                                     FinAi<span className="text-blue-600">.</span>
                                 </span>
                             </Link>
                         </div>
 
-                        <nav className="flex-1 px-3 py-4 space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
+                        <nav className="flex-1 px-1.5 md:px-3 py-3 md:py-4 space-y-2 md:space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
                             {menuItems.map((item, idx) => {
                                 const isActive = pathname === item.href;
                                 
                                 if (item.subItems) {
                                     return (
                                         <div key={idx} className="space-y-1">
-                                            <div className={`flex items-center justify-between px-3.5 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${
+                                            <div className={`flex items-center justify-center md:justify-between px-2 md:px-3.5 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav ${
                                                 isActive 
                                                     ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
                                                     : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
@@ -164,15 +164,15 @@ function DashboardShell({
                                                 {/* Direct Link to Portfolio Page */}
                                                 <Link 
                                                     href={item.href} 
-                                                    className="flex items-center flex-1 min-w-0 pr-2"
+                                                    className="flex items-center justify-center md:justify-start flex-1 min-w-0"
                                                 >
                                                     <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B] transition-colors'}`} />
-                                                    <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold">
+                                                    <span className="opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block">
                                                         {item.label}
                                                     </span>
                                                 </Link>
 
-                                                {/* Chevron Dropdown Toggle Button */}
+                                                {/* Chevron Dropdown Toggle Button (Desktop hover only) */}
                                                 <button
                                                     type="button"
                                                     onClick={(e) => {
@@ -181,7 +181,7 @@ function DashboardShell({
                                                         item.toggleExpand();
                                                     }}
                                                     title="Alt Başlıkları Aç/Kapat"
-                                                    className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all p-1.5 rounded-xl flex items-center justify-center shrink-0 ${
+                                                    className={`hidden md:group-hover:flex transition-all p-1.5 rounded-xl items-center justify-center shrink-0 ${
                                                         isActive 
                                                             ? 'hover:bg-white/20 text-white' 
                                                             : 'hover:bg-[#00008B]/15 text-[#00008B]'
@@ -225,13 +225,13 @@ function DashboardShell({
                                 }
 
                                 return (
-                                    <Link key={idx} href={item.href} className={`flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all overflow-hidden whitespace-nowrap h-12 relative group/nav ${
+                                    <Link key={idx} href={item.href} className={`flex items-center justify-center md:justify-start px-2 md:px-4 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav ${
                                         isActive 
                                             ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
                                             : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
                                     }`}>
                                         <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B] transition-colors'}`} />
-                                        <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold">
+                                        <span className="opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block">
                                             {item.label}
                                         </span>
                                     </Link>
@@ -239,10 +239,10 @@ function DashboardShell({
                             })}
                         </nav>
 
-                        <div className="p-4 border-t border-white/10 shrink-0">
-                            <button onClick={handleLogout} className="flex items-center px-4 py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-12 w-full text-left group/out">
+                        <div className="p-2 md:p-4 border-t border-white/10 shrink-0">
+                            <button onClick={handleLogout} className="flex items-center justify-center md:justify-start px-2 md:px-4 py-2.5 md:py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out">
                                 <LogOut className="w-5 h-5 flex-shrink-0" />
-                                <span className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate">
+                                <span className="opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block">
                                     Çıkış Yap
                                 </span>
                             </button>
@@ -252,16 +252,10 @@ function DashboardShell({
                     {/* Main Content */}
                     <main className="flex-1 relative flex flex-col min-w-0 bg-transparent overflow-x-hidden">
                         {/* Header (Glassified) */}
-                        <header className="h-14 md:h-16 border-b border-slate-100 flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
-                            <div className="flex items-center gap-2.5">
-                                <Link href="/dashboard" className="flex items-center gap-2 md:hidden">
-                                    <FinAiLogo showText={false} className="h-7 w-7 shrink-0 drop-shadow-[0_0_10px_rgba(0,0,139,0.15)]" />
-                                    <span className="text-lg font-black tracking-tight text-[#00008B]">FinAi</span>
-                                </Link>
-                                <h1 className="hidden md:block text-[10px] font-bold text-[#00008B] tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
-                            </div>
+                        <header className="h-12 md:h-16 border-b border-slate-100 flex items-center justify-between px-3 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
+                            <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
                             
-                            <div className="flex items-center space-x-3 md:space-x-4">
+                            <div className="flex items-center space-x-2 md:space-x-4">
                                 <div className="relative hidden sm:block">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B]/40" />
                                     <input
@@ -274,12 +268,12 @@ function DashboardShell({
                                 <div className="relative" ref={profileRef}>
                                     <button
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                        className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#0a192f] font-bold hover:bg-slate-200 transition-all focus:outline-none overflow-hidden border border-[#0a192f]/5"
+                                        className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#0a192f] font-bold hover:bg-slate-200 transition-all focus:outline-none overflow-hidden border border-[#0a192f]/5"
                                     >
                                         {avatarUrl ? (
                                             <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
                                         ) : (
-                                            userName ? userName.charAt(0).toUpperCase() : <User className="w-4 h-4" />
+                                            userName ? userName.charAt(0).toUpperCase() : <User className="w-3.5 h-3.5 md:w-4 md:h-4" />
                                         )}
                                     </button>
 
@@ -313,42 +307,6 @@ function DashboardShell({
                         </div>
                     </main>
                 </div>
-            </div>
-
-            {/* Mobile Bottom Navigation Bar (Modern Mobile App Navigation) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/80 shadow-[0_-4px_25px_rgba(0,0,139,0.08)] px-2 py-1.5 pb-safe">
-                <nav className="flex items-center justify-around">
-                    {menuItems.map((item, idx) => {
-                        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                        const Icon = item.icon;
-                        return (
-                            <Link
-                                key={idx}
-                                href={item.href}
-                                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
-                                    isActive 
-                                        ? 'text-[#00008B] font-extrabold' 
-                                        : 'text-slate-400 hover:text-slate-600 font-medium'
-                                }`}
-                            >
-                                <div className={`p-1 rounded-xl transition-all ${
-                                    isActive ? 'bg-[#00008B]/10 scale-105' : ''
-                                }`}>
-                                    <Icon className={`w-5 h-5 ${isActive ? 'text-[#00008B]' : 'text-slate-400'}`} />
-                                </div>
-                                <span className="text-[9px] tracking-tight mt-0.5 whitespace-nowrap">
-                                    {item.label}
-                                </span>
-                                {isActive && (
-                                    <motion.div 
-                                        layoutId="mobileActiveIndicator"
-                                        className="w-1 h-1 bg-[#00008B] rounded-full mt-0.5"
-                                    />
-                                )}
-                            </Link>
-                        );
-                    })}
-                </nav>
             </div>
         </div>
     );

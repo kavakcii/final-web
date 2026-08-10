@@ -140,79 +140,52 @@ export function BalanceGrowthChartWidget() {
     const isNewUser = !firstDate && !loading;
 
     return (
-        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col justify-between min-h-[300px] sm:min-h-[320px] min-w-0">
+        <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3 sm:p-5 shadow-sm flex flex-col justify-between h-full min-w-0">
             <div>
                 {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shrink-0">
-                            <LineChart className="w-4 h-4 text-[#00008B]" />
+                <div className="flex items-center justify-between mb-2 sm:mb-4">
+                    <div className="flex items-center gap-1.5 sm:gap-3">
+                        <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-lg sm:rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center shrink-0">
+                            <LineChart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#00008B]" />
                         </div>
                         <div>
-                            <h3 className="text-sm sm:text-base font-black text-[#00008B] tracking-tight">Varlık Gelişim Grafiği</h3>
-                            <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">Günlük Kapanış Değeri</p>
+                            <h3 className="text-xs sm:text-base font-black text-[#00008B] tracking-tight truncate">Varlık Gelişimi</h3>
+                            <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Günlük Kapanış</p>
                         </div>
                     </div>
 
                     {/* Tüm Günler Etiketi */}
-                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold text-[#00008B] bg-[#00008B]/5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-[#00008B]/10">
-                        <span>Tüm Günler</span>
+                    <div className="flex items-center gap-1 text-[8px] sm:text-[10px] font-extrabold text-[#00008B] bg-[#00008B]/5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-2xl border border-[#00008B]/10">
+                        <span>7 Gün</span>
                     </div>
                 </div>
 
                 {/* --- Yeni Kullanıcı Durumu --- */}
                 {isNewUser && (
-                    <div className="flex flex-col items-center justify-center py-10 gap-4">
-                        <div className="w-14 h-14 rounded-3xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center">
-                            <TrendingUp className="w-7 h-7 text-[#00008B]/40" />
+                    <div className="flex flex-col items-center justify-center py-6 gap-2">
+                        <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-[#00008B]/40" />
                         </div>
                         <div className="text-center max-w-xs">
-                            <p className="text-sm font-black text-slate-700 mb-1">Grafik Oluşmaya Başlıyor</p>
-                            <p className="text-xs text-slate-400 leading-relaxed">
-                                Her gün gece <span className="font-bold text-slate-600">23:59</span>&apos;da portföyünüzün kapanış değeri otomatik olarak kaydedilir.
-                            </p>
-                            <div className="mt-4 space-y-2">
-                                {(['1W', '1M', '3M', 'YTD', '1Y'] as HistoryRange[]).map(r => (
-                                    <div key={r} className="flex items-center gap-2 justify-between text-xs text-slate-500 bg-slate-50 rounded-xl px-3 py-1.5">
-                                        <span className="flex items-center gap-1.5 font-bold text-[#00008B]">
-                                            <Clock className="w-3 h-3" />
-                                            {r}
-                                        </span>
-                                        <span>
-                                            {r === '1W'
-                                                ? '7 gün sonra açılır'
-                                                : r === '1M'
-                                                    ? '30 gün sonra açılır'
-                                                    : r === '3M'
-                                                        ? '3 ay sonra açılır'
-                                                        : r === 'YTD'
-                                                            ? 'Yıl ilerledikçe zenginleşir'
-                                                            : '1 yıl sonra tam dolar'}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
+                            <p className="text-xs font-black text-slate-700">Grafik Başlıyor</p>
+                            <p className="text-[10px] text-slate-400">Veriler her gece 23:59'da kaydedilir.</p>
                         </div>
                     </div>
                 )}
 
                 {/* --- Yüklenme Durumu --- */}
                 {!isNewUser && loading && (
-                    <div className="flex items-center justify-center h-44">
-                        <div className="w-6 h-6 border-2 border-[#00008B] border-t-transparent rounded-full animate-spin" />
+                    <div className="flex items-center justify-center h-32 sm:h-44">
+                        <div className="w-5 h-5 border-2 border-[#00008B] border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
 
                 {/* --- Veri Yok / Kilitli Dönem --- */}
                 {!isNewUser && !loading && !hasData && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-2">
-                        <Lock className="w-6 h-6 text-slate-300" />
-                        <p className="text-xs font-bold text-slate-400 text-center">
-                            Bu dönem için henüz yeterli veri birikimedi.
-                            <br />
-                            <span className="text-slate-300">
-                                {RANGE_DAYS[timeRange]} günlük veri birikince açılır.
-                            </span>
+                    <div className="flex flex-col items-center justify-center py-6 gap-2">
+                        <Lock className="w-5 h-5 text-slate-300" />
+                        <p className="text-[10px] font-bold text-slate-400 text-center">
+                            Henüz yeterli veri yok.
                         </p>
                     </div>
                 )}
@@ -221,16 +194,16 @@ export function BalanceGrowthChartWidget() {
                 {!isNewUser && !loading && hasData && (
                     <>
                         {/* İstatistik */}
-                        <div className="flex items-center justify-between mb-4 px-1">
+                        <div className="flex items-center justify-between mb-2 px-0.5">
                             <div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                    {RANGE_LABELS[timeRange]} Değişim
+                                <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                    Değişim
                                 </span>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-xl sm:text-2xl font-black text-[#00008B]">
-                                        ₺{latestBalance.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
+                                    <span className="text-sm sm:text-2xl font-black text-[#00008B] truncate">
+                                        ₺{latestBalance.toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </span>
-                                    <span className={`flex items-center gap-0.5 text-xs font-black px-2 py-0.5 rounded-lg border ${
+                                    <span className={`flex items-center text-[9px] sm:text-xs font-black px-1 sm:px-2 py-0.5 rounded border ${
                                         isPositive
                                             ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
                                             : 'text-red-500 bg-red-50 border-red-200'
@@ -239,17 +212,12 @@ export function BalanceGrowthChartWidget() {
                                     </span>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <span className="text-[10px] font-bold text-slate-300 block">
-                                    {displayChartData.length} günlük veri
-                                </span>
-                            </div>
                         </div>
 
                         {/* Chart */}
-                        <div className="h-44 w-full pt-2">
+                        <div className="h-32 sm:h-44 w-full pt-1">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={displayChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                                <AreaChart data={displayChartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%"  stopColor="#00008B" stopOpacity={0.25} />
@@ -260,25 +228,25 @@ export function BalanceGrowthChartWidget() {
                                         dataKey="date"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                                        tick={{ fill: "#94a3b8", fontSize: 8, fontWeight: 700 }}
                                         interval="preserveStartEnd"
                                     />
                                     <YAxis
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
-                                        width={90}
+                                        tick={{ fill: "#94a3b8", fontSize: 8, fontWeight: 700 }}
+                                        width={42}
                                         domain={['dataMin', 'dataMax']}
-                                        tickFormatter={(v: number) => `₺${v.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                                        tickCount={5}
+                                        tickFormatter={(v: number) => v >= 1000000 ? `₺${(v/1000000).toFixed(1)}M` : v >= 1000 ? `₺${(v/1000).toFixed(0)}k` : `₺${v}`}
+                                        tickCount={4}
                                     />
                                     <Tooltip
                                         contentStyle={{
                                             backgroundColor: '#00008B',
                                             borderColor:     '#00008B',
-                                            borderRadius:    '16px',
+                                            borderRadius:    '12px',
                                             color:           '#ffffff',
-                                            fontSize:        '11px',
+                                            fontSize:        '10px',
                                             fontWeight:      'bold',
                                             boxShadow:       '0 10px 25px -5px rgba(0, 0, 139, 0.3)'
                                         }}
@@ -293,11 +261,11 @@ export function BalanceGrowthChartWidget() {
                                         type="monotone"
                                         dataKey="balance"
                                         stroke="#00008B"
-                                        strokeWidth={3}
+                                        strokeWidth={2.5}
                                         fillOpacity={1}
                                         fill="url(#colorBalance)"
                                         dot={false}
-                                        activeDot={{ r: 5, fill: '#00008B', strokeWidth: 2, stroke: '#fff' }}
+                                        activeDot={{ r: 4, fill: '#00008B', strokeWidth: 2, stroke: '#fff' }}
                                     />
                                 </AreaChart>
                             </ResponsiveContainer>
