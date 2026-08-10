@@ -24,7 +24,7 @@ export function SmartReaderModal({ url, isLoading, error, articleData, onClose }
     if (!url) return null;
 
     const handleCopy = () => {
-        if (url) {
+        if (url && typeof window !== 'undefined' && navigator.clipboard) {
             navigator.clipboard.writeText(url);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);

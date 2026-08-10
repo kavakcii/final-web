@@ -119,9 +119,11 @@ export async function GET(request: Request) {
         const now = Date.now();
         if (!forceRefresh && cachedNews && (now - cachedNews.timestamp < CACHE_TTL_MS) && (!userId || cachedNews.userId === userId)) {
             let filtered = filterNews(cachedNews.items, categoryParam, searchQuery);
+            const sliced = filtered.slice(0, limitParam);
             return NextResponse.json({
                 success: true,
-                data: filtered.slice(0, limitParam),
+                data: sliced,
+                news: sliced,
                 total: filtered.length,
                 cached: true,
                 sentimentDistribution: calculateSentimentDistribution(cachedNews.items)
@@ -288,10 +290,12 @@ export async function GET(request: Request) {
         };
 
         const filtered = filterNews(allItems, categoryParam, searchQuery);
+        const sliced = filtered.slice(0, limitParam);
 
         return NextResponse.json({
             success: true,
-            data: filtered.slice(0, limitParam),
+            data: sliced,
+            news: sliced,
             total: filtered.length,
             cached: false,
             sentimentDistribution: calculateSentimentDistribution(allItems)
@@ -302,7 +306,8 @@ export async function GET(request: Request) {
         return NextResponse.json({
             success: false,
             error: "Haberler yüklenirken bir sorun oluştu.",
-            data: []
+            data: [],
+            news: []
         }, { status: 500 });
     }
 }

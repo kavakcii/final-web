@@ -48,7 +48,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const res = await fetch('/api/news');
             const data = await res.json();
             if (data.success) {
-                setGlobalNews(data.news);
+                const items = data.news || data.data || [];
+                setGlobalNews(items);
             }
         } catch (error) {
             console.error("Background news prefetch error:", error);

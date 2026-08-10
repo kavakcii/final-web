@@ -25,7 +25,8 @@ export default function DashboardPage() {
                 const res = await fetch(`/api/news?userId=${user.id}`);
                 const data = await res.json();
                 if (data.success) {
-                    setNews(data.news);
+                    const items = data.news || data.data || [];
+                    setNews(items);
                 } else if (globalNews && globalNews.length > 0) {
                     setNews(globalNews);
                 }
