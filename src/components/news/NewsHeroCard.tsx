@@ -28,9 +28,14 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
         }
     };
 
-    const assets = mainNews.affectedAssets && mainNews.affectedAssets.length > 0
+    const rawAssets = mainNews.affectedAssets && mainNews.affectedAssets.length > 0
         ? mainNews.affectedAssets
         : (mainNews.tickers || []);
+
+    const specificAssets = rawAssets.filter(a => 
+        a.toLowerCase() !== mainNews.categoryLabel.toLowerCase() &&
+        !mainNews.categoryLabel.toLowerCase().includes(a.toLowerCase())
+    );
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -50,10 +55,10 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
                         {mainNews.category === 'portfolio' ? 'Portföyünüzdeki Gelişmeler' : 'Günün Öne Çıkanı'}
                     </span>
 
-                    {assets.length > 0 && (
+                    {specificAssets.length > 0 && (
                         <div className="flex items-center gap-1.5">
                             <span className="text-[10px] font-bold text-blue-200/80 uppercase">Etkilenen:</span>
-                            {assets.map((asset, idx) => (
+                            {specificAssets.map((asset, idx) => (
                                 <span key={idx} className="px-2.5 py-0.5 bg-yellow-400 text-yellow-950 text-[10px] font-black rounded-lg shadow-sm">
                                     {asset}
                                 </span>
@@ -101,9 +106,14 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
             {/* Side 2 Spotlight Cards (5 Cols) */}
             <div className="lg:col-span-5 flex flex-col gap-4">
                 {subNews.slice(0, 2).map((item, idx) => {
-                    const subAssets = item.affectedAssets && item.affectedAssets.length > 0
+                    const subRawAssets = item.affectedAssets && item.affectedAssets.length > 0
                         ? item.affectedAssets
                         : (item.tickers || []);
+
+                    const subSpecificAssets = subRawAssets.filter(a => 
+                        a.toLowerCase() !== item.categoryLabel.toLowerCase() &&
+                        !item.categoryLabel.toLowerCase().includes(a.toLowerCase())
+                    );
 
                     return (
                         <Link
@@ -112,14 +122,20 @@ export function NewsHeroCard({ mainNews, subNews }: NewsHeroCardProps) {
                             className="flex-1 bg-white border border-slate-200/80 hover:border-[#00008B]/40 rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
                         >
                             <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
-                                    {subAssets.slice(0, 2).map((a, aIdx) => (
-                                        <span key={aIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                                            {a}
-                                        </span>
-                                    ))}
-                                </div>
+                                {subSpecificAssets.length > 0 ? (
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
+                                        {subSpecificAssets.slice(0, 2).map((a, aIdx) => (
+                                            <span key={aIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                                                {a}
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <span className="px-3 py-1 rounded-full text-[9px] font-black bg-[#00008B]/5 text-[#00008B] uppercase tracking-widest">
+                                        {item.categoryLabel}
+                                    </span>
+                                )}
                                 <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
                                     <Clock className="w-3 h-3" />
                                     {formatTimeAgo(item.pubDate)}

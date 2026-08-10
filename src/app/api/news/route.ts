@@ -58,12 +58,12 @@ const KNOWN_TICKERS = [
     'VAKBN', 'SOKM', 'AEFES', 'TABGD', 'REEDR', 'EUPWR', 'CWENE', 'ALFAS', 'MIATK', 'KAPEKS'
 ];
 
-function extractAffectedAssets(title: string, desc: string, category: string): string[] {
+function extractAffectedAssets(title: string, desc: string): string[] {
     const found = new Set<string>();
     const text = `${title} ${desc}`.toLowerCase();
     const upper = `${title} ${desc}`.toUpperCase();
 
-    // 1. Doğrudan hisse kodlarını tespit et (Hashtag'siz temiz kod)
+    // 1. Sadece SPESİFİK hisse kodlarını tespit et
     KNOWN_TICKERS.forEach(ticker => {
         const regex = new RegExp(`\\b${ticker}\\b`, 'i');
         if (regex.test(upper) || upper.includes(`(${ticker})`) || upper.includes(`[${ticker}]`)) {
@@ -71,27 +71,19 @@ function extractAffectedAssets(title: string, desc: string, category: string): s
         }
     });
 
-    // 2. Varlık veya piyasa türünü belirle (Hashtag'siz profesyonel Türkçe etiketler)
-    if (text.includes('altın') || text.includes('gram altın') || text.includes('çeyrek')) found.add('Altın');
-    if (text.includes('ons ') || text.includes('ons altın')) found.add('Ons Altın');
-    if (text.includes('petrol') || text.includes('brent')) found.add('Brent Petrol');
+    // 2. Sadece SPESİFİK finansal varlıkları tespit et (Kategori tekrarı yapmayan spesifik enstrümanlar)
+    if (text.includes('gram altın') || text.includes('çeyrek altın')) found.add('Gram Altın');
+    else if (text.includes('ons altın') || text.includes('ons ')) found.add('Ons Altın');
+    else if (text.includes('altın')) found.add('Altın');
+
+    if (text.includes('brent') || text.includes('ham petrol') || text.includes('petrol')) found.add('Brent Petrol');
     if (text.includes('gümüş')) found.add('Gümüş');
-    if (text.includes('dolar') || text.includes('usd') || text.includes('döviz')) found.add('Dolar/TL');
-    if (text.includes('euro') || text.includes('eur')) found.add('Euro/TL');
+    if (text.includes('dolar') || text.includes('usd/try') || text.includes('dolar/tl')) found.add('Dolar/TL');
+    if (text.includes('euro') || text.includes('eur/try') || text.includes('euro/tl')) found.add('Euro/TL');
     if (text.includes('bitcoin') || text.includes('btc')) found.add('Bitcoin');
     if (text.includes('ethereum') || text.includes('eth')) found.add('Ethereum');
-    if (text.includes('bist 100') || text.includes('bist100') || text.includes('borsa istanbul')) found.add('BIST 100');
-    if (text.includes('tcmb') || text.includes('faiz') || text.includes('enflasyon')) found.add('TCMB / Faiz');
-    if (text.includes('fed ') || text.includes('wall street') || text.includes('nasdaq')) found.add('Fed / Wall Street');
-
-    if (found.size === 0) {
-        if (category === 'bist') found.add('Borsa İstanbul');
-        else if (category === 'commodity') found.add('Altın & Emtia');
-        else if (category === 'crypto') found.add('Kripto Piyasası');
-        else if (category === 'macro') found.add('Makro Ekonomi');
-        else if (category === 'global') found.add('Küresel Çapta');
-        else found.add('Genel Piyasa');
-    }
+    if (text.includes('solana') || text.includes('sol')) found.add('Solana');
+    if (text.includes('faiz') || text.includes('tcmb')) found.add('TCMB / Faiz');
 
     return Array.from(found).slice(0, 2);
 }
@@ -238,7 +230,7 @@ export async function GET(request: Request) {
                     const cleanDesc = rawDesc.replace(/<[^>]*>/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
 
                     const catInfo = categorizeNews(rawTitle, cleanDesc, feed.category, feed.label);
-                    const affected = extractAffectedAssets(rawTitle, cleanDesc, catInfo.category);
+                    const affected = extractAffectedAssets(rawTitle, cleanDesc);
                     const sentiment = detectSentiment(rawTitle, cleanDesc);
 
                     // Portföy eşleşmesi

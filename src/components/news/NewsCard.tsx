@@ -26,9 +26,15 @@ export function NewsCard({ item, index }: NewsCardProps) {
         }
     };
 
-    const assets = item.affectedAssets && item.affectedAssets.length > 0
+    // Sadece kategoriyle aynı olmayan spesifik varlıkları al
+    const rawAssets = item.affectedAssets && item.affectedAssets.length > 0
         ? item.affectedAssets
         : (item.tickers || []);
+
+    const specificAssets = rawAssets.filter(a => 
+        a.toLowerCase() !== item.categoryLabel.toLowerCase() &&
+        !item.categoryLabel.toLowerCase().includes(a.toLowerCase())
+    );
 
     return (
         <motion.div
@@ -39,14 +45,18 @@ export function NewsCard({ item, index }: NewsCardProps) {
         >
             {/* Top Bar: Etkilenen Varlıklar & Kategori */}
             <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
-                    {assets.map((asset, sIdx) => (
-                        <span key={sIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
-                            {asset}
-                        </span>
-                    ))}
-                </div>
+                {specificAssets.length > 0 ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">Etkilenen:</span>
+                        {specificAssets.map((asset, sIdx) => (
+                            <span key={sIdx} className="text-[10px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md">
+                                {asset}
+                            </span>
+                        ))}
+                    </div>
+                ) : (
+                    <div />
+                )}
 
                 <span className="text-[9px] font-black text-[#00008B] bg-[#00008B]/5 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
                     {item.categoryLabel}
