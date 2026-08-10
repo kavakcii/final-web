@@ -256,13 +256,13 @@ function DashboardShell({
                     <main className="flex-1 relative flex flex-col min-w-0 bg-transparent overflow-x-hidden">
                         {/* Header (Glassified) */}
                         <header className="h-12 md:h-16 border-b border-slate-100 flex items-center justify-between px-3 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2.5">
                                 <button
                                     onClick={() => setIsMobileMenuOpen(true)}
-                                    className="md:hidden p-1.5 -ml-1 text-[#00008B] hover:bg-[#00008B]/10 rounded-xl transition-all"
+                                    className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-[#00008B]/10 border border-[#00008B]/20 text-[#00008B] hover:bg-[#00008B]/20 active:scale-95 transition-all shadow-xs"
                                     aria-label="Menüyü Aç"
                                 >
-                                    <Menu className="w-5 h-5 text-[#00008B]" />
+                                    <Menu className="w-4.5 h-4.5 text-[#00008B]" />
                                 </button>
                                 <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
                             </div>
