@@ -13,10 +13,9 @@ import {
     AlertCircle, 
     FileText, 
     Sparkles, 
-    Zap,
     TrendingUp,
-    ChevronRight,
-    Flame
+    TrendingDown,
+    Minus
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { EnrichedNewsItem } from "@/app/api/news/route";
@@ -54,7 +53,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
 
                 if (newsJson.success && Array.isArray(newsJson.data)) {
                     currentItem = newsJson.data.find((item: EnrichedNewsItem) => item.slug === slug || item.id === slug);
-                    otherItems = newsJson.data.filter((item: EnrichedNewsItem) => item.slug !== slug).slice(0, 5);
+                    otherItems = newsJson.data.filter((item: EnrichedNewsItem) => item.slug !== slug).slice(0, 4);
                     setCriticalNews(otherItems);
                 }
 
@@ -161,7 +160,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                 </div>
             </div>
 
-            {/* Main Page Grid (%60 Sol Ana Metin, %35 Sağ Özet + Kritik Gelişmeler) */}
+            {/* Main Page Grid (Sol %60 Ana Metin, Sağ %35 Özet + Kritik Gelişmeler - Eşit Toplam Yükseklik) */}
             <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 pt-8">
                 {loading ? (
                     <div className="bg-white border border-slate-200/80 rounded-[2.5rem] p-16 text-center space-y-4 shadow-sm">
@@ -184,37 +183,29 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                         </div>
                     </div>
                 ) : newsItem && article ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
 
                         {/* SOL TARAF: %60 - 65 GENİŞLİK (Ana Ham Haber Metni) */}
                         <motion.article
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="lg:col-span-8 bg-white border border-slate-200/80 rounded-[2.5rem] p-6 sm:p-10 md:p-12 shadow-sm space-y-8"
+                            className="lg:col-span-8 bg-white border border-slate-200/80 rounded-[2.5rem] p-6 sm:p-10 md:p-12 shadow-sm flex flex-col justify-between"
                         >
-                            {/* Badges & Meta */}
-                            <div className="space-y-4">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <span className="px-3.5 py-1.5 bg-[#00008B] text-white text-[10px] font-black rounded-full uppercase tracking-widest">
-                                        FinAi Özel Yayın
-                                    </span>
-                                    <span className="px-3 py-1 bg-slate-100 text-[#00008B] text-[10px] font-bold rounded-full uppercase tracking-wider">
+                            <div className="space-y-6">
+                                {/* Üst Alan: Doğrudan Başlık ve Sağ Üstte Kategori Rozeti */}
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-2">
+                                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#00008B] leading-tight tracking-tight flex-1">
+                                        {article.title || newsItem.title}
+                                    </h1>
+                                    
+                                    {/* Kategori Sağ Üst Kısımda */}
+                                    <span className="px-3.5 py-1.5 bg-[#00008B]/5 text-[#00008B] text-[10px] font-black rounded-full uppercase tracking-wider shrink-0 border border-[#00008B]/10 w-fit">
                                         {newsItem.categoryLabel}
                                     </span>
-                                    {specificAssets.map((asset, idx) => (
-                                        <span key={idx} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-black rounded-lg border border-blue-200">
-                                            {asset}
-                                        </span>
-                                    ))}
                                 </div>
 
-                                {/* Main Headline */}
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-[#00008B] leading-tight tracking-tight">
-                                    {article.title || newsItem.title}
-                                </h1>
-
                                 {/* Editorial Author & Time Bar */}
-                                <div className="flex flex-wrap items-center justify-between gap-4 py-5 border-y border-slate-100 text-xs text-slate-500 font-bold">
+                                <div className="flex flex-wrap items-center justify-between gap-4 py-4 border-y border-slate-100 text-xs text-slate-500 font-bold">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-[#00008B] text-white font-black text-sm flex items-center justify-center shadow-md shadow-[#00008B]/20">
                                             F
@@ -236,66 +227,92 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                                         </span>
                                     </div>
                                 </div>
+
+                                {/* Ana Ham Haber Metni (100 Boyutunda Paragraflar) */}
+                                <div className="space-y-6 text-slate-700 leading-relaxed text-base sm:text-lg pt-2">
+                                    {article.paragraphs.map((paragraph, idx) => (
+                                        <p key={idx} className="leading-relaxed font-medium text-slate-700">
+                                            {paragraph}
+                                        </p>
+                                    ))}
+                                </div>
                             </div>
 
-                            {/* Ana Ham Haber Metni (100 Boyutunda Paragraflar) */}
-                            <div className="space-y-6 text-slate-700 leading-relaxed text-base sm:text-lg">
-                                {article.paragraphs.map((paragraph, idx) => (
-                                    <p key={idx} className="leading-relaxed font-medium text-slate-700">
-                                        {paragraph}
-                                    </p>
-                                ))}
-                            </div>
-
-                            {/* Kaynak Referansı */}
-                            <div className="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 p-6 rounded-2xl">
+                            {/* Alt Alan: Sol tarafta Kaynak Referansı, Sağ Alt Kısımda FinAi Haber & Etkilenen Varlıklar */}
+                            <div className="mt-12 pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50 p-6 rounded-2xl">
                                 <div>
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Kaynak Referansı</span>
                                     <p className="text-xs font-bold text-[#00008B] mt-0.5">
                                         Bu içerik <span className="font-black">{newsItem.source}</span> bülteninden FinAi okuyucuları için derlenmiştir.
                                     </p>
+                                    <a
+                                        href={article.sourceUrl || newsItem.link}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 hover:underline mt-2"
+                                    >
+                                        Orijinal Kaynak <ExternalLink className="w-3 h-3" />
+                                    </a>
                                 </div>
-                                <a
-                                    href={article.sourceUrl || newsItem.link}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-[#00008B] hover:bg-slate-100 transition-colors flex items-center gap-2 shrink-0"
-                                >
-                                    Orijinal Kaynak <ExternalLink className="w-3.5 h-3.5" />
-                                </a>
+
+                                {/* Sağ Alt Kısım: FinAi Haber + Etkilenen Varlıklar */}
+                                <div className="flex flex-col sm:items-end gap-2 shrink-0">
+                                    <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest">
+                                        FinAi Haber
+                                    </span>
+
+                                    {specificAssets.length > 0 && (
+                                        <div className="flex items-center gap-1.5 flex-wrap sm:justify-end">
+                                            <span className="text-[10px] font-bold text-slate-400">Etkilenen:</span>
+                                            {specificAssets.map((asset, idx) => (
+                                                <span key={idx} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-black rounded-lg border border-blue-200">
+                                                    {asset}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </motion.article>
 
-                        {/* SAĞ TARAF: %35 - 40 GENİŞLİK (Özet Widget'ı + Kritik Gelişmeler) */}
-                        <div className="lg:col-span-4 space-y-6 sticky top-24">
+                        {/* SAĞ TARAF: %35 - 40 GENİŞLİK (Özet Widget'ı %60 Boy, Kritik Gelişmeler %35 Boy) */}
+                        <div className="lg:col-span-4 flex flex-col justify-between gap-6 h-full">
                             
-                            {/* WIDGET 1: FinAi Yönetici Özeti (Sol metne göre %60 Kompakt Boyut) */}
-                            <div className="bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-3xl p-6 shadow-xl shadow-[#00008B]/20 border border-white/10 relative overflow-hidden space-y-4">
+                            {/* WIDGET 1: FinAi Yönetici Özeti (Toplam Yüksekliğin %60'ı) */}
+                            <div className="flex-[6] bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-[#00008B]/20 border border-white/10 relative overflow-hidden flex flex-col justify-between space-y-4">
                                 <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
 
-                                <div className="relative z-10 flex items-center justify-between pb-3 border-b border-white/10">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-xl bg-yellow-400 text-yellow-950 flex items-center justify-center font-black shadow-md shadow-yellow-400/20">
-                                            <Sparkles className="w-4 h-4 fill-current" />
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-9 h-9 rounded-xl bg-yellow-400 text-yellow-950 flex items-center justify-center font-black shadow-md shadow-yellow-400/20">
+                                                <Sparkles className="w-5 h-5 fill-current" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                                                    FinAi Yönetici Özeti
+                                                </h3>
+                                                <p className="text-[10px] text-blue-200 font-bold">30 Saniyede Önemli Noktalar</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                                                FinAi Yönetici Özeti
-                                            </h3>
-                                            <p className="text-[10px] text-blue-200 font-bold">30 Saniyede Önemli Noktalar</p>
+                                    </div>
+
+                                    {/* Özet Metni */}
+                                    <div className="space-y-4 text-xs text-blue-100 leading-relaxed font-medium">
+                                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
+                                            <div className="flex items-center gap-2 text-yellow-300 font-black text-[11px]">
+                                                <span className="w-2 h-2 rounded-full bg-yellow-400" />
+                                                Önemli Çıkarım
+                                            </div>
+                                            <p className="text-xs text-blue-100/90 leading-relaxed">
+                                                {newsItem.description}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Özet Çıkarım Maddeleri (%60 Boyutunda Kompakt Yazı) */}
-                                <div className="relative z-10 space-y-3 text-xs text-blue-100/90 leading-relaxed font-medium">
-                                    <div className="flex items-start gap-2.5 bg-white/5 p-3 rounded-2xl border border-white/5">
-                                        <span className="w-2 h-2 rounded-full bg-yellow-400 shrink-0 mt-1.5" />
-                                        <p className="text-xs leading-normal">
-                                            {newsItem.description.slice(0, 160)}...
-                                        </p>
-                                    </div>
-
+                                {/* Alt Bilgi: Varlıklar ve Algı */}
+                                <div className="relative z-10 pt-4 border-t border-white/10 space-y-2">
                                     {specificAssets.length > 0 && (
                                         <div className="flex items-center justify-between text-[11px] font-bold bg-white/5 p-2.5 px-3 rounded-xl">
                                             <span className="text-slate-300">İlgili Varlıklar:</span>
@@ -306,16 +323,22 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                                     <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 pt-1">
                                         <span>Piyasa Algısı:</span>
                                         <span className="text-emerald-300 font-black flex items-center gap-1">
-                                            <TrendingUp className="w-3 h-3" /> {newsItem.sentiment === 'bullish' ? 'Pozitif Beklenti' : newsItem.sentiment === 'bearish' ? 'Temkinli / Satış' : 'Dengeli Görünüm'}
+                                            {newsItem.sentiment === 'bullish' ? (
+                                                <><TrendingUp className="w-3.5 h-3.5" /> Pozitif Beklenti</>
+                                            ) : newsItem.sentiment === 'bearish' ? (
+                                                <><TrendingDown className="w-3.5 h-3.5 text-rose-400" /> <span className="text-rose-300">Temkinli / Satış</span></>
+                                            ) : (
+                                                <><Minus className="w-3.5 h-3.5 text-slate-400" /> <span className="text-slate-300">Dengeli Görünüm</span></>
+                                            )}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* WIDGET 2: Kritik Gelişmeler (Diğer Önemli Haber Başlıkları) */}
+                            {/* WIDGET 2: Kritik Gelişmeler (Toplam Yüksekliğin %35'i) */}
                             {criticalNews.length > 0 && (
-                                <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm space-y-4">
-                                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div className="flex-[4] bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-3">
+                                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                                         <div className="flex items-center gap-2">
                                             <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
                                             <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">
@@ -327,20 +350,20 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                                         </Link>
                                     </div>
 
-                                    <div className="divide-y divide-slate-100 space-y-1">
+                                    <div className="divide-y divide-slate-100 space-y-1 overflow-y-auto max-h-[220px] pr-1">
                                         {criticalNews.map((item, idx) => (
                                             <Link
                                                 key={idx}
                                                 href={`/dashboard/news/${item.slug}`}
-                                                className="py-3 block group hover:bg-slate-50 rounded-xl px-2 transition-all"
+                                                className="py-2.5 block group hover:bg-slate-50 rounded-xl px-2 transition-all"
                                             >
-                                                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-1">
+                                                <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 mb-0.5">
                                                     <span className="text-[#00008B] font-black bg-blue-50 px-2 py-0.5 rounded-md">
                                                         {item.categoryLabel}
                                                     </span>
                                                     <span>{item.source}</span>
                                                 </div>
-                                                <h4 className="text-xs font-bold text-[#00008B] leading-snug group-hover:text-blue-700 transition-colors line-clamp-2">
+                                                <h4 className="text-xs font-bold text-[#00008B] leading-snug group-hover:text-blue-700 transition-colors line-clamp-1">
                                                     {item.title}
                                                 </h4>
                                             </Link>
