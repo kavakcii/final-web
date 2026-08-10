@@ -1,62 +1,127 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { Newspaper, Calendar, ExternalLink, Loader2, Target, TrendingUp, AlertCircle, Brain, X, Info, FileText } from "lucide-react";
+import { useState, useEffect, Suspense, useMemo } from "react";
+import { 
+    Newspaper, 
+    Search, 
+    RefreshCw, 
+    Filter, 
+    Zap, 
+    Sparkles, 
+    TrendingUp, 
+    Globe, 
+    Coins, 
+    PieChart, 
+    Building2, 
+    Loader2, 
+    AlertCircle, 
+    Flame,
+    Radio
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
 import { useSearchParams, useRouter } from "next/navigation";
+import { EnrichedNewsItem } from "@/app/api/news/route";
+import { NewsHeroCard } from "@/components/news/NewsHeroCard";
+import { NewsCard } from "@/components/news/NewsCard";
+import { NewsSentimentWidget } from "@/components/news/NewsSentimentWidget";
+import { KapLiveFeedWidget } from "@/components/news/KapLiveFeedWidget";
+import { SmartReaderModal } from "@/components/news/SmartReaderModal";
 
-interface NewsItem {
-    title: string;
-    link: string;
-    pubDate: string;
-    source: string;
-    description: string;
-    category?: string;
-    aiSummary?: string;
-}
-
-interface FullArticle {
-    title: string;
-    body: string;
-    sourceUrl: string;
-}
+const CATEGORY_TABS = [
+    { id: 'all', label: 'Tüm Akış', icon: Newspaper },
+    { id: 'portfolio', label: 'Portföyüm', icon: PieChart },
+    { id: 'kap', label: 'KAP Bildirimleri', icon: Building2 },
+    { id: 'bist', label: 'Borsa İstanbul', icon: TrendingUp },
+    { id: 'commodity', label: 'Altın & Emtia', icon: Flame },
+    { id: 'macro', label: 'Makro Ekonomi', icon: Zap },
+    { id: 'global', label: 'Küresel Piyasalar', icon: Globe },
+    { id: 'crypto', label: 'Kripto', icon: Coins }
+];
 
 function NewsContent() {
     const { user } = useUser();
     const searchParams = useSearchParams();
     const router = useRouter();
-    const [news, setNews] = useState<NewsItem[]>([]);
+
+    // Data states
+    const [news, setNews] = useState<EnrichedNewsItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    
-    // Article states
+    const [sentimentDist, setSentimentDist] = useState({
+        bullish: 60,
+        bearish: 25,
+        neutral: 15,
+        total: 0
+    });
+
+    // Filter states
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+
+    // Modal / Article Reader states
     const [analyzingUrl, setAnalyzingUrl] = useState<string | null>(null);
-    const [articleData, setArticleData] = useState<FullArticle | null>(null);
+    const [articleData, setArticleData] = useState<any | null>(null);
     const [analysisLoading, setAnalysisLoading] = useState(false);
     const [analysisError, setAnalysisError] = useState<string | null>(null);
 
+    // Initial query param check
     useEffect(() => {
-        const urlParam = searchParams.get('url');
+        const urlParam = searchParams?.get('url');
         if (urlParam) {
             handleOpenArticle(urlParam);
         }
     }, [searchParams]);
+
+    const fetchNewsData = async (isManualRefresh = false) => {
+        if (isManualRefresh) setRefreshing(true);
+        else setLoading(true);
+        setError(null);
+
+        try {
+            const url = user 
+                ? `/api/news?userId=${user.id}${isManualRefresh ? '&refresh=true' : ''}`
+                : `/api/news${isManualRefresh ? '?refresh=true' : ''}`;
+            
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.success && Array.isArray(data.data)) {
+                setNews(data.data);
+                if (data.sentimentDistribution) {
+                    setSentimentDist(data.sentimentDistribution);
+                }
+            } else {
+                setError(data.error || "Haber akışı yüklenemedi.");
+            }
+        } catch (err: any) {
+            console.error("News fetch error:", err);
+            setError("Sunucuya bağlanırken bir sorun oluştu.");
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchNewsData();
+    }, [user]);
 
     const handleOpenArticle = async (url: string) => {
         setAnalyzingUrl(url);
         setAnalysisLoading(true);
         setAnalysisError(null);
         setArticleData(null);
-        
+
         try {
             const res = await fetch(`/api/news/analyze?url=${encodeURIComponent(url)}`);
             const data = await res.json();
-            
-            if (data.success) {
+
+            if (data.success && data.content) {
                 setArticleData(data.content);
             } else {
-                setAnalysisError(data.error || "İçerik yüklenemedi.");
+                setAnalysisError(data.error || "Haber içeriği yüklenemedi.");
             }
         } catch (err) {
             setAnalysisError("Bağlantı hatası oluştu.");
@@ -69,298 +134,232 @@ function NewsContent() {
         setAnalyzingUrl(null);
         setArticleData(null);
         setAnalysisError(null);
-        const params = new URLSearchParams(searchParams);
-        params.delete('url');
-        router.replace(`/dashboard/news`);
-    };
-
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!user) return;
-
-            try {
-                const res = await fetch(`/api/news?userId=${user.id}`);
-                const data = await res.json();
-
-                if (data.success && Array.isArray(data.news)) {
-                    setNews(data.news);
-                } else {
-                    setError("Haberler alınamadı.");
-                }
-
-            } catch (err: any) {
-                console.error("News page error:", err);
-                setError(err.message || "Bir hata oluştu.");
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [user]);
-
-    const strategicNews = news.filter(n => n.category === 'Altın' || n.category === 'Enerji');
-    const portfolioNews = news.filter(n => n.category !== 'Altın' && n.category !== 'Enerji');
-
-    const formatDate = (dateString: string) => {
-        try {
-            return new Date(dateString).toLocaleDateString('tr-TR', {
-                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-            });
-        } catch {
-            return dateString;
+        if (searchParams?.get('url')) {
+            router.replace('/dashboard/news');
         }
     };
 
+    // Filter news client-side for ultra-fast tab switching
+    const filteredNews = useMemo(() => {
+        return news.filter(item => {
+            const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
+            const s = searchQuery.toLowerCase().trim();
+            const matchSearch = !s || 
+                item.title.toLowerCase().includes(s) || 
+                item.description.toLowerCase().includes(s) ||
+                item.tickers.some(t => t.toLowerCase().includes(s)) ||
+                item.source.toLowerCase().includes(s);
+
+            return matchCategory && matchSearch;
+        });
+    }, [news, selectedCategory, searchQuery]);
+
+    // Separate Featured Hero Stories and Stream News
+    const featuredStory = useMemo(() => {
+        return news.find(n => n.isHot || n.impact === 'high') || news[0];
+    }, [news]);
+
+    const subStories = useMemo(() => {
+        return news.filter(n => n.id !== featuredStory?.id).slice(0, 2);
+    }, [news, featuredStory]);
+
+    const streamNews = useMemo(() => {
+        if (selectedCategory === 'all' && !searchQuery) {
+            const featuredIds = new Set([featuredStory?.id, ...subStories.map(s => s.id)]);
+            return filteredNews.filter(n => !featuredIds.has(n.id));
+        }
+        return filteredNews;
+    }, [filteredNews, featuredStory, subStories, selectedCategory, searchQuery]);
+
+    const kapNewsOnly = useMemo(() => {
+        return news.filter(n => n.category === 'kap');
+    }, [news]);
+
+    // Top Breaking news ticker items
+    const breakingHeadlines = useMemo(() => {
+        return news.slice(0, 4);
+    }, [news]);
+
     return (
-        <div className="p-6 md:p-8 space-y-8 min-h-full pb-20 max-w-7xl mx-auto relative">
+        <div className="p-4 sm:p-6 md:p-8 space-y-8 min-h-screen pb-28 max-w-[1600px] mx-auto relative">
             
-            {/* Full Article Modal Overlay */}
-            <AnimatePresence>
-                {analyzingUrl && (
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10 bg-slate-950/80 backdrop-blur-md"
-                    >
-                        <motion.div 
-                            initial={{ scale: 0.95, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.95, y: 20 }}
-                            className="bg-white border border-slate-100 rounded-[2.5rem] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
-                        >
-                            {/* Modal Header */}
-                            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B] flex items-center justify-center text-white">
-                                        <FileText className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h2 className="text-xl font-black text-[#00008B]">FinAi Özel Yayın</h2>
-                                        <p className="text-[10px] font-bold text-[#00008B]/40 uppercase tracking-widest text-emerald-600">Tam Metin Görünümü</p>
-                                    </div>
-                                </div>
-                                <button onClick={closeArticle} className="p-2 hover:bg-slate-50 rounded-full transition-colors text-[#00008B]">
-                                    <X className="w-6 h-6" />
-                                </button>
-                            </div>
+            {/* Modal: Smart Reader */}
+            <SmartReaderModal
+                url={analyzingUrl}
+                isLoading={analysisLoading}
+                error={analysisError}
+                articleData={articleData}
+                onClose={closeArticle}
+            />
 
-                            {/* Modal Body */}
-                            <div className="flex-1 overflow-y-auto p-8 md:p-12 scrollbar-thin scrollbar-thumb-slate-200">
-                                {analysisLoading ? (
-                                    <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                        <div className="relative">
-                                            <Loader2 className="w-12 h-12 text-[#00008B] animate-spin" />
-                                            <Brain className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
-                                        </div>
-                                        <p className="text-[#00008B] font-bold animate-pulse">Haber içeriği hazırlanıyor...</p>
-                                    </div>
-                                ) : analysisError ? (
-                                    <div className="flex flex-col items-center justify-center text-center py-20">
-                                        <AlertCircle className="w-16 h-16 text-red-100 mb-4" />
-                                        <h3 className="text-xl font-bold text-slate-800 mb-2">Haber Yüklenemedi</h3>
-                                        <p className="text-slate-400 mb-8 max-w-md">{analysisError}</p>
-                                        <a href={analyzingUrl} target="_blank" className="px-8 py-4 bg-[#00008B] text-white rounded-2xl font-black shadow-lg">Haberi Kaynağında Oku</a>
-                                    </div>
-                                ) : articleData ? (
-                                    <article className="max-w-3xl mx-auto space-y-8">
-                                        <h1 className="text-3xl md:text-4xl font-black text-[#00008B] leading-tight tracking-tighter">
-                                            {articleData.title}
-                                        </h1>
-                                        
-                                        <div className="flex items-center gap-4 py-6 border-y border-slate-50">
-                                            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-[#00008B] font-black text-xl">
-                                                F
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-[#00008B]">FinAi Ekonomi Masası</p>
-                                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Özel İçerik</p>
-                                            </div>
-                                        </div>
+            {/* Top Breaking Ticker Bar */}
+            {breakingHeadlines.length > 0 && (
+                <div className="bg-[#00008B] text-white rounded-2xl p-2.5 px-4 flex items-center gap-3 shadow-lg shadow-[#00008B]/15 overflow-hidden">
+                    <div className="flex items-center gap-1.5 shrink-0 px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-black uppercase tracking-wider animate-pulse">
+                        <Radio className="w-3.5 h-3.5" /> CANLI SON DAKİKA
+                    </div>
+                    <div className="overflow-x-auto whitespace-nowrap scrollbar-none flex items-center gap-6 text-xs font-semibold text-blue-100">
+                        {breakingHeadlines.map((item, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => handleOpenArticle(item.link)}
+                                className="hover:text-yellow-300 transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
+                                <span className="font-bold">{item.title}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
 
-                                        <div className="prose prose-slate max-w-none">
-                                            {articleData.body.split('\n\n').map((para, i) => (
-                                                <p key={i} className="text-lg md:text-xl text-slate-700 leading-relaxed font-medium mb-6">
-                                                    {para}
-                                                </p>
-                                            ))}
-                                        </div>
-
-                                        <div className="mt-20 pt-10 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6 pb-10">
-                                            <div className="text-center md:text-left">
-                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Kaynak</p>
-                                                <a href={articleData.sourceUrl} target="_blank" className="text-sm font-bold text-[#00008B] hover:underline flex items-center gap-1">
-                                                    Haberin Orijinal Kaynağı <ExternalLink className="w-3 h-3" />
-                                                </a>
-                                            </div>
-                                            <button onClick={closeArticle} className="px-8 py-4 bg-slate-50 text-[#00008B] rounded-2xl font-black text-sm hover:bg-slate-100 transition-colors">
-                                                Kapat
-                                            </button>
-                                        </div>
-                                    </article>
-                                ) : null}
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-10">
+            {/* Header Area */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pt-2">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
-                        <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest animate-pulse">Yayında</span>
-                        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase tracking-widest">Kişiselleştirilmiş Akış</span>
+                        <span className="px-3 py-1 bg-[#00008B] text-white text-[9px] font-black rounded-full uppercase tracking-widest">
+                            FinAi Haber Masası
+                        </span>
+                        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[9px] font-black rounded-full border border-emerald-500/20 uppercase tracking-widest flex items-center gap-1">
+                            <Sparkles className="w-3 h-3 fill-current" /> Yapay Zeka İstihbarat Ağı
+                        </span>
                     </div>
-                    <h1 className="text-4xl font-black text-[#00008B] tracking-tighter">
-                        Günün 10 Kritik Gelişmesi
+                    <h1 className="text-3xl md:text-5xl font-black text-[#00008B] tracking-tight">
+                        Piyasa & Haber İstihbaratı
                     </h1>
-                    <p className="text-[#00008B]/50 mt-2 font-bold uppercase text-[10px] tracking-[0.2em]">
-                        Portföyünüz ve stratejik piyasalar için FinAi Ekonomi Masası'ndan özel içerikler.
+                    <p className="text-[#00008B]/60 mt-1.5 font-bold uppercase text-[11px] tracking-[0.2em]">
+                        KAP Bildirimleri, BIST 100, Portföy Eşleşmeleri ve Küresel Makro Veriler
                     </p>
                 </div>
-                <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm flex items-center gap-4">
-                    <div className="text-right">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Güncelleme</p>
-                        <p className="text-sm font-black text-[#00008B]">Her Gün 08:00</p>
+
+                {/* Right Controls: Search & Refresh */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative min-w-[240px] sm:min-w-[280px]">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B]/40" />
+                        <input
+                            type="text"
+                            placeholder="Haber veya hisse ara (#THYAO)..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full bg-white border border-slate-200/80 rounded-2xl py-2.5 pl-10 pr-4 text-xs font-bold text-[#00008B] placeholder:text-[#00008B]/40 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 transition-all shadow-sm"
+                        />
                     </div>
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-[#00008B]">
-                        <Calendar className="w-5 h-5" />
-                    </div>
+
+                    <button
+                        onClick={() => fetchNewsData(true)}
+                        disabled={refreshing || loading}
+                        className="px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-black text-[#00008B] shadow-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                        title="Verileri Yenile"
+                    >
+                        <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                        Yenile
+                    </button>
+                </div>
+            </div>
+
+            {/* Category Filter Tabs */}
+            <div className="overflow-x-auto scrollbar-none pb-1">
+                <div className="flex items-center gap-2 min-w-max bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60">
+                    {CATEGORY_TABS.map((tab) => {
+                        const Icon = tab.icon;
+                        const isSelected = selectedCategory === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setSelectedCategory(tab.id)}
+                                className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                                    isSelected
+                                        ? 'bg-[#00008B] text-white shadow-md shadow-[#00008B]/20'
+                                        : 'text-[#00008B]/70 hover:text-[#00008B] hover:bg-white/60'
+                                }`}
+                            >
+                                <Icon className="w-3.5 h-3.5" />
+                                {tab.label}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {loading ? (
-                <div className="flex flex-col items-center justify-center h-64 space-y-4">
+                <div className="flex flex-col items-center justify-center py-28 space-y-4">
                     <div className="relative">
                         <Loader2 className="w-12 h-12 text-[#00008B] animate-spin" />
-                        <Brain className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
+                        <Sparkles className="w-6 h-6 text-[#00008B] absolute inset-0 m-auto animate-pulse" />
                     </div>
-                    <p className="text-[#00008B] font-bold opacity-40">Size özel finansal raporlar hazırlanıyor...</p>
+                    <p className="text-[#00008B] font-bold text-sm opacity-50">
+                        Çok kaynaklı haberler derleniyor ve yapay zeka duyarlılık analizi hesaplanıyor...
+                    </p>
                 </div>
             ) : error ? (
-                <div className="bg-red-50 border border-red-100 text-red-600 p-6 rounded-[2rem] flex items-center gap-4">
-                    <AlertCircle className="w-8 h-8 opacity-40" />
+                <div className="bg-red-50 border border-red-200 text-red-700 p-8 rounded-3xl flex items-center gap-4">
+                    <AlertCircle className="w-8 h-8 text-red-500 shrink-0" />
                     <div>
-                        <p className="font-bold">Haberler yüklenemedi</p>
-                        <p className="text-sm opacity-70">{error}</p>
+                        <h3 className="font-black text-base">Haberler Alınamadı</h3>
+                        <p className="text-xs text-red-600 mt-1">{error}</p>
                     </div>
                 </div>
             ) : (
-                <div className="space-y-16">
-                    {/* 🚀 STRATEGIC FOCUS (Gold & Energy) */}
-                    <section className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-yellow-400 flex items-center justify-center text-yellow-900 shadow-lg shadow-yellow-400/20">
-                                <TrendingUp className="w-6 h-6" />
+                <div className="space-y-10">
+                    {/* Hero Big Story (Only on 'all' tab without active search) */}
+                    {selectedCategory === 'all' && !searchQuery && featuredStory && (
+                        <NewsHeroCard
+                            mainNews={featuredStory}
+                            subNews={subStories}
+                            onOpenArticle={handleOpenArticle}
+                        />
+                    )}
+
+                    {/* Main Content: 8 Columns + 4 Columns Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        
+                        {/* Left Side: Stream News Grid (8 Cols) */}
+                        <div className="lg:col-span-8 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-[#00008B]" />
+                                    <h2 className="text-lg font-black text-[#00008B] uppercase tracking-wide">
+                                        {CATEGORY_TABS.find(t => t.id === selectedCategory)?.label} Akışı
+                                    </h2>
+                                </div>
+                                <span className="text-xs font-bold text-slate-400">
+                                    {streamNews.length} Gelişme Listeleniyor
+                                </span>
                             </div>
-                            <div>
-                                <h2 className="text-xl font-black text-[#00008B]">Stratejik Piyasa Odağı</h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Altın ve Enerji Piyasaları</p>
-                            </div>
+
+                            {streamNews.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {streamNews.map((item, idx) => (
+                                        <NewsCard
+                                            key={item.id || idx}
+                                            item={item}
+                                            index={idx}
+                                            onOpenArticle={handleOpenArticle}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-white border border-slate-200/80 rounded-3xl p-16 text-center space-y-3">
+                                    <Filter className="w-8 h-8 text-slate-300 mx-auto" />
+                                    <h3 className="text-sm font-black text-[#00008B]">Bu kriterlere uygun haber bulunamadı</h3>
+                                    <p className="text-xs text-slate-400">Arama kelimenizi değiştirebilir veya başka bir kategori seçebilirsiniz.</p>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="grid gap-6 md:grid-cols-2">
-                            {strategicNews.map((item, idx) => (
-                                <motion.div
-                                    key={`strategic-${idx}`}
-                                    whileHover={{ y: -5 }}
-                                    className="bg-[#00008B] text-white rounded-[2.5rem] p-8 shadow-xl shadow-[#00008B]/20 transition-all group relative overflow-hidden flex flex-col"
-                                >
-                                    <div className="absolute right-[-20px] top-[-20px] opacity-10 group-hover:scale-110 transition-transform">
-                                        <Target className="w-48 h-48" />
-                                    </div>
-                                    <div className="relative z-10 flex flex-col h-full">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <span className="text-[9px] font-black bg-white/10 px-3 py-1 rounded-full uppercase tracking-widest">
-                                                {item.category} Raporu
-                                            </span>
-                                            <span className="text-[9px] font-black bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full uppercase tracking-widest">
-                                                Önemli
-                                            </span>
-                                        </div>
+                        {/* Right Side: KAP Feed + Sentiment Index (4 Cols) */}
+                        <div className="lg:col-span-4 space-y-6 sticky top-24">
+                            {/* Sentiment Index Bar */}
+                            <NewsSentimentWidget distribution={sentimentDist} />
 
-                                        <h3 className="text-xl font-black mb-4 leading-snug">
-                                            {item.title}
-                                        </h3>
-
-                                        <p className="text-white/70 text-sm font-medium mb-8 line-clamp-3 leading-relaxed">
-                                            {item.aiSummary || item.description.replace(/<[^>]*>/g, '')}
-                                        </p>
-
-                                        <div className="mt-auto flex items-center justify-between pt-6 border-t border-white/10">
-                                            <span className="text-[10px] font-bold opacity-40 flex items-center gap-1">
-                                                <Calendar className="w-3 h-3" />
-                                                {formatDate(item.pubDate)}
-                                            </span>
-                                            <button 
-                                                onClick={() => handleOpenArticle(item.link)}
-                                                className="px-6 py-3 bg-white text-[#00008B] text-xs font-black rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                                Devamını Oku
-                                            </button>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </section>
-
-                    {/* 📊 PORTFOLIO MATCHED NEWS */}
-                    <section className="space-y-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 flex items-center justify-center text-[#00008B]">
-                                <Target className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-black text-[#00008B]">Sizin İçin Seçilenler</h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Portföyünüzle Uyumlu Haberler</p>
-                            </div>
+                            {/* KAP Live Feed */}
+                            <KapLiveFeedWidget
+                                kapNews={kapNewsOnly}
+                                onOpenArticle={handleOpenArticle}
+                            />
                         </div>
 
-                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {portfolioNews.map((item, idx) => (
-                                <motion.div
-                                    key={`portfolio-${idx}`}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className="bg-white rounded-[2rem] p-6 border border-slate-100 hover:border-[#00008B]/20 shadow-sm hover:shadow-xl transition-all group flex flex-col h-full"
-                                >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[9px] font-black text-[#00008B] bg-[#00008B]/5 px-3 py-1 rounded-full uppercase tracking-widest">
-                                            {item.category === 'Portföy' ? 'Portföy Uyumu' : item.source}
-                                        </span>
-                                        <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
-                                            {formatDate(item.pubDate)}
-                                        </span>
-                                    </div>
-
-                                    <h3 className="text-base font-bold text-[#00008B] mb-3 line-clamp-3 group-hover:text-blue-700 transition-colors">
-                                        {item.title}
-                                    </h3>
-
-                                    <p className="text-sm text-slate-400 font-medium line-clamp-3 mb-6">
-                                        {item.aiSummary || item.description.replace(/<[^>]*>/g, '')}
-                                    </p>
-
-                                    <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
-                                        <button 
-                                            onClick={() => handleOpenArticle(item.link)}
-                                            className="text-[10px] font-black text-[#00008B] hover:underline flex items-center gap-1"
-                                        >
-                                            <FileText className="w-3 h-3" /> DEVAMINI OKU
-                                        </button>
-                                        <a href={item.link} target="_blank" className="text-slate-300 hover:text-[#00008B] transition-colors">
-                                            <ExternalLink className="w-4 h-4" />
-                                        </a>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </section>
+                    </div>
                 </div>
             )}
         </div>
@@ -369,7 +368,11 @@ function NewsContent() {
 
 export default function NewsPage() {
     return (
-        <Suspense fallback={<div className="p-8 text-center"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>}>
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-[#00008B]" />
+            </div>
+        }>
             <NewsContent />
         </Suspense>
     );

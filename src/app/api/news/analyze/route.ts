@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const dynamic = 'force-dynamic';
+
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export async function GET(request: Request) {
   try {
@@ -9,7 +13,7 @@ export async function GET(request: Request) {
     const url = searchParams.get('url');
 
     if (!url) {
-      return NextResponse.json({ success: false, error: "URL is required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "URL parametresi gereklidir." }, { status: 400 });
     }
 
     const response = await fetch(url, {
@@ -20,32 +24,30 @@ export async function GET(request: Request) {
       next: { revalidate: 3600 }
     });
 
-    if (!response.ok) throw new Error("Fetch failed");
+    if (!response.ok) throw new Error("Kaynak sayfaya ulaşılamadı.");
 
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    // 1. ADIM: Sayfayı temizle (Gürültüleri at)
-    $('script, style, iframe, nav, footer, header, aside, form, .ads, .sidebar, .comments, .social-share, .related, .tags, .author-info').remove();
+    // 1. Sayfayı temizle (Gürültü ve reklamları kaldır)
+    $('script, style, iframe, nav, footer, header, aside, form, .ads, .sidebar, .comments, .social-share, .related, .tags, .author-info, [role="navigation"], [role="banner"]').remove();
 
-    // 2. ADIM: Başlığı Kesinleştir
+    // 2. Başlığı al
     const title = $('h1').first().text().trim() || 
                   $('meta[property="og:title"]').attr('content') || 
-                  $('title').text().trim();
+                  $('title').text().trim() || "Finansal Gelişme";
 
-    // 3. ADIM: Readability Algoritması (Metin Yoğunluğu Analizi)
+    // 3. Readability & Paragraf Çıkarıcı
     let bestElement: any = null;
     let maxScore = 0;
 
-    // Tüm kapsayıcıları tara
-    $('div, article, section, main').each((_, el) => {
+    $('article, main, section, div').each((_, el) => {
       const element = $(el);
-      const text = element.clone().children().remove().end().text().trim(); // Sadece direkt metin
+      const text = element.clone().children().remove().end().text().trim();
       const paragraphCount = element.find('p').length;
       const linkCount = element.find('a').length;
       
-      // Puanlama: Paragraf sayısı yüksek, link sayısı düşük olan bölge asıl haberdir
-      const score = (paragraphCount * 20) + (text.length / 10) - (linkCount * 10);
+      const score = (paragraphCount * 25) + (text.length / 10) - (linkCount * 8);
 
       if (score > maxScore) {
         maxScore = score;
@@ -55,57 +57,85 @@ export async function GET(request: Request) {
 
     let finalBody = "";
 
-    if (bestElement && maxScore > 100) {
-      // En iyi adayı bulduk, içindeki paragrafları al
+    if (bestElement && maxScore > 60) {
       finalBody = (bestElement as any).find('p, div.text, div.content').map((_: any, el: any) => $(el).text().trim()).get()
-        .filter((p: string) => p.length > 50)
+        .filter((p: string) => p.length > 45 && !p.toLowerCase().includes('abone ol') && !p.toLowerCase().includes('çerez'))
         .join('\n\n');
     }
 
-    // 4. ADIM: Eğer Readability başarısızsa (SPA veya farklı yapı) LD+JSON dene
-    if (finalBody.length < 300) {
-      const ldJson = $('script[type="application/ld+json"]');
-      ldJson.each((_, el) => {
-        try {
-          const data = JSON.parse($(el).html() || '{}');
-          const articleBody = data.articleBody || data.description;
-          if (articleBody && articleBody.length > finalBody.length) {
-            finalBody = articleBody;
-          }
-        } catch (e) {}
-      });
-    }
-
-    // 5. ADIM: Son Çare - Tüm P'leri akıllıca topla
-    if (finalBody.length < 300) {
+    if (finalBody.length < 250) {
       finalBody = $('p').map((_, el) => $(el).text().trim()).get()
-        .filter(p => p.length > 60 && !p.includes('cookie') && !p.includes('tıklayın'))
+        .filter(p => p.length > 50 && !p.includes('cookie') && !p.includes('tıklayın'))
         .join('\n\n');
     }
 
-    // Temizlik
+    // Temizle
     finalBody = finalBody
       .replace(/\s+/g, ' ')
       .replace(/\n\s*\n/g, '\n\n')
       .trim();
 
-    // Eğer hala boşsa meta fallback
-    if (finalBody.length < 100) {
+    if (finalBody.length < 80) {
       finalBody = $('meta[property="og:description"]').attr('content') || 
                    $('meta[name="description"]').attr('content') || 
-                   "Haber metni bu kaynaktan teknik olarak çekilemedi. Lütfen orijinal linki ziyaret edin.";
+                   "Haber metni bu kaynaktan teknik olarak ayıklanamadı. Lütfen orijinal linki ziyaret edin.";
+    }
+
+    // 4. AI Zenginleştirmesi (Gemini AI ile Hap Yönetici Özeti & Piyasa Etkisi)
+    let aiKeyPoints: string[] = [];
+    let aiMarketImpact: string = "";
+
+    if (genAI && finalBody.length > 100) {
+      try {
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const prompt = `
+        Sen kıdemli bir Finansal Stratejistsin.
+        Aşağıdaki haber metnini oku ve yatırımcılar için hap bilgi çıkar:
+        
+        BAŞLIK: ${title}
+        METİN: ${finalBody.slice(0, 4000)}
+        
+        Lütfen SADECE aşağıdaki JSON formatında yanıt ver:
+        {
+          "keyPoints": [
+            "Haberin en kritik 1. somut maddesi",
+            "Haberin en kritik 2. somut maddesi",
+            "Haberin en kritik 3. somut maddesi"
+          ],
+          "marketImpact": "Bu gelişmenin Borsa İstanbul, Dolar/TL, Altın veya ilgili hisseler üzerindeki doğrudan olası etkisi (1-2 cümle)."
+        }
+        `;
+
+        const result = await model.generateContent(prompt);
+        const resText = result.response.text();
+        const cleanJson = resText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        if (parsed.keyPoints) aiKeyPoints = parsed.keyPoints;
+        if (parsed.marketImpact) aiMarketImpact = parsed.marketImpact;
+      } catch (aiErr) {
+        console.warn("AI Smart Reader Error:", aiErr);
+      }
+    }
+
+    // Fallback if AI not available
+    if (aiKeyPoints.length === 0) {
+      const paragraphs = finalBody.split('\n\n').filter(p => p.length > 40);
+      aiKeyPoints = paragraphs.slice(0, 3).map(p => p.slice(0, 160) + '...');
+      aiMarketImpact = "Bu gelişme sektör dinamikleri ve piyasa fiyatlamaları açısından takip edilmektedir.";
     }
 
     return NextResponse.json({ 
       success: true, 
       content: {
-        title: title,
+        title,
         body: finalBody.slice(0, 15000),
-        sourceUrl: url
+        sourceUrl: url,
+        keyPoints: aiKeyPoints,
+        marketImpact: aiMarketImpact
       }
     });
 
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: "Teknik bir hata oluştu." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Haber içeriği yüklenirken teknik bir sorun oluştu." }, { status: 500 });
   }
 }
