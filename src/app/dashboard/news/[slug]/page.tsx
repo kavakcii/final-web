@@ -288,8 +288,8 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                                     </h3>
                                 </div>
 
-                                {/* Doğrudan Büyük, Birleşik ve Akıcı Paragraf Metni */}
-                                <div className="relative z-10 text-sm sm:text-[15px] text-blue-100 leading-relaxed font-normal pt-1">
+                                {/* Doğrudan Dengeli ve Akıcı Paragraf Metni */}
+                                <div className="relative z-10 text-xs sm:text-sm text-blue-100/90 leading-relaxed font-normal pt-1">
                                     <p className="leading-relaxed">
                                         {summaryText}
                                     </p>
