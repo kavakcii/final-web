@@ -257,12 +257,15 @@ function DashboardShell({
                         {/* Header (Glassified) */}
                         <header className="h-12 md:h-16 border-b border-slate-100 flex items-center justify-between px-3 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
                             <div className="flex items-center gap-2.5">
+                                {/* Hamburger Butonu (Görsel 1'deki gibi 3 Yatay Çizgi) */}
                                 <button
                                     onClick={() => setIsMobileMenuOpen(true)}
-                                    className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl bg-[#00008B]/10 border border-[#00008B]/20 text-[#00008B] hover:bg-[#00008B]/20 active:scale-95 transition-all shadow-xs"
+                                    className="md:hidden flex flex-col items-center justify-center gap-1 w-8 h-8 rounded-lg bg-[#00008B] text-white shadow-xs active:scale-95 transition-all shrink-0 cursor-pointer"
                                     aria-label="Menüyü Aç"
                                 >
-                                    <Menu className="w-4.5 h-4.5 text-[#00008B]" />
+                                    <span className="w-4 h-0.5 bg-white rounded-full block" />
+                                    <span className="w-4 h-0.5 bg-white rounded-full block" />
+                                    <span className="w-4 h-0.5 bg-white rounded-full block" />
                                 </button>
                                 <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
                             </div>
@@ -312,7 +315,7 @@ function DashboardShell({
                             </div>
                         </header>
 
-                        {/* Mobile Drawer (Animasyonlu Açılır Çekmece Menü) */}
+                        {/* Mobile Drawer (Görsel 2'deki gibi Şık Koyu Tema Çekmece Menü) */}
                         <AnimatePresence>
                             {isMobileMenuOpen && (
                                 <>
@@ -322,55 +325,59 @@ function DashboardShell({
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0 }}
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70] md:hidden"
+                                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] md:hidden"
                                     />
 
-                                    {/* Soldan Kayan Menü */}
+                                    {/* Soldan Kayan Koyu Menü (Görsel 2) */}
                                     <motion.div
                                         initial={{ x: "-100%" }}
                                         animate={{ x: 0 }}
                                         exit={{ x: "-100%" }}
                                         transition={{ type: "spring", damping: 25, stiffness: 220 }}
-                                        className="fixed inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-2xl border-r border-slate-200/80 shadow-2xl z-[80] flex flex-col p-4 md:hidden"
+                                        className="fixed inset-y-0 left-0 w-80 bg-[#0c101d] text-white shadow-2xl z-[80] flex flex-col p-4 md:hidden border-r border-white/10"
                                     >
-                                        {/* Drawer Başlık & Kapatma Butonu */}
-                                        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                                            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2.5">
-                                                <FinAiLogo showText={false} className="h-8 w-8" />
-                                                <span className="text-xl font-black tracking-tighter text-[#00008B]">
-                                                    FinAi<span className="text-blue-600">.</span>
-                                                </span>
-                                            </Link>
+                                        {/* Drawer Başlık & Kapatma Butonu (Görsel 2'deki Menü ve X) */}
+                                        <div className="flex items-center justify-between pb-3.5 border-b border-white/10">
+                                            <span className="text-lg font-black tracking-tight text-white">Menü</span>
                                             <button
                                                 onClick={() => setIsMobileMenuOpen(false)}
-                                                className="p-1.5 text-slate-400 hover:text-[#00008B] hover:bg-slate-100 rounded-xl transition-all"
+                                                className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded-xl transition-all"
                                                 aria-label="Menüyü Kapat"
                                             >
                                                 <X className="w-5 h-5" />
                                             </button>
                                         </div>
 
-                                        {/* Menü Linkleri */}
-                                        <nav className="flex-1 py-3 space-y-1.5 overflow-y-auto scrollbar-none">
+                                        {/* FinAi Tanıtım Kartı */}
+                                        <div className="my-3 p-3 rounded-2xl bg-gradient-to-r from-[#00008B] to-blue-900 border border-blue-500/20 flex items-center gap-3 shadow-md">
+                                            <FinAiLogo showText={false} className="h-7 w-7" />
+                                            <div>
+                                                <p className="text-xs font-black text-white">FinAi Workspace</p>
+                                                <p className="text-[9px] text-blue-200">Canlı Piyasa & Portföy Analizi</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Menü Linkleri (Görsel 2'deki Liste Düzeni) */}
+                                        <nav className="flex-1 py-2 space-y-1 overflow-y-auto scrollbar-none">
                                             {menuItems.map((item, idx) => {
                                                 const isActive = pathname === item.href;
                                                 const ItemIcon = item.icon;
 
                                                 if (item.subItems) {
                                                     return (
-                                                        <div key={idx} className="space-y-1">
-                                                            <div className={`flex items-center justify-between px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                                                        <div key={idx} className="space-y-0.5">
+                                                            <div className={`flex items-center justify-between px-3.5 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                                                                 isActive 
-                                                                    ? 'text-white bg-[#00008B] shadow-md' 
-                                                                    : 'text-[#00008B] hover:bg-[#00008B]/10'
+                                                                    ? 'text-white bg-white/15 shadow-sm font-bold' 
+                                                                    : 'text-white/80 hover:text-white hover:bg-white/5'
                                                             }`}>
                                                                 <Link
                                                                     href={item.href}
                                                                     onClick={() => setIsMobileMenuOpen(false)}
                                                                     className="flex items-center gap-3 flex-1 min-w-0"
                                                                 >
-                                                                    <ItemIcon className="w-5 h-5 flex-shrink-0" />
-                                                                    <span className="text-xs uppercase font-extrabold tracking-wider">{item.label}</span>
+                                                                    <ItemIcon className="w-4.5 h-4.5 text-white/80 flex-shrink-0" />
+                                                                    <span className="text-xs uppercase font-extrabold tracking-wider truncate">{item.label}</span>
                                                                 </Link>
                                                                 <button
                                                                     type="button"
@@ -379,14 +386,14 @@ function DashboardShell({
                                                                         e.stopPropagation();
                                                                         item.toggleExpand();
                                                                     }}
-                                                                    className="p-1 rounded-lg hover:bg-black/10"
+                                                                    className="p-1 rounded-lg hover:bg-white/10 text-white/60 hover:text-white"
                                                                 >
-                                                                    <ChevronDown className={`w-4 h-4 transition-transform ${item.isExpanded ? 'rotate-180' : ''}`} />
+                                                                    <ChevronDown className={`w-4 h-4 transition-transform ${item.isExpanded ? 'rotate-180 text-blue-400' : ''}`} />
                                                                 </button>
                                                             </div>
 
                                                             {item.isExpanded && (
-                                                                <div className="ml-4 pl-3 border-l-2 border-[#00008B]/20 space-y-1 py-1">
+                                                                <div className="ml-5 pl-3 border-l-2 border-white/15 space-y-0.5 py-1">
                                                                     {item.subItems.map((sub, sIdx) => {
                                                                         const SubIcon = sub.icon;
                                                                         return (
@@ -396,8 +403,8 @@ function DashboardShell({
                                                                                 onClick={() => setIsMobileMenuOpen(false)}
                                                                                 className={`flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-lg transition-all ${
                                                                                     sub.isSubActive
-                                                                                        ? 'bg-[#00008B] text-white shadow-sm'
-                                                                                        : 'text-[#00008B]/80 hover:bg-[#00008B]/10'
+                                                                                        ? 'bg-blue-600 text-white shadow-sm'
+                                                                                        : 'text-white/70 hover:text-white hover:bg-white/5'
                                                                                 }`}
                                                                             >
                                                                                 <SubIcon className="w-4 h-4 flex-shrink-0" />
@@ -416,29 +423,29 @@ function DashboardShell({
                                                         key={idx}
                                                         href={item.href}
                                                         onClick={() => setIsMobileMenuOpen(false)}
-                                                        className={`flex items-center gap-3 px-3 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                                                        className={`flex items-center gap-3 px-3.5 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                                                             isActive
-                                                                ? 'text-white bg-[#00008B] shadow-md'
-                                                                : 'text-[#00008B] hover:bg-[#00008B]/10'
+                                                                ? 'text-white bg-white/15 shadow-sm font-bold'
+                                                                : 'text-white/80 hover:text-white hover:bg-white/5'
                                                         }`}
                                                     >
-                                                        <ItemIcon className="w-5 h-5 flex-shrink-0" />
-                                                        <span className="text-xs uppercase font-extrabold tracking-wider">{item.label}</span>
+                                                        <ItemIcon className="w-4.5 h-4.5 text-white/80 flex-shrink-0" />
+                                                        <span className="text-xs uppercase font-extrabold tracking-wider truncate">{item.label}</span>
                                                     </Link>
                                                 );
                                             })}
                                         </nav>
 
                                         {/* Çıkış Yap */}
-                                        <div className="pt-2 border-t border-slate-100">
+                                        <div className="pt-3 border-t border-white/10">
                                             <button
                                                 onClick={() => {
                                                     setIsMobileMenuOpen(false);
                                                     handleLogout();
                                                 }}
-                                                className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold text-rose-600 hover:bg-rose-50 rounded-xl transition-all w-full text-left"
+                                                className="flex items-center gap-3 px-3.5 py-2.5 text-sm font-bold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-all w-full text-left"
                                             >
-                                                <LogOut className="w-5 h-5 flex-shrink-0" />
+                                                <LogOut className="w-4.5 h-4.5 flex-shrink-0" />
                                                 <span className="text-xs uppercase tracking-wider">Çıkış Yap</span>
                                             </button>
                                         </div>
