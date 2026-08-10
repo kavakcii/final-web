@@ -11,19 +11,17 @@ import {
     Check, 
     Loader2, 
     AlertCircle, 
-    FileText, 
-    Sparkles, 
-    TrendingUp,
-    TrendingDown,
-    Minus
+    FileText
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { EnrichedNewsItem } from "@/app/api/news/route";
+import { StructuredSummary } from "@/app/api/news/article/route";
 
 interface ArticleDetail {
     title: string;
     image?: string | null;
     paragraphs: string[];
+    structuredSummary?: StructuredSummary;
     sourceUrl: string;
 }
 
@@ -65,8 +63,8 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
 
                 setNewsItem(currentItem);
 
-                // 2. Haberin tam ham metnini kaynak siteden çek
-                const articleRes = await fetch(`/api/news/article?url=${encodeURIComponent(currentItem.link)}`);
+                // 2. Haberin tam ham metnini ve yapılandırılmış özetini çek
+                const articleRes = await fetch(`/api/news/article?url=${encodeURIComponent(currentItem.link)}&desc=${encodeURIComponent(currentItem.description)}`);
                 const articleJson = await articleRes.json();
 
                 if (articleJson.success && articleJson.data) {
@@ -76,6 +74,11 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                     setArticle({
                         title: currentItem.title,
                         paragraphs: [currentItem.description],
+                        structuredSummary: {
+                            mainEvent: currentItem.description,
+                            keyData: `${currentItem.title} kapsamında piyasa verileri takip ediliyor.`,
+                            strategicImpact: 'Bu gelişme ilgili piyasa dinamikleri açısından yakından izlenmektedir.'
+                        },
                         sourceUrl: currentItem.link
                     });
                 }
@@ -122,6 +125,12 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
         a.toLowerCase() !== newsItem?.categoryLabel.toLowerCase() &&
         !newsItem?.categoryLabel.toLowerCase().includes(a.toLowerCase())
     );
+
+    const summary = article?.structuredSummary || {
+        mainEvent: newsItem?.description || '',
+        keyData: `${newsItem?.title} gelişmesinde piyasa verileri izleniyor.`,
+        strategicImpact: 'Bu hamle şirket ve piyasa dengesi açısından stratejik önem taşımaktadır.'
+    };
 
     return (
         <div className="min-h-screen bg-slate-50/50 text-[#00008B] pb-24">
@@ -275,63 +284,56 @@ export default function NewsDetailPage({ params }: { params: Promise<{ slug: str
                             </div>
                         </motion.article>
 
-                        {/* SAĞ TARAF: %35 - 40 GENİŞLİK (Özet Widget'ı %60 Boy, Kritik Gelişmeler %35 Boy) */}
+                        {/* SAĞ TARAF: %35 - 40 GENİŞLİK (Yapılandırılmış 3 Maddelik Özet Widget'ı + Kritik Gelişmeler) */}
                         <div className="lg:col-span-4 flex flex-col justify-between gap-6 h-full">
                             
-                            {/* WIDGET 1: FinAi Yönetici Özeti (Toplam Yüksekliğin %60'ı) */}
-                            <div className="flex-[6] bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-3xl p-6 md:p-8 shadow-xl shadow-[#00008B]/20 border border-white/10 relative overflow-hidden flex flex-col justify-between space-y-4">
+                            {/* WIDGET 1: Yapılandırılmış 3 Maddelik Zengin Özet (Toplam Yüksekliğin %60'ı) */}
+                            <div className="flex-[6] bg-gradient-to-br from-[#00008B] via-[#000066] to-[#0a1e3d] text-white rounded-3xl p-6 md:p-7 shadow-xl shadow-[#00008B]/20 border border-white/10 relative overflow-hidden flex flex-col justify-between space-y-4">
                                 <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
 
-                                <div className="relative z-10">
-                                    <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="w-9 h-9 rounded-xl bg-yellow-400 text-yellow-950 flex items-center justify-center font-black shadow-md shadow-yellow-400/20">
-                                                <Sparkles className="w-5 h-5 fill-current" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-xs font-black text-white uppercase tracking-wider">
-                                                    FinAi Yönetici Özeti
-                                                </h3>
-                                                <p className="text-[10px] text-blue-200 font-bold">30 Saniyede Önemli Noktalar</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Özet Metni */}
-                                    <div className="space-y-4 text-xs text-blue-100 leading-relaxed font-medium">
-                                        <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-2">
-                                            <div className="flex items-center gap-2 text-yellow-300 font-black text-[11px]">
-                                                <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                                                Önemli Çıkarım
-                                            </div>
-                                            <p className="text-xs text-blue-100/90 leading-relaxed">
-                                                {newsItem.description}
-                                            </p>
-                                        </div>
-                                    </div>
+                                <div className="relative z-10 pb-3 border-b border-white/10">
+                                    <h3 className="text-xs font-black text-white uppercase tracking-wider">
+                                        Özet
+                                    </h3>
                                 </div>
 
-                                {/* Alt Bilgi: Varlıklar ve Algı */}
-                                <div className="relative z-10 pt-4 border-t border-white/10 space-y-2">
-                                    {specificAssets.length > 0 && (
-                                        <div className="flex items-center justify-between text-[11px] font-bold bg-white/5 p-2.5 px-3 rounded-xl">
-                                            <span className="text-slate-300">İlgili Varlıklar:</span>
-                                            <span className="text-yellow-300 font-black">{specificAssets.join(', ')}</span>
-                                        </div>
-                                    )}
-
-                                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-300 pt-1">
-                                        <span>Piyasa Algısı:</span>
-                                        <span className="text-emerald-300 font-black flex items-center gap-1">
-                                            {newsItem.sentiment === 'bullish' ? (
-                                                <><TrendingUp className="w-3.5 h-3.5" /> Pozitif Beklenti</>
-                                            ) : newsItem.sentiment === 'bearish' ? (
-                                                <><TrendingDown className="w-3.5 h-3.5 text-rose-400" /> <span className="text-rose-300">Temkinli / Satış</span></>
-                                            ) : (
-                                                <><Minus className="w-3.5 h-3.5 text-slate-400" /> <span className="text-slate-300">Dengeli Görünüm</span></>
-                                            )}
+                                {/* 3 Maddelik Zengin & Yapılandırılmış Yatırımcı Özeti */}
+                                <div className="relative z-10 space-y-3.5 text-xs text-blue-100/90 leading-relaxed font-medium">
+                                    
+                                    {/* 1. Ana Gelişme */}
+                                    <div className="space-y-1">
+                                        <span className="text-[10px] font-black text-yellow-300 uppercase tracking-wider block">
+                                            📌 Ana Gelişme
                                         </span>
+                                        <p className="text-xs leading-relaxed text-white font-medium">
+                                            {summary.mainEvent}
+                                        </p>
                                     </div>
+
+                                    {/* 2. Kritik Veri & Rakamlar */}
+                                    <div className="space-y-1 pt-1 border-t border-white/5">
+                                        <span className="text-[10px] font-black text-emerald-300 uppercase tracking-wider block">
+                                            📊 Kritik Veri & Rakamlar
+                                        </span>
+                                        <p className="text-xs leading-relaxed text-blue-100">
+                                            {summary.keyData}
+                                        </p>
+                                    </div>
+
+                                    {/* 3. Stratejik Etki / Sonuç */}
+                                    <div className="space-y-1 pt-1 border-t border-white/5">
+                                        <span className="text-[10px] font-black text-blue-300 uppercase tracking-wider block">
+                                            🎯 Stratejik Etki
+                                        </span>
+                                        <p className="text-xs leading-relaxed text-blue-200">
+                                            {summary.strategicImpact}
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                                <div className="relative z-10 pt-2 text-[9px] text-blue-300/60 font-semibold text-right">
+                                    FinAi Intelligence
                                 </div>
                             </div>
 
