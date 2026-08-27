@@ -272,7 +272,7 @@ export async function generateWeeklyReport(assets: Asset[], days: number = 7): P
             const json = await newsRes.json();
             recentNews = json.data || json.news || [];
         }
-    } catch (e) {
+    } catch (e: any) {
         console.warn("Failed to fetch news from API, falling back to empty news feed", e.message);
     }
 
