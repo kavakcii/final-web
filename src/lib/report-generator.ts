@@ -575,7 +575,7 @@ export function generateEmailHtml(data: WeeklyReportData, userName?: string): st
                 <!-- Footer -->
                 <div class="footer">
                     <p>© 2026 FinAl Yatırım Teknolojileri. Tüm hakları saklıdır.</p>
-                    <p>Bu rapor, portföy ayarlarınız doğrultusunda otomatik olarak üretilmiştir. Ayarlarınızı değiştirmek için <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://finalyatirim.com'}/dashboard/reports" style="color: #3b82f6; text-decoration: none; font-weight: 600;">buraya tıklayabilirsiniz</a>.</p>
+                    <p>Bu rapor, portföy ayarlarınız doğrultusunda otomatik olarak üretilmiştir. Ayarlarınızı değiştirmek için <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://finalyatirim.com'}/dashboard/mail-automation" style="color: #3b82f6; text-decoration: none; font-weight: 600;">buraya tıklayabilirsiniz</a>.</p>
                     <p class="disclaimer"><strong>YASAL UYARI:</strong> Burada yer alan yatırım bilgi, yorum ve tavsiyeleri yatırım danışmanlığı kapsamında değildir. Bu rapor sadece bilgilendirme amaçlıdır.</p>
                 </div>
             </div>
