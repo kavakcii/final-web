@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
 
-type EmailFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semiannually' | 'annually' | 'none';
+type EmailFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semiannually' | 'annually' | 'none';
 
 interface ReportInstruction {
     id: string;
@@ -15,6 +15,7 @@ interface ReportInstruction {
     frequency: EmailFrequency;
     includeAnalysis: boolean;
     includePortfolioDetails: boolean;
+    portfolioOnlyNews?: boolean;
     preferredDay?: number;
     preferredDate?: number;
     preferredTime?: string;
@@ -26,6 +27,7 @@ const REPORT_TYPES = [
 ];
 
 const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
+    daily: 'Her Gün',
     weekly: 'Her Hafta',
     biweekly: 'Her 15 Günde Bir',
     monthly: 'Her Ay',
@@ -36,6 +38,7 @@ const FREQUENCY_LABELS: Record<EmailFrequency, string> = {
 };
 
 const FREQUENCY_ICONS: Record<EmailFrequency, string> = {
+    daily: '☀️',
     weekly: '📅',
     biweekly: '📆',
     monthly: '🗓️',
@@ -80,6 +83,7 @@ export default function ReportsPage() {
     const [tempFreq, setTempFreq] = useState<EmailFrequency>('weekly');
     const [tempAnalysis, setTempAnalysis] = useState(false);
     const [tempDetails, setTempDetails] = useState(true);
+    const [tempPortfolioOnlyNews, setTempPortfolioOnlyNews] = useState(false);
     const [tempDay, setTempDay] = useState<number>(1);
     const [tempDate, setTempDate] = useState<number>(1);
     const [tempTime, setTempTime] = useState<string>('09:00');
@@ -102,6 +106,7 @@ export default function ReportsPage() {
                             frequency: old.frequency === 'biweekly' ? 'biweekly' : (old.frequency as any),
                             includeAnalysis: old.includeAnalysis || false,
                             includePortfolioDetails: old.includePortfolioDetails ?? true,
+                            portfolioOnlyNews: false,
                             preferredDay: 1,
                             preferredDate: 1,
                             preferredTime: '09:00',
@@ -133,6 +138,7 @@ export default function ReportsPage() {
                 frequency: tempFreq,
                 includeAnalysis: tempAnalysis,
                 includePortfolioDetails: tempDetails,
+                portfolioOnlyNews: tempPortfolioOnlyNews,
                 preferredDay: tempFreq === 'weekly' ? tempDay : undefined,
                 preferredDate: (tempFreq === 'monthly' || tempFreq === 'quarterly' || tempFreq === 'semiannually' || tempFreq === 'annually') ? tempDate : undefined,
                 preferredTime: tempTime,
@@ -195,6 +201,7 @@ export default function ReportsPage() {
         setTempFreq('weekly');
         setTempAnalysis(true);
         setTempDetails(true);
+        setTempPortfolioOnlyNews(false);
         setTempDay(1);
         setTempDate(1);
         setTempTime('09:00');
@@ -209,6 +216,7 @@ export default function ReportsPage() {
         setTempFreq(inst.frequency);
         setTempAnalysis(inst.includeAnalysis);
         setTempDetails(inst.includePortfolioDetails);
+        setTempPortfolioOnlyNews(inst.portfolioOnlyNews ?? false);
         setTempDay(inst.preferredDay ?? 1);
         setTempDate(inst.preferredDate ?? 1);
         setTempTime(inst.preferredTime ?? '09:00');
@@ -496,6 +504,52 @@ export default function ReportsPage() {
                                                 onChange={(e) => setTempLabel(e.target.value)}
                                                 className="w-full bg-slate-900 border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/20 transition-all outline-none"
                                             />
+                                        </div>
+
+                                        <div className="space-y-3 pt-2">
+                                            <label className="text-[10px] font-bold text-slate-500 uppercase block tracking-widest">İçerik Tercihleri</label>
+                                            
+                                            <div className="flex items-center justify-between p-3 bg-slate-900/50 border border-white/5 rounded-xl">
+                                                <div className="pr-4">
+                                                    <span className="block text-xs font-bold text-white">Yapay Zeka Yorumu</span>
+                                                    <span className="text-[9px] text-slate-500 leading-tight block">Neden-sonuç analizini ve makro özetleri e-postaya dahil eder.</span>
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setTempAnalysis(!tempAnalysis)}
+                                                    className={`w-10 h-6 flex items-center rounded-full p-1 transition-all duration-300 flex-shrink-0 ${tempAnalysis ? 'bg-purple-600 justify-end' : 'bg-slate-800 justify-start'}`}
+                                                >
+                                                    <div className="w-4 h-4 bg-white rounded-full shadow-md" />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 bg-slate-900/50 border border-white/5 rounded-xl">
+                                                <div className="pr-4">
+                                                    <span className="block text-xs font-bold text-white">Detaylı Değişim Tablosu</span>
+                                                    <span className="text-[9px] text-slate-500 leading-tight block">Günlük, haftalık ve aylık performans değişim tablosunu ekler.</span>
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setTempDetails(!tempDetails)}
+                                                    className={`w-10 h-6 flex items-center rounded-full p-1 transition-all duration-300 flex-shrink-0 ${tempDetails ? 'bg-purple-600 justify-end' : 'bg-slate-800 justify-start'}`}
+                                                >
+                                                    <div className="w-4 h-4 bg-white rounded-full shadow-md" />
+                                                </button>
+                                            </div>
+
+                                            <div className="flex items-center justify-between p-3 bg-slate-900/50 border border-white/5 rounded-xl">
+                                                <div className="pr-4">
+                                                    <span className="block text-xs font-bold text-white">Sadece Portföyümle İlgili Haberler</span>
+                                                    <span className="text-[9px] text-slate-500 leading-tight block">Genel haberleri filtreleyip sadece kendi hisse/varlıklarınızın haberlerini ekler.</span>
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setTempPortfolioOnlyNews(!tempPortfolioOnlyNews)}
+                                                    className={`w-10 h-6 flex items-center rounded-full p-1 transition-all duration-300 flex-shrink-0 ${tempPortfolioOnlyNews ? 'bg-purple-600 justify-end' : 'bg-slate-800 justify-start'}`}
+                                                >
+                                                    <div className="w-4 h-4 bg-white rounded-full shadow-md" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="flex gap-2 mt-4">

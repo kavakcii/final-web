@@ -482,9 +482,14 @@ export const sectorMapping: Record<string, string> = {
 
 export const getAssetSector = (symbol: string): string => {
     const commodities = ["ALTIN", "GUMUS", "ALTIN.S1"];
-    if (commodities.includes(symbol)) return "Emtia";
-    if (symbol === "BTC" || symbol === "ETH") return "Kripto";
+    const cleanSym = symbol.toUpperCase().replace(/\.IS$/, '');
+    if (commodities.includes(cleanSym) || cleanSym.includes("XAU") || cleanSym.includes("XAG")) return "Emtia";
+    if (cleanSym.includes("BTC") || cleanSym.includes("ETH") || cleanSym.includes("SOL") || cleanSym.includes("USDT")) return "Kripto";
     
+    // GYO / GMYO kontrolü
+    if (cleanSym.endsWith("GYO") || cleanSym.includes("GMYO")) return "Gayrimenkul";
+    
+    if (sectorMapping[cleanSym]) return sectorMapping[cleanSym];
     if (sectorMapping[symbol]) return sectorMapping[symbol];
     
     return "Yatırım Fonu";

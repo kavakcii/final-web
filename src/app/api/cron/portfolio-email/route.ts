@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { analyzePortfolioWithAI, PortfolioAIAnalysis } from '@/lib/ai-portfolio-analyzer';
-import { generateWeeklyReport, Asset } from '@/lib/report-generator';
+import { generateWeeklyReport, generateEmailHtml, Asset } from '@/lib/report-generator';
 
-export const maxDuration = 60; // Increase timeout for AI processing
+export const maxDuration = 120; // Increase timeout for AI processing (Next.js config)
 export const dynamic = 'force-dynamic';
 
 // Lazy-init admin client
@@ -25,25 +24,12 @@ interface PortfolioAsset {
     avg_cost: number;
 }
 
-function generatePortfolioEmailHtml(userName: string, reportData: any): string {
-    // Content wiped per user request. To be rewritten.
-    return `
-    <html>
-    <body>
-        <h1>Merhaba ${userName}</h1>
-        <p>Gelişmiş rapor içeriğiniz hazırlanmaktadır.</p>
-    </body>
-    </html>
-    `;
-}
-
-
-
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function POST(req: Request) {
     try {
         const body = await req.json().catch(() => ({}));
-        const { userId, sendEmail = false, isCron = false, reportType = 'basic' } = body;
+        const { userId, sendEmail = false, isCron = false } = body;
 
         // Current TR time (UTC+3)
         const trTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
@@ -65,6 +51,7 @@ export async function POST(req: Request) {
         }[] = [];
 
         if (userId) {
+            // Manual test / single run
             const { data: userData } = await getSupabaseAdmin().auth.admin.getUserById(userId);
             if (userData?.user) {
                 targetUsers.push({
@@ -80,6 +67,7 @@ export async function POST(req: Request) {
                 });
             }
         } else {
+            // Automated run for all users matching timeframe
             const { data: portfolioUsers } = await getSupabaseAdmin().from('user_portfolios').select('user_id');
             const uniqueUserIds = [...new Set(portfolioUsers?.map(p => p.user_id) || [])];
 
@@ -93,13 +81,16 @@ export async function POST(req: Request) {
                         if (inst.frequency === 'none') continue;
 
                         if (isCron) {
-                            // 1. Time Check
-                            const preferredHour = inst.preferredTime ? parseInt(inst.preferredTime.split(':')[0]) : 9;
+                            // 1. Time Check (preferredTime e.g., '09:00')
+                            const preferredHour = inst.preferredTime ? parseInt(inst.preferredTime.split(':')[0], 10) : 9;
                             if (currentHour !== preferredHour) continue;
 
-                            // 2. Day/Date Check
+                            // 2. Day/Date Check based on frequency
                             let shouldSend = false;
-                            if (inst.frequency === 'weekly') {
+                            
+                            if (inst.frequency === 'daily') {
+                                shouldSend = true;
+                            } else if (inst.frequency === 'weekly') {
                                 const preferredDay = inst.preferredDay !== undefined ? inst.preferredDay : 1;
                                 if (currentDay === preferredDay) shouldSend = true;
                             } else if (inst.frequency === 'biweekly') {
@@ -141,7 +132,15 @@ export async function POST(req: Request) {
         const stats = { sent: 0, total: targetUsers.length };
         let firstPreview = '';
 
-        for (const user of targetUsers) {
+        for (let i = 0; i < targetUsers.length; i++) {
+            const user = targetUsers[i];
+
+            // Throttling to respect Gemini API rate limits (15 RPM)
+            if (i > 0) {
+                console.log("Sleeping to prevent rate-limit...");
+                await sleep(4000); // 4 seconds delay between user reports
+            }
+
             const { data: dbAssets } = await getSupabaseAdmin()
                 .from('user_portfolios')
                 .select('symbol, asset_type, quantity, avg_cost')
@@ -149,13 +148,12 @@ export async function POST(req: Request) {
 
             if (!dbAssets || dbAssets.length === 0) continue;
 
-            // Group by symbol to avoid duplicates in the report
+            // Group by symbol to prevent duplicates
             const groupedMap: Record<string, { symbol: string, amount: number, type: string }> = {};
 
             dbAssets.forEach(a => {
                 const symbol = a.symbol.toUpperCase();
                 if (!groupedMap[symbol]) {
-                    // Smart type detection: 3 letter uppercase usually means TEFAS fund
                     let detectedType = a.asset_type.toLowerCase();
                     if (symbol.length === 3) detectedType = 'fund';
 
@@ -169,44 +167,47 @@ export async function POST(req: Request) {
             });
 
             const mappedAssets: Asset[] = Object.values(groupedMap) as Asset[];
-            console.log(`Analyzing portfolio for ${user.email}:`, mappedAssets);
+            console.log(`Generating report for ${user.email}:`, mappedAssets);
 
-            // Generate full report data (includes prices and Gemini analysis)
+            // Generate report with daily, weekly, monthly pricing and causal AI explanation
             const reportData = await generateWeeklyReport(mappedAssets);
 
-            // If the report generator skipped analysis for some reason, ensure we have a fallback
-            if (!reportData.structuredAnalysis && mappedAssets.length > 0) {
-                console.warn("AI Analysis missed structured output, retrying/fallback needed.");
-            }
-
-            // Generate the sophisticated HTML
-            const emailHtml = generatePortfolioEmailHtml(
-                user.name,
-                reportData
-            );
+            // Generate responsive HTML
+            const emailHtml = generateEmailHtml(reportData, user.name);
 
             if (!firstPreview) firstPreview = emailHtml;
 
             if (sendEmail) {
                 const resendKey = process.env.RESEND_API_KEY;
                 if (resendKey) {
-                    await fetch('https://api.resend.com/emails', {
+                    const fromEmail = process.env.RESEND_FROM_EMAIL || 'rapor@finalyatirim.com';
+                    const res = await fetch('https://api.resend.com/emails', {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            from: 'Yatırımcım <onboarding@resend.dev>',
+                            from: `Yatırımcım <${fromEmail}>`,
                             to: [user.email],
-                            subject: `📊 Yatırımcım — ${user.instructionLabel || 'Robotu Raporu'}`,
+                            subject: `📊 Yatırımcım — ${user.instructionLabel || 'FinAi Raporu'}`,
                             html: emailHtml,
                         }),
                     });
-                    stats.sent++;
+
+                    if (res.ok) {
+                        stats.sent++;
+                        console.log(`Email successfully sent to ${user.email}`);
+                    } else {
+                        const errText = await res.text();
+                        console.error(`Resend API error sending to ${user.email}:`, errText);
+                    }
+                } else {
+                    console.warn("RESEND_API_KEY is missing, skipping email sending.");
                 }
             }
         }
 
         return NextResponse.json({ success: true, stats, htmlPreview: firstPreview });
     } catch (e: any) {
+        console.error("Email API Route error:", e);
         return NextResponse.json({ success: false, error: e.message }, { status: 500 });
     }
 }
