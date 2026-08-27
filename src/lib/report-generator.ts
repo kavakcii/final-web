@@ -228,9 +228,10 @@ export async function generateWeeklyReport(assets: Asset[], days: number = 7): P
 
     // Adjust names using asset-catalog or known maps
     try {
-        const { assetCatalog } = await import('./asset-catalog');
+        const { BIST_CATALOG, TEFAS_CATALOG } = await import('./asset-catalog');
+        const combinedCatalog = [...(BIST_CATALOG || []), ...(TEFAS_CATALOG || [])];
         performanceData.forEach(p => {
-            const found = assetCatalog.find((c: any) => c.symbol.toUpperCase() === p.symbol.toUpperCase());
+            const found = combinedCatalog.find((c: any) => c.symbol.toUpperCase() === p.symbol.toUpperCase());
             if (found) p.name = found.name;
         });
     } catch (e) {
