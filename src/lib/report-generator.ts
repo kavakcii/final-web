@@ -388,7 +388,7 @@ export async function generateWeeklyReport(assets: Asset[], days: number = 7): P
     };
 }
 
-export function generateEmailHtml(data: WeeklyReportData): string {
+export function generateEmailHtml(data: WeeklyReportData, userName?: string): string {
     const analysis = data.structuredAnalysis;
     const todayStr = new Date().toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -469,6 +469,7 @@ export function generateEmailHtml(data: WeeklyReportData): string {
                 
                 <!-- Content -->
                 <div class="content">
+                    <p style="font-size: 15px; margin-top: 0; margin-bottom: 20px; font-weight: 500; color: #0f172a;">Merhaba ${userName || 'Değerli Yatırımcımız'},</p>
                     <!-- Portfolio Snapshot -->
                     <div class="card-summary">
                         <p class="summary-title">Portföy Net Değeri</p>
