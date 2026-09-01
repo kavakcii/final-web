@@ -7,7 +7,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
     try {
         const userId = request.nextUrl.searchParams.get('userId') || undefined;
-        const report = await generateFinAiReport(userId);
+        const tfParam = request.nextUrl.searchParams.get('timeframe') as any;
+        const timeframe = (tfParam === 'monthly' || tfParam === 'all-time') ? tfParam : 'weekly';
+
+        const report = await generateFinAiReport(timeframe, userId);
         return NextResponse.json({ success: true, data: report });
     } catch (error: any) {
         console.error("FinAi report route error:", error);
