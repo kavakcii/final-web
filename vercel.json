@@ -1,6 +1,10 @@
 {
     "crons": [
         {
+            "path": "/api/cron/daily-morning-summary",
+            "schedule": "0 5 * * *"
+        },
+        {
             "path": "/api/cron/portfolio-email",
             "schedule": "0 9 * * *"
         },

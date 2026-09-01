@@ -23,13 +23,14 @@ export default function NotificationsPage() {
     const [followedIndicators, setFollowedIndicators] = useState<string[]>([]);
     const [loadingFollowed, setLoadingFollowed] = useState(true);
 
-    // Notification Preferences State (5 Options)
+    // Notification Preferences State (6 Options)
     const [preferences, setPreferences] = useState({
         min_30_before: false,
         min_10_before: true,
         on_release: true,
         on_update: true,
-        on_revision: true
+        on_revision: true,
+        daily_morning_summary: true
     });
     const [savingPref, setSavingPref] = useState(false);
     const [prefSuccessMsg, setPrefSuccessMsg] = useState(false);
@@ -395,6 +396,21 @@ export default function NotificationsPage() {
                     </div>
 
                     <div className="space-y-4">
+                        <label className="flex items-center justify-between p-4 rounded-2xl bg-blue-50/60 border border-blue-200 cursor-pointer hover:border-blue-300 transition-all">
+                            <div>
+                                <span className="text-xs font-black text-[#00008B] flex items-center gap-1.5">
+                                    ☀️ Günlük Sabah Özeti (08:00 TSİ)
+                                </span>
+                                <span className="text-[11px] text-slate-600 font-medium block mt-0.5">Her sabah 08:00'de günün makro haber manşeti, açıklanacak takvim olayları ve takip ettiğiniz göstergelerin özeti cebinize gelir.</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={preferences.daily_morning_summary}
+                                onChange={(e) => setPreferences({ ...preferences, daily_morning_summary: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
+                            />
+                        </label>
+
                         <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
                             <div>
                                 <span className="text-xs font-black text-[#00008B] block">Veri Açıklanmadan 10 Dakika Önce</span>
