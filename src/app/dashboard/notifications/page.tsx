@@ -32,6 +32,40 @@ export default function NotificationsPage() {
     const [savingPref, setSavingPref] = useState(false);
     const [prefSuccessMsg, setPrefSuccessMsg] = useState(false);
 
+    // Test Push State
+    const [sendingTestPush, setSendingTestPush] = useState(false);
+    const [testPushStatus, setTestPushStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+
+    const handleSendTestPush = async () => {
+        setSendingTestPush(true);
+        setTestPushStatus(null);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                setTestPushStatus({ success: false, message: 'Lütfen önce giriş yapın.' });
+                return;
+            }
+
+            const res = await fetch('/api/notifications/test-push', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+            const json = await res.json();
+            if (json.success) {
+                setTestPushStatus({ success: true, message: json.message || 'Test bildirimi gönderildi!' });
+            } else {
+                setTestPushStatus({ success: false, message: json.error || 'Test bildirimi gönderilemedi.' });
+            }
+        } catch (e: any) {
+            setTestPushStatus({ success: false, message: e.message });
+        } finally {
+            setSendingTestPush(false);
+        }
+    };
+
     useEffect(() => {
         const loadData = async () => {
             const { data: { session } } = await supabase.auth.getSession();
@@ -366,16 +400,27 @@ export default function NotificationsPage() {
                         </label>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-150 flex items-center justify-between">
-                        {prefSuccessMsg ? (
-                            <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Tercihleriniz başarıyla kaydedildi.
-                            </span>
-                        ) : (
-                            <span className="text-xs font-bold text-slate-400">
-                                Tarayıcı İzni: {permissionStatus === 'granted' ? '✅ İzin Verildi' : '⚠️ İzin Bekleniyor'}
-                            </span>
-                        )}
+                    <div className="pt-4 border-t border-slate-150 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            {prefSuccessMsg ? (
+                                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Tercihleriniz başarıyla kaydedildi.
+                                </span>
+                            ) : (
+                                <span className="text-xs font-bold text-slate-400">
+                                    Tarayıcı İzni: {permissionStatus === 'granted' ? '✅ İzin Verildi' : '⚠️ İzin Bekleniyor'}
+                                </span>
+                            )}
+                            <button
+                                onClick={handleSendTestPush}
+                                disabled={sendingTestPush}
+                                className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#00008B] font-bold text-xs border border-blue-200 transition-all disabled:opacity-50 flex items-center gap-1"
+                                title="Kendi cihazınıza anlık Web Push test bildirimi gönderin"
+                            >
+                                <Bell className="w-3.5 h-3.5" />
+                                {sendingTestPush ? 'Gönderiliyor...' : 'Test Bildirimi Gönder'}
+                            </button>
+                        </div>
                         <button
                             onClick={handleSavePreferences}
                             disabled={savingPref}
@@ -384,6 +429,17 @@ export default function NotificationsPage() {
                             {savingPref ? 'Kaydediliyor...' : 'Tercihleri Kaydet'}
                         </button>
                     </div>
+
+                    {testPushStatus && (
+                        <div className={`p-3 rounded-2xl border text-xs font-bold flex items-center gap-2 ${
+                            testPushStatus.success 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>
+                            <span>{testPushStatus.success ? '✅' : '⚠️'}</span>
+                            <span>{testPushStatus.message}</span>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

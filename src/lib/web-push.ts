@@ -1,21 +1,5 @@
 import webpush from 'web-push';
 
-const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'BEl62iUYgUivxIkv69yViEuiBIa167768875_PLACEHOLDER_KEY';
-const privateVapidKey = process.env.VAPID_PRIVATE_KEY || 'PLACEHOLDER_PRIVATE_KEY';
-const mailto = process.env.VAPID_MAILTO || 'mailto:info@finai.com';
-
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-    try {
-        webpush.setVapidDetails(
-            mailto,
-            publicVapidKey,
-            privateVapidKey
-        );
-    } catch (err) {
-        console.error('[WebPush Init Error]', err);
-    }
-}
-
 export interface PushNotificationPayload {
     title: string;
     body: string;
@@ -32,10 +16,26 @@ export interface PushSubscriptionItem {
     auth: string;
 }
 
+function ensureVapidInit() {
+    const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
+    const mailto = process.env.VAPID_MAILTO || 'mailto:finairesmi@gmail.com';
+
+    if (publicVapidKey && privateVapidKey) {
+        try {
+            webpush.setVapidDetails(mailto, publicVapidKey, privateVapidKey);
+        } catch (err) {
+            console.error('[WebPush Init Error]', err);
+        }
+    }
+}
+
 export async function sendWebPushNotification(
     subscription: PushSubscriptionItem,
     payload: PushNotificationPayload
 ): Promise<{ success: boolean; error?: any; statusCode?: number }> {
+    ensureVapidInit();
+
     try {
         const pushSubscription = {
             endpoint: subscription.endpoint,
@@ -61,4 +61,6 @@ export async function sendWebPushNotification(
     }
 }
 
-export { publicVapidKey };
+export function getPublicVapidKey(): string {
+    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+}
