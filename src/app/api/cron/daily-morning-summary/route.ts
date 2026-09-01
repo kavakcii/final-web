@@ -28,16 +28,35 @@ async function handleDailySummary(request: NextRequest) {
     const isTestMode = searchParams.get('test') === 'true';
     const targetUserId = searchParams.get('user_id');
 
-    // 1. Authorization check (Cron secret or Vercel Cron header or Test mode)
-    if (!isTestMode && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-        const isVercelCron = request.headers.get('x-vercel-cron') === '1';
-        if (!isVercelCron) {
-            return NextResponse.json({ success: false, error: 'Yetkisiz istek.' }, { status: 401 });
+    // 1. Strict Authorization Check
+    // If CRON_SECRET is configured:
+    // - In test mode (test=true), authorization MUST be Bearer ${CRON_SECRET}.
+    // - In normal cron execution, authorization must be Bearer ${CRON_SECRET} OR Vercel Cron header (x-vercel-cron: 1).
+    if (cronSecret) {
+        const hasValidSecret = authHeader === `Bearer ${cronSecret}`;
+        const isVercelCron = !isTestMode && request.headers.get('x-vercel-cron') === '1';
+
+        if (!hasValidSecret && !isVercelCron) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Yetkisiz istek. Geçerli CRON_SECRET gereklidir.' 
+            }, { status: 401 });
         }
+    }
+
+    // 2. Strict Test Mode Validation
+    // If test=true is requested, user_id parameter is MANDATORY to prevent accidental broadcast.
+    if (isTestMode && !targetUserId) {
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Test modunda targetUserId (user_id) parametresi zorunludur.' 
+        }, { status: 400 });
     }
 
     const stats = {
         date: '',
+        is_test_mode: isTestMode,
+        target_user_id: targetUserId || null,
         events_found: 0,
         top_news_title: '',
         ai_headline_used: false,
@@ -48,13 +67,13 @@ async function handleDailySummary(request: NextRequest) {
     };
 
     try {
-        // 2. Timezone calculation: Europe/Istanbul (YYYY-MM-DD)
+        // 3. Timezone calculation: Europe/Istanbul (YYYY-MM-DD)
         const now = new Date();
         const todayIso = now.toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
         const todayFormatted = now.toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul', day: '2-digit', month: '2-digit', year: 'numeric' });
         stats.date = todayIso;
 
-        // 3. Fetch today's economic calendar events from DB or Catalog
+        // 4. Fetch today's economic calendar events from DB or Catalog
         const { data: dbEvents } = await supabaseAdmin
             .from('economic_calendar_events')
             .select('*')
@@ -84,7 +103,7 @@ async function handleDailySummary(request: NextRequest) {
 
         stats.events_found = todayEvents.length;
 
-        // 4. Fetch Top Morning Headline News from /api/news
+        // 5. Fetch Top Morning Headline News from /api/news
         let topNewsHeadline = '';
         try {
             const host = request.headers.get('host') || 'localhost:3000';
@@ -94,7 +113,6 @@ async function handleDailySummary(request: NextRequest) {
                 const newsJson = await newsRes.json();
                 const newsItems = newsJson.news || newsJson.data || [];
                 if (newsItems.length > 0) {
-                    // Pick top news with high impact or bullish/bearish sentiment
                     const meaningfulNews = newsItems.find((n: any) => n.impact === 'critical' || n.impact === 'high') || newsItems[0];
                     if (meaningfulNews && meaningfulNews.title) {
                         topNewsHeadline = meaningfulNews.title;
@@ -106,7 +124,7 @@ async function handleDailySummary(request: NextRequest) {
             console.error('[Daily Summary News Fetch Error]', newsErr);
         }
 
-        // 5. Single Global Gemini AI Call (AT MOST ONCE FOR ALL USERS)
+        // 6. Single Global Gemini AI Call (AT MOST ONCE FOR ALL USERS)
         let globalAiHeadline = '';
         const geminiApiKey = process.env.GEMINI_API_KEY;
 
@@ -131,21 +149,28 @@ Yanıtında sadece Türkçe 1 cümle olsun.`;
             }
         }
 
-        // 6. Fetch Users with Push Subscriptions and daily_morning_summary = true
+        // 7. Fetch Users with Push Subscriptions and daily_morning_summary = true
         const { data: preferences } = await supabaseAdmin
             .from('notification_preferences')
             .select('*')
             .eq('daily_morning_summary', true);
 
-        const { data: subscriptions } = await supabaseAdmin
+        // Query active subscriptions (strictly filtered at DB level in test mode)
+        let subQuery = supabaseAdmin
             .from('push_subscriptions')
             .select('*')
             .eq('is_active', true);
 
+        if (isTestMode && targetUserId) {
+            subQuery = subQuery.eq('user_id', targetUserId);
+        }
+
+        const { data: subscriptions } = await subQuery;
+
         if (!subscriptions || subscriptions.length === 0) {
             return NextResponse.json({
                 success: true,
-                message: 'Aktif push aboneliği olan kullanıcı bulunamadı.',
+                message: isTestMode ? 'Hedef kullanıcının aktif push aboneliği bulunamadı.' : 'Aktif push aboneliği olan kullanıcı bulunamadı.',
                 stats
             });
         }
@@ -171,24 +196,39 @@ Yanıtında sadece Türkçe 1 cümle olsun.`;
             userSubsMap.set(s.user_id, [...list, s]);
         });
 
-        const dailyEventLogId = `daily_summary_${todayIso}`;
+        // Event log ID and notification type differentiation
+        const dailyEventLogId = isTestMode 
+            ? `daily_summary_test_${todayIso}_${Date.now()}`
+            : `daily_summary_${todayIso}`;
 
-        // 7. Process Each User (Personalize Payload Deterministically)
+        const notificationType = isTestMode
+            ? 'daily_summary_test'
+            : 'daily_summary';
+
+        // 8. Process Each User (Personalize Payload Deterministically)
         for (const [userId, userSubs] of userSubsMap.entries()) {
             stats.users_processed++;
 
-            // Duplicate Protection Check
-            const { data: existingLog } = await supabaseAdmin
-                .from('notification_logs')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('event_id', dailyEventLogId)
-                .eq('notification_type', 'daily_summary')
-                .maybeSingle();
-
-            if (existingLog && !isTestMode) {
-                stats.duplicates_prevented++;
+            // Check Preference
+            const userPref = prefMap.get(userId);
+            if (userPref && userPref.daily_morning_summary === false && !isTestMode) {
                 continue;
+            }
+
+            // Duplicate Protection Check (Normal cron run)
+            if (!isTestMode) {
+                const { data: existingLog } = await supabaseAdmin
+                    .from('notification_logs')
+                    .select('id')
+                    .eq('user_id', userId)
+                    .eq('event_id', dailyEventLogId)
+                    .eq('notification_type', notificationType)
+                    .maybeSingle();
+
+                if (existingLog) {
+                    stats.duplicates_prevented++;
+                    continue;
+                }
             }
 
             // User's followed indicators
@@ -226,7 +266,7 @@ Yanıtında sadece Türkçe 1 cümle olsun.`;
             }
 
             const payload = {
-                title: 'FinAi Gün Başlangıcı ☀️',
+                title: isTestMode ? 'FinAi Gün Başlangıcı (Test) ☀️' : 'FinAi Gün Başlangıcı ☀️',
                 body: finalBody,
                 url: '/dashboard/economic-calendar',
                 tag: `daily-summary-${todayIso}`
@@ -261,24 +301,22 @@ Yanıtında sadece Türkçe 1 cümle olsun.`;
                 }
             }
 
-            // Log notification entry for duplicate prevention
-            if (!isTestMode || sentAny) {
-                await supabaseAdmin.from('notification_logs').insert({
-                    user_id: userId,
-                    event_id: dailyEventLogId,
-                    notification_type: 'daily_summary',
-                    title: payload.title,
-                    body: payload.body,
-                    sent_at: new Date().toISOString(),
-                    status: sentAny ? 'sent' : 'failed',
-                    error_message: sentAny ? null : lastError
-                });
-            }
+            // Log notification entry
+            await supabaseAdmin.from('notification_logs').insert({
+                user_id: userId,
+                event_id: dailyEventLogId,
+                notification_type: notificationType,
+                title: payload.title,
+                body: payload.body,
+                sent_at: new Date().toISOString(),
+                status: sentAny ? 'sent' : 'failed',
+                error_message: sentAny ? null : lastError
+            });
         }
 
         return NextResponse.json({
             success: true,
-            message: 'FinAi Gün Başlangıcı Özeti başarıyla işlendi.',
+            message: isTestMode ? 'FinAi Gün Başlangıcı Özeti (Test Modu) başarıyla iletildi.' : 'FinAi Gün Başlangıcı Özeti başarıyla işlendi.',
             stats
         });
     } catch (e: any) {
