@@ -7,6 +7,18 @@
         {
             "path": "/api/cron/daily-snapshot",
             "schedule": "59 20 * * *"
+        },
+        {
+            "path": "/api/cron/update-calendar",
+            "schedule": "0 18 * * 0"
+        },
+        {
+            "path": "/api/cron/update-calendar",
+            "schedule": "0 21 * * *"
+        },
+        {
+            "path": "/api/cron/update-calendar",
+            "schedule": "0 7,9,11,12,14,16 * * 1-5"
         }
     ]
 }
