@@ -3,3 +3,6 @@
 
 ALTER TABLE public.notification_preferences 
 ADD COLUMN IF NOT EXISTS daily_morning_summary BOOLEAN NOT NULL DEFAULT true;
+
+-- CRON_SECRET production environment active
+
