@@ -419,7 +419,7 @@ export default function EconomicEventDetailPage() {
                     )}
                 </div>
 
-                {/* HISTORICAL ARCHIVE & GERÇEK TARİHSEL GRAFİK */}
+                {/* HISTORICAL GRAPH — GERÇEK TARİHSEL VERİ GRAFİĞİ */}
                 <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
@@ -428,41 +428,23 @@ export default function EconomicEventDetailPage() {
                             </div>
                             <div>
                                 <h3 className="text-lg font-black text-[#00008B] tracking-tight">
-                                    FinAi Historical Archive Grafiği
+                                    FinAi Geçmiş Veri Grafiği
                                 </h3>
                                 <p className="text-xs text-slate-400 font-bold">Kalıcı Veritabanından Doğrulanan Gerçek Kayıtlar</p>
                             </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-                            {[
-                                { id: '12m', label: 'Son 12 Dönem' },
-                                { id: '1y', label: '1 Yıl' },
-                                { id: '3y', label: '3 Yıl' }
-                            ].map((tf) => (
-                                <button
-                                    key={tf.id}
-                                    onClick={() => setChartTimeframe(tf.id as any)}
-                                    className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all ${
-                                        chartTimeframe === tf.id ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-600 hover:text-[#00008B]'
-                                    }`}
-                                >
-                                    {tf.label}
-                                </button>
-                            ))}
                         </div>
                     </div>
 
                     {loadingHistory ? (
                         <div className="h-40 flex items-center justify-center text-xs font-bold text-slate-400">
-                            Historical Archive verileri sorgulanıyor...
+                            Geçmiş veriler sorgulanıyor...
                         </div>
-                    ) : !hasEnoughRealData ? (
+                    ) : realHistoryEvents.length === 0 ? (
                         <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center space-y-2">
                             <Database className="w-8 h-8 text-slate-400 mx-auto" />
-                            <h4 className="text-sm font-black text-[#00008B]">Henüz Yeterli Tarihsel Veri Birikmedi</h4>
+                            <h4 className="text-sm font-black text-[#00008B]">Bu gösterge için henüz geçmiş veri bulunmuyor.</h4>
                             <p className="text-xs text-slate-500 font-medium max-w-lg mx-auto leading-relaxed">
-                                FinAi Historical Archive'da bu gösterge için henüz yeterli sayıda dönemsel gerçek veri kaydı bulunmamaktadır. Gelecek senkronizasyonlarla birlikte gerçek grafik burada otomatik görüntülenecektir.
+                                Veritabanımıza gerçekleşen veri kaydoldukça gerçek geçmiş veri grafiği burada otomatik olarak görüntülenecektir.
                             </p>
                         </div>
                     ) : (
@@ -476,22 +458,22 @@ export default function EconomicEventDetailPage() {
                                 </div>
                             )}
 
-                            <div className="h-48 flex items-end justify-between gap-3 px-4 border-b border-slate-200 pb-2">
+                            <div className="h-48 flex items-end justify-[#00008B] justify-center sm:justify-around gap-4 px-4 border-b border-slate-200 pb-2">
                                 {realHistoryEvents.map((pt, idx) => {
                                     const valNum = parseFloat((pt.actual || '0').replace(/[^0-9\.\,\-]/g, '').replace(',', '.'));
-                                    const heightPercent = Math.min(Math.max((Math.abs(valNum) / 10) * 100, 15), 90);
+                                    const heightPercent = Math.min(Math.max((Math.abs(valNum) / 10) * 100, 20), 90);
 
                                     return (
                                         <div
                                             key={idx}
                                             onMouseEnter={() => setHoveredPoint({ month: pt.dateFormatted, actual: pt.actual || '-', forecast: pt.forecast || '-', previous: pt.previous || '-' })}
                                             onMouseLeave={() => setHoveredPoint(null)}
-                                            className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
+                                            className="flex-1 max-w-[60px] flex flex-col items-center gap-2 group cursor-pointer"
                                         >
                                             <span className="text-[10px] font-black text-slate-500 group-hover:text-[#00008B] transition-colors">
                                                 {pt.actual}
                                             </span>
-                                            <div className="w-full max-w-[28px] bg-slate-150 group-hover:bg-[#00008B] rounded-t-xl transition-all duration-300 relative overflow-hidden" style={{ height: `${heightPercent}%` }}>
+                                            <div className="w-full max-w-[28px] bg-slate-200 group-hover:bg-[#00008B] rounded-t-xl transition-all duration-300 relative overflow-hidden" style={{ height: `${heightPercent}%` }}>
                                                 <div className="absolute inset-0 bg-gradient-to-t from-[#00008B]/80 to-blue-500/80 group-hover:from-[#00008B] group-hover:to-blue-400 transition-all" />
                                             </div>
                                             <span className="text-[9px] font-bold text-slate-400 group-hover:text-[#00008B] whitespace-nowrap">
