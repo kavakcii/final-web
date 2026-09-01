@@ -17,6 +17,7 @@ import { INDICATOR_PROFILES_DATABASE } from "@/lib/indicator-profiles";
 import FeaturedEconomicEvents from "@/components/calendar/FeaturedEconomicEvents";
 import EconomicEventCard from "@/components/calendar/EconomicEventCard";
 import CalendarEmptyState from "@/components/calendar/CalendarEmptyState";
+import FollowIndicatorButton from "@/components/calendar/FollowIndicatorButton";
 
 const ITEMS_PER_PAGE = 10;
 const ALL_COUNTRIES = ['TR', 'ABD', 'EU', 'UK'];
@@ -748,9 +749,12 @@ export default function EconomicCalendarPage() {
 
                                                     {/* Haber Başlığı */}
                                                     <td className="py-4 px-3 align-top relative">
-                                                        <span className="text-xs font-bold text-[#00008B] block leading-snug">
-                                                            {item.event}
-                                                        </span>
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <span className="text-xs font-bold text-[#00008B] block leading-snug">
+                                                                {item.event}
+                                                            </span>
+                                                            <FollowIndicatorButton indicatorName={item.event} compact />
+                                                        </div>
 
                                                         {/* Sadeleşmiş Nesnel Fark Badge */}
                                                         {calc.forecastDiffText && (

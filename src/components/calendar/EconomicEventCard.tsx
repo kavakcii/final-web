@@ -5,6 +5,7 @@ import { calculateBackendDifferences } from "@/lib/finai-calendar-analysis-engin
 import { INDICATOR_PROFILES_DATABASE } from "@/lib/indicator-profiles";
 import { Clock, ArrowRight, Activity, CheckCircle2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import FollowIndicatorButton from "@/components/calendar/FollowIndicatorButton";
 
 interface EconomicEventCardProps {
     item: CatalogCalendarEvent;
@@ -40,14 +41,17 @@ export default function EconomicEventCard({ item, statusInfo, isRecentlyUpdated 
                 </span>
             </div>
 
-            {/* Event Title */}
-            <div>
-                <h4 className="text-sm font-black text-[#00008B] leading-snug">
-                    {item.event}
-                </h4>
-                <p className="text-[11px] text-slate-500 font-medium line-clamp-1 mt-0.5">
-                    {profile.whyItMatters}
-                </p>
+            {/* Event Title & Follow Button */}
+            <div className="flex items-start justify-between gap-2">
+                <div>
+                    <h4 className="text-sm font-black text-[#00008B] leading-snug">
+                        {item.event}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 font-medium line-clamp-1 mt-0.5">
+                        {profile.whyItMatters}
+                    </p>
+                </div>
+                <FollowIndicatorButton indicatorName={item.event} compact />
             </div>
 
             {/* Metrics: Actual, Forecast, Previous */}

@@ -1,176 +1,391 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Bell, Sparkles, TrendingUp, AlertTriangle, Check, Trash2 } from 'lucide-react';
-
-const mockNotifications = [
-    {
-        id: 1,
-        title: 'Yeni Özellik: Portföy Analizi',
-        description: 'Yapay zeka destekli portföy analiz modülü artık yayında. Hemen deneyin!',
-        time: '2 saat önce',
-        type: 'system',
-        read: false,
-    },
-    {
-        id: 2,
-        title: 'Fiyat Alarmı: THYAO',
-        description: 'Türk Hava Yolları hissesi belirlediğiniz 300 TL hedef fiyatına ulaştı.',
-        time: '5 saat önce',
-        type: 'alert',
-        read: false,
-    },
-    {
-        id: 3,
-        title: 'Haftalık Piyasa Özeti',
-        description: 'Geçen haftanın en çok kazandıranları ve bu haftanın beklentileri bülteni hazır.',
-        time: '1 gün önce',
-        type: 'news',
-        read: true,
-    },
-    {
-        id: 4,
-        title: 'Güvenlik Uyarısı',
-        description: 'Hesabınıza yeni bir cihazdan giriş yapıldı. Siz değilseniz şifrenizi değiştirin.',
-        time: '2 gün önce',
-        type: 'alert',
-        read: true,
-    },
-    {
-        id: 5,
-        title: 'TEFAS Fon Verileri Güncellendi',
-        description: 'Tüm yatırım fonlarının günlük getirileri sisteme işlendi.',
-        time: '3 gün önce',
-        type: 'system',
-        read: true,
-    },
-];
+import { useState, useEffect } from 'react';
+import { 
+    Bell, Sparkles, TrendingUp, Check, Trash2, Calendar as CalendarIcon, 
+    ArrowRight, Settings, Sliders, ShieldCheck, Clock, CheckCircle2
+} from 'lucide-react';
+import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
+import { useWebPush } from '@/lib/useWebPush';
+import { ECONOMIC_CALENDAR_CATALOG } from '@/lib/calendar-catalog';
 
 export default function NotificationsPage() {
-    const [notifications, setNotifications] = useState(mockNotifications);
-    const [filter, setFilter] = useState('all'); // all, unread, system, alert
+    const { permissionStatus, registerAndSubscribe, toggleFollowIndicator } = useWebPush();
+    const [activeTab, setActiveTab] = useState<'notifications' | 'followed' | 'settings'>('notifications');
 
-    const getIcon = (type: string) => {
-        switch (type) {
-            case 'system': return <Sparkles className="w-5 h-5 text-purple-400" />;
-            case 'alert': return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
-            case 'news': return <TrendingUp className="w-5 h-5 text-blue-400" />;
-            default: return <Bell className="w-5 h-5 text-slate-400" />;
+    // Real Notification Logs History
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(true);
+
+    // Followed Indicators List
+    const [followedIndicators, setFollowedIndicators] = useState<string[]>([]);
+    const [loadingFollowed, setLoadingFollowed] = useState(true);
+
+    // Notification Preferences State
+    const [preferences, setPreferences] = useState({
+        min_30_before: false,
+        min_10_before: true,
+        on_release: true,
+        on_update: true
+    });
+    const [savingPref, setSavingPref] = useState(false);
+    const [prefSuccessMsg, setPrefSuccessMsg] = useState(false);
+
+    useEffect(() => {
+        const loadData = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                setLoadingNotifications(false);
+                setLoadingFollowed(false);
+                return;
+            }
+
+            const token = session.access_token;
+
+            // Fetch Real Notification Logs
+            try {
+                const resNotif = await fetch('/api/notifications', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const jsonNotif = await resNotif.json();
+                if (jsonNotif.success) {
+                    setNotifications(jsonNotif.notifications || []);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoadingNotifications(false);
+            }
+
+            // Fetch Followed Indicators
+            try {
+                const resFol = await fetch('/api/indicators/followed', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const jsonFol = await resFol.json();
+                if (jsonFol.success) {
+                    setFollowedIndicators(jsonFol.followed || []);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoadingFollowed(false);
+            }
+
+            // Fetch Preferences
+            try {
+                const resPref = await fetch('/api/notifications/preferences', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const jsonPref = await resPref.json();
+                if (jsonPref.success && jsonPref.preferences) {
+                    setPreferences(jsonPref.preferences);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        loadData();
+    }, []);
+
+    const handleSavePreferences = async () => {
+        setSavingPref(true);
+        setPrefSuccessMsg(false);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+
+            const res = await fetch('/api/notifications/preferences', {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify(preferences)
+            });
+            const json = await res.json();
+            if (json.success) {
+                setPrefSuccessMsg(true);
+                setTimeout(() => setPrefSuccessMsg(false), 3000);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setSavingPref(false);
         }
     };
 
-    const filteredNotifications = notifications.filter(n => {
-        if (filter === 'all') return true;
-        if (filter === 'unread') return !n.read;
-        return n.type === filter;
-    });
-
-    const markAllRead = () => {
-        setNotifications(notifications.map(n => ({ ...n, read: true })));
-    };
-
-    const deleteNotification = (id: number) => {
-        setNotifications(notifications.filter(n => n.id !== id));
+    const handleUnfollow = async (name: string) => {
+        await toggleFollowIndicator(name);
+        setFollowedIndicators(prev => prev.filter(i => i !== name));
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-4rem)] bg-black text-white p-6 md:p-8 max-w-5xl mx-auto w-full">
-
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+        <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-[#00008B] w-full mx-auto p-4 sm:p-6 md:p-8 max-w-5xl">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
                 <div>
-                    <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-white">Bildirimler</h1>
-                    <p className="text-slate-400 mt-1">Sistem ve piyasa ile ilgili son gelişmeler.</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-[#00008B] tracking-tight">Bildirim Merkezi</h1>
+                    <p className="text-xs font-bold text-slate-500 mt-0.5">Takip ettiğiniz ekonomik göstergeler ve duyuru geçmişiniz.</p>
                 </div>
 
-                <div className="flex items-center space-x-2 bg-slate-900/50 p-1 rounded-lg border border-white/10">
-                    {['all', 'unread', 'alert', 'system'].map((f) => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${filter === f
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                }`}
-                        >
-                            {f === 'all' ? 'Tümü' : f === 'unread' ? 'Okunmamış' : f === 'alert' ? 'Uyarılar' : 'Sistem'}
-                        </button>
-                    ))}
+                {/* Tabs */}
+                <div className="flex items-center gap-1 bg-slate-200 p-1.5 rounded-2xl border border-slate-300">
+                    <button
+                        onClick={() => setActiveTab('notifications')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                            activeTab === 'notifications' 
+                                ? 'bg-[#00008B] text-white shadow-sm' 
+                                : 'text-slate-600 hover:text-[#00008B]'
+                        }`}
+                    >
+                        Bildirim Geçmişi
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('followed')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                            activeTab === 'followed' 
+                                ? 'bg-[#00008B] text-white shadow-sm' 
+                                : 'text-slate-600 hover:text-[#00008B]'
+                        }`}
+                    >
+                        Takip Ettiklerim ({followedIndicators.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('settings')}
+                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${
+                            activeTab === 'settings' 
+                                ? 'bg-[#00008B] text-white shadow-sm' 
+                                : 'text-slate-600 hover:text-[#00008B]'
+                        }`}
+                    >
+                        Ayarlar
+                    </button>
                 </div>
             </div>
 
-            <div className="flex justify-end mb-4">
-                <button
-                    onClick={markAllRead}
-                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors"
-                >
-                    <Check className="w-3 h-3" />
-                    Tümünü okundu işaretle
-                </button>
-            </div>
-
-            <div className="space-y-4">
-                {filteredNotifications.length > 0 ? (
-                    filteredNotifications.map((notification) => (
-                        <div
-                            key={notification.id}
-                            className={`group relative flex items-start p-4 rounded-xl border transition-all duration-300 ${notification.read
-                                    ? 'bg-transparent border-white/5 hover:bg-white/[0.02]'
-                                    : 'bg-blue-500/5 border-blue-500/20 hover:bg-blue-500/10 hover:border-blue-500/30 shadow-[0_0_15px_-5px_rgba(59,130,246,0.1)]'
-                                }`}
-                        >
-                            <div className={`p-3 rounded-full mr-4 flex-shrink-0 ${notification.read ? 'bg-slate-800/50' : 'bg-slate-800'}`}>
-                                {getIcon(notification.type)}
+            {/* TAB 1: BİLDİRİM GEÇMİŞİ */}
+            {activeTab === 'notifications' && (
+                <div className="space-y-3">
+                    {loadingNotifications ? (
+                        <div className="py-16 text-center text-xs font-bold text-slate-400">
+                            Bildirim geçmişi yükleniyor...
+                        </div>
+                    ) : notifications.length === 0 ? (
+                        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 space-y-3 p-6 shadow-sm">
+                            <div className="w-14 h-14 bg-blue-50 border border-blue-200 rounded-3xl flex items-center justify-center mx-auto text-[#00008B]">
+                                <Bell className="w-7 h-7" />
                             </div>
+                            <h3 className="text-base font-black text-[#00008B]">Henüz Bildiriminiz Bulunmuyor</h3>
+                            <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+                                Ekonomik takvimdeki göstergeleri takip ederek açıklanma anında ve yaklaştığında anlık web bildirimleri alabilirsiniz.
+                            </p>
+                            <Link
+                                href="/dashboard/economic-calendar"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#00008B] text-white font-bold text-xs shadow-sm hover:bg-[#0808a3] transition-all"
+                            >
+                                Ekonomik Takvime Git <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                        </div>
+                    ) : (
+                        notifications.map((item) => {
+                            const targetUrl = item.event_id 
+                                ? `/dashboard/economic-calendar/${encodeURIComponent(item.event_id)}`
+                                : '/dashboard/economic-calendar';
 
-                            <div className="flex-1 min-w-0 pr-8">
-                                <div className="flex items-center justify-between mb-1">
-                                    <h3 className={`text-base font-semibold truncate ${notification.read ? 'text-slate-300' : 'text-white'}`}>
-                                        {notification.title}
-                                    </h3>
-                                    <span className="text-xs text-slate-500 whitespace-nowrap ml-2 flex-shrink-0">{notification.time}</span>
-                                </div>
-                                <p className={`text-sm leading-relaxed ${notification.read ? 'text-slate-500' : 'text-slate-300'}`}>
-                                    {notification.description}
-                                </p>
-                            </div>
-
-                            <div className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2">
-                                <button
-                                    onClick={() => deleteNotification(notification.id)}
-                                    className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
-                                    title="Sil"
+                            return (
+                                <Link
+                                    key={item.id}
+                                    href={targetUrl}
+                                    className="p-4 rounded-3xl bg-white border border-slate-200 hover:border-blue-300 transition-all flex items-start justify-between gap-4 group shadow-xs"
                                 >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                                {!notification.read && (
-                                    <button
-                                        onClick={() => {
-                                            const newNotifs = notifications.map(n => n.id === notification.id ? { ...n, read: true } : n);
-                                            setNotifications(newNotifs);
-                                        }}
-                                        className="p-1.5 text-slate-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-md transition-colors"
-                                        title="Okundu İşaretle"
-                                    >
-                                        <Check className="w-4 h-4" />
-                                    </button>
-                                )}
-                            </div>
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0 text-[#00008B]">
+                                            <Bell className="w-5 h-5" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h4 className="text-sm font-black text-[#00008B] leading-snug group-hover:text-blue-600 transition-colors">
+                                                {item.title}
+                                            </h4>
+                                            <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                                {item.body}
+                                            </p>
+                                            <span className="text-[10px] font-bold text-slate-400 block pt-1 font-mono">
+                                                {new Date(item.sent_at).toLocaleString('tr-TR')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <span className="p-2 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#00008B] transition-colors shrink-0">
+                                        <ArrowRight className="w-4 h-4" />
+                                    </span>
+                                </Link>
+                            );
+                        })
+                    )}
+                </div>
+            )}
 
-                            {!notification.read && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-                            )}
+            {/* TAB 2: TAKİP ETTİKLERİM */}
+            {activeTab === 'followed' && (
+                <div className="space-y-3">
+                    {loadingFollowed ? (
+                        <div className="py-16 text-center text-xs font-bold text-slate-400">
+                            Takip edilen göstergeler yükleniyor...
                         </div>
-                    ))
-                ) : (
-                    <div className="text-center py-20 bg-slate-900/20 rounded-2xl border border-white/5 border-dashed">
-                        <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Bell className="w-8 h-8 text-slate-600" />
+                    ) : followedIndicators.length === 0 ? (
+                        <div className="text-center py-16 bg-white rounded-3xl border border-slate-200 space-y-3 p-6 shadow-sm">
+                            <div className="w-14 h-14 bg-blue-50 border border-blue-200 rounded-3xl flex items-center justify-center mx-auto text-[#00008B]">
+                                <CalendarIcon className="w-7 h-7" />
+                            </div>
+                            <h3 className="text-base font-black text-[#00008B]">Takip Edilen Gösterge Yok</h3>
+                            <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
+                                Ekonomik takvim üzerindeki "Takip Et" butonunu kullanarak ilgilendiğiniz göstergeleri listenize ekleyebilirsiniz.
+                            </p>
+                            <Link
+                                href="/dashboard/economic-calendar"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#00008B] text-white font-bold text-xs shadow-sm hover:bg-[#0808a3] transition-all"
+                            >
+                                Ekonomik Takvime Git <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
                         </div>
-                        <h3 className="text-lg font-medium text-slate-300">Bildirim Yok</h3>
-                        <p className="text-slate-500">Şu anda bu kriterlere uygun bildiriminiz bulunmuyor.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {followedIndicators.map((indName, idx) => {
+                                const nextEvent = ECONOMIC_CALENDAR_CATALOG.find(e => e.event === indName || e.event.includes(indName));
+
+                                return (
+                                    <div
+                                        key={idx}
+                                        className="p-4 rounded-3xl bg-white border border-slate-200 space-y-3 shadow-xs flex flex-col justify-between"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-100 uppercase">
+                                                    Takip Ediliyor ✓
+                                                </span>
+                                                <h4 className="text-sm font-black text-[#00008B] leading-snug mt-1.5">
+                                                    {indName}
+                                                </h4>
+                                            </div>
+                                            <button
+                                                onClick={() => handleUnfollow(indName)}
+                                                className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 text-[11px] font-bold transition-all"
+                                            >
+                                                Takipten Çıkar
+                                            </button>
+                                        </div>
+
+                                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                                            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
+                                                <Clock className="w-3.5 h-3.5 text-blue-600" />
+                                                {nextEvent ? `Sonraki: ${nextEvent.dateFormatted} · ${nextEvent.time}` : 'Düzenli Yayın'}
+                                            </span>
+                                            {nextEvent && (
+                                                <Link
+                                                    href={`/dashboard/economic-calendar/${encodeURIComponent(nextEvent.id || nextEvent.event)}`}
+                                                    className="font-bold text-[#00008B] hover:underline flex items-center gap-0.5 text-[11px]"
+                                                >
+                                                    İncele <ArrowRight className="w-3 h-3" />
+                                                </Link>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* TAB 3: BİLDİRİM AYARLARI */}
+            {activeTab === 'settings' && (
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-6 shadow-sm">
+                    <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#00008B]">
+                            <Sliders className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black text-[#00008B]">Bildirim Zamanlaması ve Tercihler</h3>
+                            <p className="text-xs text-slate-500 font-bold">Takip ettiğiniz ekonomik göstergeler için ne zaman bildirim alacağınızı seçin.</p>
+                        </div>
                     </div>
-                )}
-            </div>
+
+                    <div className="space-y-4">
+                        <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
+                            <div>
+                                <span className="text-xs font-black text-[#00008B] block">Veri Açıklanmadan 10 Dakika Önce</span>
+                                <span className="text-[11px] text-slate-500 font-medium block">Piyasa duyurusu yaklaşırken cihazınıza uyarı gönderilir (Varsayılan Açık).</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={preferences.min_10_before}
+                                onChange={(e) => setPreferences({ ...preferences, min_10_before: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
+                            <div>
+                                <span className="text-xs font-black text-[#00008B] block">Veri Açıklanmadan 30 Dakika Önce</span>
+                                <span className="text-[11px] text-slate-500 font-medium block">Önceden hazırlık yapmak isteyenler için erken bildirim.</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={preferences.min_30_before}
+                                onChange={(e) => setPreferences({ ...preferences, min_30_before: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
+                            <div>
+                                <span className="text-xs font-black text-[#00008B] block">Veri Açıklandığı Anda</span>
+                                <span className="text-[11px] text-slate-500 font-medium block">Resmi gerçekleşen rakam ve piyasa beklentisi anında cebinize gelir.</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={preferences.on_release}
+                                onChange={(e) => setPreferences({ ...preferences, on_release: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
+                            <div>
+                                <span className="text-xs font-black text-[#00008B] block">Veri Güncellendiğinde / Revize Edildiğinde</span>
+                                <span className="text-[11px] text-slate-500 font-medium block">Resmi kurumlar tarafından veri revize edilirse anında haber verilir.</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={preferences.on_update}
+                                onChange={(e) => setPreferences({ ...preferences, on_update: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
+                            />
+                        </label>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-150 flex items-center justify-between">
+                        {prefSuccessMsg ? (
+                            <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Tercihleriniz başarıyla kaydedildi.
+                            </span>
+                        ) : (
+                            <span className="text-xs font-bold text-slate-400">
+                                Tarayıcı İzni: {permissionStatus === 'granted' ? '✅ İzin Verildi' : '⚠️ İzin Bekleniyor'}
+                            </span>
+                        )}
+                        <button
+                            onClick={handleSavePreferences}
+                            disabled={savingPref}
+                            className="px-5 py-2.5 rounded-2xl bg-[#00008B] text-white font-black text-xs shadow-md hover:bg-[#0808a3] transition-all disabled:opacity-50"
+                        >
+                            {savingPref ? 'Kaydediliyor...' : 'Tercihleri Kaydet'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runAdaptiveLiveSync } from "@/lib/calendar-adaptive-engine";
 import { processNotificationEngine } from "@/lib/notification-engine";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 /**
- * Adaptive Server-Side Otomatik Ekonomik Takvim Senkronizasyon Rotası
- * Yaklaşan olayların saatlerine göre canlı verileri tarar ve Supabase veritabanına işler.
+ * Web Push Notification Processing Cron Endpoint
+ * Scheduled via Vercel Cron or called after live calendar updates.
  */
 export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    // Güvenlik Doğrulaması
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
         const isVercelCron = request.headers.get('x-vercel-cron') === '1';
         if (!isVercelCron) {
@@ -22,20 +20,15 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        // Adaptive Live Sync Motorunu Çalıştır
-        const stats = await runAdaptiveLiveSync();
-
-        // Web Push Bildirim Motorunu Tetikle
-        const notifStats = await processNotificationEngine();
+        const stats = await processNotificationEngine();
 
         return NextResponse.json({
-            success: stats.status === 'success' || stats.status === 'concurrency_locked',
-            message: "Adaptive Live Sync Engine ve Notification Engine senkronizasyonu tamamlandı.",
-            stats,
-            notifStats
+            success: true,
+            message: "Notification Engine taraması tamamlandı.",
+            stats
         });
     } catch (error: any) {
-        console.error("[ADAPTIVE CRON SYNC ERROR]", error);
+        console.error("[PROCESS NOTIFICATIONS CRON ERROR]", error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }

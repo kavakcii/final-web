@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
 import { INDICATOR_PROFILES_DATABASE, IndicatorProfile, TECHNICAL_TERMS, TechnicalTermTooltip } from "@/lib/indicator-profiles";
 import { calculateBackendDifferences, generateFinAiAnalysis } from "@/lib/finai-calendar-analysis-engine";
+import FollowIndicatorButton from "@/components/calendar/FollowIndicatorButton";
 
 export default function EconomicEventDetailPage() {
     const params = useParams();
@@ -128,14 +129,17 @@ export default function EconomicEventDetailPage() {
                     </Link>
                 </div>
 
-                {/* SADELEŞTİRİLMİŞ HEADER BANNER (GEREKSİZ TEKRAR EDEN BADGE'LAR KALDIRILDI) */}
+                {/* SADELEŞTİRİLMİŞ HEADER BANNER (TAKİP ET BUTONU EKLENDİ) */}
                 <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 md:p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-4">
                     <div className="relative z-10 space-y-2">
-                        <div className="flex items-center gap-2 text-blue-200 text-xs font-bold">
-                            <span>{profile.flag}</span>
-                            <span>{event.country}</span>
-                            <span>·</span>
-                            <span>{profile.category}</span>
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-blue-200 text-xs font-bold">
+                                <span>{profile.flag}</span>
+                                <span>{event.country}</span>
+                                <span>·</span>
+                                <span>{profile.category}</span>
+                            </div>
+                            <FollowIndicatorButton indicatorName={event.event} />
                         </div>
 
                         <div>
