@@ -98,12 +98,12 @@ export default function DashboardPage() {
                 {/* 1. KATMAN: %60 Varlık Kartları (Alt Alta) / %40 Gündem Haberleri */}
                 <div className="grid grid-cols-12 gap-2.5 sm:gap-4 md:gap-6 items-stretch w-full flex-1">
                     {/* %60 Sol Bölüm (Toplam Varlık ve Net Kâr/Zarar) */}
-                    <div className="col-span-7 flex flex-col min-w-0">
+                    <div className="col-span-12 md:col-span-7 flex flex-col min-w-0">
                         <DashboardSummaryCards layout="stacked" />
                     </div>
 
                     {/* %40 Sağ Bölüm (Gündem Son Haberler) */}
-                    <div className="col-span-5 flex flex-col min-w-0">
+                    <div className="col-span-12 md:col-span-5 flex flex-col min-w-0">
                         <div className="w-full h-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm flex flex-col justify-between overflow-hidden min-h-[230px] sm:min-h-[270px]">
                             <div>
                                 <div className="flex items-center justify-between mb-2">
@@ -133,12 +133,12 @@ export default function DashboardPage() {
                 {/* 2. KATMAN: %100 Satır içinde %60 Varlık Gelişim Grafiği / %40 FinAi Raporu */}
                 <div className="grid grid-cols-12 gap-2.5 sm:gap-4 md:gap-6 items-stretch w-full flex-1">
                     {/* %60 Sol Bölüm (Varlık Gelişim Çizgi Grafiği) */}
-                    <div className="col-span-7 flex flex-col min-w-0">
+                    <div className="col-span-12 md:col-span-7 flex flex-col min-w-0">
                         <BalanceGrowthChartWidget />
                     </div>
 
                     {/* %40 Sağ Bölüm (FinAi Raporu) */}
-                    <div className="col-span-5 flex flex-col min-w-0">
+                    <div className="col-span-12 md:col-span-5 flex flex-col min-w-0">
                         <FinAiYesterdayReportWidget />
                     </div>
                 </div>

@@ -189,73 +189,109 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
                         <span className="text-[10px] sm:text-xs font-bold text-blue-200">Haberler Yükleniyor...</span>
                     </div>
                 ) : filteredEvents.length > 0 ? (
-                    <div className="overflow-x-auto max-h-[170px] sm:max-h-[500px] overflow-y-auto pr-1 w-full scrollbar-thin">
-                        <table className="w-full text-left border-collapse min-w-[480px]">
-                            <thead>
-                                <tr className="border-b border-white/15 text-[9px] sm:text-[10px] font-black text-blue-200 uppercase tracking-wider pb-1.5">
-                                    <th className="py-1.5 px-2 w-14 text-blue-200">Saat</th>
-                                    <th className="py-1.5 px-2 w-16 text-blue-200">Ülke</th>
-                                    <th className="py-1.5 px-1.5 w-10 text-center text-blue-200">Etki</th>
-                                    <th className="py-1.5 px-2 text-blue-200">Haber Başlığı</th>
-                                    <th className="py-1.5 px-2 text-right w-20 text-blue-200">Açıklanan</th>
-                                    <th className="py-1.5 px-2 text-right w-20 text-blue-200">Beklenen</th>
-                                    <th className="py-1.5 px-2 text-right w-20 text-blue-200">Önceki</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/10 text-[11px] sm:text-xs font-medium">
-                                {filteredEvents.slice(0, 15).map((item, idx) => (
-                                    <tr
-                                        key={idx}
-                                        onClick={(e) => handleRowClick(e, item)}
-                                        className="hover:bg-white/15 cursor-pointer transition-colors group border-b border-white/10"
-                                    >
-                                        {/* Saat */}
-                                        <td className="py-2 px-2 font-bold text-white align-top">
-                                            {item.time}
-                                        </td>
-
-                                        {/* Ülke Kısaltması (TR, ABD, EU, UK) */}
-                                        <td className="py-2 px-2 align-top">
-                                            <div className="flex items-center gap-1">
-                                                <span className="text-xs">{item.flag || '🌐'}</span>
-                                                <span className="text-[11px] font-black text-white">
-                                                    {item.country}
-                                                </span>
-                                            </div>
-                                        </td>
-
-                                        {/* Etki Sinyal Barları */}
-                                        <td className="py-2 px-1.5 text-center align-top pt-2.5">
-                                            <div className="flex justify-center">
-                                                {renderSignalBars(item.impact)}
-                                            </div>
-                                        </td>
-
-                                        {/* Haber Başlığı */}
-                                        <td className="py-2 px-2 align-top">
-                                            <span className="text-[11px] font-bold text-white block leading-tight">
-                                                {item.event}
+                    <div className="w-full">
+                        {/* MOBİL GÖRÜNÜM: EVENT CARD LİSTESİ (SADECE MOBİLDE GÖRÜNÜR) */}
+                        <div className="block md:hidden space-y-2.5 max-h-[360px] overflow-y-auto pr-0.5 scrollbar-thin">
+                            {filteredEvents.slice(0, 15).map((item, idx) => (
+                                <div
+                                    key={idx}
+                                    onClick={(e) => handleRowClick(e, item)}
+                                    className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 cursor-pointer transition-all space-y-2 active:scale-[0.99]"
+                                >
+                                    {/* Header Bar */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-sm">{item.flag || '🌐'}</span>
+                                            <span className="text-xs font-black text-white">{item.country}</span>
+                                            <span className="text-[10px] font-bold text-blue-200 bg-white/10 px-2 py-0.5 rounded-md border border-white/10 ml-1">
+                                                {item.time}
                                             </span>
-                                        </td>
+                                        </div>
+                                        <div>
+                                            {renderSignalBars(item.impact)}
+                                        </div>
+                                    </div>
 
-                                        {/* Açıklanan */}
-                                        <td className="py-2 px-2 text-right align-top">
-                                            {renderActualValue(item)}
-                                        </td>
+                                    {/* Title */}
+                                    <h4 className="text-xs font-black text-white leading-snug">
+                                        {item.event}
+                                    </h4>
 
-                                        {/* Beklenen (Forecast) */}
-                                        <td className="py-2 px-2 text-right font-semibold text-blue-200 align-top">
-                                            {item.forecast || '-'}
-                                        </td>
+                                    {/* Values Grid */}
+                                    <div className="grid grid-cols-3 gap-2 pt-1.5 border-t border-white/10 text-center">
+                                        <div className="bg-white/5 p-1.5 rounded-xl border border-white/10">
+                                            <span className="text-[9px] font-bold text-blue-200 block uppercase tracking-wider">Açıklanan</span>
+                                            <span className="text-xs font-black block mt-0.5">{renderActualValue(item)}</span>
+                                        </div>
+                                        <div className="bg-white/5 p-1.5 rounded-xl border border-white/10">
+                                            <span className="text-[9px] font-bold text-blue-200 block uppercase tracking-wider">Beklenen</span>
+                                            <span className="text-xs font-black text-blue-200 block mt-0.5">{item.forecast || '-'}</span>
+                                        </div>
+                                        <div className="bg-white/5 p-1.5 rounded-xl border border-white/10">
+                                            <span className="text-[9px] font-bold text-blue-200 block uppercase tracking-wider">Önceki</span>
+                                            <span className="text-xs font-black text-blue-200 block mt-0.5">{item.previous || '-'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
 
-                                        {/* Önceki (Previous) */}
-                                        <td className="py-2 px-2 text-right font-semibold text-blue-200 align-top">
-                                            {item.previous || '-'}
-                                        </td>
+                        {/* DESKTOP GÖRÜNÜM: GENİŞ TABLO (SADECE MÜSAİT MASAÜSTÜ EKRANLARDA GÖRÜNÜR) */}
+                        <div className="hidden md:block overflow-x-auto max-h-[500px] overflow-y-auto pr-1 w-full scrollbar-thin">
+                            <table className="w-full text-left border-collapse min-w-[480px]">
+                                <thead>
+                                    <tr className="border-b border-white/15 text-[9px] sm:text-[10px] font-black text-blue-200 uppercase tracking-wider pb-1.5">
+                                        <th className="py-1.5 px-2 w-14 text-blue-200">Saat</th>
+                                        <th className="py-1.5 px-2 w-16 text-blue-200">Ülke</th>
+                                        <th className="py-1.5 px-1.5 w-10 text-center text-blue-200">Etki</th>
+                                        <th className="py-1.5 px-2 text-blue-200">Haber Başlığı</th>
+                                        <th className="py-1.5 px-2 text-right w-20 text-blue-200">Açıklanan</th>
+                                        <th className="py-1.5 px-2 text-right w-20 text-blue-200">Beklenen</th>
+                                        <th className="py-1.5 px-2 text-right w-20 text-blue-200">Önceki</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="divide-y divide-white/10 text-[11px] sm:text-xs font-medium">
+                                    {filteredEvents.slice(0, 15).map((item, idx) => (
+                                        <tr
+                                            key={idx}
+                                            onClick={(e) => handleRowClick(e, item)}
+                                            className="hover:bg-white/15 cursor-pointer transition-colors group border-b border-white/10"
+                                        >
+                                            <td className="py-2 px-2 font-bold text-white align-top">
+                                                {item.time}
+                                            </td>
+                                            <td className="py-2 px-2 align-top">
+                                                <div className="flex items-center gap-1">
+                                                    <span className="text-xs">{item.flag || '🌐'}</span>
+                                                    <span className="text-[11px] font-black text-white">
+                                                        {item.country}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="py-2 px-1.5 text-center align-top pt-2.5">
+                                                <div className="flex justify-center">
+                                                    {renderSignalBars(item.impact)}
+                                                </div>
+                                            </td>
+                                            <td className="py-2 px-2 align-top">
+                                                <span className="text-[11px] font-bold text-white block leading-tight">
+                                                    {item.event}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-2 text-right align-top">
+                                                {renderActualValue(item)}
+                                            </td>
+                                            <td className="py-2 px-2 text-right font-semibold text-blue-200 align-top">
+                                                {item.forecast || '-'}
+                                            </td>
+                                            <td className="py-2 px-2 text-right font-semibold text-blue-200 align-top">
+                                                {item.previous || '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 ) : (
                     <div className="py-8 text-center text-xs font-bold text-blue-200">

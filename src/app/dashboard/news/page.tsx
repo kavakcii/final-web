@@ -157,12 +157,12 @@ function NewsContent() {
                         <Radio className="w-3.5 h-3.5" /> CANLI AKIŞ
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 flex-1 items-center divide-y md:divide-y-0 md:divide-x divide-white/10 text-xs font-semibold text-blue-100">
+                    <div className="flex md:grid flex-nowrap md:grid-cols-3 gap-3 md:gap-4 flex-1 items-center overflow-x-auto scrollbar-none divide-x divide-white/10 text-xs font-semibold text-blue-100 pb-1 md:pb-0">
                         {breakingHeadlines.map((item, idx) => (
                             <Link
                                 key={idx}
                                 href={`/dashboard/news/${item.slug}`}
-                                className={`hover:text-yellow-300 transition-colors flex items-center gap-2 truncate ${idx > 0 ? 'md:pl-4 pt-1 md:pt-0' : ''}`}
+                                className={`hover:text-yellow-300 transition-colors flex items-center gap-2 shrink-0 md:shrink min-w-[240px] md:min-w-0 ${idx > 0 ? 'pl-3 md:pl-4' : ''}`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" />
                                 <span className="font-bold truncate" title={item.title}>{item.title}</span>
