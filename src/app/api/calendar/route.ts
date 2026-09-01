@@ -4,10 +4,28 @@ import { scrapeEconomicCalendar } from '@/lib/calendar-scraper';
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
+// 10. SERVER-SIDE REQUEST DEDUPLICATION CACHE
+// 100 eşzamanlı kullanıcı widget açtığında dış kaynak API'sine 100 ayrı istek gitmesini engeller.
+let cachedEvents: any[] | null = null;
+let lastFetchTimeMs = 0;
+const SERVER_CACHE_TTL_MS = 10000; // 10 Saniye Önbellek
+
 export async function GET(request: NextRequest) {
+  const nowMs = Date.now();
+
+  // Önbellekteki veri 10 saniyeden taze ise direkt sunucu önbelleğinden döndür (Rate limit koruması)
+  if (cachedEvents && (nowMs - lastFetchTimeMs < SERVER_CACHE_TTL_MS)) {
+      return NextResponse.json(
+          { success: true, source: 'server-cache', data: cachedEvents },
+          { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
+  }
+
   try {
       const events = await scrapeEconomicCalendar();
       if (events && events.length > 0) {
+          cachedEvents = events;
+          lastFetchTimeMs = nowMs;
           return NextResponse.json(
             { success: true, source: 'live-feed', data: events },
             { headers: { 'Cache-Control': 'no-store, max-age=0' } }
@@ -15,6 +33,14 @@ export async function GET(request: NextRequest) {
       }
   } catch (e: any) {
       console.error("Economic calendar API route error:", e);
+  }
+
+  // Önbellekte önceden çekilmiş veri varsa onu kullan
+  if (cachedEvents) {
+      return NextResponse.json(
+          { success: true, source: 'server-cache-fallback', data: cachedEvents },
+          { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      );
   }
 
   // Fallback if network issue
