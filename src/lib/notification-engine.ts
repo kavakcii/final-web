@@ -104,7 +104,8 @@ export async function processNotificationEngine(): Promise<ProcessNotificationsS
                     min_30_before: false,
                     min_10_before: true,
                     on_release: true,
-                    on_update: true
+                    on_update: true,
+                    on_revision: true
                 };
 
                 const eventId = item.id || `${item.country}_${item.event}_${item.dateFormatted}`;
@@ -157,7 +158,7 @@ export async function processNotificationEngine(): Promise<ProcessNotificationsS
 async function sendNotificationToUser(
     userId: string,
     eventId: string,
-    notifType: 'min_30' | 'min_10' | 'released' | 'updated',
+    notifType: 'min_30' | 'min_10' | 'released' | 'updated' | 'revision',
     payload: PushNotificationPayload,
     subs: any[],
     stats: ProcessNotificationsStats

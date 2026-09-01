@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { 
     Bell, Sparkles, TrendingUp, Check, Trash2, Calendar as CalendarIcon, 
-    ArrowRight, Settings, Sliders, ShieldCheck, Clock, CheckCircle2
+    ArrowRight, Settings, Sliders, ShieldCheck, Clock, CheckCircle2,
+    Plus, Search, X
 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -22,12 +23,13 @@ export default function NotificationsPage() {
     const [followedIndicators, setFollowedIndicators] = useState<string[]>([]);
     const [loadingFollowed, setLoadingFollowed] = useState(true);
 
-    // Notification Preferences State
+    // Notification Preferences State (5 Options)
     const [preferences, setPreferences] = useState({
         min_30_before: false,
         min_10_before: true,
         on_release: true,
-        on_update: true
+        on_update: true,
+        on_revision: true
     });
     const [savingPref, setSavingPref] = useState(false);
     const [prefSuccessMsg, setPrefSuccessMsg] = useState(false);
@@ -35,6 +37,38 @@ export default function NotificationsPage() {
     // Test Push State
     const [sendingTestPush, setSendingTestPush] = useState(false);
     const [testPushStatus, setTestPushStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+
+    // Add Indicator Modal State
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [addingIndicator, setAddingIndicator] = useState<string | null>(null);
+
+    // Extract Unique Available Indicators from Catalog
+    const availableIndicators = Array.from(
+        new Set(ECONOMIC_CALENDAR_CATALOG.map(item => item.event))
+    ).map(eventName => {
+        const item = ECONOMIC_CALENDAR_CATALOG.find(e => e.event === eventName);
+        return {
+            name: eventName,
+            country: item?.country || 'Küresel',
+            flag: item?.flag || '🌐',
+            impact: item?.impact || 'medium'
+        };
+    });
+
+    const handleAddIndicator = async (indicatorName: string) => {
+        setAddingIndicator(indicatorName);
+        try {
+            await toggleFollowIndicator(indicatorName);
+            if (!followedIndicators.includes(indicatorName)) {
+                setFollowedIndicators(prev => [...prev, indicatorName]);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setAddingIndicator(null);
+        }
+    };
 
     const handleSendTestPush = async () => {
         setSendingTestPush(true);
@@ -263,7 +297,21 @@ export default function NotificationsPage() {
 
             {/* TAB 2: TAKİP ETTİKLERİM */}
             {activeTab === 'followed' && (
-                <div className="space-y-3">
+                <div className="space-y-4">
+                    {/* Header Action Bar */}
+                    <div className="flex items-center justify-between bg-white border border-slate-200 p-4 rounded-3xl shadow-xs">
+                        <div>
+                            <h3 className="text-sm font-black text-[#00008B]">Takip Edilen Ekonomik Göstergeler</h3>
+                            <p className="text-xs text-slate-500 font-medium">Seçtiğiniz göstergeler açıklandığında veya yaklaşırken bildirim alırsınız.</p>
+                        </div>
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="px-4 py-2 rounded-2xl bg-[#00008B] text-white font-bold text-xs shadow-sm hover:bg-[#0808a3] transition-all flex items-center gap-1.5 shrink-0"
+                        >
+                            <Plus className="w-4 h-4" /> Gösterge Ekle
+                        </button>
+                    </div>
+
                     {loadingFollowed ? (
                         <div className="py-16 text-center text-xs font-bold text-slate-400">
                             Takip edilen göstergeler yükleniyor...
@@ -275,14 +323,14 @@ export default function NotificationsPage() {
                             </div>
                             <h3 className="text-base font-black text-[#00008B]">Takip Edilen Gösterge Yok</h3>
                             <p className="text-xs text-slate-500 font-medium max-w-sm mx-auto leading-relaxed">
-                                Ekonomik takvim üzerindeki "Takip Et" butonunu kullanarak ilgilendiğiniz göstergeleri listenize ekleyebilirsiniz.
+                                Aşağıdaki buton veya ekonomik takvim üzerindeki "Takip Et" butonunu kullanarak takip etmek istediğiniz göstergeleri ekleyebilirsiniz.
                             </p>
-                            <Link
-                                href="/dashboard/economic-calendar"
+                            <button
+                                onClick={() => setShowAddModal(true)}
                                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-[#00008B] text-white font-bold text-xs shadow-sm hover:bg-[#0808a3] transition-all"
                             >
-                                Ekonomik Takvime Git <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
+                                <Plus className="w-4 h-4" /> Hemen Gösterge Ekle
+                            </button>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -388,13 +436,26 @@ export default function NotificationsPage() {
 
                         <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
                             <div>
-                                <span className="text-xs font-black text-[#00008B] block">Veri Güncellendiğinde / Revize Edildiğinde</span>
-                                <span className="text-[11px] text-slate-500 font-medium block">Resmi kurumlar tarafından veri revize edilirse anında haber verilir.</span>
+                                <span className="text-xs font-black text-[#00008B] block">Veri Güncellendiğinde</span>
+                                <span className="text-[11px] text-slate-500 font-medium block">Yayın öncesi tarih, saat veya beklenti rakamları güncellendiğinde anında haber verilir.</span>
                             </div>
                             <input
                                 type="checkbox"
                                 checked={preferences.on_update}
                                 onChange={(e) => setPreferences({ ...preferences, on_update: e.target.checked })}
+                                className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
+                            />
+                        </label>
+
+                        <label className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-blue-300 transition-all">
+                            <div>
+                                <span className="text-xs font-black text-[#00008B] block">Veri Revize Edildiğinde</span>
+                                <span className="text-[11px] text-slate-500 font-medium block">Resmi kurumlar tarafından geçmiş gerçekleşen rakamlar revize edilirse anında haber verilir.</span>
+                            </div>
+                            <input
+                                type="checkbox"
+                                checked={preferences.on_revision}
+                                onChange={(e) => setPreferences({ ...preferences, on_revision: e.target.checked })}
                                 className="w-5 h-5 rounded border-slate-300 text-[#00008B] focus:ring-[#00008B]"
                             />
                         </label>
@@ -440,6 +501,102 @@ export default function NotificationsPage() {
                             <span>{testPushStatus.message}</span>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* ADD INDICATOR MODAL */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white text-[#00008B] rounded-3xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+                        {/* Modal Header */}
+                        <div className="p-5 border-b border-slate-150 flex items-center justify-between bg-slate-50">
+                            <div>
+                                <h3 className="text-base font-black text-[#00008B]">Ekonomik Gösterge Ekle</h3>
+                                <p className="text-xs text-slate-500 font-medium">Takip etmek istediğiniz göstergeyi arayın ve listenize ekleyin.</p>
+                            </div>
+                            <button
+                                onClick={() => setShowAddModal(false)}
+                                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="p-4 border-b border-slate-100 bg-white">
+                            <div className="relative">
+                                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Gösterge adı veya ülke ara (Örn: TÜFE, Faiz, ABD...)"
+                                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-[#00008B] focus:outline-none focus:border-[#00008B] focus:ring-2 focus:ring-[#00008B]/10"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Indicator List */}
+                        <div className="p-4 space-y-2 overflow-y-auto flex-1">
+                            {availableIndicators
+                                .filter(ind => 
+                                    !searchQuery || 
+                                    ind.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                    ind.country.toLowerCase().includes(searchQuery.toLowerCase())
+                                )
+                                .map((ind, idx) => {
+                                    const isAlreadyFollowed = followedIndicators.includes(ind.name);
+                                    const isProcessing = addingIndicator === ind.name;
+
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className="p-3.5 rounded-2xl border border-slate-200 hover:border-blue-300 transition-all flex items-center justify-between gap-3 bg-white"
+                                        >
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                <span className="text-xl shrink-0">{ind.flag}</span>
+                                                <div className="min-w-0">
+                                                    <h4 className="text-xs font-black text-[#00008B] truncate">
+                                                        {ind.name}
+                                                    </h4>
+                                                    <span className="text-[10px] font-bold text-slate-500 block">
+                                                        {ind.country}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => handleAddIndicator(ind.name)}
+                                                disabled={isProcessing}
+                                                className={`px-3 py-1.5 rounded-xl font-bold text-xs shrink-0 transition-all ${
+                                                    isAlreadyFollowed
+                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-300'
+                                                        : 'bg-[#00008B] text-white hover:bg-[#0808a3] shadow-xs'
+                                                }`}
+                                            >
+                                                {isProcessing ? (
+                                                    'İşleniyor...'
+                                                ) : isAlreadyFollowed ? (
+                                                    '✓ Takip Ediliyor'
+                                                ) : (
+                                                    '+ Takip Et'
+                                                )}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t border-slate-150 bg-slate-50 flex justify-end">
+                            <button
+                                onClick={() => setShowAddModal(false)}
+                                className="px-5 py-2 rounded-xl bg-[#00008B] text-white font-bold text-xs"
+                            >
+                                Tamam
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

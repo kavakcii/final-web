@@ -23,8 +23,10 @@ import {
     Calendar, 
     DollarSign, 
     Sliders,
-    RefreshCw
+    RefreshCw,
+    ArrowRight
 } from 'lucide-react';
+import Link from 'next/link';
 import { Switch } from '@/components/ui/switch';
 import { useUser } from '@/components/providers/UserProvider';
 import { supabase } from '@/lib/supabase';
@@ -725,6 +727,25 @@ function SettingsContent() {
                         transition={{ duration: 0.2 }}
                         className="space-y-8"
                     >
+                        {/* Bildirim Merkezi Kısayol Banner */}
+                        <div className="bg-gradient-to-r from-[#00008B] to-blue-800 text-white rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="space-y-1">
+                                <span className="text-[10px] font-black text-blue-200 uppercase tracking-widest bg-white/10 px-2.5 py-0.5 rounded-lg border border-white/15">
+                                    Canlı Web Push & Gösterge Takibi
+                                </span>
+                                <h3 className="text-lg font-black text-white">Bildirim Merkezi ve Gösterge Takip Yönetimi</h3>
+                                <p className="text-xs text-blue-100 font-medium">
+                                    Ekonomik göstergeleri takip edin, anlık cihaz bildirimlerinizi özelleştirin ve canlı alarmlarınızı yönetin.
+                                </p>
+                            </div>
+                            <Link
+                                href="/dashboard/notifications"
+                                className="px-5 py-2.5 rounded-2xl bg-white text-[#00008B] font-black text-xs shadow-md hover:bg-blue-50 transition-all shrink-0 inline-flex items-center gap-1.5"
+                            >
+                                Bildirim Merkezi'ne Git <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </div>
+
                         {/* E-posta Bildirimleri */}
                         <SettingsCard
                             title="E-posta & Bülten Bildirimleri"

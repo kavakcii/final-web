@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
             min_30_before: false,
             min_10_before: true,
             on_release: true,
-            on_update: true
+            on_update: true,
+            on_revision: true
         };
 
         return NextResponse.json({ success: true, preferences: data || defaults });
@@ -59,7 +60,7 @@ export async function PATCH(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { min_30_before, min_10_before, on_release, on_update } = body;
+        const { min_30_before, min_10_before, on_release, on_update, on_revision } = body;
 
         const payload = {
             user_id: user.id,
@@ -67,6 +68,7 @@ export async function PATCH(request: NextRequest) {
             min_10_before: typeof min_10_before === 'boolean' ? min_10_before : true,
             on_release: typeof on_release === 'boolean' ? on_release : true,
             on_update: typeof on_update === 'boolean' ? on_update : true,
+            on_revision: typeof on_revision === 'boolean' ? on_revision : true,
             updated_at: new Date().toISOString()
         };
 
