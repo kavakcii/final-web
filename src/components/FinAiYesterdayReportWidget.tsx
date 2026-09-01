@@ -32,12 +32,58 @@ export function FinAiYesterdayReportWidget() {
         fetchReport(timeframe);
     }, [user?.id, myAssets.length, timeframe]);
 
-    const displayDiffValue = report?.diffValue ?? 0;
-    const displayDiffPercent = report?.diffPercent ?? 0;
-    const twrPercent = report?.twrPercent ?? 0;
-    const isPositive = displayDiffValue >= 0;
+    // Client-side fallback narrative generator
+    const clientFallbackNarrative = useMemo(() => {
+        if (!myAssets || myAssets.length === 0) {
+            return "Portföyünüzde henüz kaydedilmiş aktif bir varlık bulunmuyor. Varlık ekledikten sonra FinAi analiz raporunuz otomatik olarak üretilecektir.";
+        }
 
-    const narrativeToDisplay = report?.narrativeText || "Portföy analizi hazırlanıyor...";
+        let currentTotal = 0;
+        let totalCost = 0;
+        const assetGains: { name: string; gain: number }[] = [];
+
+        myAssets.forEach((asset: any) => {
+            const symUpper = (asset.symbol || '').toUpperCase();
+            const symClean = symUpper.replace(/\.IS$/, '');
+            const price = prices[symUpper] ?? prices[symClean] ?? prices[`${symClean}.IS`] ?? asset.avgCost ?? 0;
+
+            const val = price * asset.quantity;
+            const cost = asset.avgCost * asset.quantity;
+            const gain = val - cost;
+
+            currentTotal += val;
+            totalCost += cost;
+            assetGains.push({ name: asset.symbol.replace(/\.IS$/, ''), gain });
+        });
+
+        const diffVal = currentTotal - totalCost;
+        const diffPct = totalCost > 0 ? (diffVal / totalCost) * 100 : 0;
+        const isPos = diffVal >= 0;
+
+        assetGains.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
+        const topDriver = assetGains[0]?.name || 'ana varlıklarınız';
+
+        const absDiffStr = Math.abs(diffVal).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const absPctStr = Math.abs(diffPct).toFixed(2);
+        const startStr = totalCost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const endStr = currentTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        if (timeframe === 'weekly') {
+            return `Son 7 günlük dönemde portföyünüzün toplam değeri ₺${startStr} seviyesinden ₺${endStr} seviyesine ${isPos ? 'yükseldi' : 'geriledi'}. Bu, ₺${absDiffStr} tutarında (${isPos ? '+' : '-'}%${absPctStr}) bir bakiye değişimine karşılık geliyor. Bu süreçteki performansın en güçlü belirleyicisi ${topDriver} pozisyonunuz oldu. Piyasalar yakından takip edilmektedir.`;
+        } else if (timeframe === 'monthly') {
+            return `Son 30 günlük aylık değerlendirmede portföy bakiyeniz ₺${startStr} seviyesinden ₺${endStr} seviyesine ulaşarak ${isPos ? '+' : '-'}%${absPctStr} değişim gösterdi. Aylık süreçteki performansı en çok etkileyen varlık ${topDriver} olurken portföy dengesi korunmaktadır.`;
+        } else {
+            return `Portföyünüz oluşturulduğu günden bugüne kadar ₺${startStr} başlangıç değerinden ₺${endStr} seviyesine ulaştı. Bu süreçte gerçekleşen ₺${absDiffStr} tutarındaki toplam büyümede ${topDriver} pozisyonunuz liderlik etti.`;
+        }
+    }, [myAssets, prices, timeframe]);
+
+    const isApiEmpty = !report || !report.narrativeText || report.narrativeText.includes("bulunmuyor");
+    const narrativeToDisplay = (myAssets.length > 0 && isApiEmpty) ? clientFallbackNarrative : (report?.narrativeText || clientFallbackNarrative);
+
+    const displayDiffValue = (!isApiEmpty && report?.diffValue !== undefined) ? report.diffValue : (myAssets.length > 0 ? (myAssets.reduce((tot: number, a: any) => tot + (prices[a.symbol.toUpperCase()] || a.avgCost) * a.quantity, 0) - myAssets.reduce((tot: number, a: any) => tot + a.avgCost * a.quantity, 0)) : 0);
+    const displayDiffPercent = (!isApiEmpty && report?.diffPercent !== undefined) ? report.diffPercent : (myAssets.length > 0 ? (displayDiffValue / (myAssets.reduce((tot: number, a: any) => tot + a.avgCost * a.quantity, 0) || 1)) * 100 : 0);
+    const twrPercent = report?.twrPercent ?? displayDiffPercent;
+    const isPositive = displayDiffValue >= 0;
 
     return (
         <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[260px] sm:min-h-[290px] min-w-0 relative overflow-hidden">

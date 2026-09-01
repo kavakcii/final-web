@@ -12,6 +12,13 @@ import {
 import { filterEventsForUserPortfolio } from './news-impact-matrix';
 import { scrapeEconomicCalendar } from './calendar-scraper';
 import { CatalogCalendarEvent } from './calendar-catalog';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false } }
+);
 
 export interface FinAiReportResponse {
     timeframe: 'weekly' | 'monthly' | 'all-time';
@@ -31,10 +38,53 @@ export interface FinAiReportResponse {
  */
 export async function generateFinAiReport(
     timeframe: 'weekly' | 'monthly' | 'all-time' = 'weekly',
-    _userId?: string
+    userId?: string
 ): Promise<FinAiReportResponse> {
     // 1. Portföy Varlıklarını ve Geçmiş Verileri Çek
-    const assets: Asset[] = await PortfolioService.getAssets();
+    let assets: Asset[] = [];
+
+    if (userId) {
+        const { data: dbAssets } = await supabaseAdmin
+            .from('user_portfolios')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (dbAssets && dbAssets.length > 0) {
+            assets = dbAssets.map((item: any) => ({
+                id: item.id,
+                symbol: item.symbol,
+                type: item.asset_type as any,
+                quantity: Number(item.quantity),
+                avgCost: Number(item.avg_cost),
+                dateAdded: item.purchase_date,
+                userId: item.user_id
+            }));
+        }
+    }
+
+    if (assets.length === 0) {
+        assets = await PortfolioService.getAssets();
+    }
+
+    // Eğer oturum olmadan sunucuda çalışıyorsa tüm aktif portföy varlıklarını çek
+    if (assets.length === 0) {
+        const { data: allDbAssets } = await supabaseAdmin
+            .from('user_portfolios')
+            .select('*')
+            .limit(50);
+
+        if (allDbAssets && allDbAssets.length > 0) {
+            assets = allDbAssets.map((item: any) => ({
+                id: item.id,
+                symbol: item.symbol,
+                type: item.asset_type as any,
+                quantity: Number(item.quantity),
+                avgCost: Number(item.avg_cost),
+                dateAdded: item.purchase_date,
+                userId: item.user_id
+            }));
+        }
+    }
     
     let historyRange: '1W' | '1M' | '1Y' = '1W';
     let daysLimit = 7;
