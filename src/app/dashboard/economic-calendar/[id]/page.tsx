@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
-    ArrowLeft, Calendar as CalendarIcon, Info, BookOpen, BarChart3, HelpCircle, Target, 
+    ArrowLeft, Calendar as CalendarIcon, Info, BookOpen, BarChart3, Target, 
     ChevronDown, ChevronUp, Layers, CheckCircle2, AlertTriangle, ShieldCheck, ArrowRight, Activity, Zap, Sparkles, X, Database
 } from "lucide-react";
 import Link from "next/link";
@@ -58,7 +58,7 @@ export default function EconomicEventDetailPage() {
         }
     }, [eventId]);
 
-    // FETCH REAL HISTORICAL RECORDS FROM SUPABASE DATABASE (KRİTİK VERİ POLİTİKASI)
+    // FETCH REAL HISTORICAL RECORDS FROM SUPABASE DATABASE
     useEffect(() => {
         if (!event) return;
 
@@ -72,7 +72,6 @@ export default function EconomicEventDetailPage() {
             .then(res => res.json())
             .then(json => {
                 if (json.data && Array.isArray(json.data)) {
-                    // Filter matching real indicator events from database
                     const matchingDbRecords = json.data.filter((item: any) => {
                         const nameMatch = item.event === event.event || item.event.includes(event.event) || event.event.includes(item.event);
                         const countryMatch = item.country === event.country;
@@ -90,7 +89,7 @@ export default function EconomicEventDetailPage() {
         return (
             <div className="flex flex-col min-h-screen bg-slate-50 items-center justify-center text-[#00008B]">
                 <div className="w-10 h-10 rounded-full border-4 border-[#00008B] border-t-transparent animate-spin mb-3" />
-                <span className="text-xs font-black uppercase tracking-wider">FinAi Intelligence UI v2 Yükleniyor...</span>
+                <span className="text-xs font-black uppercase tracking-wider">Gösterge Analizi Yükleniyor...</span>
             </div>
         );
     }
@@ -112,13 +111,8 @@ export default function EconomicEventDetailPage() {
         INDICATOR_PROFILES_DATABASE[Object.keys(INDICATOR_PROFILES_DATABASE).find(k => event.event.includes(k)) || ""] || 
         INDICATOR_PROFILES_DATABASE["Default"];
 
-    // 4. Backend Calculations
     const calc = calculateBackendDifferences(event);
-
-    // 5. FinAi Narrative Analysis Generation
     const finAiAnalysis = generateFinAiAnalysis(event);
-
-    // 10. REAL HISTORICAL ARCHIVE DATA FILTERING (SAHTE VERİ KESİNLİKLE YOK)
     const hasEnoughRealData = realHistoryEvents.length >= 2;
 
     return (
@@ -132,25 +126,16 @@ export default function EconomicEventDetailPage() {
                     >
                         <ArrowLeft className="w-4 h-4" /> Ekonomik Takvime Dön
                     </Link>
-                    <span className="text-[11px] font-black text-blue-700 bg-blue-50 px-3 py-1 rounded-2xl border border-blue-200 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-blue-600" /> FinAi Intelligence UI v2
-                    </span>
                 </div>
 
-                {/* 3. VERİ KİMLİĞİ (HEADER) */}
+                {/* SADELEŞTİRİLMİŞ HEADER BANNER (GEREKSİZ TEKRAR EDEN BADGE'LAR KALDIRILDI) */}
                 <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 md:p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-4">
-                    <div className="relative z-10 space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xl">{profile.flag}</span>
-                            <span className="px-2.5 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-blue-200">
-                                {event.country}
-                            </span>
-                            <span className="px-2.5 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-300">
-                                {profile.category}
-                            </span>
-                            <span className="px-2.5 py-1 rounded-xl bg-rose-500/20 border border-rose-400/30 text-xs font-black text-rose-200">
-                                {event.impact === 'critical' || event.impact === 'high' ? '🔥 Yüksek Etki' : 'Orta Etki'}
-                            </span>
+                    <div className="relative z-10 space-y-2">
+                        <div className="flex items-center gap-2 text-blue-200 text-xs font-bold">
+                            <span>{profile.flag}</span>
+                            <span>{event.country}</span>
+                            <span>·</span>
+                            <span>{profile.category}</span>
                         </div>
 
                         <div>
@@ -164,7 +149,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 4. ACTUAL / FORECAST / PREVIOUS (KARTLAR & OBJECTIVE BACKEND HESAPLAMALARI) */}
+                {/* ACTUAL / FORECAST / PREVIOUS KARTLARI */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Actual */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
@@ -238,23 +223,18 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 5. FINAI INTELLIGENCE ANA BÖLÜMÜ & 6. DÖRT PARÇALI ANALİZ */}
+                {/* FINAI INTELLIGENCE ANA BÖLÜMÜ (TEKNİK NİTELEMELER KALDIRILDI) */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-150">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
-                                <Sparkles className="w-5 h-5 text-[#00008B]" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-black text-[#00008B] tracking-tight">FINAI INTELLIGENCE</h2>
-                                <p className="text-xs text-slate-400 font-bold">
-                                    Bu verinin ne söylediğini, ne anlama geldiğini ve hangi koşullarda önem kazandığını açıklıyoruz.
-                                </p>
-                            </div>
+                    <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                            <Sparkles className="w-5 h-5 text-[#00008B]" />
                         </div>
-                        <span className="text-[10px] font-extrabold text-[#00008B] bg-blue-50 border border-blue-200 px-3 py-1 rounded-xl self-start sm:self-center">
-                            Analiz Motoru v2.0
-                        </span>
+                        <div>
+                            <h2 className="text-xl font-black text-[#00008B] tracking-tight">FINAI INTELLIGENCE</h2>
+                            <p className="text-xs text-slate-400 font-bold">
+                                Bu verinin ne söylediğini, ne anlama geldiğini ve hangi koşullarda önem kazandığını açıklıyoruz.
+                            </p>
+                        </div>
                     </div>
 
                     {/* FINAI'NİN KISA DEĞERLENDİRMESİ */}
@@ -267,7 +247,7 @@ export default function EconomicEventDetailPage() {
                         </p>
                     </div>
 
-                    {/* DÖRT PARÇALI ANALİZ (01, 02, 03, 04) */}
+                    {/* DÖRT PARÇALI ANALİZ */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
                             <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
@@ -307,7 +287,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 7. BU VERİ NEDİR? (4 ALANLI: Tanım, Ne ölçer?, Neden önemlidir?, NASIL YORUMLANIR?) */}
+                {/* BU VERİ NEDİR? */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
                         <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
@@ -315,7 +295,7 @@ export default function EconomicEventDetailPage() {
                         </div>
                         <div>
                             <h2 className="text-xl font-black text-[#00008B]">Bu Veri Nedir?</h2>
-                            <p className="text-xs text-slate-400 font-bold">Indicator Profile Kapsamında Gösterge Özeti ve Yorumlama Mantığı</p>
+                            <p className="text-xs text-slate-400 font-bold">Gösterge Özeti ve Yorumlama Mantığı</p>
                         </div>
                     </div>
 
@@ -341,7 +321,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 8. EKONOMİK ETKİ ZİNCİRİ (NEDEN-SONUÇ ŞEMASI: DESKTOP YATAY AKIŞ, MOBİL DİKEY) */}
+                {/* EKONOMİK ETKİ ZİNCİRİ */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
                         <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
@@ -374,7 +354,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 9. SENARYO ANALİZİ (GERÇEKLEŞEN SENARYO ÖNE ÇIKARILMIŞ) */}
+                {/* SENARYO ANALİZİ */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex items-center justify-between pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
@@ -395,7 +375,6 @@ export default function EconomicEventDetailPage() {
                         </button>
                     </div>
 
-                    {/* Gerçekleşen Senaryo Öne Çıkarılmış Akış */}
                     <div className="p-6 rounded-3xl bg-[#00008B] text-white space-y-4 shadow-lg">
                         <div className="flex items-center justify-between">
                             <span className="px-3 py-1 rounded-xl bg-emerald-400 text-[#00008B] text-xs font-black">
@@ -406,7 +385,7 @@ export default function EconomicEventDetailPage() {
                             </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-medium text-blue-100 pt-2 border-t border-blue-800">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-medium text-blue-100 pt-2 border-t border-blue-800">
                             <div>
                                 <span className="text-[10px] text-blue-300 uppercase block font-bold">PİYASA BEKLENTİSİ</span>
                                 <span className="text-sm font-black text-white">{event.forecast || '-'}</span>
@@ -416,17 +395,12 @@ export default function EconomicEventDetailPage() {
                                 <span className="text-sm font-black text-white">{event.actual || 'Bekleniyor'}</span>
                             </div>
                             <div>
-                                <span className="text-[10px] text-blue-300 uppercase block font-bold">FARK</span>
-                                <span className="text-sm font-black text-white">{calc.forecastDiffNumber !== undefined ? `${calc.forecastDiffNumber} puan` : '-'}</span>
-                            </div>
-                            <div>
                                 <span className="text-[10px] text-blue-300 uppercase block font-bold">OLASI EKONOMİK YANSIMA</span>
-                                <span className="text-xs font-bold text-emerald-300">{finAiAnalysis.whatItMeans.slice(0, 70)}...</span>
+                                <span className="text-xs font-bold text-emerald-300">{finAiAnalysis.whatItMeans.slice(0, 80)}...</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Diğer Senaryolar (Akordeon) */}
                     {showAllScenarios && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-150">
                             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
@@ -445,7 +419,7 @@ export default function EconomicEventDetailPage() {
                     )}
                 </div>
 
-                {/* 10. HISTORICAL ARCHIVE & 11. GERÇEK TARİHSEL GRAFİK (KRİTİK VERİ POLİTİKASI: GERÇEK SUPABASE VERİLERİ) */}
+                {/* HISTORICAL ARCHIVE & GERÇEK TARİHSEL GRAFİK */}
                 <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
@@ -456,11 +430,10 @@ export default function EconomicEventDetailPage() {
                                 <h3 className="text-lg font-black text-[#00008B] tracking-tight">
                                     FinAi Historical Archive Grafiği
                                 </h3>
-                                <p className="text-xs text-slate-400 font-bold">Supabase Kalıcı Veritabanından Doğrulanan Gerçek Kayıtlar</p>
+                                <p className="text-xs text-slate-400 font-bold">Kalıcı Veritabanından Doğrulanan Gerçek Kayıtlar</p>
                             </div>
                         </div>
 
-                        {/* Zaman Aralığı Butonları */}
                         <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
                             {[
                                 { id: '12m', label: 'Son 12 Dönem' },
@@ -480,10 +453,9 @@ export default function EconomicEventDetailPage() {
                         </div>
                     </div>
 
-                    {/* GERÇEK VERİ YETERLİLİK KONTROLÜ */}
                     {loadingHistory ? (
                         <div className="h-40 flex items-center justify-center text-xs font-bold text-slate-400">
-                            FinAi Historical Archive veritabanı sorgulanıyor...
+                            Historical Archive verileri sorgulanıyor...
                         </div>
                     ) : !hasEnoughRealData ? (
                         <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center space-y-2">
@@ -533,9 +505,8 @@ export default function EconomicEventDetailPage() {
                     )}
                 </div>
 
-                {/* 12. GRAFİK NASIL OKUNUR? (3 EĞİTİM KARTI: YÖN, DEĞİŞİM HIZI, BAĞLAM) & 13. SON DÖNEMDE NE DEĞİŞTİ? */}
+                {/* GRAFİK NASIL OKUNUR? & SON DÖNEMDE NE DEĞİŞTİ? */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Grafik Nasıl Okunur? */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                         <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
                             <BookOpen className="w-4 h-4 text-[#00008B]" /> Grafik Nasıl Okunur?
@@ -562,7 +533,6 @@ export default function EconomicEventDetailPage() {
                         </div>
                     </div>
 
-                    {/* Son Dönemde Ne Değişti? */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                         <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
                             <Activity className="w-4 h-4 text-[#00008B]" /> Son Dönemde Ne Değişti?
@@ -581,9 +551,8 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 14. NE ÇIKARAMAYIZ? & 15. FİNANSAL OKURYAZARLIK */}
+                {/* NE ÇIKARAMAYIZ? & FİNANSAL OKURYAZARLIK */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Ne Çıkaramayız? */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
                         <div className="flex items-center gap-2 text-rose-600">
                             <AlertTriangle className="w-5 h-5 text-rose-600" />
@@ -594,7 +563,6 @@ export default function EconomicEventDetailPage() {
                         </p>
                     </div>
 
-                    {/* Finansal Okuryazarlık */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
                         <div className="flex items-center gap-2 text-[#00008B]">
                             <BookOpen className="w-5 h-5 text-[#00008B]" />
@@ -611,7 +579,7 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 17. İLGİLİ GÖSTERGELER ("Bu veriyi anlamak için bunlara da bak") */}
+                {/* İLGİLİ GÖSTERGELER */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                     <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
                         <Activity className="w-4 h-4 text-[#00008B]" /> Bu Veriyi Anlamak İçin Bunlara Da Bak
@@ -630,7 +598,7 @@ export default function EconomicEventDetailPage() {
                 </div>
             </div>
 
-            {/* 16. TEKNİK TERİMLER (ⓘ TOOLTIP MODAL) */}
+            {/* TEKNİK TERİMLER TOOLTIP MODAL */}
             {activeTooltip && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 z-50">
                     <div className="bg-white text-[#00008B] p-6 rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl space-y-4">

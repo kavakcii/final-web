@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { 
-    ArrowLeft, Calendar as CalendarIcon, Loader2, Check, Filter, Database, Zap, Sparkles, 
-    ChevronLeft, ChevronRight, RotateCcw, Search, X, Tag, Globe, SlidersHorizontal, Clock, AlertCircle, Info, ArrowRight, Flame
+    ArrowLeft, Calendar as CalendarIcon, Loader2, Check, Filter, 
+    ChevronLeft, ChevronRight, RotateCcw, Search, X, Tag, Globe, SlidersHorizontal, Clock, Info, ArrowRight, Flame
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,6 @@ import {
 import { calculateBackendDifferences } from "@/lib/finai-calendar-analysis-engine";
 import { INDICATOR_PROFILES_DATABASE } from "@/lib/indicator-profiles";
 
-import CalendarSummary from "@/components/calendar/CalendarSummary";
 import FeaturedEconomicEvents from "@/components/calendar/FeaturedEconomicEvents";
 import EconomicEventCard from "@/components/calendar/EconomicEventCard";
 import CalendarEmptyState from "@/components/calendar/CalendarEmptyState";
@@ -47,7 +46,6 @@ export default function EconomicCalendarPage() {
     const router = useRouter();
     const [events, setEvents] = useState<CatalogCalendarEvent[]>(ECONOMIC_CALENDAR_CATALOG);
     const [loading, setLoading] = useState(false);
-    const [dataSource, setDataSource] = useState<string>('live-feed');
     const [now, setNow] = useState<Date>(new Date());
 
     // Highlight effect for newly updated events
@@ -60,7 +58,7 @@ export default function EconomicCalendarPage() {
     const [searchQuery, setSearchQuery] = useState<string>('');
 
     // Time & Date Navigation State
-    const [timeTab, setTimeTab] = useState<'today' | 'tomorrow' | 'week0' | 'week1' | 'week2' | 'custom' | 'all'>('all');
+    const [timeTab, setTimeTab] = useState<'today' | 'tomorrow' | 'custom' | 'all'>('all');
     const [startDate, setStartDate] = useState<string>('');
     const [endDate, setEndDate] = useState<string>('');
 
@@ -91,7 +89,7 @@ export default function EconomicCalendarPage() {
         if (qParam !== null) setSearchQuery(qParam);
 
         const tabParam = params.get('tab');
-        if (tabParam && ['today', 'tomorrow', 'week0', 'week1', 'week2', 'custom', 'all'].includes(tabParam)) {
+        if (tabParam && ['today', 'tomorrow', 'custom', 'all'].includes(tabParam)) {
             setTimeTab(tabParam as any);
         }
 
@@ -145,8 +143,6 @@ export default function EconomicCalendarPage() {
             }
             const res = await fetch(url);
             const json = await res.json();
-            
-            if (json.source) setDataSource(json.source);
 
             if (json.data && Array.isArray(json.data) && json.data.length > 0) {
                 const updatedIds = new Set<string>();
@@ -172,7 +168,6 @@ export default function EconomicCalendarPage() {
             }
         } catch (err) {
             console.error("Calendar page fetch error:", err);
-            setDataSource('fallback-active');
         } finally {
             setLoading(false);
         }
@@ -311,7 +306,13 @@ export default function EconomicCalendarPage() {
 
         const result = events.filter(e => {
             if (!selectedCountries.includes(e.country)) return false;
-            if (impactFilter !== 'all' && e.impact !== impactFilter) return false;
+            
+            // ETKİ FİLTRESİ
+            if (impactFilter !== 'all') {
+                if (impactFilter === 'high' && !(e.impact === 'high' || e.impact === 'critical')) return false;
+                if (impactFilter === 'medium' && (e.impact as string) !== 'medium') return false;
+                if (impactFilter === 'low' && (e.impact as string) !== 'low') return false;
+            }
 
             if (normQuery !== '') {
                 const normEventName = normalizeText(e.event);
@@ -358,36 +359,14 @@ export default function EconomicCalendarPage() {
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-[#00008B] w-full mx-auto relative overflow-hidden">
             <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6 md:px-10 lg:py-8 space-y-6 relative z-10 mb-20">
-                {/* 4. HEADER BÖLÜMÜ */}
-                <div className="flex flex-wrap items-center justify-between gap-4">
+                {/* Navigation Top Bar */}
+                <div className="flex items-center justify-between">
                     <Link
                         href="/dashboard"
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-slate-200 text-[#00008B] font-bold text-xs shadow-sm hover:bg-slate-100 transition-all"
                     >
                         <ArrowLeft className="w-4 h-4" /> Ana Sayfaya Dön
                     </Link>
-
-                    {/* Data Source Status Badges */}
-                    <div className="flex items-center gap-2">
-                        {dataSource === 'live-feed' && (
-                            <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-2xl border border-emerald-200">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                                CANLI AKIŞ AKTİF
-                            </span>
-                        )}
-                        {dataSource === 'server-cache' && (
-                            <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-[#00008B] bg-blue-50 px-3 py-1 rounded-2xl border border-blue-200">
-                                <Zap className="w-3.5 h-3.5 text-[#00008B]" />
-                                SUNUCU ÖNBELLEĞİ
-                            </span>
-                        )}
-                        {dataSource === 'database-history' && (
-                            <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-purple-700 bg-purple-50 px-3 py-1 rounded-2xl border border-purple-200">
-                                <Database className="w-3.5 h-3.5 text-purple-600" />
-                                KALICI VERİTABANI GEÇMİŞİ
-                            </span>
-                        )}
-                    </div>
                 </div>
 
                 {/* Page Title & Subtitle */}
@@ -396,21 +375,18 @@ export default function EconomicCalendarPage() {
                         EKONOMİK TAKVİM
                     </h1>
                     <p className="text-xs font-bold text-slate-500">
-                        Türkiye, ABD, Euro Bölgesi ve İngiltere'nin ekonomik gündemini ve göstergelerini takip edin.
+                        Türkiye, ABD, Euro Bölgesi ve İngiltere'nin ekonomik gündemini takip edin.
                     </p>
                 </div>
 
-                {/* 5. BUGÜN EKONOMİDE ÖZETİ COMPONENT */}
-                <CalendarSummary events={filteredEvents} selectedCountriesCount={selectedCountries.length} />
-
-                {/* 6. ÖNE ÇIKAN YÜKSEK ETKİLİ VERİLER BANNER */}
+                {/* ÖNE ÇIKAN YÜKSEK ETKİLİ VERİLER BANNER */}
                 <FeaturedEconomicEvents events={filteredEvents} />
 
-                {/* 7. SEGMENTED ÜLKE VE TARİH KONTROLÜ */}
+                {/* DÜZENLENMİŞ VE YENİLENMİŞ FİLTRELER HİYERARŞİSİ */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
-                    {/* Ülke Segmented Control */}
+                    {/* 1. Ülke Seçimi */}
                     <div className="space-y-2">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Ülke & Bölge Seçimi</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Ülke Seçimi</span>
                         <div className="flex flex-wrap items-center gap-2">
                             <button
                                 onClick={toggleAllCountries}
@@ -444,44 +420,108 @@ export default function EconomicCalendarPage() {
                         </div>
                     </div>
 
-                    {/* Tarih Kısayolları & Arama Çubuğu */}
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-150">
-                        {/* Tarih Tabs */}
-                        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-                            {[
-                                { id: 'all', label: 'Tüm Tarihler' },
-                                { id: 'today', label: 'BUGÜN' },
-                                { id: 'tomorrow', label: 'Yarın' }
-                            ].map(tab => (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setTimeTab(tab.id as any)}
-                                    className={`px-3.5 py-1.5 text-xs font-black rounded-xl transition-all ${
-                                        timeTab === tab.id 
-                                            ? 'bg-[#00008B] text-white shadow-sm' 
-                                            : 'text-slate-600 hover:text-[#00008B]'
-                                    }`}
-                                >
-                                    {tab.label}
-                                </button>
-                            ))}
+                    {/* 2. Etki Seviyesi Filtresi (GERİ EKLENDİ) & Tarih Kısayolları */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-150">
+                        {/* Etki Seviyesi */}
+                        <div className="space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Etki Seviyesi</span>
+                            <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                                {[
+                                    { id: 'all', label: 'Tümü' },
+                                    { id: 'high', label: 'Yüksek Etki' },
+                                    { id: 'medium', label: 'Orta Etki' },
+                                    { id: 'low', label: 'Düşük Etki' }
+                                ].map(imp => (
+                                    <button
+                                        key={imp.id}
+                                        onClick={() => setImpactFilter(imp.id as any)}
+                                        className={`flex-1 py-1.5 text-xs font-black rounded-xl transition-all ${
+                                            impactFilter === imp.id 
+                                                ? 'bg-[#00008B] text-white shadow-sm' 
+                                                : 'text-slate-600 hover:text-[#00008B]'
+                                        }`}
+                                    >
+                                        {imp.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Anlık Arama */}
-                        <div className="relative flex-1 min-w-[200px] max-w-md">
-                            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Gösterge adı veya duyuru ara..."
-                                className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-[#00008B] focus:outline-none focus:border-[#00008B]"
-                            />
+                        {/* Tarih Seçimi (Bugün, Yarın, Tarih Aralığı) */}
+                        <div className="space-y-2">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Tarih Seçimi</span>
+                            <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                                {[
+                                    { id: 'today', label: 'Bugün' },
+                                    { id: 'tomorrow', label: 'Yarın' },
+                                    { id: 'custom', label: 'Tarih Aralığı' },
+                                    { id: 'all', label: 'Tümü' }
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setTimeTab(tab.id as any)}
+                                        className={`flex-1 py-1.5 text-xs font-black rounded-xl transition-all ${
+                                            timeTab === tab.id 
+                                                ? 'bg-[#00008B] text-white shadow-sm' 
+                                                : 'text-slate-600 hover:text-[#00008B]'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
+                    </div>
+
+                    {/* Tarih Aralığı Date Pickers (Custom Seçildiğinde) */}
+                    {timeTab === 'custom' && (
+                        <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-3 pt-3">
+                            <span className="text-xs font-black text-[#00008B] flex items-center gap-1.5">
+                                <CalendarIcon className="w-4 h-4 text-blue-600" /> Özel Tarih Aralığı Seçin
+                            </span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Başlangıç Tarihi</label>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-[#00008B] focus:outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Bitiş Tarihi</label>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        min={startDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-[#00008B] focus:outline-none"
+                                    />
+                                </div>
+                            </div>
+                            {startDate && endDate && (
+                                <p className="text-xs font-bold text-blue-700">
+                                    Seçilen Aralık: {startDate.split('-').reverse().join('.')} — {endDate.split('-').reverse().join('.')}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Anlık Arama */}
+                    <div className="relative pt-2">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Gösterge adı veya duyuru ara..."
+                            className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-[#00008B] focus:outline-none focus:border-[#00008B]"
+                        />
                     </div>
                 </div>
 
-                {/* 24. FİLTRE SONUÇ ÖZET BARI */}
+                {/* FİLTRE SONUÇ ÖZET BARI */}
                 <div className="flex items-center justify-between px-2 text-xs font-bold text-slate-500">
                     <span className="flex items-center gap-1.5">
                         <SlidersHorizontal className="w-3.5 h-3.5 text-[#00008B]" />
@@ -492,7 +532,7 @@ export default function EconomicCalendarPage() {
                     )}
                 </div>
 
-                {/* 18. BOŞ GÜN VEYA TAKVİM İÇERİĞİ */}
+                {/* BOŞ GÜN VEYA TAKVİM İÇERİĞİ */}
                 {selectedCountries.length === 0 || filteredEvents.length === 0 ? (
                     <CalendarEmptyState onResetFilters={clearAllFilters} />
                 ) : (
@@ -515,7 +555,7 @@ export default function EconomicCalendarPage() {
                             })}
                         </div>
 
-                        {/* DESKTOP GÖRÜNÜM (PROFESYONEL VE TEMİZ TABLO FORMATI) */}
+                        {/* DESKTOP GÖRÜNÜM (TEMİZ VE SADE TABLO FORMATI) */}
                         <div className="hidden md:block bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
@@ -582,7 +622,7 @@ export default function EconomicCalendarPage() {
                                                             {item.event}
                                                         </span>
 
-                                                        {/* Backend Objektif Karşılaştırma Badge */}
+                                                        {/* Sadeleştirilmiş Nesnel Fark Badge (Mekanik Puan İfadeleri Kaldırıldı) */}
                                                         {calc.forecastDiffText && (
                                                             <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 inline-block mt-1">
                                                                 {calc.forecastDiffText}

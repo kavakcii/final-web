@@ -18,7 +18,7 @@ export interface FinAiNarrativeAnalysis {
     status: 'draft' | 'published' | 'superseded' | 'failed';
     generatedAt: string;
     model: string;
-    shortExecutiveSummary: string; // FİNAİ'NİN KISA DEĞERLENDİRMESİ (YENİ 7.1 SEVİYESİ)
+    shortExecutiveSummary: string;
     whatHappened: string; // 01 — NE OLDU?
     whatItMeans: string; // 02 — NE ANLAMA GELİYOR?
     potentialImpacts: string; // 03 — NELERİ ETKİLEYEBİLİR?
@@ -33,7 +33,7 @@ function parseNumber(str?: string): number | null {
 }
 
 /**
- * 7.1 BACKEND CALCULATION LAYER (AI Yapmayacak, Objektif Backend Hesaplayacak)
+ * BACKEND CALCULATION LAYER (Objektif ve Sade Kullanıcı Dili)
  */
 export function calculateBackendDifferences(item: CatalogCalendarEvent): BackendCalculations {
     const actualNum = parseNumber(item.actual);
@@ -53,11 +53,11 @@ export function calculateBackendDifferences(item: CatalogCalendarEvent): Backend
         const diff = Math.abs(actualNum - forecastNum);
         forecastDiffNumber = Number(diff.toFixed(2));
         if (actualNum > forecastNum) {
-            forecastDiffText = `Beklentinin ${forecastDiffNumber} puan üzerinde`;
+            forecastDiffText = `Beklentinin üzerinde açıklandı.`;
         } else if (actualNum < forecastNum) {
-            forecastDiffText = `Beklentinin ${forecastDiffNumber} puan altında`;
+            forecastDiffText = `Beklentinin altında açıklandı.`;
         } else {
-            forecastDiffText = `Beklentiyle birebir aynı gerçekleşti`;
+            forecastDiffText = `Beklentiyle uyumlu açıklandı.`;
         }
     }
 
@@ -65,11 +65,11 @@ export function calculateBackendDifferences(item: CatalogCalendarEvent): Backend
         const diff = Math.abs(actualNum - previousNum);
         previousDiffNumber = Number(diff.toFixed(2));
         if (actualNum > previousNum) {
-            previousDiffText = `Önceki açıklamaya göre ${previousDiffNumber} puan yüksek`;
+            previousDiffText = `Önceki açıklamaya göre yüksek açıklandı.`;
         } else if (actualNum < previousNum) {
-            previousDiffText = `Önceki açıklamaya göre ${previousDiffNumber} puan geriledi`;
+            previousDiffText = `Önceki açıklamaya göre geriledi.`;
         } else {
-            previousDiffText = `Önceki açıklama seviyesini korudu`;
+            previousDiffText = `Önceki açıklama seviyesini korudu.`;
         }
     }
 
@@ -86,7 +86,6 @@ export function calculateBackendDifferences(item: CatalogCalendarEvent): Backend
 
 /**
  * FİNAİ INTELLIGENCE ANALİZ ÜRETİCİ
- * Şartlı, objektif ve kesin yatırım tavsiyesi içermeyen dil kuralları ile.
  */
 export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativeAnalysis {
     const calc = calculateBackendDifferences(item);
@@ -98,15 +97,15 @@ export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativ
     const obsId = item.id || `obs_${item.country}_${item.time.replace(':', '')}`;
 
     if (!calc.hasActual) {
-        const shortExecutiveSummary = `Açıklanması beklenen ${profile.name} verisi için piyasa konsensüs tahmini ${item.forecast || 'belirtilmedi'} seviyesindedir. Önceki dönem gerçekleşmesi ${item.previous || 'bulunmamaktadır'}. Veri açıklandığında beklenti ile gerçekleşme arasındaki fark makroekonomik duruş üzerinde belirleyici olabilir.`;
+        const shortExecutiveSummary = `Açıklanması beklenen ${profile.name} verisi için piyasa konsensüs tahmini ${item.forecast || 'belirtilmedi'} seviyesindedir. Önceki dönem gerçekleşmesi ${item.previous || 'bulunmamaktadır'}. Veri açıklandığında beklenti ile gerçekleşme arasındaki uyum makroekonomik duruş üzerinde belirleyici olabilir.`;
 
         return {
-            analysisId: `anl_${obsId}_v2`,
+            analysisId: `anl_${obsId}`,
             observationId: obsId,
-            version: 'v2.0',
+            version: '1.0',
             status: 'published',
             generatedAt: nowIso,
-            model: 'FinAi-Economic-Intelligence-Engine-v2',
+            model: 'FinAi-Engine',
             shortExecutiveSummary,
             whatHappened: `Veri henüz açıklanmadı. Piyasa beklentisi ${item.forecast || 'belirtilmedi'} seviyesindedir.`,
             whatItMeans: `Verinin açıklanmasıyla birlikte ${profile.category.toLowerCase()} patikasındaki mevcut görünüm netlik kazanacaktır.`,
@@ -115,20 +114,20 @@ export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativ
         };
     }
 
-    // FİNAİ'NİN KISA DEĞERLENDİRMESİ (Dinamik Özet Metin)
+    // FİNAİ'NİN KISA DEĞERLENDİRMESİ (Sade Kullanıcı Dili)
     let shortExecutiveSummary = `Açıklanan ${profile.name} ${item.actual} gerçekleşerek `;
     if (calc.forecastDiffText) {
-        shortExecutiveSummary += `${item.forecast || 'tahmin'}'lik piyasa beklentisinin ${calc.forecastDiffNumber} puan ${parseNumber(item.actual)! < parseNumber(item.forecast)! ? 'altında kalmıştır' : parseNumber(item.actual)! > parseNumber(item.forecast)! ? 'üzerinde gerçekleşmiştir' : 'paralelinde seyretmiştir'}. `;
+        shortExecutiveSummary += `${calc.forecastDiffText.toLowerCase()} (Piyasa beklentisi: ${item.forecast}). `;
     }
     if (calc.previousDiffText) {
-        shortExecutiveSummary += `Önceki döneme (${item.previous}) göre ise ${calc.previousDiffNumber} puanlık bir ${parseNumber(item.actual)! > parseNumber(item.previous)! ? 'yükseliş' : parseNumber(item.actual)! < parseNumber(item.previous)! ? 'gerileme' : 'değişimsizlik'} görülmüştür. `;
+        shortExecutiveSummary += `${calc.previousDiffText} (Önceki dönem: ${item.previous}). `;
     }
     shortExecutiveSummary += `Bu sonuç, mevcut koşullar altında ${profile.category.toLowerCase()} patikasının beklentiye kıyasla daha ${parseNumber(item.actual)! < (parseNumber(item.forecast) || 0) ? 'sınırlı' : 'güçlü'} olduğunu gösterirken, tek başına kalıcı eğilimin değiştiği sonucunu ortaya koymaz.`;
 
     // 01 — NE OLDU?
     let whatHappened = `Açıklanan ${profile.name} değeri ${item.actual} seviyesinde gerçekleşti. `;
     if (calc.forecastDiffText) {
-        whatHappened += `Bu sonuç ${calc.forecastDiffText.toLowerCase()} gerçekleştiğine işaret ediyor (Piyasa Beklentisi: ${item.forecast}). `;
+        whatHappened += `${calc.forecastDiffText} (Piyasa Beklentisi: ${item.forecast}). `;
     }
     if (calc.previousDiffText) {
         whatHappened += `${calc.previousDiffText} (Önceki Veri: ${item.previous}).`;
@@ -151,12 +150,12 @@ export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativ
     const pointsToConsider = `Ancak tek bir dönem açıklaması, genel trendin kalıcı olarak değiştiğini kanıtlamak için yeterli olmayabilir. Gelecek dönem verileri ve yardımcı makro göstergelerle birlikte değerlendirilmelidir.`;
 
     return {
-        analysisId: `anl_${obsId}_v2`,
+        analysisId: `anl_${obsId}`,
         observationId: obsId,
-        version: 'v2.0',
+        version: '1.0',
         status: 'published',
         generatedAt: nowIso,
-        model: 'FinAi-Economic-Intelligence-Engine-v2',
+        model: 'FinAi-Engine',
         shortExecutiveSummary,
         whatHappened,
         whatItMeans,
