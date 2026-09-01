@@ -72,13 +72,13 @@ export function EconomicCalendarWidget({ isDetailedPage = false }: EconomicCalen
         year: 'numeric'
     });
 
-    // Sadece Bugünün tarihine ait olan haberleri filtrele
+    // Sadece Bugünün tarihine ait olan haberleri filtrele ve 00:00 -> 23:59 kronolojik sırala
     const filteredEvents = events.filter(e => {
         if (e.dateFormatted) {
             return e.dateFormatted === todayFormattedDate;
         }
         return e.isToday ?? true;
-    });
+    }).sort((a, b) => a.time.localeCompare(b.time));
 
     // Etki Sinyal Barları (Tam Net, Beyaz & Yüksek Kontrastlı)
     const renderSignalBars = (impact: string) => {

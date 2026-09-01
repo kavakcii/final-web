@@ -6,11 +6,66 @@ import { CalendarDbService } from '@/lib/calendar-db-service';
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-const CACHE_KEY = 'economic-calendar:combined';
+const DEFAULT_CACHE_KEY = 'economic-calendar:combined';
 
 export async function GET(request: NextRequest) {
-    // 1. FRESH CACHE KONTROLÜ (Cache HIT)
-    const cachedData = CalendarCache.get<any[]>(CACHE_KEY);
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    // 2. OPSİYONEL TARİH ARALIĞI SORGU DESTEĞİ (Geçmiş Tarih Sorgusu)
+    if (startDate && endDate) {
+        const rangeCacheKey = `economic-calendar:range:${startDate}:${endDate}`;
+        const cachedRange = CalendarCache.get<any[]>(rangeCacheKey);
+        
+        if (cachedRange) {
+            return NextResponse.json(
+                { success: true, source: 'history-cache', data: cachedRange },
+                { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+            );
+        }
+
+        // Supabase DB'den geçmiş verileri getir
+        const dbEvents = await CalendarDbService.getEventsByDateRange(startDate, endDate);
+        if (dbEvents && dbEvents.length > 0) {
+            const formattedDbEvents = dbEvents.map(d => {
+                const parts = d.event_date.split('-');
+                const dateFormatted = parts.length === 3 ? `${parts[2]}.${parts[1]}.${parts[0]}` : d.event_date;
+                const todayIso = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+                
+                return {
+                    id: d.id,
+                    dateFormatted,
+                    time: d.event_time,
+                    country: d.country_code,
+                    flag: d.flag,
+                    event: d.event_name,
+                    impact: d.impact_level,
+                    previous: d.previous_value || '-',
+                    forecast: d.forecast_value || '-',
+                    actual: d.is_released ? (d.actual_value || '-') : 'Bekleniyor',
+                    isToday: d.event_date === todayIso
+                };
+            });
+
+            // 00:00 -> 23:59 Kronolojik Sıralama (Tarih + Saat)
+            formattedDbEvents.sort((a, b) => {
+                const partsA = a.dateFormatted.split('.').reverse().join('-');
+                const partsB = b.dateFormatted.split('.').reverse().join('-');
+                if (partsA !== partsB) return partsA.localeCompare(partsB);
+                return a.time.localeCompare(b.time);
+            });
+
+            CalendarCache.set(rangeCacheKey, formattedDbEvents, 30000);
+            return NextResponse.json(
+                { success: true, source: 'database-history', data: formattedDbEvents },
+                { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+            );
+        }
+    }
+
+    // 1. FRESH CACHE KONTROLÜ (Mevcut Standart Akış)
+    const cachedData = CalendarCache.get<any[]>(DEFAULT_CACHE_KEY);
     if (cachedData) {
         return NextResponse.json(
             { success: true, source: 'server-cache', data: cachedData },
@@ -18,8 +73,8 @@ export async function GET(request: NextRequest) {
         );
     }
 
-    // 6. IN-FLIGHT PROMISE DEDUPLICATION (Aynı process içinde concurrent istekleri tekilleştir)
-    const existingInFlight = CalendarCache.getInFlightPromise<any[]>(CACHE_KEY);
+    // IN-FLIGHT PROMISE DEDUPLICATION
+    const existingInFlight = CalendarCache.getInFlightPromise<any[]>(DEFAULT_CACHE_KEY);
     if (existingInFlight) {
         try {
             const data = await existingInFlight;
@@ -32,14 +87,21 @@ export async function GET(request: NextRequest) {
         } catch {}
     }
 
-    // 15. MERKEZİ SOURCE REQUEST (In-Flight Promise Wrap)
+    // MERKEZİ SOURCE REQUEST (In-Flight Promise Wrap)
     const fetchPromise = (async () => {
         try {
             const events = await scrapeEconomicCalendar();
 
-            // 12. SOURCE RESPONSE VALIDATION
             if (CalendarCache.validateSourceResponse(events)) {
-                CalendarCache.set(CACHE_KEY, events);
+                // Kronolojik Sıralama (00:00 -> 23:59)
+                events.sort((a, b) => {
+                    const partsA = a.dateFormatted.split('.').reverse().join('-');
+                    const partsB = b.dateFormatted.split('.').reverse().join('-');
+                    if (partsA !== partsB) return partsA.localeCompare(partsB);
+                    return a.time.localeCompare(b.time);
+                });
+
+                CalendarCache.set(DEFAULT_CACHE_KEY, events);
                 return events;
             } else {
                 console.warn("[CALENDAR API WARNING] Source response validation failed. Falling back to DB.");
@@ -48,7 +110,7 @@ export async function GET(request: NextRequest) {
             console.error("[CALENDAR API ERROR] Live fetch failed:", e);
         }
 
-        // 8. DATABASE FALLBACK (Dış API başarısızsa Supabase DB'den kesintisiz getir)
+        // DATABASE FALLBACK
         const today = new Date();
         const startIso = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7).toISOString().split('T')[0];
         const endIso = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 21).toISOString().split('T')[0];
@@ -68,14 +130,23 @@ export async function GET(request: NextRequest) {
                 actual: d.is_released ? (d.actual_value || '-') : 'Bekleniyor',
                 isToday: d.event_date === today.toISOString().split('T')[0]
             }));
-            CalendarCache.set(CACHE_KEY, formattedDbEvents, 30000);
+
+            // Kronolojik Sıralama (00:00 -> 23:59)
+            formattedDbEvents.sort((a, b) => {
+                const partsA = a.dateFormatted.split('.').reverse().join('-');
+                const partsB = b.dateFormatted.split('.').reverse().join('-');
+                if (partsA !== partsB) return partsA.localeCompare(partsB);
+                return a.time.localeCompare(b.time);
+            });
+
+            CalendarCache.set(DEFAULT_CACHE_KEY, formattedDbEvents, 30000);
             return formattedDbEvents;
         }
 
         return null;
     })();
 
-    CalendarCache.setInFlightPromise(CACHE_KEY, fetchPromise);
+    CalendarCache.setInFlightPromise(DEFAULT_CACHE_KEY, fetchPromise);
 
     try {
         const resultData = await fetchPromise;
