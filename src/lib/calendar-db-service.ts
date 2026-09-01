@@ -25,6 +25,18 @@ export interface DbEconomicCalendarEvent {
     last_checked_at?: string;
 }
 
+export interface SyncStats {
+    fetched_count: number;
+    inserted_count: number;
+    updated_count: number;
+    unchanged_count: number;
+    failed_count: number;
+    duplicate_prevented_count: number;
+    sync_started_at: string;
+    sync_completed_at: string;
+    duration_ms: number;
+}
+
 /**
  * 3. BENZERSİZ EKONOMİK OLAY KİMLİĞİ ÜRETİCİ
  * Aynı ülke ve aynı saatte birden fazla farklı ekonomik gösterge açıklandığında
@@ -60,9 +72,9 @@ export const CalendarDbService = {
     /**
      * 8. VERİ GÜNCELLEME VE DUPLICATE KORUMA MANTIĞI
      * Aynı olay tekrar çekildiğinde yeni kayıt açmaz, mevcut kaydı günceller.
-     * Revizyon takibi yapar (Previous/Actual değiştiğinde updated_at güncellenir).
+     * Revizyon takibi yapar (Previous/Actual/Forecast değiştiğinde updated_at güncellenir).
      */
-    saveOrUpdateEvent: async (event: CatalogCalendarEvent): Promise<boolean> => {
+    saveOrUpdateEvent: async (event: CatalogCalendarEvent): Promise<{ status: 'inserted' | 'updated' | 'unchanged' | 'failed' }> => {
         try {
             const isoDate = formatToIsoDate(event.dateFormatted);
             const eventId = event.id && !event.id.includes('_1') ? event.id : generateDeterministicEventId(event.country, event.event, event.dateFormatted, event.time);
@@ -113,34 +125,69 @@ export const CalendarDbService = {
                             last_checked_at: nowIso
                         })
                         .eq('id', eventId);
+                    return { status: 'updated' };
                 } else {
                     await supabaseAdmin
                         .from('economic_calendar_events')
                         .update({ last_checked_at: nowIso })
                         .eq('id', eventId);
+                    return { status: 'unchanged' };
                 }
             } else {
                 // Yeni kayıt oluştur
                 await supabaseAdmin
                     .from('economic_calendar_events')
                     .insert([{ ...dbPayload, created_at: nowIso }]);
+                return { status: 'inserted' };
             }
-
-            return true;
         } catch (e) {
-            // Veritabanı hatası durumunda uygulamanın çökmesini engeller
             console.error("Calendar DB sync info:", e);
-            return false;
+            return { status: 'failed' };
         }
     },
 
     /**
-     * Toplu Veri Senkronizasyonu
+     * Otomatik Senkronizasyon ve Detaylı İstatistik Üretici
      */
-    batchSaveEvents: async (events: CatalogCalendarEvent[]) => {
+    syncCalendarData: async (events: CatalogCalendarEvent[]): Promise<SyncStats> => {
+        const syncStartedAt = new Date();
+        const startTimeMs = performance.now();
+
+        let inserted_count = 0;
+        let updated_count = 0;
+        let unchanged_count = 0;
+        let failed_count = 0;
+        let duplicate_prevented_count = 0;
+
         for (const ev of events) {
-            await CalendarDbService.saveOrUpdateEvent(ev);
+            const res = await CalendarDbService.saveOrUpdateEvent(ev);
+            if (res.status === 'inserted') inserted_count++;
+            else if (res.status === 'updated') {
+                updated_count++;
+                duplicate_prevented_count++;
+            } else if (res.status === 'unchanged') {
+                unchanged_count++;
+                duplicate_prevented_count++;
+            } else if (res.status === 'failed') failed_count++;
         }
+
+        const syncCompletedAt = new Date();
+        const duration_ms = Math.round(performance.now() - startTimeMs);
+
+        const stats: SyncStats = {
+            fetched_count: events.length,
+            inserted_count,
+            updated_count,
+            unchanged_count,
+            failed_count,
+            duplicate_prevented_count,
+            sync_started_at: syncStartedAt.toISOString(),
+            sync_completed_at: syncCompletedAt.toISOString(),
+            duration_ms
+        };
+
+        console.log("[CALENDAR SYNC COMPLETED]", stats);
+        return stats;
     },
 
     /**
