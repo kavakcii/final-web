@@ -1,6 +1,7 @@
 import { CatalogCalendarEvent } from './calendar-catalog';
 import { scrapeEconomicCalendar } from './calendar-scraper';
 import { CalendarDbService } from './calendar-db-service';
+import { CalendarCache } from './calendar-cache';
 
 export interface AdaptiveSyncStats {
     fetched_count: number;
@@ -50,9 +51,8 @@ export function getAdaptiveCheckPriority(eventTimeIso: string, isReleased: boole
  */
 export async function runAdaptiveLiveSync(): Promise<AdaptiveSyncStats> {
     const startTimeMs = performance.now();
-    const nowIso = new Date().toISOString();
 
-    // 11. Concurrency Lock Kontrolü (10 saniye içinde iki istek girerse lock uygula)
+    // 11. Concurrency Lock Kontrolü (5 saniye içinde iki istek girerse lock uygula)
     if (isSyncingInFlight || (Date.now() - lastSyncTimestampMs < 5000)) {
         console.log("[CALENDAR ADAPTIVE SYNC] Concurrency lock active, skipping execution.");
         return {
@@ -81,16 +81,15 @@ export async function runAdaptiveLiveSync(): Promise<AdaptiveSyncStats> {
     let updated_count = 0;
     let unchanged_count = 0;
     let failed_count = 0;
-    let source_errors = 0;
 
     try {
         // 1. Kaynaktan Canlı Verileri Çek
         const events: CatalogCalendarEvent[] = await scrapeEconomicCalendar();
         fetched_count = events.length;
 
-        // 17. Stale Data Koruması (Normalde ~40+ event beklenir, <5 gelirse veri bozuk/eksiktir, reddet)
-        if (!events || events.length < 5) {
-            console.warn("[CALENDAR ADAPTIVE SYNC WARNING] Source returned abnormally small dataset. Stale data protection triggered.");
+        // 12. Source Response Validation & Stale Data Protection
+        if (!CalendarCache.validateSourceResponse(events)) {
+            console.warn("[CALENDAR ADAPTIVE SYNC WARNING] Source response validation failed. Skipping DB update.");
             isSyncingInFlight = false;
             return {
                 fetched_count,
@@ -126,6 +125,12 @@ export async function runAdaptiveLiveSync(): Promise<AdaptiveSyncStats> {
             } else if (res.status === 'failed') {
                 failed_count++;
             }
+        }
+
+        // 10 & 13. Cache Invalidation: Eğer verilerde değişiklik veya yeni açıklanan actual varsa önbelleği temizle
+        if (changed_count > 0) {
+            CalendarCache.invalidate('economic-calendar:combined');
+            CalendarCache.set('economic-calendar:combined', events);
         }
 
         const duration_ms = Math.round(performance.now() - startTimeMs);
