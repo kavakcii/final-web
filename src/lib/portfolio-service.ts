@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 export interface Asset {
     id: string;
     symbol: string;
-    type: "STOCK" | "FUND" | "CRYPTO" | "GOLD";
+    type: "STOCK" | "FUND" | "CRYPTO" | "GOLD" | "CASH";
     quantity: number;
     avgCost: number;
     dateAdded: string; // purchase_date
@@ -110,9 +110,100 @@ export const PortfolioService = {
 
     calculateTotalValue: (assets: Asset[], currentPrices: Record<string, number>) => {
         return assets.reduce((total, asset) => {
+            if (asset.type === "CASH" || asset.symbol === "TRY_CASH" || asset.symbol === "NAKİT") {
+                return total + (asset.quantity * asset.avgCost);
+            }
             const price = currentPrices[asset.symbol.toUpperCase()] || asset.avgCost;
             return total + (price * asset.quantity);
         }, 0);
+    },
+
+    /**
+     * Portföydeki Toplam Kullanılabilir Nakit Bakiyesini Çeker
+     */
+    getCashBalance: (assets: Asset[]): number => {
+        const cashAssets = assets.filter(a => a.type === "CASH" || a.symbol === "TRY_CASH" || a.symbol === "NAKİT");
+        return cashAssets.reduce((sum, a) => sum + (a.quantity * a.avgCost), 0);
+    },
+
+    /**
+     * Manuel Nakit Ekleme (DEPOSIT) veya Nakit Çekimi (WITHDRAWAL) İşlemi
+     */
+    addCashTransaction: async (amount: number, type: 'DEPOSIT' | 'WITHDRAWAL') => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Kullanıcı oturumu bulunamadı");
+
+            if (amount <= 0) throw new Error("Geçerli bir tutar giriniz");
+
+            const assets = await PortfolioService.getAssets();
+            const existingCash = assets.find(a => a.type === "CASH" || a.symbol === "TRY_CASH" || a.symbol === "NAKİT");
+
+            const currentCashAmount = existingCash ? (existingCash.quantity * existingCash.avgCost) : 0;
+
+            if (type === 'WITHDRAWAL' && amount > currentCashAmount) {
+                throw new Error(`Yetersiz nakit bakiye! Mevcut nakitiniz: ${currentCashAmount.toLocaleString('tr-TR')} ₺`);
+            }
+
+            const newCashAmount = type === 'DEPOSIT' 
+                ? currentCashAmount + amount 
+                : currentCashAmount - amount;
+
+            if (existingCash) {
+                if (newCashAmount <= 0) {
+                    await PortfolioService.removeAsset(existingCash.id);
+                } else {
+                    await PortfolioService.updateAsset(existingCash.id, {
+                        quantity: newCashAmount,
+                        avgCost: 1
+                    });
+                }
+            } else if (type === 'DEPOSIT') {
+                await PortfolioService.addAsset({
+                    symbol: "NAKİT",
+                    type: "CASH",
+                    quantity: amount,
+                    avgCost: 1,
+                    dateAdded: new Date().toISOString()
+                });
+            }
+
+            return newCashAmount;
+        } catch (error) {
+            console.error('Nakit işlem hatası:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Varlık Satışı (Satılan Tutar Otomatik Portföy Nakit Bakiyesine Aktarılır - Portföy Değeri Düşmez)
+     */
+    sellAssetToCash: async (asset: Asset, sellQuantity: number, sellUnitPrice: number) => {
+        try {
+            if (sellQuantity <= 0 || sellQuantity > asset.quantity) {
+                throw new Error("Geçersiz satış miktarı");
+            }
+
+            const totalProceeds = sellQuantity * sellUnitPrice; // Satıştan elde edilen toplam TL nakit
+
+            // 1. Satılan varlığın miktarını azalt veya pozisyonu tamamen kapat
+            const remainingQuantity = asset.quantity - sellQuantity;
+            if (remainingQuantity <= 0) {
+                await PortfolioService.removeAsset(asset.id);
+            } else {
+                await PortfolioService.updateAsset(asset.id, {
+                    quantity: remainingQuantity
+                });
+            }
+
+            // 2. Elde edilen satılan tutarı otomatik Nakit Bakiyesine aktar (DEPOSIT)
+            await PortfolioService.addCashTransaction(totalProceeds, 'DEPOSIT');
+
+            return totalProceeds;
+        } catch (error) {
+            console.error('Varlık satışı nakit aktarım hatası:', error);
+            throw error;
+        }
     },
 
     saveSnapshot: async (totalValue: number, totalProfit: number, totalCost?: number, assetCount?: number) => {

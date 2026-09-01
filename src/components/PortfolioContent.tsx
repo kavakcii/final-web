@@ -287,6 +287,12 @@ export default function PortfolioPage() {
     const [newItemValues, setNewItemValues] = useState<{ symbol: string, quantity: string, avgCost: string }>({ symbol: '', quantity: '', avgCost: '' });
     const [newItemType, setNewItemType] = useState<Asset["type"]>("STOCK");
 
+    // Nakit Çekme & Yatırma Sistemi (Cash Management) State'leri
+    const [isCashModalOpen, setIsCashModalOpen] = useState(false);
+    const [cashActionType, setCashActionType] = useState<'DEPOSIT' | 'WITHDRAWAL'>('DEPOSIT');
+    const [cashAmountInput, setCashAmountInput] = useState('');
+    const [isCashSubmitting, setIsCashSubmitting] = useState(false);
+
     const searchParams = useSearchParams();
     const focusQuery = searchParams ? searchParams.get("focus") : null;
 
@@ -809,6 +815,33 @@ export default function PortfolioPage() {
         }
     };
 
+    // Portföydeki Kullanılabilir Nakit Bakiyesi
+    const cashBalance = useMemo(() => {
+        return PortfolioService.getCashBalance(assets);
+    }, [assets]);
+
+    // Nakit Çekme & Yatırma İşlem Handler'ı
+    const handleCashTransaction = async () => {
+        const amount = parseFloat(cashAmountInput.replace(',', '.'));
+        if (isNaN(amount) || amount <= 0) {
+            setFeedback({ message: 'Lütfen geçerli bir tutar giriniz.', type: 'error' });
+            return;
+        }
+        setIsCashSubmitting(true);
+        try {
+            await PortfolioService.addCashTransaction(amount, cashActionType);
+            const actionText = cashActionType === 'DEPOSIT' ? 'Nakit portföye aktarıldı' : 'Nakit çekimi başarıyla tamamlandı';
+            setFeedback({ message: `${actionText} (${amount.toLocaleString('tr-TR')} ₺)`, type: 'success' });
+            setIsCashModalOpen(false);
+            setCashAmountInput('');
+            await fetchPortfolioData();
+        } catch (e: any) {
+            setFeedback({ message: e.message || 'Nakit işlemi başarısız', type: 'error' });
+        } finally {
+            setIsCashSubmitting(false);
+        }
+    };
+
     useEffect(() => {
         fetchPortfolioData();
 
@@ -1025,15 +1058,15 @@ export default function PortfolioPage() {
         switch(id) {
             case 'summary':
                 return (
-                    <div className="space-y-4">
-                        {/* TOPLAM VARLIK DEĞERİ KARTI - LACİVERT BG & BEYAZ YAZILAR */}
-                        <div className="bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 shadow-xl shadow-[#00008B]/20 relative overflow-hidden group">
-                            <div className="flex items-center justify-between mb-2">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* TOPLAM PORTFÖY DEĞERİ (YATIRIM VARLIKLARI + NAKİT BAKİYE) */}
+                        <div className="bg-[#00008B] text-white p-6 rounded-3xl shadow-xl shadow-[#00008B]/20 relative overflow-hidden flex flex-col justify-between border border-blue-900/40">
+                            <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
-                                        <Wallet className="w-3.5 h-3.5 text-white" />
+                                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/15">
+                                        <Wallet className="w-4 h-4 text-white" />
                                     </div>
-                                    <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest">Toplam Varlık Değeri</span>
+                                    <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest">Toplam Portföy Değeri</span>
                                 </div>
                             </div>
                             <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter mt-1">
@@ -1041,13 +1074,40 @@ export default function PortfolioPage() {
                             </h2>
                             <div className="flex items-center gap-2 mt-3">
                                 <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <p className="text-white/70 text-[10px] font-semibold uppercase tracking-wider">Canlı Piyasa Değerlemesi</p>
+                                <p className="text-white/70 text-[10px] font-semibold uppercase tracking-wider">Varlıklar + Kullanılabilir Nakit</p>
                             </div>
                         </div>
 
-                        {/* NET KÂR / ZARAR KARTI - KARDA YEŞİL, ZARARDA KIRMIZI BG & BEYAZ YAZILAR */}
+                        {/* KULLANILABİLİR NAKİT BAKİYE KARTI & NAKİT İŞLEMLERİ */}
+                        <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-6 rounded-3xl shadow-xl shadow-emerald-950/20 relative overflow-hidden flex flex-col justify-between border border-emerald-700/30">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
+                                        <Coins className="w-4 h-4 text-emerald-300" />
+                                    </div>
+                                    <span className="text-emerald-200/90 text-[10px] font-bold uppercase tracking-widest">Portföy Nakit Bakiyesi</span>
+                                </div>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setIsCashModalOpen(true); }}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 border border-emerald-300/40"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Nakit Yatır / Çek
+                                </button>
+                            </div>
+                            <div className="mt-3">
+                                <span className="text-3xl md:text-4xl font-black tracking-tight text-white block">
+                                    {formatCurrency(cashBalance)}
+                                </span>
+                                <p className="text-emerald-300/80 text-[10px] font-medium mt-1">
+                                    Satış gelirleri otomatik nakde aktarılır
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* NET KÂR / ZARAR KARTI */}
                         <div className={cn(
-                            "rounded-3xl p-6 shadow-xl text-white border transition-colors",
+                            "rounded-3xl p-6 shadow-xl text-white border transition-colors flex flex-col justify-between",
                             totalProfit >= 0 
                                 ? "bg-emerald-600 border-emerald-500 shadow-emerald-900/10" 
                                 : "bg-rose-600 border-rose-500 shadow-rose-900/10"
@@ -2674,30 +2734,6 @@ export default function PortfolioPage() {
                 )}
             </AnimatePresence>
 
-            {/* Delete Confirmation Modal */}
-            <AnimatePresence>
-                {deleteConfirm.isOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false })} />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl text-[#00008B]">
-                            <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-100">
-                                <Trash2 className="w-7 h-7 text-rose-600" />
-                            </div>
-                            <h3 className="text-lg font-black text-[#00008B]">Silmeyi Onayla</h3>
-                            <p className="text-xs text-slate-500 font-medium my-3">{deleteConfirm.assetSymbol} varlığı silinecektir. Emin misiniz?</p>
-                            <div className="grid grid-cols-2 gap-3 mt-6">
-                                <button className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition-colors" onClick={() => setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false })}>
-                                    Vazgeç
-                                </button>
-                                <button className="py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl text-xs shadow-lg shadow-rose-600/20 transition-all" onClick={handleDelete}>
-                                    Sil
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
             {/* Add Asset Modal - BRAND THEME REVAMP (VARLIK EKLE MODALI & AKILLI ÖNERİ DROPDOWN KATMANI) */}
             <AnimatePresence>
                 {isModalOpen && (
@@ -2790,7 +2826,7 @@ export default function PortfolioPage() {
                                         <input 
                                             type="number" 
                                             step="any"
-                                            placeholder="2500" 
+                                            placeholder="Maliyet" 
                                             className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 focus:border-[#00008B] transition-all text-sm" 
                                             value={newItemValues.avgCost} 
                                             onChange={e => setNewItemValues({...newItemValues, avgCost: e.target.value})} 
