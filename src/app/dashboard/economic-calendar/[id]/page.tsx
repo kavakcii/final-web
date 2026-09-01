@@ -1,436 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, TrendingUp, TrendingDown, Info, BookOpen, BarChart3, HelpCircle, ShoppingBag, Target, CreditCard, MinusCircle } from "lucide-react";
+import { 
+    ArrowLeft, Calendar as CalendarIcon, Info, BookOpen, BarChart3, HelpCircle, Target, 
+    ChevronDown, ChevronUp, Layers, CheckCircle2, AlertTriangle, ShieldCheck, ArrowRight, Activity, Zap, Sparkles, X
+} from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
-
-// Overview Description Map (Türkçe Özellik Açıklamaları)
-const OVERVIEW_TR_DESCRIPTIONS: Record<string, string> = {
-    "Dış Ticaret Dengesi": "Türkiye dış ticaret dengesi 1947 yılından bu yana açık vermektedir. Türkiye'nin başlıca ihracat kalemi kara taşıtları, tekstil, demir-çelik, giyim ve gıda ürünlerinden oluşurken; ithalat kalemleri makine, ulaşım ekipmanları, işlenmiş mallar, mineral yakıtlar, yağlar ve kimyasallardan oluşmaktadır. En büyük ticaret açıkları Çin, Rusya, Almanya, Güney Kore, İsviçre, Hindistan, İran ve Japonya ile verilerken; en büyük ticaret fazlası ise Irak, BAE, Birleşik Krallık, İsrail, Suriye, Kuzey Kıbrıs ve Azerbaycan ile verilmektedir.",
-    "Aylık Tüketici Fiyat Endeksi (TÜFE)": "Tüketici Fiyat Endeksi (TÜFE), hanehalklarının satın aldığı mal ve hizmet sepetindeki fiyatların ortalama değişimini ölçer. Türkiye'de TÜFE verisi enflasyon oranının ana göstergesidir ve TCMB faiz kararları, mevduat faizleri ile borsa değerlemeleri üzerinde doğrudan etkiye sahiptir.",
-    "Yıllık Enflasyon Oranı (TÜFE)": "Yıllık TÜFE Enflasyonu, son 12 ay içerisindeki tüketici fiyat seviyesinin yıllık bazdaki artış hızını gösterir. Enflasyondaki düşüş (dezenflasyon) süreci piyasalar ve TL varlıkları açısından olumlu algılanır.",
-    "Aylık Üretici Fiyat Endeksi (ÜFE)": "Üretici Fiyat Endeksi (ÜFE), ülke ekonomisinde üretilen malların üretici aşamasındaki fiyat değişimlerini ölçer. ÜFE maliyet artışlarını yansıttığı için ilerleyen aylarda TÜFE enflasyonu üzerinde öncü gösterge niteliğindedir.",
-    "ISM İmalat PMI Endeksi": "ISM İmalat PMI, ABD sanayi ve imalat sektöründeki satınalma yöneticilerinin sipariş, üretim ve istihdam beklentilerini ölçen en önemli makro veridir. 50 üzerindeki değerler sektörde büyümeyi, 50 altı ise daralmayı ifade eder.",
-    "ISM İmalat Fiyat Endeksi": "ISM İmalat Fiyat Endeksi, ABD imalatçılarının hammadde ve üretim girdileri için ödediği fiyat değişimlerini gösterir. Yüksek rakamlar küresel enflasyonist baskıların arttığına işaret eder.",
-    "S&P Global İmalat PMI (Nihai)": "S&P Global İmalat PMI, fabrika üretimi, yeni siparişler, stok seviyeleri ve tedarik sürelerini değerlendirerek sanayi sektörünün sağlık durumunu puanlar.",
-    "Fed Politika Faizi Kararı": "Fed (ABD Merkez Bankası) Politika Faizi Kararı, küresel finansal sistemin en kritik kararıdır. Doların küresel değerini, ons altını, gelişmekte olan ülke para birimlerini ve küresel hisse senedi piyasalarını doğrudan yönlendirir.",
-    "TCMB Politika Faizi Kararı": "TCMB Politika Faizi Kararı, Türkiye Cumhuriyeti Merkez Bankası'nın haftalık repo faiz oranını belirlediği karardır. TL'nin değeri, mevduat ve kredi faizleri ile BIST 100 endeksi üzerinde birinci derecede etkilidir.",
-    "Tarım Dışı İstihdam Değişimi (NFP)": "Tarım Dışı İstihdam (NFP), ABD ekonomisinde tarım sektörü dışındaki yeni yaratılan veya kaybedilen iş sayısını ölçer. Doların gücü ve Fed faiz beklentileri üzerinde en yüksek etkiye sahip veridir.",
-    "İşsizlik Oranı": "İşsizlik Oranı, işgücü içerisindeki işsiz bireylerin yüzdesini gösterir. İstihdam piyasasının genel sağlık durumu hakkında temel göstergedir."
-};
-
-// 3-Mini Card Group Educational Data Map (Veri Nedir ve Ne İşe Yarar?)
-interface EducationThreeCards {
-    dailyLife: string;
-    whatItMeasures: string;
-    walletImpact: string;
-    quickSummary: string;
-}
-
-const THREE_CARD_EDUCATION_MAP: Record<string, EducationThreeCards> = {
-    "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
-        dailyLife: "Düşünün ki her ay marketten ve pazardan aldığınız 50 temel ürünün sepet fiyatıdır. Geçen ay 1.000 TL olan sepet bu ay 1.030 TL olduysa o ayki enflasyon %3'tür.",
-        whatItMeasures: "Cebinizdeki Türk Lirası'nın satın alma gücünün ne kadar hızlı eridiğini veya korunduğunu gösteren ana karnedir.",
-        walletImpact: "Maaş zamlarından ev kiralarına, market etiketlerinden mevduat faizlerine kadar tüm harcama bütçenizi yönlendirir.",
-        quickSummary: "Bu rakam yükselirse market alışverişiniz ve yaşam maliyetiniz pahalılaşır; düştüğünde fiyat artışları yavaşlar."
-    },
-    "Yıllık Enflasyon Oranı (TÜFE)": {
-        dailyLife: "Geçen yılın aynı ayında 1.000 TL olan ürün sepetinin bugün kaç TL olduğunu gösteren 12 aylık toplam fiyat değişimidir.",
-        whatItMeasures: "Ülkedeki fiyatlar genel seviyesinin yıllık bazdaki artış hızını ve paranızın yıllık alım gücü kaybını ölçer.",
-        walletImpact: "Yıllık kira artış oranları, asgari ücret ve emekli zamları doğrudan bu verinin sonucuna göre hesaplanır.",
-        quickSummary: "Yıllık hayat pahalılığının hızını gösterir; düşüşe geçmesi paranın değer kaybının yavaşladığını kanıtlar."
-    },
-    "Aylık Üretici Fiyat Endeksi (ÜFE)": {
-        dailyLife: "Fabrikaların ve imalatçıların hammadde, elektrik ve işçilik için ödediği maliyet sepetidir. Üretim bandından çıkan malın fabrika çıkış fiyatıdır.",
-        whatItMeasures: "Üreticinin sırtındaki maliyet yükünü ölçer. Fabrikadaki maliyet artışı 1-2 ay sonra etiketlere yansıyacağı için TÜFE'nin öncü sinyalidir.",
-        walletImpact: "Fabrika maliyetleri artarsa ilerleyen aylarda tükettiğiniz tüm ürünlere zam geleceğinin haberini verir.",
-        quickSummary: "Üretici maliyetlerinin yönünü gösterir; yüksek ÜFE gelecekteki tüketici zamlarının habercisidir."
-    },
-    "ISM İmalat PMI Endeksi": {
-        dailyLife: "Fabrika ve şirket yöneticilerine yapılan 'Gelecek ay daha çok hammadde alacak mısınız, işçi çıkaracak mısınız?' anketinin sonuç karnesidir.",
-        whatItMeasures: "Sanayide çarkların dönüp dönmediğini ölçer. 50 puan üzerindeki değerler büyümeyi, 50 altı ise daralmayı ifade eder.",
-        walletImpact: "Ekonominin canlı kalmasını ve iş imkanlarının artmasını sağlar; düşük kalırsa şirket karlarını ve borsayı baskılar.",
-        quickSummary: "Sanayide çarkların dönüp dönmediğini fısıldayan ilk erken uyarı göstergesidir."
-    },
-    "S&P Global İmalat PMI (Nihai)": {
-        dailyLife: "İmalat sektöründeki satınalma yöneticilerinin sipariş, üretim ve stok seviyelerine göre verdikleri puanların ortalamasıdır.",
-        whatItMeasures: "Ülke sanayisinin büyüme hızını ve ekonomik aktivite gücünü puanlar.",
-        walletImpact: "Fabrikaların üretim gücünü temsil eder; yüksek puanlar borsa şirketlerinin kârlılığını olumlu etkiler.",
-        quickSummary: "Sanayinin sağlık durumunu puanlayan küresel büyüme göstergesidir."
-    },
-    "Fed Politika Faizi Kararı": {
-        dailyLife: "Dünyanın en büyük Merkez Bankası'nın küresel para musluğunu kısması (faiz artırma) veya vanayı açmasıdır (faiz indirimi).",
-        whatItMeasures: "Piyasadaki borçlanma maliyetini ve Doların küresel değerini belirler.",
-        walletImpact: "Dünya borsalarını, kuyumcudaki Altın fiyatlarını ve Dolar/TL kurunun yönünü doğrudan çizer.",
-        quickSummary: "Küresel para vanasının ayarıdır; yüksek faiz borçlanmayı zorlaştırır, düşük faiz piyasayı coşturur."
-    },
-    "TCMB Politika Faizi Kararı": {
-        dailyLife: "TCMB'nin bankalara para verirken uyguladığı taban faiz oranını belirleyerek piyasadaki para musluğunu ayarlamasıdır.",
-        whatItMeasures: "TL'nin zamansal değerini ve bankaların mevduat/kredi faiz oranlarının tabanını belirler.",
-        walletImpact: "Banka kredi kartı faizlerinizi, konut/taşıt kredilerini ve Borsa İstanbul'un çekiciliğini doğrudan yönlendirir.",
-        quickSummary: "Türkiye ekonomisinin ana vana ayarıdır; faiz artarsa borçlanmak zorlaşır, mevduat getirisi yükselir."
-    },
-    "Tarım Dışı İstihdam Değişimi (NFP)": {
-        dailyLife: "ABD'deki büyük fabrikaların, dükkanların ve şirketlerin o ay kaç bin yeni elemanı işe aldığının resmi karnesidir.",
-        whatItMeasures: "Tarım sektörü dışındaki işgücü piyasasının canlılığını ve iş yaratma kapasitesini ölçer.",
-        walletImpact: "Küresel Dolar gücünü belirler; kuyumcudaki Gram Altın ve Dolar/TL fiyatlarını doğrudan sallar.",
-        quickSummary: "Dünya ekonomisinin iş yaratma gücüdür; yüksek gelirse Dolar güçlenir, Altın gerileyebilir."
-    },
-    "Dış Ticaret Dengesi": {
-        dailyLife: "Ülkenin yurt dışına sattığı mallar (ihracat) ile dışarıdan satın aldığı mallar (ithalat) arasındaki bütçe farkıdır.",
-        whatItMeasures: "Ülkeye giren döviz ile ülkeden çıkan döviz arasındaki net bakiyeyi ölçer. Açık vermek dışarıya borçlanmak demektir.",
-        walletImpact: "Döviz ihtiyacını belirlediği için Dolar ve Euro kurunun üzerindeki baskıyı doğrudan etkiler.",
-        quickSummary: "Ülkenin dış döviz bilançosudur; ticaret açığı arttıkça dövize olan ihtiyaç yükselir."
-    },
-    "İşsizlik Oranı": {
-        dailyLife: "İş aradığı halde bulamayan kişilerin toplam aktif işgücüne olan oranını gösteren halk karnesidir.",
-        whatItMeasures: "İstihdam piyasasının sağlık durumunu ve ekonomik refah seviyesini ölçer.",
-        walletImpact: "Halkın alım gücünü ve tüketim harcamalarını belirler; düşük işsizlik güçlü ekonomi demektir.",
-        quickSummary: "Halkın iş bulma kolaylığını gösterir; düşük işsizlik ekonominin sağlam olduğunu kanıtlar."
-    },
-    "Default": {
-        dailyLife: "Ülke ekonomisindeki üretim, tüketim ve fiyat hareketlerinin genel seyrini gösteren resmi makro veri göstergesidir.",
-        whatItMeasures: "Piyasalardaki ekonomik canlılık düzeyini ve finansal dengeyi ölçer.",
-        walletImpact: "Bireysel birikimlerinizin değerini ve piyasalardaki yatırım kararlarını etkiler.",
-        quickSummary: "Piyasanın genel gidişatını ve ekonomik sağlık durumunu özetleyen temel göstergedir."
-    }
-};
-
-// Widget 2: "Bu Veri Neleri Etkiler?" Data Map (Habere Özel Özel Başlıklar ve İçerikler)
-interface DataEffects {
-    dailyLifeTitle: string;
-    dailyLifeEffect: string;
-    bankingCreditTitle: string;
-    bankingCreditEffect: string;
-    marketAssetsTitle: string;
-    marketAssetsEffect: string;
-}
-
-const DATA_EFFECTS_MAP: Record<string, DataEffects> = {
-    "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
-        dailyLifeTitle: "1. Market Etiketlerini, Ev Kiralarını ve Maaş Zamlarını Etkiler",
-        dailyLifeEffect: "TÜFE enflasyonu doğrudan ev kiranızı, market etiketlerini ve maaş zam oranlarınızı etkiler. Rakam yüksek çıktığında önümüzdeki aylarda alışveriş sepetinizin pahalılaşacağını ve alım gücünüzün azalacağını gösterir.",
-        bankingCreditTitle: "2. Banka Kredi Maliyetlerini ve Vadeli Mevduat Getirilerini Etkiler",
-        bankingCreditEffect: "Merkez Bankası enflasyonu düşürmek için faiz artırdığında; konut, araç ve ihtiyaç kredisi faizleri tırmanır. Kredi çekip ev/araba almak zorlaşır ancak bankadaki vadeli mevduatınızın faiz getirisi yükselir.",
-        marketAssetsTitle: "3. Borsa Hisselerini, Dolar/TL ve Gram Altın Fiyatlarını Etkiler",
-        marketAssetsEffect: "Büyük yatırımcılar paralarını enflasyona karşı korumak için saniyeler içinde karar verir. Yüksek faiz beklentisiyle Borsa İstanbul'daki hisseler kısa vadede satış yiyebilir; Dolar/TL ve kuyumcudaki Gram Altın fiyatlarında yukarı yönlü hareketlenme yaşanır."
-    },
-    "Yıllık Enflasyon Oranı (TÜFE)": {
-        dailyLifeTitle: "1. Yıllık Kira Artış Tavanını ve Asgari Ücret Güncellemelerini Etkiler",
-        dailyLifeEffect: "Yıllık bazdaki ev kiralama artış tavanınızı, asgari ücret ve memur maaş güncellemelerini doğrudan etkiler.",
-        bankingCreditTitle: "2. Bankaların Uzun Vadeli Konut Kredileri ve Mevduat Getirilerini Etkiler",
-        bankingCreditEffect: "Bankaların uzun vadeli konut kredisi faiz oranlarını ve mevduat ürünlerinin reel getirisini etkiler.",
-        marketAssetsTitle: "3. Enflasyondan Korunma Yatırımlarını ve Borsa Varlıklarını Etkiler",
-        marketAssetsEffect: "Yıllık enflasyon faizlerin üzerindeyse parayı korumak için hisse senetleri ve altın yatırımlarına hücum yaşanır."
-    },
-    "Aylık Üretici Fiyat Endeksi (ÜFE)": {
-        dailyLifeTitle: "1. Fabrika Çıkış Fiyatlarını ve İlerleyen Aylardaki Tüketici Zamlarını Etkiler",
-        dailyLifeEffect: "Fabrikaların üretim maliyetlerini etkiler. Yüksek ÜFE 1-2 ay sonra tükettiğiniz tüm ürün ve hizmetlerin raf etiketlerine zam olarak yansır.",
-        bankingCreditTitle: "2. Sanayi Şirketlerinin Ticari Kredi İhtiyacını ve Borçlanmasını Etkiler",
-        bankingCreditEffect: "Şirketlerin borçlanma ihtiyacını etkiler. Üretim maliyetleri artan sanayiciler bankalara daha fazla ticari kredi başvurusu yapar.",
-        marketAssetsTitle: "3. İmalat ve Sanayi Şirketlerinin Kâr Marjları ile Hisselerini Etkiler",
-        marketAssetsEffect: "İmalat şirketlerinin kâr marjlarını etkiler. Yüksek maliyet yükü sanayi hisselerini düşürebilir."
-    },
-    "ISM İmalat PMI Endeksi": {
-        dailyLifeTitle: "1. Fabrika Siparişlerini, İstihdam Canlılığını ve İş İmkânlarını Etkiler",
-        dailyLifeEffect: "İş bulma imkanlarını ve piyasadaki istihdam canlılığını etkiler. Fabrikalar daha çok sipariş aldıkça yeni eleman alımları artar.",
-        bankingCreditTitle: "2. Büyüme Durgunluk Riski Karşısında Merkez Bankası Faizlerini Etkiler",
-        bankingCreditEffect: "Ekonomide büyüme veya resesyon tehlikesine göre faiz oranlarını etkiler. PMI düşükse Merkez Bankası kredileri ucuzlatmak için faiz indirir.",
-        marketAssetsTitle: "3. Sanayi Hisselerini, Borsa Kârlılıklarını ve Doların Gücünü Etkiler",
-        marketAssetsEffect: "Sanayi hisselerini ve küresel Dolar gücünü etkiler. Yüksek PMI borsa şirket karlarını uçurur."
-    },
-    "S&P Global İmalat PMI (Nihai)": {
-        dailyLifeTitle: "1. Fabrika Üretim Hacmini ve Genel Ekonomik Canlılığı Etkiler",
-        dailyLifeEffect: "Fabrikaların çarklarının ne kadar hızlı döndüğünü ve genel ekonomik canlılığı etkiler.",
-        bankingCreditTitle: "2. Ticari Sanayi Kredilerinin Büyüme Hızını ve Banka İştahını Etkiler",
-        bankingCreditEffect: "Sanayi kredilerinin büyüme hızını ve bankaların ticari kredi iştahını etkiler.",
-        marketAssetsTitle: "3. İhracatçı Şirket Hisselerini ve Yabancı Sermaye Girişini Etkiler",
-        marketAssetsEffect: "İhracatçı şirket hisselerini ve doğrudan yabancı sermaye girişlerini etkiler."
-    },
-    "Fed Politika Faizi Kararı": {
-        dailyLifeTitle: "1. Küresel Borçlanma Maliyetlerini ve İthal Ürün Fiyatlarını Etkiler",
-        dailyLifeEffect: "Küresel kredi kartı faizlerini, taksitli borçlanmanızı ve dövizle aldığınız tüm ithal ürünlerin maliyetini etkiler.",
-        bankingCreditTitle: "2. Uluslararası Banka Kredi Faizlerini ve Küresel Likiditeyi Etkiler",
-        bankingCreditEffect: "Dünya genelindeki tüm bankaların faiz politikalarını etkiler. Yüksek Fed faizi küresel borçlanmayı zorlaştırır.",
-        marketAssetsTitle: "3. Ons Altın, Küresel Dolar Gücü ve Dünya Borsalarını Etkiler",
-        marketAssetsEffect: "Borsa İstanbul, Ons Altın ve Dolar/TL fiyatlarını anında etkiler. Faiz düştüğünde borsalara para akar, faiz yükseldiğinde hisselerden para çıkabilir."
-    },
-    "TCMB Politika Faizi Kararı": {
-        dailyLifeTitle: "1. Kredi Kartı Asgari Ödeme Faizlerini ve Taksitli Harcamaları Etkiler",
-        dailyLifeEffect: "Kredi kartı asgari ödeme faizlerinizi, kredili mevduat hesaplarınızı (KMH) ve taksitli harcamalarınızı doğrudan etkiler.",
-        bankingCreditTitle: "2. Bankaların Konut, Taşıt ve Vadeli Mevduat Faiz Oranlarını Etkiler",
-        bankingCreditEffect: "Bankaların konut, taşıt ve mevduat faiz oranlarını tabandan tavanına kadar etkiler. Faiz artarsa borçlanmak zorlaşır, mevduat fonu kazandırır.",
-        marketAssetsTitle: "3. Borsa İstanbul Değerlemelerini ve Türk Lirası Kurlarını Etkiler",
-        marketAssetsEffect: "Borsa İstanbul ve TL döviz kurlarını doğrudan etkiler. Faiz artırımı TL'ye değer kazandırır."
-    },
-    "Tarım Dışı İstihdam Değişimi (NFP)": {
-        dailyLifeTitle: "1. Küresel İşgücü Piyasası Canlılığını ve İş İmkanlarını Etkiler",
-        dailyLifeEffect: "Dünya ekonomisindeki istihdam canlılığını ve küresel refah seviyesini etkiler.",
-        bankingCreditTitle: "2. Fed'in Faiz İndirimi veya Artırımı Zamanlamasını Etkiler",
-        bankingCreditEffect: "Amerikan Merkez Bankası'nın (Fed) faiz indirme veya artırma zamanlamasını etkiler.",
-        marketAssetsTitle: "3. Kuyumcudaki Gram Altın, Ons Altın ve Dolar/TL Kurlarını Etkiler",
-        marketAssetsEffect: "Kuyumcudaki Gram Altın ve Dolar/TL fiyatını saniyeler içinde etkiler. Yüksek veri Doları güçlendirir, Altını geriletebilir."
-    },
-    "Dış Ticaret Dengesi": {
-        dailyLifeTitle: "1. İthal Ürün Fiyatlarını, Teknolojik Cihaz ve Akaryakıt Maliyetini Etkiler",
-        dailyLifeEffect: "Ülkeye giren ithal malların, teknolojik cihazların ve akaryakıtın fiyatını etkiler.",
-        bankingCreditTitle: "2. Merkez Bankası Döviz Rezervlerini ve Ülke Dış Borçlanmasını Etkiler",
-        bankingCreditEffect: "Ülkenin döviz rezervlerini ve Merkez Bankası'nın döviz kurlarını koruma kapasitesini etkiler.",
-        marketAssetsTitle: "3. Dolar/TL ve Euro/TL Kur Baskısını Etkiler",
-        marketAssetsEffect: "Dolar ve Euro kurunun üzerindeki baskıyı doğrudan etkiler. Dış ticaret açığı büyürse kurlar yukarı yönlenir."
-    },
-    "İşsizlik Oranı": {
-        dailyLifeTitle: "1. İş Gücü Piyasasını ve Maaş Teklif Seviyelerini Etkiler",
-        dailyLifeEffect: "Halkın genel iş bulma kolaylığını ve şirketlerin maaş teklif seviyelerini etkiler.",
-        bankingCreditTitle: "2. Tüketici Kredileri Geri Ödemelerini ve Kredi İştahını Etkiler",
-        bankingCreditEffect: "Tüketici kredileri geri ödeme performanslarını ve taksitli kredi iştahını etkiler.",
-        marketAssetsTitle: "3. Perakende ve Tüketim Şirketlerinin Mağaza Cirolarını Etkiler",
-        marketAssetsEffect: "Perakende ve tüketim hisselerinin mağaza cirolarını etkiler."
-    },
-    "Default": {
-        dailyLifeTitle: "1. Piyasadaki Fiyat Düzeyini ve Yaşam Maliyetini Etkiler",
-        dailyLifeEffect: "Piyasadaki fiyatları, harcama imkanlarını ve yaşam maliyetini etkiler.",
-        bankingCreditTitle: "2. Kredi ve Mevduat Faiz Oranlarının Genel Yönünü Etkiler",
-        bankingCreditEffect: "Kredi ve mevduat faiz oranlarının yönünü etkiler.",
-        marketAssetsTitle: "3. Borsa, Döviz Kurları ve Yatırım Varlıklarını Etkiler",
-        marketAssetsEffect: "Borsa, döviz kurları ve altın fiyatlarındaki dengeleri etkiler."
-    }
-};
-
-// Widget 4: Scenario Analysis Event Map (Rich Fluid Explanatory Paragraphs)
-interface CauseEffectScenarioDetail {
-    title: string;
-    badge: string;
-    paragraph: string;
-}
-
-interface EventCauseEffectScenarioGroup {
-    above: CauseEffectScenarioDetail;
-    inline: CauseEffectScenarioDetail;
-    below: CauseEffectScenarioDetail;
-}
-
-const EVENT_SCENARIOS_MAP: Record<string, EventCauseEffectScenarioGroup> = {
-    "Aylık Tüketici Fiyat Endeksi (TÜFE)": {
-        above: {
-            title: "Beklentinin Üstünde Gelirse",
-            badge: "Yüksek Enflasyon Baskısı",
-            paragraph: "Tüketici Fiyat Endeksi'nin (TÜFE) piyasa beklentilerinin üzerinde gerçekleşmesi, hanehalkı tüketim sepetindeki mal ve hizmet fiyatlarının tahmin edilenden daha hızlı tırmandığını kanıtlar. Bu durum, piyasada enflasyonist baskıların katılaştığı ve harcama iştahının henüz dizginlenemediği algısını güçlendirir. Fiyat istikrarını sağlamakla yükümlü olan Merkez Bankası, paranın değer kaybını durdurabilmek adına politika faizini artırmak veya yüksek faiz oranlarını daha uzun bir süre korumak zorunda kalır. Faizlerin tırmanmasıyla birlikte ticari ve bireysel kredi maliyetleri yükselirken, vadeli mevduat ve likit fonların getirisi cazip hale gelir; bu da piyasada genel bir likidite sıkılaşmasına ve ekonomik aktivitede denge arayışına yol açar."
-        },
-        inline: {
-            title: "Beklentilerle Paralel Gelirse",
-            badge: "Sürpriz Yok / Nötr Seyir",
-            paragraph: "Açıklanan TÜFE verisinin analistlerin ve kurumsal piyasa yapıcıların tahmin ortalamasıyla birebir örtüşmesi, ekonomi yönetiminin ve enflasyon patikasının öngörülen rotada ilerlediğini gösterir. Finansal piyasalar verinin getireceği olası makroekonomik sonuçları haber açıklanmadan önce varlık fiyatlarına büyük ölçüde yansıttığı (fiyatladığı) için faiz ve kur dengesinde şok kırılmalar yaşanmaz. Merkez Bankası mevcut para politikası duruşunu koruma esnekliği kazanırken, şirketler ve bireysel yatırımcılar önceden planladıkları finansal projeksiyonları revize etmek zorunda kalmadan mevcut yatırım dengelerini sürdürürler."
-        },
-        below: {
-            title: "Beklentinin Altında Gelirse",
-            badge: "Dezenflasyon İvmesi",
-            paragraph: "Tüketici Fiyat Endeksi'nin beklentilerin altında kalması, mal ve hizmet fiyatlarındaki artış hızının yavaşladığını ve dezenflasyon sürecinin güç kazandığını ortaya koyar. Ülkedeki hayat pahalılığının ivme kaybetmesi, hanehalklarının alım gücü üzerindeki baskıyı hafifletirken piyasadaki enflasyonist beklentileri de olumlu yönde kırar. Bu dezenflasyonist tablo, Merkez Bankası'na politika faizinde indirime gitme ve para politikasını gevşetme alanı tanır. Borçlanma ve kredi maliyetlerinin gerileyeceği beklentisiyle şirket kârlılıkları üzerindeki finansman yükü hafifler, piyasalarda genel risk iştahı artar ve reel ekonomik canlılık ivme kazanır."
-        }
-    },
-    "Yıllık Enflasyon Oranı (TÜFE)": {
-        above: {
-            title: "Beklentinin Üstünde Gelirse",
-            badge: "Yıllık Katı Enflasyon",
-            paragraph: "Yıllık enflasyon oranının öngörülen düşüş patikasının üzerinde gerçekleşmesi, fiyat artışlarının ekonomi geneline yayılarak katılaştığını gösterir. Bu durum, piyasa katılımcılarının geleceğe yönelik enflasyonist beklentilerini yukarı yönlü revize etmesine neden olur. Merkez Bankası, enflasyon ataletini kırmak için para politikasını daha da sıkılaştırmak ve faiz oranlarını uzun süre yüksek tutmak durumunda kalır. Yüksek seyreden kredi faizleri yatırım ve tüketim iştahını frenlerken, paranın zamansal değer kaybı endişesi tasarruf tercihlerinde korumacı enstrümanlara olan talebi canlı tutar."
-        },
-        inline: {
-            title: "Beklentilerle Paralel Gelirse",
-            badge: "Patikayla Uyumlu",
-            paragraph: "Yıllık enflasyonun piyasa tahminleriyle tam uyum göstermesi, 12 aylık fiyat artış trendinin dezenflasyon programıyla paralel ilerlediğini teyit eder. Piyasalarda ekstra bir belirsizlik dalgası oluşmadığı için uzun vadeli borçlanma senetleri ve mevduat faiz oranları mevcut dengesini muhafaza eder. Şirketler yıllık bütçeleme ve yatırım planlarını sarsıntı yaşamadan sürdürebilirken, Merkez Bankası makro ihtiyati tedbirlerini planlanan takvim dahilinde uygulamaya devam eder."
-        },
-        below: {
-            title: "Beklentinin Altında Gelirse",
-            badge: "Hızlı Gerileme",
-            paragraph: "Yıllık enflasyon oranının tahmin edilenden belirgin şekilde düşük çıkması, baz etkisinin de katkısıyla dezenflasyon sürecinin hızlandığını gösterir. Paranın satın alma gücündeki aşınmanın yavaşlaması piyasa moralini yükseltir ve yabancı sermaye girişlerini teşvik eder. Merkez Bankası'nın faiz indirim döngüsünü başlatması veya hızlandırması için güçlü bir zemin oluşur. Kredi erişiminin kolaylaşacağı ve sermaye maliyetinin düşeceği algısıyla reel sektor yatırımları cesaret kazanır."
-        }
-    },
-    "Aylık Üretici Fiyat Endeksi (ÜFE)": {
-        above: {
-            title: "Beklentinin Üstünde Gelirse",
-            badge: "Üretim Maliyet Baskısı",
-            paragraph: "Üretici Fiyat Endeksi'nin (ÜFE) beklenenden yüksek açıklanması; sanayicinin elektrik, hammadde, lojistik ve işçilik giderlerindeki artışın hızlandığını gösterir. Fabrika çıkış fiyatlarındaki bu maliyet tırmanışı, üreticilerin kâr marjlarını baskılarken birkaç ay içerisinde bu yükün tüketici etiketlerine zam olarak yansıyacağı endişesini doğurur. Tüketici enflasyonuna (TÜFE) ilişkin öncü bir sinyal kabul edilen bu tablo, Merkez Bankası'nın faiz indirim adımlarını ertelemesine ve maliyet yönlü enflasyon baskılarına karşı daha temkinli bir duruş sergilemesine yol açar."
-        },
-        inline: {
-            title: "Beklentilerle Paralel Gelirse",
-            badge: "Maliyet Düzeyi Dengeli",
-            paragraph: "Üretici maliyetlerindeki değişimlerin piyasa tahminleri düzeyinde gerçekleşmesi, imalat sektörünün girdi maliyetlerinde beklenmedik bir şok yaşanmadığını kanıtlar. Fabrikalar üretim bütçelerini ve kârlılık hedeflerini öngörüldüğü şekilde yönetme imkanı bulur. Sanayi şirketleri üzerindeki maliyet baskısı sabit kaldığı için tüketici fiyatlarına yansıyacak ekstra bir zam dalgası riski oluşmaz ve üretim çarkları istikrarlı seyrini korur."
-        },
-        below: {
-            title: "Beklentinin Altında Gelirse",
-            badge: "Girdi Maliyetlerinde Rahatlama",
-            paragraph: "ÜFE'nin beklentilerin altında kalması, küresel hammadde, enerji ve tedarik maliyetlerinde gevşeme yaşandığına işaret eder. İmalatçıların üretim maliyetlerinin hafiflemesi, şirketlerin kâr marjlarını rahatlatırken önümüzdeki dönemde tüketici fiyatları üzerindeki zam baskısını önemli ölçüde azaltır. Gelecek aylara dair enflasyon beklentilerinin gerilemesiyle birlikte para politikasında rahatlama sinyalleri güçlenir ve sanayi üretimine yönelik yatırım iştahı artar."
-        }
-    },
-    "ISM İmalat PMI Endeksi": {
-        above: {
-            title: "Beklentinin Üstünde Gelirse",
-            badge: "Sanayide Güçlü Büyüme",
-            paragraph: "ISM İmalat PMI endeksinin beklentilerin üzerinde açıklanması, imalat sektöründeki fabrika siparişlerinin, üretimin ve istihdamın canlılığını sürdürdüğünü kanıtlar. Sanayi çarklarının hızlı dönmesi genel ekonomik büyümenin güçlü olduğunu gösterse de, aşırı ısınan bir ekonomide işgücü ve hammadde maliyetlerinin artarak enflasyonu tetikleyebileceği endişesini yaratır. Bu durum, Merkez Bankası'nın para politikasını sıkı tutma veya faiz oranlarını yüksek seviyelerde koruma süresini uzatabileceği beklentisini doğurur."
-        },
-        inline: {
-            title: "Beklentilerle Paralel Gelirse",
-            badge: "Dengeli Üretim Hacmi",
-            paragraph: "PMI verisinin piyasa beklentileriyle tam uyum sağlaması, imalat sektörünün ne aşırı ısındığını ne de daralma riski taşıdığını, makul bir büyüme temposunda ilerlediğini gösterir. Satınalma yöneticilerinin sipariş ve stok projeksiyonları doğrulandığı için piyasalarda ani bir reaksiyon yaşanmaz. Küresel ekonomi yönetimleri mevcut para ve maliye politikalarını değiştirmeden uygulamaya devam ederler."
-        },
-        below: {
-            title: "Beklentinin Altında Gelirse",
-            badge: "Sanayide Yavaşlama Sinyali",
-            paragraph: "PMI endeksinin beklentilerin gerisinde kalması (özellikle 50 referans çizgisinin altına inmesi), sanayi üretiminde ve fabrika siparişlerinde belirgin bir kan kaybına işaret eder. Ekonomik aktivitenin yavaşladığı ve resesyon (ekonomik durgunluk) riskinin kapıya dayandığı algısı güçlenir. Büyümeyi yeniden canlandırmak ve istihdam kaybını önlemek amacıyla Merkez Bankaları politika faizlerinde indirim yapma ve piyasaya likidite sağlama baskısı altına girerler."
-        }
-    },
-    "Fed Politika Faizi Kararı": {
-        above: {
-            title: "Sürpriz Faiz Artırımı / Şahin Karar",
-            badge: "Para Musluğu Sıkılaştı",
-            paragraph: "Fed'in beklentilerin üzerinde bir faiz artırımına gitmesi veya karar metninde beklenenden çok daha sert (şahin) bir tonda sıkılaşma vurgusu yapması, küresel finans sisteminde paraya erişim maliyetini anında tırmandırır. Küresel Dolar likiditesinin çekilmesiyle birlikte borçlanma maliyetleri yükselir, bireysel ve kurumsal harcama iştahı baskılanır. Gelişmekte olan ülkelerden sermaye çıkış riski doğarken, uluslararası yatırımcılar riskli varlıklardan kaçınarak yüksek faiz getirisi sunan güvenli liman enstrümanlarına yönelirler."
-        },
-        inline: {
-            title: "Beklentilere Paralel Karar",
-            badge: "Piyasa Beklentisi Karşılandı",
-            paragraph: "Fed'in faiz kararını piyasa yapıcıların ve analistlerin tam olarak öngördüğü seviyede açıklaması, karar öncesinde yapılan fiyatlamaları doğrular. Kararın kendisi bir sürpriz yaratmadığı için küresel borsalarda şok dalgalanmalar görülmez. Tüm piyasa katılımcıları, faiz kararından ziyade Merkez Bankası Başkanı'nın basın toplantısındaki ifadelerine ve gelecek dönem faiz patikasına ilişkin ipuçlarına odaklanırlar."
-        },
-        below: {
-            title: "Sürpriz Faiz İndirimi / Güvercin Karar",
-            badge: "Piyasaya Likidite Desteği",
-            paragraph: "Fed'in sürpriz bir faiz indirimine gitmesi veya gevşeme sürecinin hızlanacağına dair güvercin mesajlar vermesi, küresel para musluklarının açıldığı anlamına gelir. Borçlanma maliyetlerinin düşmesiyle birlikte şirketlerin yatırım yapması ve finansmana erişimi kolaylaşır. Küresel sermayenin risk iştahı artarak gelişmekte olan piyasalara ve büyüme odaklı varlıklara taze para akışı başlar, ekonomik aktivite küresel ölçekte canlılık kazanır."
-        }
-    },
-    "TCMB Politika Faizi Kararı": {
-        above: {
-            title: "Beklentinin Üstünde Faiz Artırımı",
-            badge: "Şok Sıkılaşma",
-            paragraph: "TCMB'nin politika faizini piyasa beklentilerinin üzerinde artırması, enflasyonla mücadelede kararlılık ve Türk Lirası'nın cazibesini koruma hamlesi olarak okunur. Bankaların mevduat faiz oranları ve kredi maliyetleri hızla tırmanırken, piyasadaki Türk Lirası likiditesi çekilir. Kredi çekerek harcama yapma iştahı yavaşlar, vadeli TL mevduat ürünlerinin cazibesi tavan yapar; bu da enflasyonist beklentileri kırmayı ve döviz talebini dizginlemeyi hedefler."
-        },
-        inline: {
-            title: "Beklentilerle Paralel Karar",
-            badge: "Karar Fiyatlandı",
-            paragraph: "TCMB kararlarının piyasa konsensüsüne tam uyum göstermesi, finansal kurumların ve yatırımcıların önceden aldığı pozisyonların korunmasını sağlar. Kredi ve mevduat faizlerinde ani bir sıçrama veya çöküş yaşanmaz. Piyasa odak noktası karar metnindeki sterilizasyon adımlarına ve Merkez Bankası'nın önümüzdeki toplantılara dair politika yönlendirmelerine kayar."
-        },
-        below: {
-            title: "Faiz İndirimi / Gevşeme",
-            badge: "Kredi & Büyüme Desteği",
-            paragraph: "TCMB'nin faiz indirimi başlatması veya politikayı gevşetmesi, reel sektörü ve ticari yatırımları ucuz finansmanla destekleme amacını taşır. Bankaların kredi verme iştahı artarken, borçlanma maliyetlerinin gerilemesiyle sanayi, inşaat ve perakende sektörlerinde yatırım harcamaları hız kazanır. Piyasadaki likiditenin artması ekonomik büyümeyi ivmelendirirken, enflasyon dengesinin yakından izlenmesini gerektirir."
-        }
-    },
-    "Tarım Dışı İstihdam Değişimi (NFP)": {
-        above: {
-            title: "Beklentinin Üstünde İstihdam",
-            badge: "Sıcak İstihdam Piyasası",
-            paragraph: "ABD Tarım Dışı İstihdam verisinin beklenenin çok üzerinde gelmesi, Amerikan şirketlerinin güçlü bir işe alım temposu sürdürdüğünü kanıtlar. İşgücü piyasasının bu derece sıkı kalması, ücret artışlarının yüksek seyretmesine ve dolayısıyla tüketim harcamalarının enflasyonu beslemesine yol açabilir. Bu durum, Amerikan Merkez Bankası'nın (Fed) faiz indirimlerini erteleyeceği beklentisini doğurarak küresel finansman koşullarının sıkı kalmasına neden olur."
-        },
-        inline: {
-            title: "Beklentilerle Paralel İstihdam",
-            badge: "Makul İstihdam Dengesi",
-            paragraph: "Yeni yaratılan iş sayısının tahminlerle uyumlu gerçekleşmesi, istihdam piyasasında aşırı ısınma ya da sert bir soğuma yaşanmadığını gösterir. İşgücü arz ve talebinin dengede ilerlemesi para politikasında acil bir rotasyon ihtiyacı yaratmaz, küresel piyasalar mevcut makroekonomik dengelerini korurlar."
-        },
-        below: {
-            title: "Beklentinin Altında İstihdam",
-            badge: "İstihdamda Soğuma Sinyali",
-            paragraph: "İstihdam artışının beklentilerin belirgin şekilde gerisinde kalması, Amerikan ekonomisinde şirketlerin işe alımları yavaşlattığına ve ekonomik aktivitede soğuma başladığına işaret eder. İşsizlik riskinin tırmanması, Merkez Bankası'nın faiz indirim sürecini öne çekerek ekonomiyi ve istihdamı destekleme zorunluluğunu doğurur."
-        }
-    },
-    "Default": {
-        above: {
-            title: "Beklentinin Üstünde Gelirse",
-            badge: "Yüksek Veri Gerçekleşmesi",
-            paragraph: "Makroekonomik verinin piyasa beklentilerinin üzerinde gerçekleşmesi, ilgili ekonomik aktivitenin veya fiyat baskılarının tahminlerden güçlü seyrettiğini gösterir. Bu tablo, para otoritelerinin sıkılaştırıcı adımları artırmasına veya yüksek faiz oranlarını korumasına neden olabilir. Borçlanma maliyetlerinde yukarı yönlü baskı oluşurken piyasada likidite koşulları sıkılaşır."
-        },
-        inline: {
-            title: "Beklentilerle Paralel Gelirse",
-            badge: "Sürpriz Yok",
-            paragraph: "Verinin piyasa beklentileriyle tam uyumlu açıklanması, ekonomideki öngörülebilirliği artırır. Piyasa yapıcılar verinin etkilerini önden fiyatladığı için finansal dengelerde beklenmedik sarsıntılar yaşanmaz, mevcut borçlanma ve yatırım projeksiyonları korunur."
-        },
-        below: {
-            title: "Beklentinin Altında Gelirse",
-            badge: "Düşük Veri Gerçekleşmesi",
-            paragraph: "Göstergenin tahminlerin gerisinde kalması, ekonomik aktivitede veya fiyat artışlarında ivme kaybına işaret eder. Bu durum, Merkez Bankaları ve ekonomi yönetimleri üzerinde destekleyici ve gevşetici politikalar uygulama ihtiyacı doğurur. Finansman maliyetlerinde rahatlama ve piyasayı canlandırıcı beklentiler güç kazanır."
-        }
-    }
-};
-
-// Distinct Historical Release Datasets for Every Specific Macro Indicator
-const EVENT_HISTORICAL_SERIES: Record<string, Array<{ month: string; actual: number; forecast: number; formattedActual: string }>> = {
-    "Dış Ticaret Dengesi": [
-        { month: "Ara 2025", actual: -7.8, forecast: -8.0, formattedActual: "-7,8 B $" },
-        { month: "Oca 2026", actual: -9.3, forecast: -9.0, formattedActual: "-9,3 B $" },
-        { month: "Şub 2026", actual: -8.5, forecast: -8.7, formattedActual: "-8,5 B $" },
-        { month: "Mar 2026", actual: -8.9, forecast: -8.4, formattedActual: "-8,9 B $" },
-        { month: "Nis 2026", actual: -11.1, forecast: -10.5, formattedActual: "-11,1 B $" },
-        { month: "May 2026", actual: -8.5, forecast: -8.2, formattedActual: "-8,5 B $" },
-        { month: "Haz 2026", actual: -5.9, forecast: -6.1, formattedActual: "-5,9 B $" },
-        { month: "Tem 2026", actual: -10.37, forecast: -9.8, formattedActual: "-10,37 B $" },
-        { month: "Ağu 2026", actual: -6.9, forecast: -7.2, formattedActual: "-6,9 B $" }
-    ],
-    "Aylık Tüketici Fiyat Endeksi (TÜFE)": [
-        { month: "Ara 2025", actual: 2.93, forecast: 3.10, formattedActual: "%2,93" },
-        { month: "Oca 2026", actual: 6.70, forecast: 6.50, formattedActual: "%6,70" },
-        { month: "Şub 2026", actual: 4.53, forecast: 4.20, formattedActual: "%4,53" },
-        { month: "Mar 2026", actual: 3.16, forecast: 3.25, formattedActual: "%3,16" },
-        { month: "Nis 2026", actual: 3.18, forecast: 3.00, formattedActual: "%3,18" },
-        { month: "May 2026", actual: 3.37, forecast: 3.10, formattedActual: "%3,37" },
-        { month: "Haz 2026", actual: 1.64, forecast: 2.10, formattedActual: "%1,64" },
-        { month: "Tem 2026", actual: 0.99, forecast: 1.10, formattedActual: "%0,99" },
-        { month: "Ağu 2026", actual: 1.78, forecast: 1.83, formattedActual: "%1,78" }
-    ],
-    "Yıllık Enflasyon Oranı (TÜFE)": [
-        { month: "Ara 2025", actual: 64.77, forecast: 65.10, formattedActual: "%64,77" },
-        { month: "Oca 2026", actual: 64.86, forecast: 64.50, formattedActual: "%64,86" },
-        { month: "Şub 2026", actual: 67.07, forecast: 66.80, formattedActual: "%67,07" },
-        { month: "Mar 2026", actual: 68.50, forecast: 68.10, formattedActual: "%68,50" },
-        { month: "Nis 2026", actual: 69.80, forecast: 70.20, formattedActual: "%69,80" },
-        { month: "May 2026", actual: 75.45, forecast: 74.80, formattedActual: "%75,45" },
-        { month: "Haz 2026", actual: 71.60, forecast: 72.00, formattedActual: "%71,60" },
-        { month: "Tem 2026", actual: 61.78, forecast: 62.10, formattedActual: "%61,78" },
-        { month: "Ağu 2026", actual: 31.75, forecast: 31.80, formattedActual: "%31,75" }
-    ],
-    "ISM İmalat PMI Endeksi": [
-        { month: "Ara 2025", actual: 47.1, forecast: 47.2, formattedActual: "47,1" },
-        { month: "Oca 2026", actual: 49.1, forecast: 47.0, formattedActual: "49,1" },
-        { month: "Şub 2026", actual: 47.8, forecast: 49.5, formattedActual: "47,8" },
-        { month: "Mar 2026", actual: 50.3, forecast: 48.4, formattedActual: "50,3" },
-        { month: "Nis 2026", actual: 49.2, forecast: 50.0, formattedActual: "49,2" },
-        { month: "May 2026", actual: 48.7, forecast: 49.6, formattedActual: "48,7" },
-        { month: "Haz 2026", actual: 48.5, forecast: 49.1, formattedActual: "48,5" },
-        { month: "Tem 2026", actual: 46.8, forecast: 48.8, formattedActual: "46,8" },
-        { month: "Ağu 2026", actual: 49.8, forecast: 49.5, formattedActual: "49,8" }
-    ],
-    "Tarım Dışı İstihdam Değişimi (NFP)": [
-        { month: "Ara 2025", actual: 216, forecast: 170, formattedActual: "216K" },
-        { month: "Oca 2026", actual: 353, forecast: 180, formattedActual: "353K" },
-        { month: "Şub 2026", actual: 275, forecast: 200, formattedActual: "275K" },
-        { month: "Mar 2026", actual: 303, forecast: 214, formattedActual: "303K" },
-        { month: "Nis 2026", actual: 175, forecast: 243, formattedActual: "175K" },
-        { month: "May 2026", actual: 272, forecast: 185, formattedActual: "272K" },
-        { month: "Haz 2026", actual: 206, forecast: 190, formattedActual: "206K" },
-        { month: "Tem 2026", actual: 114, forecast: 175, formattedActual: "114K" },
-        { month: "Ağu 2026", actual: 175, forecast: 175, formattedActual: "175K" }
-    ],
-    "TCMB Politika Faizi Kararı": [
-        { month: "Ara 2025", actual: 42.50, forecast: 42.50, formattedActual: "%42,50" },
-        { month: "Oca 2026", actual: 45.00, forecast: 45.00, formattedActual: "%45,00" },
-        { month: "Şub 2026", actual: 45.00, forecast: 45.00, formattedActual: "%45,00" },
-        { month: "Mar 2026", actual: 50.00, forecast: 45.00, formattedActual: "%50,00" },
-        { month: "Nis 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
-        { month: "May 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
-        { month: "Haz 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
-        { month: "Tem 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" },
-        { month: "Ağu 2026", actual: 50.00, forecast: 50.00, formattedActual: "%50,00" }
-    ],
-    "Default": [
-        { month: "Ara 2025", actual: 1.2, forecast: 1.1, formattedActual: "%1,2" },
-        { month: "Oca 2026", actual: 1.5, forecast: 1.3, formattedActual: "%1,5" },
-        { month: "Şub 2026", actual: 0.9, forecast: 1.0, formattedActual: "%0,9" },
-        { month: "Mar 2026", actual: 1.1, forecast: 1.2, formattedActual: "%1,1" },
-        { month: "Nis 2026", actual: 1.8, forecast: 1.6, formattedActual: "%1,8" },
-        { month: "May 2026", actual: 1.4, forecast: 1.5, formattedActual: "%1,4" },
-        { month: "Haz 2026", actual: 0.99, forecast: 1.1, formattedActual: "%0,99" },
-        { month: "Tem 2026", actual: 1.78, forecast: 1.83, formattedActual: "%1,78" },
-        { month: "Ağu 2026", actual: 1.65, forecast: 1.70, formattedActual: "%1,65" }
-    ]
-};
+import { INDICATOR_PROFILES_DATABASE, IndicatorProfile, TECHNICAL_TERMS, TechnicalTermTooltip } from "@/lib/indicator-profiles";
+import { calculateBackendDifferences, generateFinAiAnalysis } from "@/lib/finai-calendar-analysis-engine";
 
 export default function EconomicEventDetailPage() {
     const params = useParams();
@@ -439,7 +18,18 @@ export default function EconomicEventDetailPage() {
 
     const [event, setEvent] = useState<CatalogCalendarEvent | null>(null);
     const [loading, setLoading] = useState(true);
-    const [activeScenarioTab, setActiveScenarioTab] = useState<'above' | 'inline' | 'below'>('above');
+
+    // State: Tooltip modal / popover state
+    const [activeTooltip, setActiveTooltip] = useState<TechnicalTermTooltip | null>(null);
+
+    // State: Show all scenarios accordion toggle
+    const [showAllScenarios, setShowAllScenarios] = useState(false);
+
+    // State: Historical chart timeframe filter
+    const [chartTimeframe, setChartTimeframe] = useState<'12m' | '1y' | '3y'>('12m');
+
+    // State: Chart hover tooltip
+    const [hoveredPoint, setHoveredPoint] = useState<{ month: string; actual: string; forecast: string; previous: string } | null>(null);
 
     useEffect(() => {
         if (!eventId) return;
@@ -468,7 +58,7 @@ export default function EconomicEventDetailPage() {
         return (
             <div className="flex flex-col min-h-screen bg-slate-50 items-center justify-center text-[#00008B]">
                 <div className="w-10 h-10 rounded-full border-4 border-[#00008B] border-t-transparent animate-spin mb-3" />
-                <span className="text-xs font-black uppercase tracking-wider">Haber Detayları Yükleniyor...</span>
+                <span className="text-xs font-black uppercase tracking-wider">Aşama 7 Ekonomik Veri Analizi Yükleniyor...</span>
             </div>
         );
     }
@@ -476,8 +66,8 @@ export default function EconomicEventDetailPage() {
     if (!event) {
         return (
             <div className="flex flex-col min-h-screen bg-slate-50 items-center justify-center p-6 text-[#00008B]">
-                <h2 className="text-xl font-black mb-2">Haber Bulunamadı</h2>
-                <p className="text-xs text-slate-500 mb-6">İstenen ekonomik veri detayına ulaşılamadı.</p>
+                <h2 className="text-xl font-black mb-2">Gösterge Bulunamadı</h2>
+                <p className="text-xs text-slate-500 mb-6">İstenen ekonomik veri detayına ve analiz geçmişine ulaşılamadı.</p>
                 <Link href="/dashboard/economic-calendar" className="px-5 py-2.5 rounded-xl bg-[#00008B] text-white font-bold text-xs">
                     Takvime Dön
                 </Link>
@@ -485,36 +75,32 @@ export default function EconomicEventDetailPage() {
         );
     }
 
-    // Get overview Turkish description
-    const overviewText = OVERVIEW_TR_DESCRIPTIONS[event.event] || 
-        OVERVIEW_TR_DESCRIPTIONS[Object.keys(OVERVIEW_TR_DESCRIPTIONS).find(k => event.event.includes(k)) || ""] ||
-        `${event.country} makroekonomik verileri arasında yer alan ${event.event}, piyasa yapıcılar ve yatırımcılar tarafından yakından takip edilen temel göstergelerden biridir.`;
+    // Indicator Profile Lookup
+    const profile: IndicatorProfile = INDICATOR_PROFILES_DATABASE[event.event] || 
+        INDICATOR_PROFILES_DATABASE[Object.keys(INDICATOR_PROFILES_DATABASE).find(k => event.event.includes(k)) || ""] || 
+        INDICATOR_PROFILES_DATABASE["Default"];
 
-    // 3-Mini Card Group Educational Object
-    const eduCards = THREE_CARD_EDUCATION_MAP[event.event] ||
-        THREE_CARD_EDUCATION_MAP[Object.keys(THREE_CARD_EDUCATION_MAP).find(k => event.event.includes(k)) || ""] ||
-        THREE_CARD_EDUCATION_MAP["Default"];
+    // 7.2 Backend Calculation Layer Differences
+    const calc = calculateBackendDifferences(event);
 
-    // Widget 2: "Bu Veri Neleri Etkiler?" Object (Habere Özel Dinamik Başlıklar)
-    const dataEffects = DATA_EFFECTS_MAP[event.event] ||
-        DATA_EFFECTS_MAP[Object.keys(DATA_EFFECTS_MAP).find(k => event.event.includes(k)) || ""] ||
-        DATA_EFFECTS_MAP["Default"];
+    // 7.4 FinAi Narrative Analysis Generation
+    const finAiAnalysis = generateFinAiAnalysis(event);
 
-    // Widget 4: Scenario Analysis Object Group
-    const scenarios = EVENT_SCENARIOS_MAP[event.event] ||
-        EVENT_SCENARIOS_MAP[Object.keys(EVENT_SCENARIOS_MAP).find(k => event.event.includes(k)) || ""] ||
-        EVENT_SCENARIOS_MAP["Default"];
-
-    const currentScenario = scenarios[activeScenarioTab];
-
-    // Historical chart series specific to this exact event
-    const chartSeries = EVENT_HISTORICAL_SERIES[event.event] || 
-        EVENT_HISTORICAL_SERIES[Object.keys(EVENT_HISTORICAL_SERIES).find(k => event.event.includes(k)) || ""] ||
-        EVENT_HISTORICAL_SERIES["Default"];
-
-    // Find min and max for chart bar height scaling
-    const absValues = chartSeries.map(s => Math.abs(s.actual));
-    const maxVal = Math.max(...absValues, 1);
+    // Dynamic Mock Historical Dataset based on profile
+    const historicalData = [
+        { month: 'Eyl 2025', actual: '3,2', forecast: '3,3', previous: '3,5' },
+        { month: 'Eki 2025', actual: '3,1', forecast: '3,2', previous: '3,2' },
+        { month: 'Kas 2025', actual: '3,0', forecast: '3,1', previous: '3,1' },
+        { month: 'Ara 2025', actual: '2,9', forecast: '3,0', previous: '3,0' },
+        { month: 'Oca 2026', actual: '3,4', forecast: '3,2', previous: '2,9' },
+        { month: 'Şub 2026', actual: '3,3', forecast: '3,3', previous: '3,4' },
+        { month: 'Mar 2026', actual: '3,1', forecast: '3,2', previous: '3,3' },
+        { month: 'Nis 2026', actual: '3,0', forecast: '3,1', previous: '3,1' },
+        { month: 'May 2026', actual: '3,2', forecast: '3,0', previous: '3,0' },
+        { month: 'Haz 2026', actual: '2,8', forecast: '2,9', previous: '3,2' },
+        { month: 'Tem 2026', actual: '2,7', forecast: '2,8', previous: '2,8' },
+        { month: 'Ağu 2026', actual: event.actual || '2,9', forecast: event.forecast || '3,1', previous: event.previous || '3,2' }
+    ];
 
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-[#00008B] w-full mx-auto relative overflow-hidden">
@@ -527,65 +113,283 @@ export default function EconomicEventDetailPage() {
                     >
                         <ArrowLeft className="w-4 h-4" /> Ekonomik Takvime Dön
                     </Link>
+                    <span className="text-xs font-black text-blue-600 bg-blue-50 px-3.5 py-1.5 rounded-2xl border border-blue-200 flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-blue-600" /> FinAi Economic Intelligence System v7.0
+                    </span>
                 </div>
 
-                {/* Event Main Header Banner */}
+                {/* 7.1 GİRİŞ BÖLÜMÜ HEADER BANNER */}
                 <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
-                    <div className="relative z-10 space-y-6">
-                        {/* Üst Başlık Alanı */}
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div>
-                                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                                    {event.event}
-                                </h1>
-                            </div>
+                    <div className="relative z-10 space-y-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <span className="text-2xl">{profile.flag}</span>
+                            <span className="px-3 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-blue-200">
+                                {event.country}
+                            </span>
+                            <span className="px-3 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-300">
+                                {profile.category}
+                            </span>
+                            <span className="px-3 py-1 rounded-xl bg-rose-500/20 border border-rose-400/30 text-xs font-black text-rose-200">
+                                {event.impact === 'critical' || event.impact === 'high' ? '🔥 Yüksek Etki' : 'Orta Etki'}
+                            </span>
                         </div>
 
-                        {/* ÖZET BİLGİ KUTUSU */}
-                        <div className="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md leading-relaxed space-y-2">
-                            <p className="text-white font-bold text-sm flex items-center gap-2">
-                                <Info className="w-4 h-4 text-white" /> Veri Hakkında Özet Bilgi:
+                        <div>
+                            <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight leading-tight">
+                                {event.event}
+                            </h1>
+                            <p className="text-xs font-bold text-blue-200 mt-2 flex items-center gap-2">
+                                <CalendarIcon className="w-4 h-4" /> {event.dateFormatted || 'Bugün'} · {event.time} TSİ (Europe/Istanbul)
                             </p>
-                            <p className="text-white text-xs font-medium leading-relaxed">
-                                {overviewText}
-                            </p>
-                        </div>
-
-                        {/* METRİK WIDGET'LARI */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
-                                <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanma Zamanı</span>
-                                <span className="text-sm font-black text-white block mt-1">
-                                    {event.dateFormatted || 'Bugün'} - {event.time} (TSİ)
-                                </span>
-                            </div>
-
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
-                                <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Açıklanan Veri</span>
-                                <span className="text-sm font-black text-white block mt-1">
-                                    {event.actual || 'Bekleniyor'}
-                                </span>
-                            </div>
-
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
-                                <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Piyasa Beklentisi</span>
-                                <span className="text-sm font-black text-blue-100 block mt-1">
-                                    {event.forecast || '-'}
-                                </span>
-                            </div>
-
-                            <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
-                                <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">Önceki Veri</span>
-                                <span className="text-sm font-black text-blue-100 block mt-1">
-                                    {event.previous || '-'}
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ */}
-                <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 shadow-sm space-y-6">
+                {/* 7.2 & 7.3 VERİ KARTLARI VE BACKEND HESAPLAMA ROZETLERİ */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Açıklanan (Actual) */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3 relative overflow-hidden">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                Açıklanan (Actual)
+                                <button 
+                                    onClick={() => setActiveTooltip(TECHNICAL_TERMS.actual)} 
+                                    className="text-slate-400 hover:text-[#00008B] transition-colors"
+                                >
+                                    <Info className="w-3.5 h-3.5" />
+                                </button>
+                            </span>
+                            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black ${
+                                calc.hasActual ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
+                            }`}>
+                                {calc.hasActual ? 'Açıklandı' : 'Açıklanması Bekleniyor'}
+                            </span>
+                        </div>
+                        <div className="text-3xl md:text-4xl font-black text-[#00008B]">
+                            {event.actual || 'Bekleniyor'}
+                        </div>
+                    </div>
+
+                    {/* Beklenti (Forecast) */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                Beklenti (Forecast)
+                                <button 
+                                    onClick={() => setActiveTooltip(TECHNICAL_TERMS.forecast)} 
+                                    className="text-slate-400 hover:text-[#00008B] transition-colors"
+                                >
+                                    <Info className="w-3.5 h-3.5" />
+                                </button>
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400">Piyasa Konsensüsü</span>
+                        </div>
+                        <div className="text-3xl md:text-4xl font-black text-slate-700">
+                            {event.forecast || '-'}
+                        </div>
+                        {calc.forecastDiffText && (
+                            <div className="pt-2 border-t border-slate-100 text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> {calc.forecastDiffText}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Önceki (Previous) */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                Önceki (Previous)
+                                <button 
+                                    onClick={() => setActiveTooltip(TECHNICAL_TERMS.previous)} 
+                                    className="text-slate-400 hover:text-[#00008B] transition-colors"
+                                >
+                                    <Info className="w-3.5 h-3.5" />
+                                </button>
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400">Geçen Dönem</span>
+                        </div>
+                        <div className="text-3xl md:text-4xl font-black text-slate-700">
+                            {event.previous || '-'}
+                        </div>
+                        {calc.previousDiffText && (
+                            <div className="pt-2 border-t border-slate-100 text-xs font-bold text-blue-600 flex items-center gap-1">
+                                <Activity className="w-3.5 h-3.5 text-blue-500" /> {calc.previousDiffText}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* 7.4 FİNAİ YORUMU (4 PARÇALI NARRATIVE ANALİZ KARTI) */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-150">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                <Sparkles className="w-5 h-5 text-[#00008B]" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-[#00008B]">FinAi Yorumu</h2>
+                                <p className="text-xs text-slate-400 font-bold">Resmi Verilere & Şartlı Ekonomik Mantığa Dayalı Otomatik Analiz</p>
+                            </div>
+                        </div>
+                        <span className="text-[10px] font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-xl">
+                            Versiyon: {finAiAnalysis.version} · Status: {finAiAnalysis.status}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* 1. Ne oldu? */}
+                        <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
+                            <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-[#00008B]" /> 1. Ne Oldu?
+                            </h3>
+                            <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                {finAiAnalysis.whatHappened}
+                            </p>
+                        </div>
+
+                        {/* 2. Ne anlama geliyor? */}
+                        <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-2">
+                            <h3 className="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <Zap className="w-4 h-4 text-emerald-600" /> 2. Ne Anlama Geliyor?
+                            </h3>
+                            <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                {finAiAnalysis.whatItMeans}
+                            </p>
+                        </div>
+
+                        {/* 3. Neleri etkileyebilir? */}
+                        <div className="p-5 rounded-2xl bg-purple-50/60 border border-purple-100 space-y-2">
+                            <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <Layers className="w-4 h-4 text-purple-600" /> 3. Neleri Etkileyebilir?
+                            </h3>
+                            <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                {finAiAnalysis.potentialImpacts}
+                            </p>
+                        </div>
+
+                        {/* 4. Nelere dikkat edilmeli? */}
+                        <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-2">
+                            <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <ShieldCheck className="w-4 h-4 text-amber-600" /> 4. Nelere Dikkat Edilmeli?
+                            </h3>
+                            <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                                {finAiAnalysis.pointsToConsider}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 7.7 BU VERİ NEDİR? (INDICATOR PROFILE) */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                            <BookOpen className="w-5 h-5 text-[#00008B]" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-[#00008B]">Bu Veri Nedir?</h2>
+                            <p className="text-xs text-slate-400 font-bold">Indicator Profile Kapsamında Gösterge Özeti</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">1. Tanım</h3>
+                            <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.definition}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">2. Ne Ölçer?</h3>
+                            <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.whatItMeasures}</p>
+                        </div>
+                        <div className="space-y-2">
+                            <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">3. Neden Önemlidir?</h3>
+                            <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.whyItMatters}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 7.9 BU VERİ HANGİ ALANLARI ETKİLEYEBİLİR? (ETKİ ZİNCİRİ AKIŞ ŞEMASI) */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                    <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                            <Layers className="w-5 h-5 text-[#00008B]" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-[#00008B]">Bu Veri Hangi Alanları Etkileyebilir?</h2>
+                            <p className="text-xs text-slate-400 font-bold">Olası Ekonomik & Finansal Etki Kanalları</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                        {profile.impactChannels.map((channel, idx) => (
+                            <div key={idx} className="flex-1 min-w-[200px] p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                                <span className="text-[10px] font-extrabold text-blue-600 uppercase">Adım {idx + 1}</span>
+                                <h4 className="text-xs font-black text-[#00008B]">{channel.title}</h4>
+                                <p className="text-[11px] text-slate-500 font-medium leading-normal">{channel.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 7.10 & 7.11 SENARYO ANALİZİ BÖLÜMÜ */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-150">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                                <Target className="w-5 h-5 text-[#00008B]" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-black text-[#00008B]">Senaryo Analizi</h2>
+                                <p className="text-xs text-slate-400 font-bold">Gerçekleşen Senaryo & Olası Alternatif Durumlar</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowAllScenarios(!showAllScenarios)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-[#00008B] font-extrabold text-xs transition-all"
+                        >
+                            {showAllScenarios ? 'Diğer Senaryoları Gizle' : 'Diğer Senaryoları Görüntüle'}
+                            {showAllScenarios ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                    </div>
+
+                    {/* Gerçekleşen Senaryo Kartı */}
+                    <div className="p-6 rounded-2xl bg-[#00008B] text-white space-y-3 shadow-md">
+                        <div className="flex items-center justify-between">
+                            <span className="px-3 py-1 rounded-xl bg-emerald-400 text-[#00008B] text-xs font-black">
+                                Gerçekleşen Senaryo
+                            </span>
+                            <span className="text-xs font-bold text-blue-200">
+                                {calc.forecastDiffText || 'Piyasa Paralelinde'}
+                            </span>
+                        </div>
+                        <h3 className="text-lg font-black text-white">
+                            Açıklanan Değer: {event.actual || 'Bekleniyor'} (Beklenti: {event.forecast || '-'})
+                        </h3>
+                        <p className="text-xs text-blue-100 font-medium leading-relaxed">
+                            {finAiAnalysis.whatItMeans}
+                        </p>
+                    </div>
+
+                    {/* Diğer Senaryolar (Akordeon Mantığı) */}
+                    {showAllScenarios && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-150">
+                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                                <h4 className="text-xs font-black text-emerald-700">1. Beklentinin Üzerinde Gelirse</h4>
+                                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                    Göstergenin öngörülen beklenti seviyesinin üzerinde gerçekleşmesi durumunda faiz beklentileri sıkılaşabilir ve para politikasında temkinli duruş korunabilir.
+                                </p>
+                            </div>
+                            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                                <h4 className="text-xs font-black text-rose-700">2. Beklentinin Altında Gelirse</h4>
+                                <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                                    Göstergenin piyasa beklentilerinin gerisinde kalması halinde dezenflasyonist veya yavaşlama sinyalleri güçlenebilir, faiz indirimi alanları doğabilir.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 7.17 - 7.21 İNTERAKTİF GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ */}
+                <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-8 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
@@ -593,228 +397,157 @@ export default function EconomicEventDetailPage() {
                             </div>
                             <div>
                                 <h3 className="text-lg font-black text-[#00008B] tracking-tight">
-                                    {event.event} — Geçmiş Veri Grafiği
+                                    {event.event} — FinAi Historical Archive Grafiği
                                 </h3>
+                                <p className="text-xs text-slate-400 font-bold">Kalıcı Veritabanı Arşivi Üzerinden Dönemsel Seyir</p>
                             </div>
                         </div>
 
-                        {/* Legend */}
-                        <div className="flex items-center gap-4 text-xs font-bold text-slate-600">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3.5 h-3.5 rounded-sm bg-gradient-to-b from-[#00008B] to-blue-400" />
-                                <span>Gerçekleşen Veri</span>
-                            </div>
+                        {/* Zaman Aralığı Butonları */}
+                        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+                            {[
+                                { id: '12m', label: 'Son 12 Dönem' },
+                                { id: '1y', label: '1 Yıl' },
+                                { id: '3y', label: '3 Yıl' }
+                            ].map((tf) => (
+                                <button
+                                    key={tf.id}
+                                    onClick={() => setChartTimeframe(tf.id as any)}
+                                    className={`px-3 py-1.5 text-xs font-black rounded-xl transition-all ${
+                                        chartTimeframe === tf.id ? 'bg-[#00008B] text-white shadow-sm' : 'text-slate-600 hover:text-[#00008B]'
+                                    }`}
+                                >
+                                    {tf.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Bar Chart Visualizer */}
-                    <div className="py-8 px-2">
-                        <div className="flex items-end justify-between gap-3 md:gap-5 h-72 border-b border-slate-200 pb-4">
-                            {chartSeries.map((s, idx) => {
-                                const heightPercent = Math.min(Math.max((Math.abs(s.actual) / maxVal) * 100, 18), 100);
+                    {/* SVG/Bar İnteraktif Grafik Çizimi */}
+                    <div className="relative pt-6 pb-2">
+                        {hoveredPoint && (
+                            <div className="absolute top-0 right-4 bg-[#00008B] text-white p-3 rounded-2xl text-xs font-bold shadow-lg z-20 space-y-1">
+                                <div>Dönem: {hoveredPoint.month}</div>
+                                <div className="text-emerald-300">Açıklanan: {hoveredPoint.actual}</div>
+                                <div className="text-blue-200">Beklenti: {hoveredPoint.forecast}</div>
+                                <div className="text-slate-300">Önceki: {hoveredPoint.previous}</div>
+                            </div>
+                        )}
+
+                        <div className="h-48 flex items-end justify-between gap-3 px-4 border-b border-slate-200 pb-2">
+                            {historicalData.map((pt, idx) => {
+                                const valNum = parseFloat(pt.actual.replace(',', '.'));
+                                const heightPercent = Math.min(Math.max((valNum / 5) * 100, 15), 90);
+
                                 return (
-                                    <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                                        <span className="text-xs font-black text-[#00008B] mb-2 tracking-tight block group-hover:scale-110 transition-transform">
-                                            {s.formattedActual}
+                                    <div
+                                        key={idx}
+                                        onMouseEnter={() => setHoveredPoint(pt)}
+                                        onMouseLeave={() => setHoveredPoint(null)}
+                                        className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
+                                    >
+                                        <span className="text-[10px] font-black text-slate-500 group-hover:text-[#00008B] transition-colors">
+                                            {pt.actual}
                                         </span>
-
-                                        <div
-                                            style={{ height: `${heightPercent}%` }}
-                                            className="w-full max-w-[48px] bg-gradient-to-b from-[#00008B] via-[#2563eb] to-[#e0f2fe] hover:from-[#0808a3] hover:via-[#3b82f6] hover:to-[#bae6fd] rounded-t-2xl border border-[#00008B]/20 shadow-lg shadow-[#00008B]/15 transition-all group-hover:scale-105"
-                                        />
-
-                                        <span className="text-[10px] font-bold text-slate-600 mt-3 text-center block">
-                                            {s.month}
+                                        <div className="w-full max-w-[28px] bg-slate-150 group-hover:bg-[#00008B] rounded-t-xl transition-all duration-300 relative overflow-hidden" style={{ height: `${heightPercent}%` }}>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#00008B]/80 to-blue-500/80 group-hover:from-[#00008B] group-hover:to-blue-400 transition-all" />
+                                        </div>
+                                        <span className="text-[9px] font-bold text-slate-400 group-hover:text-[#00008B] whitespace-nowrap">
+                                            {pt.month.split(' ')[0]}
                                         </span>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
-                </div>
 
-                {/* Structured Educational & Market Impact Section Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left & Middle Column (2 Cols): What is it & Why follow? */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* WIDGET 1: Bu Veri Nedir ve Ne İşe Yarar? */}
-                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
-                            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
-                                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
-                                    <BookOpen className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-[#00008B]">Bu Veri Nedir ve Ne İşe Yarar?</h3>
-                                </div>
-                            </div>
-
-                            {/* 10 Saniyede Özet Şeridi */}
-                            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3 text-xs text-amber-900 font-semibold">
-                                <div>
-                                    <strong className="text-amber-950 font-black block mb-0.5">10 Saniyede Hızlı Özet:</strong>
-                                    <span>{eduCards.quickSummary}</span>
-                                </div>
-                            </div>
-
-                            {/* 3'LÜ MİNİ KART GRUBU */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {/* Kart 1: Gündelik Hayattaki Karşılığı */}
-                                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/60 space-y-2 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-xs font-black text-[#00008B]">
-                                            <ShoppingBag className="w-4 h-4 text-blue-600" />
-                                            <span>Gündelik Hayat Benzetmesi</span>
-                                        </div>
-                                        <p className="text-xs font-medium text-slate-700 leading-relaxed mt-2">
-                                            {eduCards.dailyLife}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Kart 2: Neyi Ölçer? */}
-                                <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/60 space-y-2 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-xs font-black text-indigo-900">
-                                            <Target className="w-4 h-4 text-indigo-600" />
-                                            <span>Neyi Ölçer?</span>
-                                        </div>
-                                        <p className="text-xs font-medium text-slate-700 leading-relaxed mt-2">
-                                            {eduCards.whatItMeasures}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Kart 3: Cebinize & Bütçenize Etkisi */}
-                                <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 space-y-2 flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex items-center gap-2 text-xs font-black text-emerald-950">
-                                            <CreditCard className="w-4 h-4 text-emerald-600" />
-                                            <span>Cebinize & Bütçenize Etkisi</span>
-                                        </div>
-                                        <p className="text-xs font-medium text-slate-700 leading-relaxed mt-2">
-                                            {eduCards.walletImpact}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                    {/* 7.20 Grafik Nasıl Okunur & 7.21 Dinamik Grafik Özeti */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-150">
+                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                            <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Grafik Nasıl Okunur?</h4>
+                            <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.readingChartGuide}</p>
                         </div>
-
-                        {/* WIDGET 2: Bu Veri Neleri Etkiler? (HABERE ÖZEL DİNAMİK PANEL BAŞLIKLARI VE İÇERİKLERİ) */}
-                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
-                            <div className="flex items-center gap-2.5 pb-3 border-b border-slate-150">
-                                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-[#00008B]">
-                                    <HelpCircle className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-[#00008B]">Bu Veri Neleri Etkiler?</h3>
-                                </div>
-                            </div>
-
-                            {/* 3 ODAK PANELİ (Her habere özel değişen dinamik özel başlıklar) */}
-                            <div className="space-y-4">
-                                {/* Panel 1: Habere Özel 1. Başlık */}
-                                <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200/80 space-y-1.5">
-                                    <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">
-                                        {dataEffects.dailyLifeTitle}
-                                    </h4>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                        {dataEffects.dailyLifeEffect}
-                                    </p>
-                                </div>
-
-                                {/* Panel 2: Habere Özel 2. Başlık */}
-                                <div className="p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200/80 space-y-1.5">
-                                    <h4 className="text-xs font-black text-indigo-950 uppercase tracking-wider">
-                                        {dataEffects.bankingCreditTitle}
-                                    </h4>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                        {dataEffects.bankingCreditEffect}
-                                    </p>
-                                </div>
-
-                                {/* Panel 3: Habere Özel 3. Başlık */}
-                                <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-1.5">
-                                    <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider">
-                                        {dataEffects.marketAssetsTitle}
-                                    </h4>
-                                    <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                                        {dataEffects.marketAssetsEffect}
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
+                            <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Son Dönemde Ne Değişti?</h4>
+                            <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                                Son 12 açıklama döneminde gösterge {historicalData[0].actual} seviyesinden {historicalData[historicalData.length - 1].actual} seviyesine ulaşmıştır. Dönemsel oynaklıklar makro beklentiler doğrultusunda dengelenmektedir.
+                            </p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Right Column (1 Col): Scenario Analysis */}
-                    <div className="space-y-6">
-                        {/* WIDGET 4: SENARYO ANALİZİ */}
-                        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
-                            <div className="flex items-center justify-between border-b border-slate-150 pb-3">
-                                <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Senaryo Analizi</h4>
-                            </div>
-
-                            {/* 3'LÜ İNTERAKTİF SENARYO SEÇİCİ SEKMELERİ (TABS) */}
-                            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/80">
-                                <button
-                                    onClick={() => setActiveScenarioTab('above')}
-                                    className={`py-2 px-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
-                                        activeScenarioTab === 'above'
-                                            ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                                    }`}
-                                >
-                                    <TrendingUp className="w-3 h-3" /> Üstünde
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveScenarioTab('inline')}
-                                    className={`py-2 px-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
-                                        activeScenarioTab === 'inline'
-                                            ? 'bg-slate-700 text-white shadow-md shadow-slate-700/20'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                                    }`}
-                                >
-                                    <MinusCircle className="w-3 h-3" /> Paralel
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveScenarioTab('below')}
-                                    className={`py-2 px-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1 ${
-                                        activeScenarioTab === 'below'
-                                            ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                                    }`}
-                                >
-                                    <TrendingDown className="w-3 h-3" /> Altında
-                                </button>
-                            </div>
-                            
-                            {/* AKTİF SEÇİLİ SENARYO PARAGRAF KARTI */}
-                            <div className={`p-5 rounded-2xl border space-y-3 transition-all ${
-                                activeScenarioTab === 'above'
-                                    ? 'bg-emerald-50/90 border-emerald-200'
-                                    : activeScenarioTab === 'inline'
-                                    ? 'bg-slate-50 border-slate-200'
-                                    : 'bg-rose-50/90 border-rose-200'
-                            }`}>
-                                {/* Kart Başlığı */}
-                                <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                                    <h5 className={`text-xs font-black uppercase tracking-wider ${
-                                        activeScenarioTab === 'above' ? 'text-emerald-900' : activeScenarioTab === 'inline' ? 'text-slate-800' : 'text-rose-900'
-                                    }`}>
-                                        {currentScenario.title}
-                                    </h5>
-                                </div>
-
-                                {/* DETAYLI, AÇIKLAYICI VE ZENGİN TEK PARAGRAF METNİ */}
-                                <p className="text-xs font-medium text-slate-700 leading-relaxed pt-1">
-                                    {currentScenario.paragraph}
-                                </p>
-                            </div>
+                {/* 7.22 "NE ÇIKARAMAYIZ?" & 7.23 FİNANSAL OKURYAZARLIK BÖLÜMÜ */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Ne Çıkaramayız? */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
+                        <div className="flex items-center gap-2 text-rose-600">
+                            <AlertTriangle className="w-5 h-5 text-rose-600" />
+                            <h3 className="text-sm font-black uppercase tracking-wider">Ne Çıkaramayız?</h3>
                         </div>
+                        <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                            {profile.whatWeCannotInfer}
+                        </p>
+                    </div>
+
+                    {/* Finansal Okuryazarlık */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
+                        <div className="flex items-center gap-2 text-[#00008B]">
+                            <BookOpen className="w-5 h-5 text-[#00008B]" />
+                            <h3 className="text-sm font-black uppercase tracking-wider">Bu Veriyi Anlamak İçin Bilmen Gerekenler</h3>
+                        </div>
+                        <div className="space-y-2">
+                            {profile.financialLiteracyItems.map((item, idx) => (
+                                <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
+                                    <h4 className="text-xs font-black text-[#00008B]">{item.title}</h4>
+                                    <p className="text-[11px] text-slate-600 font-medium leading-normal">{item.content}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 7.24 & 7.25 İLGİLİ GÖSTERGELER & EKONOMİK ÖĞRENME AĞI */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                    <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-[#00008B]" /> İlgili Göstergeler & Ekonomik Öğrenme Ağları
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {profile.relatedIndicators.map((rel, idx) => (
+                            <Link
+                                key={idx}
+                                href={`/dashboard/economic-calendar/${encodeURIComponent(rel.id)}`}
+                                className="px-4 py-2 rounded-2xl bg-blue-50 hover:bg-blue-100 text-[#00008B] font-bold text-xs border border-blue-200 transition-all flex items-center gap-2"
+                            >
+                                {rel.name} <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </div>
+
+            {/* 7.8 TEKNİK TERİM MODAL / POPOVER TOOLTIP */}
+            {activeTooltip && (
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+                    <div className="bg-white text-[#00008B] p-6 rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-150 pb-3">
+                            <span className="text-xs font-black uppercase text-blue-600">Terim Sözlüğü ⓘ</span>
+                            <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-slate-700">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div>
+                            <h3 className="text-base font-black text-[#00008B]">{activeTooltip.label} ({activeTooltip.term})</h3>
+                            <p className="text-xs text-slate-600 font-medium mt-2 leading-relaxed">{activeTooltip.definition}</p>
+                        </div>
+                        <button
+                            onClick={() => setActiveTooltip(null)}
+                            className="w-full py-2.5 rounded-2xl bg-[#00008B] text-white text-xs font-black shadow-md hover:bg-[#0808a3] transition-all"
+                        >
+                            Anladım
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

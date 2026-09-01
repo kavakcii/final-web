@@ -859,10 +859,13 @@ export default function EconomicCalendarPage() {
                                                             </div>
                                                         </td>
 
-                                                        {/* Haber Başlığı */}
+                                                        {/* Haber Başlığı & 7.26 Veriyi ve Etkilerini İncele Linki */}
                                                         <td className="py-4 px-3 align-top">
                                                             <span className="text-xs font-bold text-white block leading-snug">
                                                                 {item.event}
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-blue-200 group-hover:text-amber-300 flex items-center gap-1 mt-1 transition-colors">
+                                                                Veriyi ve etkilerini incele →
                                                             </span>
                                                         </td>
 
