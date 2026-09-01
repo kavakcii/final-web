@@ -865,7 +865,7 @@ export default function EconomicCalendarPage() {
                                                                 {item.event}
                                                             </span>
                                                             <span className="text-[10px] font-bold text-blue-200 group-hover:text-amber-300 flex items-center gap-1 mt-1 transition-colors">
-                                                                Veriyi ve etkilerini incele →
+                                                                FinAi Intelligence'ı incele →
                                                             </span>
                                                         </td>
 

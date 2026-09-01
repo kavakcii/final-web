@@ -18,10 +18,11 @@ export interface FinAiNarrativeAnalysis {
     status: 'draft' | 'published' | 'superseded' | 'failed';
     generatedAt: string;
     model: string;
-    whatHappened: string; // 1. Ne oldu?
-    whatItMeans: string; // 2. Ne anlama geliyor?
-    potentialImpacts: string; // 3. Neleri etkileyebilir?
-    pointsToConsider: string; // 4. Nelere dikkat edilmeli?
+    shortExecutiveSummary: string; // FİNAİ'NİN KISA DEĞERLENDİRMESİ (YENİ 7.1 SEVİYESİ)
+    whatHappened: string; // 01 — NE OLDU?
+    whatItMeans: string; // 02 — NE ANLAMA GELİYOR?
+    potentialImpacts: string; // 03 — NELERİ ETKİLEYEBİLİR?
+    pointsToConsider: string; // 04 — NELERE DİKKAT EDİLMELİ?
 }
 
 function parseNumber(str?: string): number | null {
@@ -32,7 +33,7 @@ function parseNumber(str?: string): number | null {
 }
 
 /**
- * 7.2 BACKEND CALCULATION LAYER (AI Yapmayacak, Backend Hesaplayacak)
+ * 7.1 BACKEND CALCULATION LAYER (AI Yapmayacak, Objektif Backend Hesaplayacak)
  */
 export function calculateBackendDifferences(item: CatalogCalendarEvent): BackendCalculations {
     const actualNum = parseNumber(item.actual);
@@ -64,7 +65,7 @@ export function calculateBackendDifferences(item: CatalogCalendarEvent): Backend
         const diff = Math.abs(actualNum - previousNum);
         previousDiffNumber = Number(diff.toFixed(2));
         if (actualNum > previousNum) {
-            previousDiffText = `Önceki açıklamaya göre ${previousDiffNumber} puan yükseldi`;
+            previousDiffText = `Önceki açıklamaya göre ${previousDiffNumber} puan yüksek`;
         } else if (actualNum < previousNum) {
             previousDiffText = `Önceki açıklamaya göre ${previousDiffNumber} puan geriledi`;
         } else {
@@ -84,8 +85,8 @@ export function calculateBackendDifferences(item: CatalogCalendarEvent): Backend
 }
 
 /**
- * 7.4 & 7.5 FİNAİ YORUMU ÜRETİCİ (Dil Kuralları & Guardrails İle)
- * Kesin Yatırım Dili Yasak ("destekleyebilir", "baskı oluşturabilir", "diğer koşullar değişmediği takdirde")
+ * FİNAİ INTELLIGENCE ANALİZ ÜRETİCİ
+ * Şartlı, objektif ve kesin yatırım tavsiyesi içermeyen dil kuralları ile.
  */
 export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativeAnalysis {
     const calc = calculateBackendDifferences(item);
@@ -97,13 +98,16 @@ export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativ
     const obsId = item.id || `obs_${item.country}_${item.time.replace(':', '')}`;
 
     if (!calc.hasActual) {
+        const shortExecutiveSummary = `Açıklanması beklenen ${profile.name} verisi için piyasa konsensüs tahmini ${item.forecast || 'belirtilmedi'} seviyesindedir. Önceki dönem gerçekleşmesi ${item.previous || 'bulunmamaktadır'}. Veri açıklandığında beklenti ile gerçekleşme arasındaki fark makroekonomik duruş üzerinde belirleyici olabilir.`;
+
         return {
-            analysisId: `anl_${obsId}_v1`,
+            analysisId: `anl_${obsId}_v2`,
             observationId: obsId,
-            version: 'v1',
+            version: 'v2.0',
             status: 'published',
             generatedAt: nowIso,
-            model: 'FinAi-Economic-Logic-Engine-v2',
+            model: 'FinAi-Economic-Intelligence-Engine-v2',
+            shortExecutiveSummary,
             whatHappened: `Veri henüz açıklanmadı. Piyasa beklentisi ${item.forecast || 'belirtilmedi'} seviyesindedir.`,
             whatItMeans: `Verinin açıklanmasıyla birlikte ${profile.category.toLowerCase()} patikasındaki mevcut görünüm netlik kazanacaktır.`,
             potentialImpacts: `${profile.name} verisi açıklandığında ${profile.impactChannels.map(c => c.title.toLowerCase()).join(', ')} alanlarında hareketlilik yaratabilir.`,
@@ -111,7 +115,17 @@ export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativ
         };
     }
 
-    // 1. Ne oldu?
+    // FİNAİ'NİN KISA DEĞERLENDİRMESİ (Dinamik Özet Metin)
+    let shortExecutiveSummary = `Açıklanan ${profile.name} ${item.actual} gerçekleşerek `;
+    if (calc.forecastDiffText) {
+        shortExecutiveSummary += `${item.forecast || 'tahmin'}'lik piyasa beklentisinin ${calc.forecastDiffNumber} puan ${parseNumber(item.actual)! < parseNumber(item.forecast)! ? 'altında kalmıştır' : parseNumber(item.actual)! > parseNumber(item.forecast)! ? 'üzerinde gerçekleşmiştir' : 'paralelinde seyretmiştir'}. `;
+    }
+    if (calc.previousDiffText) {
+        shortExecutiveSummary += `Önceki döneme (${item.previous}) göre ise ${calc.previousDiffNumber} puanlık bir ${parseNumber(item.actual)! > parseNumber(item.previous)! ? 'yükseliş' : parseNumber(item.actual)! < parseNumber(item.previous)! ? 'gerileme' : 'değişimsizlik'} görülmüştür. `;
+    }
+    shortExecutiveSummary += `Bu sonuç, mevcut koşullar altında ${profile.category.toLowerCase()} patikasının beklentiye kıyasla daha ${parseNumber(item.actual)! < (parseNumber(item.forecast) || 0) ? 'sınırlı' : 'güçlü'} olduğunu gösterirken, tek başına kalıcı eğilimin değiştiği sonucunu ortaya koymaz.`;
+
+    // 01 — NE OLDU?
     let whatHappened = `Açıklanan ${profile.name} değeri ${item.actual} seviyesinde gerçekleşti. `;
     if (calc.forecastDiffText) {
         whatHappened += `Bu sonuç ${calc.forecastDiffText.toLowerCase()} gerçekleştiğine işaret ediyor (Piyasa Beklentisi: ${item.forecast}). `;
@@ -120,29 +134,30 @@ export function generateFinAiAnalysis(item: CatalogCalendarEvent): FinAiNarrativ
         whatHappened += `${calc.previousDiffText} (Önceki Veri: ${item.previous}).`;
     }
 
-    // 2. Ne anlama geliyor?
+    // 02 — NE ANLAMA GELİYOR?
     let whatItMeans = '';
     if (calc.forecastDiffNumber !== undefined && calc.hasForecast && parseNumber(item.actual)! < parseNumber(item.forecast)!) {
-        whatItMeans = `Sonuç, ${profile.category.toLowerCase()} tarafındaki baskının piyasanın öngördüğünden daha sınırlı seyrettiğini gösterebilir. Fiyat artış hızındaki bu görünüm dezenflasyonist beklentileri destekleyebilir.`;
+        whatItMeans = `Sonuç, ${profile.category.toLowerCase()} tarafındaki artış hızının piyasanın öngördüğünden daha sınırlı kaldığını gösterebilir. Fiyat basamaklarındaki bu yavaşlama dezenflasyonist veya esnetici beklentileri destekleyebilir.`;
     } else if (calc.forecastDiffNumber !== undefined && calc.hasForecast && parseNumber(item.actual)! > parseNumber(item.forecast)!) {
         whatItMeans = `Sonuç, ${profile.category.toLowerCase()} üzerindeki baskıların devam ettiğine ve piyasa tahminlerinden daha güçlü seyrettiğine işaret edebilir.`;
     } else {
         whatItMeans = `Verinin piyasa beklentileriyle tam uyum göstermesi, mevcut makroekonomik projeksiyonların korunduğunu ve sürpriz bir şok oluşmadığını gösterebilir.`;
     }
 
-    // 3. Neleri etkileyebilir?
-    const potentialImpacts = `Diğer koşullar değişmediği takdirde bu gelişme, ${profile.impactChannels.map(c => c.title).join(' ve ')} üzerinde hassasiyet yaratabilir, politika yapıcıların karar alma esnekliğini etkileyebilir.`;
+    // 03 — NELERİ ETKİLEYEBİLİR?
+    const potentialImpacts = `Diğer koşullar değişmediği takdirde bu gelişme, ${profile.impactChannels.map(c => c.title).slice(0, 3).join(', ')} üzerinde hassasiyet yaratabilir, politika yapıcıların karar alma esnekliğini etkileyebilir.`;
 
-    // 4. Nelere dikkat edilmeli?
+    // 04 — NELERE DİKKAT EDİLMELİ?
     const pointsToConsider = `Ancak tek bir dönem açıklaması, genel trendin kalıcı olarak değiştiğini kanıtlamak için yeterli olmayabilir. Gelecek dönem verileri ve yardımcı makro göstergelerle birlikte değerlendirilmelidir.`;
 
     return {
-        analysisId: `anl_${obsId}_v1`,
+        analysisId: `anl_${obsId}_v2`,
         observationId: obsId,
-        version: 'v1',
+        version: 'v2.0',
         status: 'published',
         generatedAt: nowIso,
-        model: 'FinAi-Economic-Logic-Engine-v2',
+        model: 'FinAi-Economic-Intelligence-Engine-v2',
+        shortExecutiveSummary,
         whatHappened,
         whatItMeans,
         potentialImpacts,

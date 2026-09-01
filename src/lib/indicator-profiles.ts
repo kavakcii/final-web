@@ -16,8 +16,13 @@ export interface IndicatorProfile {
     definition: string; // 1. Tanım
     whatItMeasures: string; // 2. Ne ölçer?
     whyItMatters: string; // 3. Neden önemlidir?
-    impactChannels: Array<{ title: string; desc: string }>; // Etki zinciri
-    readingChartGuide: string; // Grafik nasıl okunur?
+    howToInterpret: string; // 4. Nasıl yorumlanır? (YENİ 7.1 SEVİYESİ)
+    impactChannels: Array<{ step: string; title: string; desc: string }>; // Dinamik etki zinciri
+    chartReadingCards: {
+        direction: string; // 01 - Yön
+        changeSpeed: string; // 02 - Değişim Hızı
+        context: string; // 03 - Bağlam
+    };
     whatWeCannotInfer: string; // Ne çıkaramayız?
     financialLiteracyItems: Array<{ title: string; content: string }>; // Finansal Okuryazarlık
     relatedIndicators: Array<{ name: string; id: string; category: string }>; // İlgili göstergeler
@@ -32,7 +37,7 @@ export const TECHNICAL_TERMS: Record<string, TechnicalTermTooltip> = {
     forecast: {
         term: 'forecast',
         label: 'Beklenti',
-        definition: 'Verinin açıklanmasından önce piyasa analistleri ve kurumsal kurumların tahmin ortalamasıdır.'
+        definition: 'Piyasa analistleri ve kurumsal kurumların veri açıklanmadan önceki tahmin ortalamasıdır.'
     },
     previous: {
         term: 'previous',
@@ -64,16 +69,23 @@ export const INDICATOR_PROFILES_DATABASE: Record<string, IndicatorProfile> = {
         definition: "Tüketici Fiyat Endeksi (TÜFE), hanehalklarının tükettiği mal ve hizmet sepetinin aylık bazdaki ortalama fiyat değişimini ölçer.",
         whatItMeasures: "Hanehalkı harcama sepetindeki aylık fiyat artış hızını ve Türk Lirası'nın satın alma gücündeki aylık erimeyi ölçer.",
         whyItMatters: "TCMB faiz kararlarını, mevduat getirilerini, ev kiralarını ve maaş zam oranlarını doğrudan belirleyen en kritik makro veridir.",
+        howToInterpret: "TÜFE'yi değerlendirirken yalnızca mevcut değere değil; önceki döneme, piyasa beklentisine, yıllık enflasyona ve çekirdek fiyat göstergelerine birlikte bakmak gerekir.",
         impactChannels: [
-            { title: "Enflasyon Beklentileri", desc: "Aylık fiyat artış hızı piyasanın gelecek dönem enflasyon patikasını şekillendirir." },
-            { title: "Para Politikası & Faizler", desc: "Yüksek aylık enflasyon Merkez Bankası'nı sıkı para politikası ve faiz artışına sevk edebilir." },
-            { title: "Mevduat & Kredi Maliyetleri", desc: "Faizlerin tırmanmasıyla kredi çekmek zorlaşır, vadeli mevduat getirisi yükselir." },
-            { title: "Finansal Varlık Değerlemeleri", desc: "Borsa şirketlerinin kârlılıkları ve döviz kuru dengeleri üzerinde doğrudan etki yapar." }
+            { step: "VERİ", title: "Açıklanan TÜFE Oranı", desc: "Aylık fiyat artış hızı verisi açıklanır." },
+            { step: "BEKLENTİLER", title: "Enflasyon Beklentileri", desc: "Piyasanın gelecek dönem enflasyon patikasına dair öngörüleri şekillenir." },
+            { step: "PARA POLİTİKASI", title: "TCMB Duruşu", desc: "Merkez Bankası para politikasında sıkılaşma veya esnetme alanını değerlendirir." },
+            { step: "FAİZLER", title: "Borçlanma & Mevduat", desc: "Politika faizine paralel olarak mevduat ve kredi faiz oranları dengelenir." },
+            { step: "KREDİ / MEVDUAT", title: "Likidite Akışı", desc: "Hanehalkı ve şirketlerin harcama veya tasarruf tercihleri etkilenir." },
+            { step: "FİNANSAL VARLIKLAR", title: "Borsa & Döviz", desc: "Reel getiriler doğrultusunda borsa şirketleri ve döviz kurları dengesini bulur." }
         ],
-        readingChartGuide: "Grafikteki her nokta ilgili ay açıklanan aylık enflasyonu gösterir. Çizginin aşağı yönelmesi enflasyon hızının yavaşladığını (dezenflasyon), yukarı yönelmesi fiyat artışlarının hızlandığını gösterir.",
+        chartReadingCards: {
+            direction: "Grafikteki yukarı yönlü hareket aylık fiyat artışının hızlandığına, aşağı yönlü hareket ise dezenflasyon sürecine işaret eder.",
+            changeSpeed: "Çizginin eğimindeki artış fiyat basamaklarının ne kadar sert veya kademeli tırmandığını ortaya koyar.",
+            context: "Tek bir ayın sıçraması mevsimsel olabilir; bu nedenle en az 3 ile 6 aylık hareketli ortalamayla incelenmelidir."
+        },
         whatWeCannotInfer: "Tek bir aylık TÜFE açıklamasından enflasyonun uzun vadeli trendinin kalıcı olarak kırıldığı sonucu çıkarılamaz. Sonraki aylar ve çekirdek göstergelerle birlikte değerlendirilmelidir.",
         financialLiteracyItems: [
-            { title: "Aylık ve Yıllık Enflasyon Arasındaki Fark Nedir?", content: "Aylık enflasyon sadece son 30 gündeki fiyat değişimini, yıllık enflasyon ise son 12 ayın toplam birikimli artışını gösterir." },
+            { title: "Aylık ve Yıllık Enflasyon Arasındaki Fark Nedir?", content: "Aylık enflasyon sadece son 30 gündeki fiyat değişimini, yıllık enflasyon ise son 12 ayın birikimli toplam artışını gösterir." },
             { title: "Çekirdek Enflasyon Nedir?", content: "Gıda ve enerji gibi oynak fiyatlı kalemlerin çıkarılmasıyla hesaplanan ana enflasyon eğilimi göstergesidir." }
         ],
         relatedIndicators: [
@@ -94,12 +106,20 @@ export const INDICATOR_PROFILES_DATABASE: Record<string, IndicatorProfile> = {
         definition: "Yıllık TÜFE Enflasyonu, son 12 ay içerisindeki tüketici fiyat seviyesinin birikimli yıllık artış oranını gösterir.",
         whatItMeasures: "Ülkedeki genel fiyat düzeyinin 1 yıllık zaman ufku içerisindeki toplam artış hızını ölçer.",
         whyItMatters: "Kira artış tavanları, asgari ücret güncellemeleri ve memur/emekli zam oranları resmi olarak bu veriye dayanır.",
+        howToInterpret: "Yıllık enflasyonu incelerken baz etkisinin (geçen yılın aynı ayındaki sıra dışı verilerin) oran üzerindeki yapay yükseltici veya düşürücü etkisini göz önüne almak şarttır.",
         impactChannels: [
-            { title: "Yıllık Kira & Ücret Zamları", desc: "Resmi kira tavanları ve maaş güncellemeleri yıllık TÜFE oranına göre belirlenir." },
-            { title: "Reel Faiz Hesaplaması", desc: "Mevduat faizinin enflasyon karşısındaki reel getirisini ortaya koyar." },
-            { title: "Sermaye Hareketleri", desc: "Dezenflasyon sürecinin inandırıcılığı yabancı sermaye girişlerini teşvik eder." }
+            { step: "VERİ", title: "Yıllık TÜFE Verisi", desc: "Son 12 ayın birikimli artış oranı yayınlanır." },
+            { step: "BEKLENTİLER", title: "Reel Faiz Beklentisi", desc: "Mevduat faizlerinin enflasyon karşısındaki koruma gücü ölçülür." },
+            { step: "PARA POLİTİKASI", title: "Sıkılaşma Patikası", desc: "TCMB'nin enflasyon hedefleri doğrultusundaki kararlılığı değerlendirilir." },
+            { step: "FAİZLER", title: "Uzun Vadeli Oranlar", desc: "Tahvil faizleri ve uzun vadeli konut kredileri şekillenir." },
+            { step: "KREDİ / MEVDUAT", title: "Tasarruf Eğilimi", desc: "TL tasarruf ve enflasyondan korunma arayışı yön bulur." },
+            { step: "FİNANSAL VARLIKLAR", title: "Varlık Değerlemeleri", desc: "Şirket değerlemeleri ve reel varlık fiyatları dengelenir." }
         ],
-        readingChartGuide: "Yıllık grafikteki düşüş eğilimi dezenflasyon sürecini temsil eder. Değerin gerilemesi fiyatların düştüğü anlamına değil, fiyat artış hızının yavaşladığı anlamına gelir.",
+        chartReadingCards: {
+            direction: "Grafikteki gerileme dezenflasyon sürecini temsil eder. Değerin düşmesi fiyatların ucuzladığı anlamına değil, artış hızının yavaşladığı anlamına gelir.",
+            changeSpeed: "Yıllık eğrinin eğimindeki yumuşama enflasyon ivmesinin kırılma hızını gösterir.",
+            context: "Geçen yılın yüksek aylık verileri endeksten çıktıkça oluşan baz etkisi trend analizinde ayırt edilmelidir."
+        },
         whatWeCannotInfer: "Yıllık enflasyonun düşmesi market fiyatlarının ucuzladığı anlamına gelmez; fiyatların geçen yıla göre daha yavaş pahalandığını gösterir.",
         financialLiteracyItems: [
             { title: "Dezenflasyon ile Deflasyon Arasındaki Fark", content: "Dezenflasyon fiyat artış hızının yavaşlamasıdır. Deflasyon ise fiyatların genel olarak mutlak gerilemesidir." }
@@ -121,12 +141,20 @@ export const INDICATOR_PROFILES_DATABASE: Record<string, IndicatorProfile> = {
         definition: "Fed (ABD Merkez Bankası) politika faizi kararı, küresel finansal sistemdeki Dolar borçlanma maliyetinin taban seviyesidir.",
         whatItMeasures: "Küresel Dolar likiditesinin fiyatını ve borçlanma maliyetini ölçer.",
         whyItMatters: "Dünya borsaları, Ons Altın, gelişmekte olan ülke para birimleri ve küresel kredi mekanizması üzerinde birinci derecede etkilidir.",
+        howToInterpret: "Fed kararını değerlendirirken yalnızca alınan faiz adımına değil; karar metnindeki şahin/güvercin ifadelere ve Fed Başkanı'nın yönlendirmelerine bakılmalıdır.",
         impactChannels: [
-            { title: "Küresel Dolar Likiditesi", desc: "Faiz artışları küresel Doları güçlendirir, faiz indirimleri piyasaya likidite akıtır." },
-            { title: "Tahvil & Borçlanma Piyasaları", desc: "ABD 10 Yıllık tahvil faizlerini ve küresel kredi maliyetlerini doğrudan şekillendirir." },
-            { title: "Altın & Borsa Değerlemeleri", desc: "Düşük faiz risk iştahını artırarak borsa ve altın fiyatlarını destekleyebilir." }
+            { step: "VERİ", title: "Fed Faiz Kararı", desc: "Politika faiz oranı ve karar metni açıklanır." },
+            { step: "BEKLENTİLER", title: "Küresel Dolar Gücü", desc: "Dolar endeksi (DXY) ve küresel likidite algısı değişir." },
+            { step: "PARA POLİTİKASI", title: "Küresel Sıkılaşma/Gevşeme", desc: "Diğer merkez bankalarının hareket alanı etkilenir." },
+            { step: "FAİZLER", title: "Tahvil Verimleri", desc: "ABD 10 Yıllık ve küresel borçlanma faizleri tepki verir." },
+            { step: "KREDİ / MEVDUAT", title: "Küresel Sermaye Akışı", desc: "Gelişmekte olan ülkelere sermaye akışı veya çıkışı yaşanabilir." },
+            { step: "FİNANSAL VARLIKLAR", title: "Altın & Küresel Borsalar", desc: "Ons Altın, Kripto ve küresel hisse senedi piyasaları yeniden fiyatlanır." }
         ],
-        readingChartGuide: "Faiz grafiğindeki merdiven basamakları para politikası döngülerini (sıkılaşma / gevşeme) gösterir.",
+        chartReadingCards: {
+            direction: "Grafikteki merdiven basamakları para politikası döngülerini (sıkılaşma veya gevşeme patikalarını) temsil eder.",
+            changeSpeed: "Pasif geçilen toplantılar ile 25/50 baz puanlık adımların sıklığı sıkılaşmanın dozunu gösterir.",
+            context: "Faiz oranı kararıyla birlikte piyasa faiz patikası tahminlerini (Dot Plot) de incelemek şarttır."
+        },
         whatWeCannotInfer: "Fed faiz indirdiği an tüm borsaların kesin yükseleceği çıkarılamaz; resesyon endişeleri varsa hisse piyasaları baskılanabilir.",
         financialLiteracyItems: [
             { title: "Fed Notları ve Dot Plot Nedir?", content: "Fed üyelerinin geleceğe dair faiz tahminlerini gösteren nokta grafiktir." }
@@ -148,11 +176,20 @@ export const INDICATOR_PROFILES_DATABASE: Record<string, IndicatorProfile> = {
         definition: "Makroekonomik piyasa takibinde kullanılan resmi ekonomik gösterge verisidir.",
         whatItMeasures: "Piyasadaki ekonomik aktivite düzeyini ve finansal dengeleri ölçer.",
         whyItMatters: "Yatırımcı kararlarını ve makroekonomik beklentileri yönlendirir.",
+        howToInterpret: "Göstergeyi değerlendirirken geçmiş trendle uyumuna ve piyasa beklentileriyle olan farkına odaklanılmalıdır.",
         impactChannels: [
-            { title: "Piyasa Beklentileri", desc: "Veri gerçekleşmeleri piyasa beklentilerini şekillendirir." },
-            { title: "Para Politikası", desc: "Merkez bankalarının politika kararlarına girdi sağlar." }
+            { step: "VERİ", title: "Veri Açıklaması", desc: "Resmi makro veri yayınlanır." },
+            { step: "BEKLENTİLER", title: "Piyasa Algısı", desc: "Makroekonomik beklentiler güncellenir." },
+            { step: "PARA POLİTİKASI", title: "Politika Etkisi", desc: "Ekonomi yönetiminin kararlarına girdi sağlar." },
+            { step: "FAİZLER", title: "Piyasa Faizleri", desc: "Borçlanma maliyetlerine yansır." },
+            { step: "KREDİ / MEVDUAT", title: "Reel Kesim Etkisi", desc: "Şirketler ve hanehalklarının tercihlerini etkiler." },
+            { step: "FİNANSAL VARLIKLAR", title: "Piyasa Dengeleme", desc: "Finansal asset fiyatlamaları dengelenir." }
         ],
-        readingChartGuide: "Grafikteki değişimler ilgili dönemdeki makro eğilimi temsil eder.",
+        chartReadingCards: {
+            direction: "Grafikteki yükseliş veya düşüş ilgili makro değişkenin dönemsel seyrini ifade eder.",
+            changeSpeed: "Verinin değişim ivmesi kırılma anlarını gösterir.",
+            context: "Tek veri yerine dönemsel ortalamalara odaklanılmalıdır."
+        },
         whatWeCannotInfer: "Tek veri açıklamasından uzun vadeli piyasa yönü çıkarılamaz.",
         financialLiteracyItems: [
             { title: "Makro Veri Nedir?", content: "Ekonominin genel sağlık durumunu gösteren istatistiki göstergelerdir." }

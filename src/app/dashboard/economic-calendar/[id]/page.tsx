@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
     ArrowLeft, Calendar as CalendarIcon, Info, BookOpen, BarChart3, HelpCircle, Target, 
-    ChevronDown, ChevronUp, Layers, CheckCircle2, AlertTriangle, ShieldCheck, ArrowRight, Activity, Zap, Sparkles, X
+    ChevronDown, ChevronUp, Layers, CheckCircle2, AlertTriangle, ShieldCheck, ArrowRight, Activity, Zap, Sparkles, X, Database
 } from "lucide-react";
 import Link from "next/link";
 import { ECONOMIC_CALENDAR_CATALOG, CatalogCalendarEvent } from "@/lib/calendar-catalog";
@@ -18,6 +18,10 @@ export default function EconomicEventDetailPage() {
 
     const [event, setEvent] = useState<CatalogCalendarEvent | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // REAL HISTORICAL DATABASE RECORDS FROM SUPABASE
+    const [realHistoryEvents, setRealHistoryEvents] = useState<CatalogCalendarEvent[]>([]);
+    const [loadingHistory, setLoadingHistory] = useState(true);
 
     // State: Tooltip modal / popover state
     const [activeTooltip, setActiveTooltip] = useState<TechnicalTermTooltip | null>(null);
@@ -54,11 +58,39 @@ export default function EconomicEventDetailPage() {
         }
     }, [eventId]);
 
+    // FETCH REAL HISTORICAL RECORDS FROM SUPABASE DATABASE (KRİTİK VERİ POLİTİKASI)
+    useEffect(() => {
+        if (!event) return;
+
+        setLoadingHistory(true);
+        const todayYear = new Date().getFullYear();
+        const startYear = todayYear - 2;
+        const startDate = `${startYear}-01-01`;
+        const endDate = `${todayYear + 1}-12-31`;
+
+        fetch(`/api/calendar?startDate=${startDate}&endDate=${endDate}`)
+            .then(res => res.json())
+            .then(json => {
+                if (json.data && Array.isArray(json.data)) {
+                    // Filter matching real indicator events from database
+                    const matchingDbRecords = json.data.filter((item: any) => {
+                        const nameMatch = item.event === event.event || item.event.includes(event.event) || event.event.includes(item.event);
+                        const countryMatch = item.country === event.country;
+                        const released = item.actual && item.actual !== 'Bekleniyor' && item.actual !== '-';
+                        return nameMatch && countryMatch && released;
+                    });
+                    setRealHistoryEvents(matchingDbRecords);
+                }
+            })
+            .catch(err => console.error("Real history query error:", err))
+            .finally(() => setLoadingHistory(false));
+    }, [event]);
+
     if (loading) {
         return (
             <div className="flex flex-col min-h-screen bg-slate-50 items-center justify-center text-[#00008B]">
                 <div className="w-10 h-10 rounded-full border-4 border-[#00008B] border-t-transparent animate-spin mb-3" />
-                <span className="text-xs font-black uppercase tracking-wider">Aşama 7 Ekonomik Veri Analizi Yükleniyor...</span>
+                <span className="text-xs font-black uppercase tracking-wider">FinAi Intelligence UI v2 Yükleniyor...</span>
             </div>
         );
     }
@@ -80,77 +112,64 @@ export default function EconomicEventDetailPage() {
         INDICATOR_PROFILES_DATABASE[Object.keys(INDICATOR_PROFILES_DATABASE).find(k => event.event.includes(k)) || ""] || 
         INDICATOR_PROFILES_DATABASE["Default"];
 
-    // 7.2 Backend Calculation Layer Differences
+    // 4. Backend Calculations
     const calc = calculateBackendDifferences(event);
 
-    // 7.4 FinAi Narrative Analysis Generation
+    // 5. FinAi Narrative Analysis Generation
     const finAiAnalysis = generateFinAiAnalysis(event);
 
-    // Dynamic Mock Historical Dataset based on profile
-    const historicalData = [
-        { month: 'Eyl 2025', actual: '3,2', forecast: '3,3', previous: '3,5' },
-        { month: 'Eki 2025', actual: '3,1', forecast: '3,2', previous: '3,2' },
-        { month: 'Kas 2025', actual: '3,0', forecast: '3,1', previous: '3,1' },
-        { month: 'Ara 2025', actual: '2,9', forecast: '3,0', previous: '3,0' },
-        { month: 'Oca 2026', actual: '3,4', forecast: '3,2', previous: '2,9' },
-        { month: 'Şub 2026', actual: '3,3', forecast: '3,3', previous: '3,4' },
-        { month: 'Mar 2026', actual: '3,1', forecast: '3,2', previous: '3,3' },
-        { month: 'Nis 2026', actual: '3,0', forecast: '3,1', previous: '3,1' },
-        { month: 'May 2026', actual: '3,2', forecast: '3,0', previous: '3,0' },
-        { month: 'Haz 2026', actual: '2,8', forecast: '2,9', previous: '3,2' },
-        { month: 'Tem 2026', actual: '2,7', forecast: '2,8', previous: '2,8' },
-        { month: 'Ağu 2026', actual: event.actual || '2,9', forecast: event.forecast || '3,1', previous: event.previous || '3,2' }
-    ];
+    // 10. REAL HISTORICAL ARCHIVE DATA FILTERING (SAHTE VERİ KESİNLİKLE YOK)
+    const hasEnoughRealData = realHistoryEvents.length >= 2;
 
     return (
         <div className="flex flex-col min-h-[calc(100vh-4rem)] bg-slate-50 text-[#00008B] w-full mx-auto relative overflow-hidden">
-            <div className="w-full max-w-[1400px] mx-auto px-6 py-8 md:px-10 lg:py-10 space-y-8 relative z-10 mb-20">
+            <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6 md:px-10 lg:py-8 space-y-6 relative z-10 mb-20">
                 {/* Navigation Top Bar */}
                 <div className="flex items-center justify-between">
                     <Link
                         href="/dashboard/economic-calendar"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white border border-slate-200 text-[#00008B] font-bold text-xs shadow-sm hover:bg-slate-100 transition-all"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-slate-200 text-[#00008B] font-bold text-xs shadow-sm hover:bg-slate-100 transition-all"
                     >
                         <ArrowLeft className="w-4 h-4" /> Ekonomik Takvime Dön
                     </Link>
-                    <span className="text-xs font-black text-blue-600 bg-blue-50 px-3.5 py-1.5 rounded-2xl border border-blue-200 flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-blue-600" /> FinAi Economic Intelligence System v7.0
+                    <span className="text-[11px] font-black text-blue-700 bg-blue-50 px-3 py-1 rounded-2xl border border-blue-200 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-600" /> FinAi Intelligence UI v2
                     </span>
                 </div>
 
-                {/* 7.1 GİRİŞ BÖLÜMÜ HEADER BANNER */}
-                <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-6">
-                    <div className="relative z-10 space-y-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                            <span className="text-2xl">{profile.flag}</span>
-                            <span className="px-3 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-blue-200">
+                {/* 3. VERİ KİMLİĞİ (HEADER) */}
+                <div className="w-full bg-[#00008B] text-white border border-[#00008B] rounded-3xl p-6 md:p-8 shadow-xl shadow-[#00008B]/20 relative overflow-hidden space-y-4">
+                    <div className="relative z-10 space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-xl">{profile.flag}</span>
+                            <span className="px-2.5 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-blue-200">
                                 {event.country}
                             </span>
-                            <span className="px-3 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-300">
+                            <span className="px-2.5 py-1 rounded-xl bg-white/10 border border-white/20 text-xs font-black text-amber-300">
                                 {profile.category}
                             </span>
-                            <span className="px-3 py-1 rounded-xl bg-rose-500/20 border border-rose-400/30 text-xs font-black text-rose-200">
+                            <span className="px-2.5 py-1 rounded-xl bg-rose-500/20 border border-rose-400/30 text-xs font-black text-rose-200">
                                 {event.impact === 'critical' || event.impact === 'high' ? '🔥 Yüksek Etki' : 'Orta Etki'}
                             </span>
                         </div>
 
                         <div>
-                            <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight leading-tight">
+                            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-snug">
                                 {event.event}
                             </h1>
-                            <p className="text-xs font-bold text-blue-200 mt-2 flex items-center gap-2">
-                                <CalendarIcon className="w-4 h-4" /> {event.dateFormatted || 'Bugün'} · {event.time} TSİ (Europe/Istanbul)
+                            <p className="text-xs font-bold text-blue-200 mt-1.5 flex items-center gap-2">
+                                <CalendarIcon className="w-4 h-4 text-blue-300" /> {event.dateFormatted || 'Bugün'} · {event.time} TSİ
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {/* 7.2 & 7.3 VERİ KARTLARI VE BACKEND HESAPLAMA ROZETLERİ */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Açıklanan (Actual) */}
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3 relative overflow-hidden">
+                {/* 4. ACTUAL / FORECAST / PREVIOUS (KARTLAR & OBJECTIVE BACKEND HESAPLAMALARI) */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Actual */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                 Açıklanan (Actual)
                                 <button 
                                     onClick={() => setActiveTooltip(TECHNICAL_TERMS.actual)} 
@@ -159,21 +178,21 @@ export default function EconomicEventDetailPage() {
                                     <Info className="w-3.5 h-3.5" />
                                 </button>
                             </span>
-                            <span className={`px-2.5 py-1 rounded-xl text-[10px] font-black ${
+                            <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black ${
                                 calc.hasActual ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'
                             }`}>
-                                {calc.hasActual ? 'Açıklandı' : 'Açıklanması Bekleniyor'}
+                                {calc.hasActual ? 'Açıklandı' : 'Bekleniyor'}
                             </span>
                         </div>
-                        <div className="text-3xl md:text-4xl font-black text-[#00008B]">
+                        <div className="text-2xl sm:text-3xl font-black text-[#00008B]">
                             {event.actual || 'Bekleniyor'}
                         </div>
                     </div>
 
-                    {/* Beklenti (Forecast) */}
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
+                    {/* Forecast */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                 Beklenti (Forecast)
                                 <button 
                                     onClick={() => setActiveTooltip(TECHNICAL_TERMS.forecast)} 
@@ -182,22 +201,22 @@ export default function EconomicEventDetailPage() {
                                     <Info className="w-3.5 h-3.5" />
                                 </button>
                             </span>
-                            <span className="text-[10px] font-bold text-slate-400">Piyasa Konsensüsü</span>
+                            <span className="text-[10px] font-bold text-slate-400">Piyasa Tahmini</span>
                         </div>
-                        <div className="text-3xl md:text-4xl font-black text-slate-700">
+                        <div className="text-2xl sm:text-3xl font-black text-slate-700">
                             {event.forecast || '-'}
                         </div>
                         {calc.forecastDiffText && (
-                            <div className="pt-2 border-t border-slate-100 text-xs font-bold text-emerald-600 flex items-center gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> {calc.forecastDiffText}
+                            <div className="pt-2 border-t border-slate-100 text-xs font-bold text-blue-600 flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" /> {calc.forecastDiffText}
                             </div>
                         )}
                     </div>
 
-                    {/* Önceki (Previous) */}
-                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
+                    {/* Previous */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-xs font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                            <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1">
                                 Önceki (Previous)
                                 <button 
                                     onClick={() => setActiveTooltip(TECHNICAL_TERMS.previous)} 
@@ -208,70 +227,79 @@ export default function EconomicEventDetailPage() {
                             </span>
                             <span className="text-[10px] font-bold text-slate-400">Geçen Dönem</span>
                         </div>
-                        <div className="text-3xl md:text-4xl font-black text-slate-700">
+                        <div className="text-2xl sm:text-3xl font-black text-slate-700">
                             {event.previous || '-'}
                         </div>
                         {calc.previousDiffText && (
-                            <div className="pt-2 border-t border-slate-100 text-xs font-bold text-blue-600 flex items-center gap-1">
-                                <Activity className="w-3.5 h-3.5 text-blue-500" /> {calc.previousDiffText}
+                            <div className="pt-2 border-t border-slate-100 text-xs font-bold text-slate-600 flex items-center gap-1">
+                                <Activity className="w-3.5 h-3.5 text-slate-500" /> {calc.previousDiffText}
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* 7.4 FİNAİ YORUMU (4 PARÇALI NARRATIVE ANALİZ KARTI) */}
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
-                    <div className="flex items-center justify-between pb-4 border-b border-slate-150">
+                {/* 5. FINAI INTELLIGENCE ANA BÖLÜMÜ & 6. DÖRT PARÇALI ANALİZ */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
                                 <Sparkles className="w-5 h-5 text-[#00008B]" />
                             </div>
                             <div>
-                                <h2 className="text-xl font-black text-[#00008B]">FinAi Yorumu</h2>
-                                <p className="text-xs text-slate-400 font-bold">Resmi Verilere & Şartlı Ekonomik Mantığa Dayalı Otomatik Analiz</p>
+                                <h2 className="text-xl font-black text-[#00008B] tracking-tight">FINAI INTELLIGENCE</h2>
+                                <p className="text-xs text-slate-400 font-bold">
+                                    Bu verinin ne söylediğini, ne anlama geldiğini ve hangi koşullarda önem kazandığını açıklıyoruz.
+                                </p>
                             </div>
                         </div>
-                        <span className="text-[10px] font-extrabold text-slate-400 bg-slate-100 px-3 py-1 rounded-xl">
-                            Versiyon: {finAiAnalysis.version} · Status: {finAiAnalysis.status}
+                        <span className="text-[10px] font-extrabold text-[#00008B] bg-blue-50 border border-blue-200 px-3 py-1 rounded-xl self-start sm:self-center">
+                            Analiz Motoru v2.0
                         </span>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* 1. Ne oldu? */}
+                    {/* FINAI'NİN KISA DEĞERLENDİRMESİ */}
+                    <div className="p-5 rounded-2xl bg-slate-900 text-white space-y-2 shadow-md">
+                        <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-4 h-4 text-amber-400" /> FinAi'nin Kısa Değerlendirmesi
+                        </h3>
+                        <p className="text-xs text-slate-200 font-medium leading-relaxed">
+                            {finAiAnalysis.shortExecutiveSummary}
+                        </p>
+                    </div>
+
+                    {/* DÖRT PARÇALI ANALİZ (01, 02, 03, 04) */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
-                            <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
-                                <CheckCircle2 className="w-4 h-4 text-[#00008B]" /> 1. Ne Oldu?
-                            </h3>
+                            <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
+                                <CheckCircle2 className="w-4 h-4 text-[#00008B]" /> 01 — NE OLDU?
+                            </h4>
                             <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                 {finAiAnalysis.whatHappened}
                             </p>
                         </div>
 
-                        {/* 2. Ne anlama geliyor? */}
                         <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-100 space-y-2">
-                            <h3 className="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                                <Zap className="w-4 h-4 text-emerald-600" /> 2. Ne Anlama Geliyor?
-                            </h3>
+                            <h4 className="text-xs font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <Zap className="w-4 h-4 text-emerald-600" /> 02 — NE ANLAMA GELİYOR?
+                            </h4>
                             <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                 {finAiAnalysis.whatItMeans}
                             </p>
                         </div>
 
-                        {/* 3. Neleri etkileyebilir? */}
                         <div className="p-5 rounded-2xl bg-purple-50/60 border border-purple-100 space-y-2">
-                            <h3 className="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-                                <Layers className="w-4 h-4 text-purple-600" /> 3. Neleri Etkileyebilir?
-                            </h3>
+                            <h4 className="text-xs font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <Layers className="w-4 h-4 text-purple-600" /> 03 — NELERİ ETKİLEYEBİLİR?
+                            </h4>
                             <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                 {finAiAnalysis.potentialImpacts}
                             </p>
                         </div>
 
-                        {/* 4. Nelere dikkat edilmeli? */}
                         <div className="p-5 rounded-2xl bg-amber-50/60 border border-amber-100 space-y-2">
-                            <h3 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                                <ShieldCheck className="w-4 h-4 text-amber-600" /> 4. Nelere Dikkat Edilmeli?
-                            </h3>
+                            <h4 className="text-xs font-black text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <ShieldCheck className="w-4 h-4 text-amber-600" /> 04 — NELERE DİKKAT EDİLMELİ?
+                            </h4>
                             <p className="text-xs font-medium text-slate-700 leading-relaxed">
                                 {finAiAnalysis.pointsToConsider}
                             </p>
@@ -279,59 +307,75 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 7.7 BU VERİ NEDİR? (INDICATOR PROFILE) */}
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                {/* 7. BU VERİ NEDİR? (4 ALANLI: Tanım, Ne ölçer?, Neden önemlidir?, NASIL YORUMLANIR?) */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
                         <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
                             <BookOpen className="w-5 h-5 text-[#00008B]" />
                         </div>
                         <div>
                             <h2 className="text-xl font-black text-[#00008B]">Bu Veri Nedir?</h2>
-                            <p className="text-xs text-slate-400 font-bold">Indicator Profile Kapsamında Gösterge Özeti</p>
+                            <p className="text-xs text-slate-400 font-bold">Indicator Profile Kapsamında Gösterge Özeti ve Yorumlama Mantığı</p>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                             <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">1. Tanım</h3>
                             <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.definition}</p>
                         </div>
-                        <div className="space-y-2">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                             <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">2. Ne Ölçer?</h3>
                             <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.whatItMeasures}</p>
                         </div>
-                        <div className="space-y-2">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                             <h3 className="text-xs font-black text-[#00008B] uppercase tracking-wider">3. Neden Önemlidir?</h3>
                             <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.whyItMatters}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-2">
+                            <h3 className="text-xs font-black text-blue-900 uppercase tracking-wider flex items-center gap-1">
+                                <Sparkles className="w-3.5 h-3.5 text-blue-600" /> 4. Nasıl Yorumlanır?
+                            </h3>
+                            <p className="text-xs text-slate-700 font-medium leading-relaxed">{profile.howToInterpret}</p>
                         </div>
                     </div>
                 </div>
 
-                {/* 7.9 BU VERİ HANGİ ALANLARI ETKİLEYEBİLİR? (ETKİ ZİNCİRİ AKIŞ ŞEMASI) */}
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                {/* 8. EKONOMİK ETKİ ZİNCİRİ (NEDEN-SONUÇ ŞEMASI: DESKTOP YATAY AKIŞ, MOBİL DİKEY) */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex items-center gap-3 pb-4 border-b border-slate-150">
                         <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
                             <Layers className="w-5 h-5 text-[#00008B]" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-[#00008B]">Bu Veri Hangi Alanları Etkileyebilir?</h2>
-                            <p className="text-xs text-slate-400 font-bold">Olası Ekonomik & Finansal Etki Kanalları</p>
+                            <h2 className="text-xl font-black text-[#00008B]">Ekonomik Etki Zinciri</h2>
+                            <p className="text-xs text-slate-400 font-bold">Veri Açıklamasından Varlık Fiyatlamalarına Neden-Sonuç Akışı</p>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-col lg:flex-row items-stretch justify-between gap-3">
                         {profile.impactChannels.map((channel, idx) => (
-                            <div key={idx} className="flex-1 min-w-[200px] p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
-                                <span className="text-[10px] font-extrabold text-blue-600 uppercase">Adım {idx + 1}</span>
-                                <h4 className="text-xs font-black text-[#00008B]">{channel.title}</h4>
-                                <p className="text-[11px] text-slate-500 font-medium leading-normal">{channel.desc}</p>
+                            <div key={idx} className="flex-1 flex flex-col lg:flex-row items-center gap-3">
+                                <div className="w-full p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5">
+                                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-wider block">
+                                        {channel.step}
+                                    </span>
+                                    <h4 className="text-xs font-black text-[#00008B]">{channel.title}</h4>
+                                    <p className="text-[11px] text-slate-500 font-medium leading-normal">{channel.desc}</p>
+                                </div>
+                                {idx < profile.impactChannels.length - 1 && (
+                                    <span className="text-slate-300 font-black text-sm hidden lg:block">➔</span>
+                                )}
+                                {idx < profile.impactChannels.length - 1 && (
+                                    <span className="text-slate-300 font-black text-sm lg:hidden">↓</span>
+                                )}
                             </div>
                         ))}
                     </div>
                 </div>
 
-                {/* 7.10 & 7.11 SENARYO ANALİZİ BÖLÜMÜ */}
-                <div className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
+                {/* 9. SENARYO ANALİZİ (GERÇEKLEŞEN SENARYO ÖNE ÇIKARILMIŞ) */}
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex items-center justify-between pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
@@ -351,8 +395,8 @@ export default function EconomicEventDetailPage() {
                         </button>
                     </div>
 
-                    {/* Gerçekleşen Senaryo Kartı */}
-                    <div className="p-6 rounded-2xl bg-[#00008B] text-white space-y-3 shadow-md">
+                    {/* Gerçekleşen Senaryo Öne Çıkarılmış Akış */}
+                    <div className="p-6 rounded-3xl bg-[#00008B] text-white space-y-4 shadow-lg">
                         <div className="flex items-center justify-between">
                             <span className="px-3 py-1 rounded-xl bg-emerald-400 text-[#00008B] text-xs font-black">
                                 Gerçekleşen Senaryo
@@ -361,15 +405,28 @@ export default function EconomicEventDetailPage() {
                                 {calc.forecastDiffText || 'Piyasa Paralelinde'}
                             </span>
                         </div>
-                        <h3 className="text-lg font-black text-white">
-                            Açıklanan Değer: {event.actual || 'Bekleniyor'} (Beklenti: {event.forecast || '-'})
-                        </h3>
-                        <p className="text-xs text-blue-100 font-medium leading-relaxed">
-                            {finAiAnalysis.whatItMeans}
-                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-medium text-blue-100 pt-2 border-t border-blue-800">
+                            <div>
+                                <span className="text-[10px] text-blue-300 uppercase block font-bold">PİYASA BEKLENTİSİ</span>
+                                <span className="text-sm font-black text-white">{event.forecast || '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-blue-300 uppercase block font-bold">GERÇEKLEŞEN VERİ</span>
+                                <span className="text-sm font-black text-white">{event.actual || 'Bekleniyor'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-blue-300 uppercase block font-bold">FARK</span>
+                                <span className="text-sm font-black text-white">{calc.forecastDiffNumber !== undefined ? `${calc.forecastDiffNumber} puan` : '-'}</span>
+                            </div>
+                            <div>
+                                <span className="text-[10px] text-blue-300 uppercase block font-bold">OLASI EKONOMİK YANSIMA</span>
+                                <span className="text-xs font-bold text-emerald-300">{finAiAnalysis.whatItMeans.slice(0, 70)}...</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* Diğer Senaryolar (Akordeon Mantığı) */}
+                    {/* Diğer Senaryolar (Akordeon) */}
                     {showAllScenarios && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-150">
                             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
@@ -388,18 +445,18 @@ export default function EconomicEventDetailPage() {
                     )}
                 </div>
 
-                {/* 7.17 - 7.21 İNTERAKTİF GEÇMİŞ VERİ GRAFİĞİ BÖLÜMÜ */}
-                <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-8 shadow-sm space-y-6">
+                {/* 10. HISTORICAL ARCHIVE & 11. GERÇEK TARİHSEL GRAFİK (KRİTİK VERİ POLİTİKASI: GERÇEK SUPABASE VERİLERİ) */}
+                <div className="bg-white border border-slate-200 text-[#00008B] rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-150">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
-                                <BarChart3 className="w-5 h-5 text-[#00008B]" />
+                                <Database className="w-5 h-5 text-[#00008B]" />
                             </div>
                             <div>
                                 <h3 className="text-lg font-black text-[#00008B] tracking-tight">
-                                    {event.event} — FinAi Historical Archive Grafiği
+                                    FinAi Historical Archive Grafiği
                                 </h3>
-                                <p className="text-xs text-slate-400 font-bold">Kalıcı Veritabanı Arşivi Üzerinden Dönemsel Seyir</p>
+                                <p className="text-xs text-slate-400 font-bold">Supabase Kalıcı Veritabanından Doğrulanan Gerçek Kayıtlar</p>
                             </div>
                         </div>
 
@@ -423,60 +480,108 @@ export default function EconomicEventDetailPage() {
                         </div>
                     </div>
 
-                    {/* SVG/Bar İnteraktif Grafik Çizimi */}
-                    <div className="relative pt-6 pb-2">
-                        {hoveredPoint && (
-                            <div className="absolute top-0 right-4 bg-[#00008B] text-white p-3 rounded-2xl text-xs font-bold shadow-lg z-20 space-y-1">
-                                <div>Dönem: {hoveredPoint.month}</div>
-                                <div className="text-emerald-300">Açıklanan: {hoveredPoint.actual}</div>
-                                <div className="text-blue-200">Beklenti: {hoveredPoint.forecast}</div>
-                                <div className="text-slate-300">Önceki: {hoveredPoint.previous}</div>
-                            </div>
-                        )}
+                    {/* GERÇEK VERİ YETERLİLİK KONTROLÜ */}
+                    {loadingHistory ? (
+                        <div className="h-40 flex items-center justify-center text-xs font-bold text-slate-400">
+                            FinAi Historical Archive veritabanı sorgulanıyor...
+                        </div>
+                    ) : !hasEnoughRealData ? (
+                        <div className="p-8 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center space-y-2">
+                            <Database className="w-8 h-8 text-slate-400 mx-auto" />
+                            <h4 className="text-sm font-black text-[#00008B]">Henüz Yeterli Tarihsel Veri Birikmedi</h4>
+                            <p className="text-xs text-slate-500 font-medium max-w-lg mx-auto leading-relaxed">
+                                FinAi Historical Archive'da bu gösterge için henüz yeterli sayıda dönemsel gerçek veri kaydı bulunmamaktadır. Gelecek senkronizasyonlarla birlikte gerçek grafik burada otomatik görüntülenecektir.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="relative pt-6 pb-2">
+                            {hoveredPoint && (
+                                <div className="absolute top-0 right-4 bg-[#00008B] text-white p-3 rounded-2xl text-xs font-bold shadow-lg z-20 space-y-1">
+                                    <div>Dönem: {hoveredPoint.month}</div>
+                                    <div className="text-emerald-300">Açıklanan: {hoveredPoint.actual}</div>
+                                    <div className="text-blue-200">Beklenti: {hoveredPoint.forecast}</div>
+                                    <div className="text-slate-300">Önceki: {hoveredPoint.previous}</div>
+                                </div>
+                            )}
 
-                        <div className="h-48 flex items-end justify-between gap-3 px-4 border-b border-slate-200 pb-2">
-                            {historicalData.map((pt, idx) => {
-                                const valNum = parseFloat(pt.actual.replace(',', '.'));
-                                const heightPercent = Math.min(Math.max((valNum / 5) * 100, 15), 90);
+                            <div className="h-48 flex items-end justify-between gap-3 px-4 border-b border-slate-200 pb-2">
+                                {realHistoryEvents.map((pt, idx) => {
+                                    const valNum = parseFloat((pt.actual || '0').replace(/[^0-9\.\,\-]/g, '').replace(',', '.'));
+                                    const heightPercent = Math.min(Math.max((Math.abs(valNum) / 10) * 100, 15), 90);
 
-                                return (
-                                    <div
-                                        key={idx}
-                                        onMouseEnter={() => setHoveredPoint(pt)}
-                                        onMouseLeave={() => setHoveredPoint(null)}
-                                        className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
-                                    >
-                                        <span className="text-[10px] font-black text-slate-500 group-hover:text-[#00008B] transition-colors">
-                                            {pt.actual}
-                                        </span>
-                                        <div className="w-full max-w-[28px] bg-slate-150 group-hover:bg-[#00008B] rounded-t-xl transition-all duration-300 relative overflow-hidden" style={{ height: `${heightPercent}%` }}>
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#00008B]/80 to-blue-500/80 group-hover:from-[#00008B] group-hover:to-blue-400 transition-all" />
+                                    return (
+                                        <div
+                                            key={idx}
+                                            onMouseEnter={() => setHoveredPoint({ month: pt.dateFormatted, actual: pt.actual || '-', forecast: pt.forecast || '-', previous: pt.previous || '-' })}
+                                            onMouseLeave={() => setHoveredPoint(null)}
+                                            className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
+                                        >
+                                            <span className="text-[10px] font-black text-slate-500 group-hover:text-[#00008B] transition-colors">
+                                                {pt.actual}
+                                            </span>
+                                            <div className="w-full max-w-[28px] bg-slate-150 group-hover:bg-[#00008B] rounded-t-xl transition-all duration-300 relative overflow-hidden" style={{ height: `${heightPercent}%` }}>
+                                                <div className="absolute inset-0 bg-gradient-to-t from-[#00008B]/80 to-blue-500/80 group-hover:from-[#00008B] group-hover:to-blue-400 transition-all" />
+                                            </div>
+                                            <span className="text-[9px] font-bold text-slate-400 group-hover:text-[#00008B] whitespace-nowrap">
+                                                {pt.dateFormatted.split('.')[1]}/{pt.dateFormatted.split('.')[2].slice(2)}
+                                            </span>
                                         </div>
-                                        <span className="text-[9px] font-bold text-slate-400 group-hover:text-[#00008B] whitespace-nowrap">
-                                            {pt.month.split(' ')[0]}
-                                        </span>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* 12. GRAFİK NASIL OKUNUR? (3 EĞİTİM KARTI: YÖN, DEĞİŞİM HIZI, BAĞLAM) & 13. SON DÖNEMDE NE DEĞİŞTİ? */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Grafik Nasıl Okunur? */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                        <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-[#00008B]" /> Grafik Nasıl Okunur?
+                        </h3>
+                        <div className="space-y-3">
+                            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                                <h4 className="text-xs font-black text-[#00008B]">01 — YÖN</h4>
+                                <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                                    {profile.chartReadingCards.direction}
+                                </p>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                                <h4 className="text-xs font-black text-[#00008B]">02 — DEĞİŞİM HIZI</h4>
+                                <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                                    {profile.chartReadingCards.changeSpeed}
+                                </p>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                                <h4 className="text-xs font-black text-[#00008B]">03 — BAĞLAM</h4>
+                                <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                                    {profile.chartReadingCards.context}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* 7.20 Grafik Nasıl Okunur & 7.21 Dinamik Grafik Özeti */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-150">
-                        <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                            <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Grafik Nasıl Okunur?</h4>
-                            <p className="text-xs text-slate-600 font-medium leading-relaxed">{profile.readingChartGuide}</p>
-                        </div>
-                        <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
-                            <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">Son Dönemde Ne Değişti?</h4>
-                            <p className="text-xs text-slate-700 font-medium leading-relaxed">
-                                Son 12 açıklama döneminde gösterge {historicalData[0].actual} seviyesinden {historicalData[historicalData.length - 1].actual} seviyesine ulaşmıştır. Dönemsel oynaklıklar makro beklentiler doğrultusunda dengelenmektedir.
-                            </p>
+                    {/* Son Dönemde Ne Değişti? */}
+                    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                        <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-[#00008B]" /> Son Dönemde Ne Değişti?
+                        </h3>
+                        <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2 h-[calc(100%-2.5rem)] flex flex-col justify-center">
+                            {hasEnoughRealData ? (
+                                <p className="text-xs text-slate-700 font-medium leading-relaxed">
+                                    Son veritabanı kayıtlarına göre göstergenin son gerçekleşen değeri {realHistoryEvents[realHistoryEvents.length - 1]?.actual || '-'} seviyesindedir. Önceki dönem gerçekleşmesi olan {realHistoryEvents[realHistoryEvents.length - 2]?.actual || '-'} seviyesi ile kıyaslandığında dönemsel eğilim makroekonomik beklentiler doğrultusunda şekillenmektedir.
+                                </p>
+                            ) : (
+                                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                    FinAi Historical Archive veritabanımızda henüz yeterli sayıda dönemsel gerçek kayıt birikmediği için dinamik trend özeti üretilmemiştir.
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* 7.22 "NE ÇIKARAMAYIZ?" & 7.23 FİNANSAL OKURYAZARLIK BÖLÜMÜ */}
+                {/* 14. NE ÇIKARAMAYIZ? & 15. FİNANSAL OKURYAZARLIK */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Ne Çıkaramayız? */}
                     <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-3">
@@ -506,10 +611,10 @@ export default function EconomicEventDetailPage() {
                     </div>
                 </div>
 
-                {/* 7.24 & 7.25 İLGİLİ GÖSTERGELER & EKONOMİK ÖĞRENME AĞI */}
+                {/* 17. İLGİLİ GÖSTERGELER ("Bu veriyi anlamak için bunlara da bak") */}
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                     <h3 className="text-sm font-black text-[#00008B] uppercase tracking-wider flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-[#00008B]" /> İlgili Göstergeler & Ekonomik Öğrenme Ağları
+                        <Activity className="w-4 h-4 text-[#00008B]" /> Bu Veriyi Anlamak İçin Bunlara Da Bak
                     </h3>
                     <div className="flex flex-wrap items-center gap-3">
                         {profile.relatedIndicators.map((rel, idx) => (
@@ -525,12 +630,12 @@ export default function EconomicEventDetailPage() {
                 </div>
             </div>
 
-            {/* 7.8 TEKNİK TERİM MODAL / POPOVER TOOLTIP */}
+            {/* 16. TEKNİK TERİMLER (ⓘ TOOLTIP MODAL) */}
             {activeTooltip && (
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-6 z-50">
                     <div className="bg-white text-[#00008B] p-6 rounded-3xl max-w-md w-full border border-slate-200 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b border-slate-150 pb-3">
-                            <span className="text-xs font-black uppercase text-blue-600">Terim Sözlüğü ⓘ</span>
+                            <span className="text-xs font-black uppercase text-blue-600">Teknik Terim ⓘ</span>
                             <button onClick={() => setActiveTooltip(null)} className="text-slate-400 hover:text-slate-700">
                                 <X className="w-5 h-5" />
                             </button>
