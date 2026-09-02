@@ -12,6 +12,66 @@ import { INDICATOR_PROFILES_DATABASE, IndicatorProfile, TECHNICAL_TERMS, Technic
 import { calculateBackendDifferences, generateFinAiAnalysis } from "@/lib/finai-calendar-analysis-engine";
 import FollowIndicatorButton from "@/components/calendar/FollowIndicatorButton";
 
+function toSlug(str: string): string {
+    return str
+        .toLowerCase()
+        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+}
+
+function resolveCalendarEvent(rawId: string, list: CatalogCalendarEvent[]): CatalogCalendarEvent | null {
+    if (!rawId || !list || list.length === 0) return null;
+
+    const decoded = decodeURIComponent(rawId).trim();
+    const cleanLower = decoded.toLowerCase();
+
+    // 1. Exact Event ID Match
+    const exactId = list.find(e => e.id === decoded || e.id === rawId);
+    if (exactId) return exactId;
+
+    // 2. Exact Event Name Match
+    const exactName = list.find(e => e.event === decoded || e.event.toLowerCase() === cleanLower);
+    if (exactName) return exactName;
+
+    // 3. Match by Slugified Event Name or Slug ID
+    const targetSlug = toSlug(decoded);
+    const slugMatch = list.find(e => {
+        const eSlug = toSlug(e.event);
+        return eSlug === targetSlug || e.id.toLowerCase() === targetSlug;
+    });
+    if (slugMatch) return slugMatch;
+
+    // 4. Parse Legacy Composite ID: ${country}_${eventName}_${date}
+    const underscoreParts = decoded.split('_');
+    if (underscoreParts.length >= 2) {
+        const countryCandidate = underscoreParts[0].toUpperCase();
+        const middleParts = underscoreParts.slice(1, underscoreParts.length - 1).join('_');
+        const middleSlug = toSlug(middleParts);
+
+        if (middleParts || middleSlug) {
+            const compositeMatch = list.find(e => {
+                const countryOk = !countryCandidate || e.country.toUpperCase() === countryCandidate;
+                const nameOk = e.event === middleParts || 
+                               e.event.toLowerCase() === middleParts.toLowerCase() ||
+                               toSlug(e.event) === middleSlug;
+                return countryOk && nameOk;
+            });
+            if (compositeMatch) return compositeMatch;
+        }
+    }
+
+    // 5. Strict Substring Match for Long Log Strings
+    const strictContains = list.find(e => {
+        const eLower = e.event.toLowerCase();
+        return cleanLower.includes(eLower) && (cleanLower.length - eLower.length) < 25;
+    });
+    if (strictContains) return strictContains;
+
+    return null;
+}
+
 export default function EconomicEventDetailPage() {
     const params = useParams();
     const router = useRouter();
@@ -39,19 +99,18 @@ export default function EconomicEventDetailPage() {
     useEffect(() => {
         if (!eventId) return;
 
-        const decodedId = decodeURIComponent(eventId);
-        const found = ECONOMIC_CALENDAR_CATALOG.find(e => e.id === decodedId || e.event === decodedId);
+        const catalogResolved = resolveCalendarEvent(eventId, ECONOMIC_CALENDAR_CATALOG);
 
-        if (found) {
-            setEvent(found);
+        if (catalogResolved) {
+            setEvent(catalogResolved);
             setLoading(false);
         } else {
             fetch('/api/calendar')
                 .then(res => res.json())
                 .then(json => {
                     if (json.data && Array.isArray(json.data)) {
-                        const apiFound = json.data.find((e: any) => e.id === decodedId || e.event === decodedId);
-                        if (apiFound) setEvent(apiFound);
+                        const apiResolved = resolveCalendarEvent(eventId, json.data);
+                        if (apiResolved) setEvent(apiResolved);
                     }
                 })
                 .catch(err => console.error(err))

@@ -260,9 +260,14 @@ export default function NotificationsPage() {
                         </div>
                     ) : (
                         notifications.map((item) => {
-                            const targetUrl = item.event_id 
-                                ? `/dashboard/economic-calendar/${encodeURIComponent(item.event_id)}`
-                                : '/dashboard/economic-calendar';
+                            const isSystemOrSummary = !item.event_id || 
+                                item.event_id.startsWith('daily_summary') || 
+                                item.event_id.includes('test') || 
+                                item.notification_type === 'daily_summary';
+
+                            const targetUrl = isSystemOrSummary 
+                                ? '/dashboard/economic-calendar'
+                                : `/dashboard/economic-calendar/${encodeURIComponent(item.event_id)}`;
 
                             return (
                                 <Link
