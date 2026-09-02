@@ -24,7 +24,8 @@ import {
   Minus,
   Layers,
   Sparkles,
-  Building2
+  Building2,
+  Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
@@ -578,6 +579,7 @@ interface StockItem {
 type SortField = 'symbol' | 'price' | 'change' | 'volume' | 'pe';
 type SortOrder = 'asc' | 'desc';
 type TopTab = 'gainers' | 'losers' | 'volume';
+type QuickFilter = 'all' | 'gainers' | 'losers' | 'volume';
 
 // GÜVENLİ HACİM NORMALEŞTİRİCİ (String -> Sayısal TL)
 function normalizeVolume(volStr: string | undefined | null): number {
@@ -617,28 +619,59 @@ function formatVolumeDisplay(num: number): string {
   return num.toLocaleString("tr-TR") + " ₺";
 }
 
-// SEKTÖR HEATMAP DİNAMİK RENK YOĞUNLUĞU HESAPLAYICI (FINAI TASARIM DİLİ)
+// SEKTÖR HEATMAP DİNAMİK RENK YOĞUNLUĞU HESAPLAYICI (BELİRGİN AÇIK SEVİYELER)
 function getSectorHeatmapStyle(annualReturn: number, isSelected: boolean) {
   if (isSelected) {
-    return "bg-[#00008B] text-white border-[#00008B] shadow-md ring-2 ring-[#00008B]/30";
+    return "bg-[#00008B] text-white border-[#00008B] shadow-md ring-2 ring-[#00008B]/30 font-black";
   }
 
-  if (annualReturn >= 80) {
-    return "bg-emerald-950/15 border-emerald-500/50 text-emerald-900 hover:bg-emerald-950/25 hover:border-emerald-600";
-  } else if (annualReturn >= 50) {
-    return "bg-emerald-900/10 border-emerald-400/40 text-emerald-800 hover:bg-emerald-900/20 hover:border-emerald-500";
+  if (annualReturn >= 90) {
+    // En Güçlü Yeşil (+100%+)
+    return "bg-emerald-950/20 border-emerald-600/70 text-emerald-950 hover:bg-emerald-950/30";
+  } else if (annualReturn >= 60) {
+    // Güçlü Yeşil (+60% - +90%)
+    return "bg-emerald-900/15 border-emerald-500/60 text-emerald-900 hover:bg-emerald-900/25";
+  } else if (annualReturn >= 40) {
+    // Orta Güçlü Yeşil (+40% - +60%)
+    return "bg-emerald-800/12 border-emerald-400/50 text-emerald-900 hover:bg-emerald-800/20";
   } else if (annualReturn >= 25) {
-    return "bg-emerald-800/8 border-emerald-300/35 text-emerald-800 hover:bg-emerald-800/15 hover:border-emerald-400";
+    // Orta/Açık Yeşil (+25% - +40%)
+    return "bg-emerald-700/8 border-emerald-300/40 text-emerald-800 hover:bg-emerald-700/15";
+  } else if (annualReturn >= 15) {
+    // Hafif Yeşil (+15% - +25%)
+    return "bg-emerald-50 border-emerald-200 text-emerald-800 hover:bg-emerald-100/70";
   } else if (annualReturn > 0) {
-    return "bg-emerald-50/70 border-emerald-200/50 text-emerald-700 hover:bg-emerald-100/60 hover:border-emerald-300";
+    // Çok Hafif Yeşil (>0% - +15%)
+    return "bg-emerald-50/40 border-emerald-100 text-emerald-700 hover:bg-emerald-50";
   } else if (annualReturn === 0) {
     return "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100";
   } else {
-    return "bg-rose-50/80 border-rose-200/60 text-rose-800 hover:bg-rose-100/80 hover:border-rose-300";
+    return "bg-rose-50/80 border-rose-200/60 text-rose-800 hover:bg-rose-100/80";
   }
 }
 
-// GÜNÜN ENLERİ ROZET RENK YOĞUNLUĞU HESAPLAYICI
+// SEKTÖR GETİRİ ROZETİ STİLİ
+function getSectorReturnBadgeStyle(annualReturn: number, isSelected: boolean) {
+  if (isSelected) {
+    return "bg-white/20 text-white border-white/30";
+  }
+  if (annualReturn >= 90) {
+    return "bg-emerald-700 text-white border-emerald-800 font-black shadow-2xs";
+  } else if (annualReturn >= 60) {
+    return "bg-emerald-600 text-white border-emerald-700 font-black shadow-2xs";
+  } else if (annualReturn >= 40) {
+    return "bg-emerald-500 text-white border-emerald-600 font-extrabold shadow-2xs";
+  } else if (annualReturn >= 25) {
+    return "bg-emerald-100 text-emerald-900 border-emerald-300 font-extrabold";
+  } else if (annualReturn >= 15) {
+    return "bg-emerald-50 text-emerald-800 border-emerald-200 font-bold";
+  } else if (annualReturn > 0) {
+    return "bg-slate-100 text-emerald-700 border-slate-200 font-bold";
+  }
+  return "bg-rose-100 text-rose-800 border-rose-200 font-bold";
+}
+
+// GÜNÜN ENLERİ & TABLO ROZET RENK YOĞUNLUĞU HESAPLAYICI
 function getChangeBadgeStyle(change: number) {
   const absChange = Math.abs(change);
   if (change > 0) {
@@ -658,6 +691,7 @@ function getChangeBadgeStyle(change: number) {
 export default function AssetsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSector, setSelectedSector] = useState<string | null>(null);
+    const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [sortField, setSortField] = useState<SortField>('change');
     const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
@@ -825,9 +859,18 @@ export default function AssetsPage() {
         };
     }, [allStocksList]);
 
-    // FİLTRELENMİŞ VE SIRALANMIŞ VARLIK MERKEZİ HİSSE LİSTESİ
+    // FİLTRELENMİŞ VE SIRALANMIŞ VARLIK MERKEZİ HİSSE LİSTESİ (HIZLI FİLTRELER DAHİL)
     const filteredStocks = useMemo(() => {
         let list = [...allStocksList];
+
+        // Hızlı Filtreler (Quick Filters)
+        if (quickFilter === 'gainers') {
+            list = list.filter(item => item.change > 0);
+        } else if (quickFilter === 'losers') {
+            list = list.filter(item => item.change < 0);
+        } else if (quickFilter === 'volume') {
+            list = list.sort((a, b) => b.rawVolumeNum - a.rawVolumeNum);
+        }
 
         if (selectedSector) {
             list = list.filter(item => item.sector === selectedSector);
@@ -842,27 +885,29 @@ export default function AssetsPage() {
             );
         }
 
-        // Sıralama
-        list.sort((a, b) => {
-            let valA: any = a[sortField];
-            let valB: any = b[sortField];
+        // Sıralama (Quick Filter 'volume' değilse veya kullanıcı sıralama değiştirdiyse)
+        if (quickFilter !== 'volume' || sortField !== 'change') {
+            list.sort((a, b) => {
+                let valA: any = a[sortField];
+                let valB: any = b[sortField];
 
-            if (sortField === 'volume') {
-                valA = a.rawVolumeNum;
-                valB = b.rawVolumeNum;
-            }
+                if (sortField === 'volume') {
+                    valA = a.rawVolumeNum;
+                    valB = b.rawVolumeNum;
+                }
 
-            if (typeof valA === 'string') {
-                return sortOrder === 'asc' 
-                    ? valA.localeCompare(valB)
-                    : valB.localeCompare(valA);
-            }
+                if (typeof valA === 'string') {
+                    return sortOrder === 'asc' 
+                        ? valA.localeCompare(valB)
+                        : valB.localeCompare(valA);
+                }
 
-            return sortOrder === 'asc' ? valA - valB : valB - valA;
-        });
+                return sortOrder === 'asc' ? valA - valB : valB - valA;
+            });
+        }
 
         return list;
-    }, [allStocksList, selectedSector, searchTerm, sortField, sortOrder]);
+    }, [allStocksList, quickFilter, selectedSector, searchTerm, sortField, sortOrder]);
 
     // SAYFALAMA KONTROLLERİ
     const totalPages = Math.max(1, Math.ceil(filteredStocks.length / itemsPerPage));
@@ -902,7 +947,7 @@ export default function AssetsPage() {
             {/* ========================================================================= */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full items-stretch">
                 
-                {/* SOL WIDGET: SEKTÖRLER YILLIK GETİRİLERİ (FINANCIAL HEATMAP TASARIMI) */}
+                {/* SOL WIDGET: SEKTÖRLER YILLIK GETİRİLERİ (GERÇEK FINANCIAL HEATMAP TASARIMI) */}
                 <div className="bg-white border border-slate-200/90 rounded-[28px] p-5 shadow-xs space-y-4 flex flex-col justify-between">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div className="flex items-center gap-2.5">
@@ -929,11 +974,12 @@ export default function AssetsPage() {
                         )}
                     </div>
 
-                    {/* FINAI HEATMAP IZGARASI (PERFORMANSA DİNAMİK YOĞUNLUKLU RENK) */}
+                    {/* FINAI HEATMAP IZGARASI (BELİRGİN PERFORMANS YOĞUNLUĞU) */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 flex-1">
                         {ALL_SECTORS_DATA.slice(0, 6).map((sector, idx) => {
                             const isSelected = selectedSector === sector.name;
                             const heatmapStyle = getSectorHeatmapStyle(sector.annualReturn, isSelected);
+                            const badgeStyle = getSectorReturnBadgeStyle(sector.annualReturn, isSelected);
 
                             return (
                                 <button
@@ -946,12 +992,7 @@ export default function AssetsPage() {
                                 >
                                     <div className="flex items-center justify-between w-full mb-1.5">
                                         <span className="text-[9px] font-black opacity-60 uppercase tracking-wider">#{idx + 1}</span>
-                                        <span className={cn(
-                                            "text-xs font-black px-1.5 py-0.5 rounded-md border",
-                                            isSelected
-                                                ? "bg-white/20 text-white border-white/30"
-                                                : "bg-white/90 text-emerald-800 border-emerald-300/60 shadow-2xs"
-                                        )}>
+                                        <span className={cn("text-xs px-1.5 py-0.5 rounded-md border", badgeStyle)}>
                                             +{sector.annualReturn}%
                                         </span>
                                     </div>
@@ -1134,7 +1175,7 @@ export default function AssetsPage() {
                     <div className="bg-emerald-950/40 backdrop-blur-md border border-emerald-500/30 p-3.5 rounded-2xl space-y-1">
                         <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
                             <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                            BIST'te Yükselen
+                            ↑ BIST'te Yükselen
                         </span>
                         <div className="flex items-baseline justify-between">
                             <span className="text-lg sm:text-xl font-black text-emerald-300">{marketStats.rising}</span>
@@ -1148,7 +1189,7 @@ export default function AssetsPage() {
                     <div className="bg-rose-950/40 backdrop-blur-md border border-rose-500/30 p-3.5 rounded-2xl space-y-1">
                         <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1">
                             <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
-                            BIST'te Düşen
+                            ↓ BIST'te Düşen
                         </span>
                         <div className="flex items-baseline justify-between">
                             <span className="text-lg sm:text-xl font-black text-rose-300">{marketStats.falling}</span>
@@ -1162,7 +1203,7 @@ export default function AssetsPage() {
                     <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl space-y-1">
                         <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1">
                             <Minus className="w-3.5 h-3.5 text-slate-300" />
-                            Değişmeyen
+                            — Değişmeyen
                         </span>
                         <div className="flex items-baseline justify-between">
                             <span className="text-lg sm:text-xl font-black text-slate-200">{marketStats.unchanged}</span>
@@ -1176,7 +1217,7 @@ export default function AssetsPage() {
                     <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl space-y-1 col-span-2 sm:col-span-1">
                         <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1">
                             <Coins className="w-3.5 h-3.5 text-amber-300" />
-                            Toplam Hacim ({marketStats.totalCount} Hisse)
+                            Toplam Hacim ({marketStats.totalCount} Şirket)
                         </span>
                         <span className="text-base sm:text-lg font-black text-amber-300 truncate block">
                             {marketStats.totalVolFormatted}
@@ -1187,7 +1228,7 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 3. BÖLÜM: VARLIK MERKEZİ (ARAMA, SEKTÖR FİLTRESİ, MASAÜSTÜ TABLO / MOBİL KARTLAR) */}
+            {/* 3. BÖLÜM: VARLIK MERKEZİ (ARAMA, SEKTÖR FİLTRESİ, HIZLI FİLTRELER, TABLO) */}
             {/* ========================================================================= */}
             <div 
                 ref={stockSectionRef}
@@ -1207,7 +1248,7 @@ export default function AssetsPage() {
                                 </span>
                             </div>
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                                Tüm BIST şirketlerini inceleyin, sütun başlıklarına tıklayarak sıralayın veya sektör filtresi kullanın.
+                                Tüm BIST şirketlerini inceleyin, sütun başlıklarına tıklayarak sıralayın veya hızlı filtreleri kullanın.
                             </p>
                         </div>
 
@@ -1263,6 +1304,57 @@ export default function AssetsPage() {
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B] pointer-events-none" />
                         </div>
+                    </div>
+
+                    {/* HIZLI FİLTRE BUTONLARI (QUICK FILTERS BAR) */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        <button
+                            onClick={() => { setQuickFilter('all'); setCurrentPage(1); }}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5",
+                                quickFilter === 'all'
+                                    ? "bg-[#00008B] text-white shadow-xs"
+                                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            )}
+                        >
+                            <span>Tümü ({allStocksList.length})</span>
+                        </button>
+                        <button
+                            onClick={() => { setQuickFilter('gainers'); setCurrentPage(1); }}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5",
+                                quickFilter === 'gainers'
+                                    ? "bg-emerald-600 text-white shadow-xs"
+                                    : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/60"
+                            )}
+                        >
+                            <TrendingUp className="w-3.5 h-3.5" />
+                            <span>Yükselenler ({marketStats.rising})</span>
+                        </button>
+                        <button
+                            onClick={() => { setQuickFilter('losers'); setCurrentPage(1); }}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5",
+                                quickFilter === 'losers'
+                                    ? "bg-rose-600 text-white shadow-xs"
+                                    : "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200/60"
+                            )}
+                        >
+                            <TrendingDown className="w-3.5 h-3.5" />
+                            <span>Düşenler ({marketStats.falling})</span>
+                        </button>
+                        <button
+                            onClick={() => { setQuickFilter('volume'); setCurrentPage(1); }}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl text-xs font-black transition-all shrink-0 flex items-center gap-1.5",
+                                quickFilter === 'volume'
+                                    ? "bg-indigo-600 text-white shadow-xs"
+                                    : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200/60"
+                            )}
+                        >
+                            <Flame className="w-3.5 h-3.5" />
+                            <span>En Çok İşlem Görenler</span>
+                        </button>
                     </div>
 
                     {/* ========================================================================= */}
@@ -1359,11 +1451,11 @@ export default function AssetsPage() {
                                                             href={`/varlik/${item.symbol}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="font-black text-slate-900 group-hover:text-[#00008B] text-xs truncate block"
+                                                            className="font-black text-[#00008B] group-hover:text-blue-900 text-xs truncate block"
                                                         >
                                                             {item.symbol}
                                                         </a>
-                                                        <span className="text-[10px] font-semibold text-slate-400 truncate block max-w-[240px]" title={item.name}>
+                                                        <span className="text-[10px] font-medium text-slate-500 truncate block max-w-[240px]" title={item.name}>
                                                             {item.name}
                                                         </span>
                                                     </div>
@@ -1403,7 +1495,7 @@ export default function AssetsPage() {
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
                                                         className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-[#00008B] group-hover:text-white text-slate-500 inline-block transition-colors"
-                                                        title={`${item.symbol} Detaylarını Aç`}
+                                                        title="Hisse detayını görüntüle"
                                                     >
                                                         <ExternalLink className="w-3.5 h-3.5" />
                                                     </a>
@@ -1428,14 +1520,14 @@ export default function AssetsPage() {
                                         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="font-black text-slate-900 text-sm group-hover:text-[#00008B] transition-colors">
+                                                    <span className="font-black text-[#00008B] text-sm group-hover:text-blue-900 transition-colors">
                                                         {item.symbol}
                                                     </span>
                                                     <span className="text-[9px] font-black px-1.5 py-0.2 rounded bg-blue-50 text-[#00008B] border border-blue-100 truncate">
                                                         {item.sector}
                                                     </span>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-slate-400 block truncate mt-0.5" title={item.name}>
+                                                <span className="text-[10px] font-medium text-slate-500 block truncate mt-0.5" title={item.name}>
                                                     {item.name}
                                                 </span>
                                             </div>
@@ -1463,7 +1555,7 @@ export default function AssetsPage() {
                                                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block text-right">F/K</span>
                                                 <span className="font-extrabold text-slate-700">{item.pe > 0 ? item.pe.toFixed(2) : "-"}</span>
                                             </div>
-                                            <div className="p-1 rounded-lg bg-slate-100 group-hover:bg-[#00008B] group-hover:text-white text-slate-400 transition-colors">
+                                            <div className="p-1 rounded-lg bg-slate-100 group-hover:bg-[#00008B] group-hover:text-white text-slate-400 transition-colors" title="Hisse detayını görüntüle">
                                                 <ChevronRight className="w-4 h-4" />
                                             </div>
                                         </div>
@@ -1474,17 +1566,18 @@ export default function AssetsPage() {
                     ) : (
                         <div className="py-12 text-center space-y-3 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                             <Info className="w-8 h-8 text-slate-400 mx-auto" />
-                            <p className="text-sm font-black text-slate-700">Aramanıza Uygun Hisse Bulunamadı</p>
-                            <p className="text-xs text-slate-400 font-bold">Filtreyi temizleyebilir veya başka bir sektör arayabilirsiniz.</p>
+                            <p className="text-sm font-black text-slate-700">Aramanıza Veya Filtrenize Uygun Hisse Bulunamadı</p>
+                            <p className="text-xs text-slate-400 font-bold">Filtreyi temizleyebilir veya başka bir sektör/arama terimi deneyebilirsiniz.</p>
                             <button
                                 onClick={() => {
                                     setSelectedSector(null);
+                                    setQuickFilter('all');
                                     setSearchTerm("");
                                     setCurrentPage(1);
                                 }}
                                 className="px-4 py-2 rounded-xl bg-[#00008B] text-white text-xs font-black shadow-xs inline-block"
                             >
-                                Tüm Hisseleri Göster
+                                Tüm Hisseleri Göster ({allStocksList.length})
                             </button>
                         </div>
                     )}
