@@ -7,11 +7,9 @@ import {
   Search, 
   ChevronRight, 
   ChevronLeft,
-  Zap, 
   Activity,
   Info,
   BarChart3,
-  Building2,
   RefreshCw,
   ArrowUpDown,
   ArrowUp,
@@ -22,13 +20,12 @@ import {
   ExternalLink,
   Filter,
   ChevronDown,
-  PieChart,
   Coins,
   Minus,
-  ArrowLeftRight,
-  Sparkles
+  Layers,
+  Sparkles,
+  Building2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { STOCK_SECTORS } from "@/lib/constants/assets-mapping";
 
@@ -537,16 +534,16 @@ const STOCK_NAMES: Record<string, string> = {
 
 // GERÇEK 2025 YILI BIST SEKTÖREL GETİRİ VERİLERİ (SABİT REFERANS)
 const ALL_SECTORS_DATA = [
-    { name: "Teknoloji & Yazılım", annualReturn: 104.4, marketCap: "180 Mr TL", leader: "MIATK", color: "from-blue-500 to-[#00008B]" },
-    { name: "Savunma Sanayii", annualReturn: 68.5, marketCap: "380 Mr TL", leader: "ASELS", color: "from-[#00008B] to-slate-900" },
-    { name: "Enerji & Yenilenebilir", annualReturn: 52.4, marketCap: "290 Mr TL", leader: "ASTOR", color: "from-amber-500 to-amber-700" },
-    { name: "Holdingler & Yatırım", annualReturn: 34.2, marketCap: "550 Mr TL", leader: "KCHOL", color: "from-indigo-600 to-[#00008B]" },
-    { name: "Demir Çelik & Sanayi", annualReturn: 24.8, marketCap: "170 Mr TL", leader: "EREGL", color: "from-slate-600 to-slate-900" },
-    { name: "Perakende & Gıda", annualReturn: 18.5, marketCap: "300 Mr TL", leader: "BIMAS", color: "from-emerald-500 to-emerald-700" },
-    { name: "Gayrimenkul (GYO)", annualReturn: 15.2, marketCap: "140 Mr TL", leader: "EKGYO", color: "from-purple-500 to-purple-800" },
-    { name: "Bankacılık & Finans", annualReturn: 13.6, marketCap: "620 Mr TL", leader: "GARAN", color: "from-cyan-600 to-blue-800" },
-    { name: "Otomotiv Sanayi", annualReturn: 11.2, marketCap: "360 Mr TL", leader: "FROTO", color: "from-rose-500 to-rose-700" },
-    { name: "Havacılık & Ulaştırma", annualReturn: 1.6, marketCap: "450 Mr TL", leader: "THYAO", color: "from-sky-500 to-blue-700" }
+    { name: "Teknoloji & Yazılım", annualReturn: 104.4, marketCap: "180 Mr TL", leader: "MIATK" },
+    { name: "Savunma Sanayii", annualReturn: 68.5, marketCap: "380 Mr TL", leader: "ASELS" },
+    { name: "Enerji & Yenilenebilir", annualReturn: 52.4, marketCap: "290 Mr TL", leader: "ASTOR" },
+    { name: "Holdingler & Yatırım", annualReturn: 34.2, marketCap: "550 Mr TL", leader: "KCHOL" },
+    { name: "Demir Çelik & Sanayi", annualReturn: 24.8, marketCap: "170 Mr TL", leader: "EREGL" },
+    { name: "Perakende & Gıda", annualReturn: 18.5, marketCap: "300 Mr TL", leader: "BIMAS" },
+    { name: "Gayrimenkul (GYO)", annualReturn: 15.2, marketCap: "140 Mr TL", leader: "EKGYO" },
+    { name: "Bankacılık & Finans", annualReturn: 13.6, marketCap: "620 Mr TL", leader: "GARAN" },
+    { name: "Otomotiv Sanayi", annualReturn: 11.2, marketCap: "360 Mr TL", leader: "FROTO" },
+    { name: "Havacılık & Ulaştırma", annualReturn: 1.6, marketCap: "450 Mr TL", leader: "THYAO" }
 ];
 
 // SEKTÖR ADI -> STOCK_SECTORS KATALOG EŞLEŞTİRMESİ
@@ -620,6 +617,44 @@ function formatVolumeDisplay(num: number): string {
   return num.toLocaleString("tr-TR") + " ₺";
 }
 
+// SEKTÖR HEATMAP DİNAMİK RENK YOĞUNLUĞU HESAPLAYICI (FINAI TASARIM DİLİ)
+function getSectorHeatmapStyle(annualReturn: number, isSelected: boolean) {
+  if (isSelected) {
+    return "bg-[#00008B] text-white border-[#00008B] shadow-md ring-2 ring-[#00008B]/30";
+  }
+
+  if (annualReturn >= 80) {
+    return "bg-emerald-950/15 border-emerald-500/50 text-emerald-900 hover:bg-emerald-950/25 hover:border-emerald-600";
+  } else if (annualReturn >= 50) {
+    return "bg-emerald-900/10 border-emerald-400/40 text-emerald-800 hover:bg-emerald-900/20 hover:border-emerald-500";
+  } else if (annualReturn >= 25) {
+    return "bg-emerald-800/8 border-emerald-300/35 text-emerald-800 hover:bg-emerald-800/15 hover:border-emerald-400";
+  } else if (annualReturn > 0) {
+    return "bg-emerald-50/70 border-emerald-200/50 text-emerald-700 hover:bg-emerald-100/60 hover:border-emerald-300";
+  } else if (annualReturn === 0) {
+    return "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100";
+  } else {
+    return "bg-rose-50/80 border-rose-200/60 text-rose-800 hover:bg-rose-100/80 hover:border-rose-300";
+  }
+}
+
+// GÜNÜN ENLERİ ROZET RENK YOĞUNLUĞU HESAPLAYICI
+function getChangeBadgeStyle(change: number) {
+  const absChange = Math.abs(change);
+  if (change > 0) {
+    if (absChange >= 8) return "bg-emerald-600 text-white font-black border border-emerald-700 shadow-xs";
+    if (absChange >= 4) return "bg-emerald-500/90 text-white font-bold border border-emerald-600/80";
+    if (absChange >= 2) return "bg-emerald-100 text-emerald-800 font-bold border border-emerald-300/80";
+    return "bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/70";
+  } else if (change < 0) {
+    if (absChange >= 8) return "bg-rose-600 text-white font-black border border-rose-700 shadow-xs";
+    if (absChange >= 4) return "bg-rose-500/90 text-white font-bold border border-rose-600/80";
+    if (absChange >= 2) return "bg-rose-100 text-rose-800 font-bold border border-rose-300/80";
+    return "bg-rose-50 text-rose-700 font-bold border border-rose-200/70";
+  }
+  return "bg-slate-100 text-slate-600 font-bold border border-slate-200";
+}
+
 export default function AssetsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedSector, setSelectedSector] = useState<string | null>(null);
@@ -629,7 +664,7 @@ export default function AssetsPage() {
     const [activeTopTab, setActiveTopTab] = useState<TopTab>('gainers');
     const itemsPerPage = 12;
 
-    // CANLI BİST FİYATLARI VE OTOMATİK Yenileme (30s Server Cache / 60s Client Polling)
+    // CANLI BİST FİYATLARI VE OTOMATİK YENİLEME (30s Server Cache / 60s Client Polling)
     const [livePrices, setLivePrices] = useState<Record<string, { price: number; change: number; volume: string; pe: number }>>({});
     const [bist100Quote, setBist100Quote] = useState<{ price: number; changePercent: number } | null>(null);
     const [lastUpdatedTime, setLastUpdatedTime] = useState<string>("");
@@ -641,7 +676,7 @@ export default function AssetsPage() {
     const fetchLivePrices = async () => {
         setIsRefreshing(true);
         try {
-            // 1. Canlı BIST Hisseleri (TradingView Scanner)
+            // 1. Canlı BIST Hisseleri (TradingView Scanner POST API)
             const resPrices = await fetch("/api/bist/prices");
             if (resPrices.ok) {
                 const data = await resPrices.json();
@@ -680,42 +715,46 @@ export default function AssetsPage() {
         return () => clearInterval(interval);
     }, []);
 
-    // TÜM BIST HİSSELERİNİ ÜRETME VE CANLI VERİYLE NORMALEŞTİRME
+    // TÜM BIST HİSSELERİNİ ÜRETME VE CANLI VERİYLE NORMALEŞTİRME (DÜZELTİLMİŞ DOĞRUDAN API AKIŞI)
     const allStocksList = useMemo(() => {
         const result: StockItem[] = [];
         const addedSymbols = new Set<string>();
 
-        // Sektörel Eşleştirmeler
-        Object.entries(SECTOR_MAPPING).forEach(([displaySector, mappingKeys]) => {
-            mappingKeys.forEach(key => {
-                const symbols = (STOCK_SECTORS as Record<string, string[]>)[key] || [];
-                symbols.forEach((sym) => {
-                    if (!addedSymbols.has(sym)) {
-                        addedSymbols.add(sym);
-                        const basePrice = Math.abs((sym.charCodeAt(0) * 17 + (sym.charCodeAt(1) || 65) * 5) % 450) + 12.5;
-                        const changeVal = parseFloat((((sym.charCodeAt(0) % 7) - 3) * 1.35).toFixed(2));
-                        const nameStr = STOCK_NAMES[sym] || `${sym} Sanayi ve Ticaret A.Ş.`;
-                        const volVal = ((sym.charCodeAt(0) * 12.4 + 50) % 850 + 40).toFixed(1) + " M₺";
-                        const peVal = parseFloat(((sym.charCodeAt(0) % 18) + 4.2).toFixed(1));
-                        const highVal = parseFloat((basePrice * 1.25).toFixed(2));
-                        
-                        result.push({
-                            symbol: sym,
-                            name: nameStr,
-                            price: parseFloat(basePrice.toFixed(2)),
-                            change: changeVal,
-                            volume: volVal,
-                            rawVolumeNum: normalizeVolume(volVal),
-                            pe: peVal,
-                            high52: highVal,
-                            sector: displaySector
-                        });
+        // 1. Önce API'den gelen canlı hisselerin tümünü ekle (En öncelikli canlı veri kümesi)
+        Object.entries(livePrices).forEach(([sym, live]) => {
+            if (!sym || addedSymbols.has(sym)) return;
+            addedSymbols.add(sym);
+
+            const nameStr = STOCK_NAMES[sym] || `${sym} Şirket Grubu A.Ş.`;
+            
+            // Sektör tespiti
+            let foundSector = "Genel BIST";
+            for (const [displaySec, mappingKeys] of Object.entries(SECTOR_MAPPING)) {
+                for (const key of mappingKeys) {
+                    const secSymbols = (STOCK_SECTORS as Record<string, string[]>)[key] || [];
+                    if (secSymbols.includes(sym)) {
+                        foundSector = displaySec;
+                        break;
                     }
-                });
+                }
+                if (foundSector !== "Genel BIST") break;
+            }
+
+            const volStr = live.volume || "-";
+            result.push({
+                symbol: sym,
+                name: nameStr,
+                price: live.price,
+                change: live.change,
+                volume: volStr,
+                rawVolumeNum: normalizeVolume(volStr),
+                pe: live.pe || 0,
+                high52: parseFloat((live.price * 1.25).toFixed(2)),
+                sector: foundSector
             });
         });
 
-        // Master Listesindeki Diğer Şirketler
+        // 2. Statik katalogdaki eksik semboller varsa onları da ekle (Initial load fallback)
         MASTER_BIST_620.forEach((sym) => {
             if (!addedSymbols.has(sym)) {
                 addedSymbols.add(sym);
@@ -740,22 +779,7 @@ export default function AssetsPage() {
             }
         });
 
-        // CANLI VERİ ENTEGRASYONU: TradingView Canlı Fiyatları Varsa Anında Eşitle
-        return result.map(item => {
-            const live = livePrices[item.symbol];
-            if (live) {
-                const volStr = live.volume || item.volume;
-                return {
-                    ...item,
-                    price: live.price,
-                    change: live.change,
-                    volume: volStr,
-                    rawVolumeNum: normalizeVolume(volStr),
-                    pe: live.pe || item.pe
-                };
-            }
-            return item;
-        });
+        return result;
     }, [livePrices]);
 
     // GÜNÜN ENLERİ (TEK CANLI STATE'TEN TÜRETİLMİŞ SEKMELİ DİZİLER)
@@ -771,27 +795,31 @@ export default function AssetsPage() {
         return [...allStocksList].sort((a, b) => b.rawVolumeNum - a.rawVolumeNum).slice(0, 5);
     }, [allStocksList]);
 
-    // PİYASA NABZI HESAPLAMALARI (DETERMİNİSTİK TÜRETME)
+    // PİYASA NABZI HESAPLAMALARI (DETERMİNİSTİK ANLIK HESAPLAMA - HARDCODE 0)
     const marketStats = useMemo(() => {
-        const totalCount = allStocksList.length;
-        let gainers = 0;
-        let losers = 0;
-        let neutral = 0;
+        const validStocks = allStocksList.filter(s => 
+            s && typeof s.price === "number" && !isNaN(s.price) && typeof s.change === "number" && !isNaN(s.change)
+        );
+
+        const totalCount = validStocks.length;
+        let rising = 0;
+        let falling = 0;
+        let unchanged = 0;
         let totalVolSum = 0;
 
-        allStocksList.forEach(s => {
-            if (s.change > 0) gainers++;
-            else if (s.change < 0) losers++;
-            else neutral++;
+        validStocks.forEach(s => {
+            if (s.change > 0) rising++;
+            else if (s.change < 0) falling++;
+            else unchanged++;
 
             totalVolSum += s.rawVolumeNum;
         });
 
         return {
             totalCount,
-            gainers,
-            losers,
-            neutral,
+            rising,
+            falling,
+            unchanged,
             totalVolSum,
             totalVolFormatted: formatVolumeDisplay(totalVolSum)
         };
@@ -845,7 +873,11 @@ export default function AssetsPage() {
 
     // Sektör Tıklama & Tabloya Kaydırma
     const handleSectorClick = (sectorName: string) => {
-        setSelectedSector(sectorName);
+        if (selectedSector === sectorName) {
+            setSelectedSector(null);
+        } else {
+            setSelectedSector(sectorName);
+        }
         setCurrentPage(1);
         setTimeout(() => {
             stockSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -866,20 +898,24 @@ export default function AssetsPage() {
         <div className="p-3 sm:p-5 md:p-6 min-h-screen bg-[#F8FAFC] space-y-6 w-full max-w-full overflow-x-hidden">
             
             {/* ========================================================================= */}
-            {/* 1. BÖLÜM: ÜST YARI — SEKTÖRLER YILLIK GETİRİLERİ (SOL) & GÜNÜN ENLERİ (SAĞ) */}
+            {/* 1. BÖLÜM: ÜST YARI — SEKTÖRLER YILLIK GETİRİLERİ (HEATMAP) & GÜNÜN ENLERİ */}
             {/* ========================================================================= */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full items-stretch">
                 
-                {/* SOL WIDGET: SEKTÖRLER YILLIK GETİRİLERİ (KOMPAKT 6 SEKTÖR) */}
-                <div className="bg-white border border-slate-200/90 rounded-[28px] p-5 shadow-sm space-y-4 flex flex-col justify-between">
+                {/* SOL WIDGET: SEKTÖRLER YILLIK GETİRİLERİ (FINANCIAL HEATMAP TASARIMI) */}
+                <div className="bg-white border border-slate-200/90 rounded-[28px] p-5 shadow-xs space-y-4 flex flex-col justify-between">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div className="flex items-center gap-2.5">
                             <div className="w-9 h-9 rounded-xl bg-[#00008B] flex items-center justify-center text-white shadow-xs shrink-0">
                                 <BarChart3 className="w-4 h-4 text-sky-300" />
                             </div>
                             <div>
-                                <h2 className="text-base font-black text-slate-900 tracking-tight leading-tight">Sektörler Yıllık Getirileri</h2>
-                                <p className="text-[10px] font-bold text-slate-400">2025 BIST Sektörel Getiri Referansı (Hisseleri Süzmek için Tıklayın)</p>
+                                <h2 className="text-base font-black text-slate-900 tracking-tight leading-tight">
+                                    Sektörler Yıllık Getirileri (2025 BIST)
+                                </h2>
+                                <p className="text-[10px] font-bold text-slate-400">
+                                    Getiri Büyüklüğüne Göre Renk Yoğunluğu (Filtrelemek İçin Tıklayın)
+                                </p>
                             </div>
                         </div>
                         {selectedSector && (
@@ -893,35 +929,39 @@ export default function AssetsPage() {
                         )}
                     </div>
 
-                    {/* KOMPAKT İKİLİ IZGARA (6 LİDER SEKTÖR) */}
+                    {/* FINAI HEATMAP IZGARASI (PERFORMANSA DİNAMİK YOĞUNLUKLU RENK) */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 flex-1">
                         {ALL_SECTORS_DATA.slice(0, 6).map((sector, idx) => {
                             const isSelected = selectedSector === sector.name;
+                            const heatmapStyle = getSectorHeatmapStyle(sector.annualReturn, isSelected);
+
                             return (
                                 <button
                                     key={sector.name}
                                     onClick={() => handleSectorClick(sector.name)}
                                     className={cn(
-                                        "p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group cursor-pointer",
-                                        isSelected 
-                                            ? "bg-blue-50/80 border-[#00008B] ring-2 ring-[#00008B]/20 shadow-md" 
-                                            : "bg-slate-50/70 border-slate-200/80 hover:bg-white hover:border-blue-300 hover:shadow-md"
+                                        "p-3 rounded-2xl border text-left transition-all relative overflow-hidden flex flex-col justify-between group cursor-pointer shadow-2xs",
+                                        heatmapStyle
                                     )}
                                 >
                                     <div className="flex items-center justify-between w-full mb-1.5">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">#{idx + 1}</span>
-                                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60">
+                                        <span className="text-[9px] font-black opacity-60 uppercase tracking-wider">#{idx + 1}</span>
+                                        <span className={cn(
+                                            "text-xs font-black px-1.5 py-0.5 rounded-md border",
+                                            isSelected
+                                                ? "bg-white/20 text-white border-white/30"
+                                                : "bg-white/90 text-emerald-800 border-emerald-300/60 shadow-2xs"
+                                        )}>
                                             +{sector.annualReturn}%
                                         </span>
                                     </div>
                                     <div>
-                                        <h3 className={cn(
-                                            "text-xs font-black leading-snug truncate",
-                                            isSelected ? "text-[#00008B]" : "text-slate-800 group-hover:text-[#00008B]"
-                                        )} title={sector.name}>
+                                        <h3 className="text-xs font-black leading-snug truncate" title={sector.name}>
                                             {sector.name}
                                         </h3>
-                                        <p className="text-[9px] font-bold text-slate-400 mt-0.5">Lider: <span className="text-slate-700 font-extrabold">{sector.leader}</span></p>
+                                        <p className="text-[9px] font-bold opacity-75 mt-0.5">
+                                            Lider: <span className="font-extrabold">{sector.leader}</span>
+                                        </p>
                                     </div>
                                 </button>
                             );
@@ -929,8 +969,8 @@ export default function AssetsPage() {
                     </div>
                 </div>
 
-                {/* SAĞ WIDGET: GÜNÜN ENLERİ (SEKMELİ YAPI: YÜKSELENLER, DÜŞENLER, EN YÜKSEK HACİM) */}
-                <div className="bg-white border border-slate-200/90 rounded-[28px] p-5 shadow-sm space-y-3.5 flex flex-col justify-between">
+                {/* SAĞ WIDGET: GÜNÜN ENLERİ (SEKMELİ & KONTROLLÜ RENK YOĞUNLUĞU) */}
+                <div className="bg-white border border-slate-200/90 rounded-[28px] p-5 shadow-xs space-y-3.5 flex flex-col justify-between">
                     
                     {/* BAŞLIK VE SEKMELER */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-3">
@@ -944,7 +984,7 @@ export default function AssetsPage() {
                             </div>
                         </div>
 
-                        {/* SEKMELER: [YÜKSELENLER] [DÜŞENLER] [EN YÜKSEK HACİM] */}
+                        {/* SEKMELER */}
                         <div className="flex items-center bg-slate-100/80 p-1 rounded-xl gap-1 self-start sm:self-auto border border-slate-200/60">
                             <button
                                 onClick={() => setActiveTopTab('gainers')}
@@ -985,7 +1025,7 @@ export default function AssetsPage() {
                         </div>
                     </div>
 
-                    {/* İÇERİK LİSTESİ (İLK 5 HİSSE) */}
+                    {/* İÇERİK LİSTESİ (KONTROLLÜ PERFORMANS YOĞUNLUĞU) */}
                     <div className="space-y-1.5 flex-1 flex flex-col justify-around">
                         {(() => {
                             const list = activeTopTab === 'gainers' ? topGainers : activeTopTab === 'losers' ? topLosers : topVolumeStocks;
@@ -1022,10 +1062,8 @@ export default function AssetsPage() {
                                             </span>
                                         ) : (
                                             <span className={cn(
-                                                "font-black text-xs px-2 py-0.5 rounded-md border text-right min-w-[62px]",
-                                                item.change >= 0 
-                                                    ? "text-emerald-700 bg-emerald-50 border-emerald-200/80" 
-                                                    : "text-rose-700 bg-rose-50 border-rose-200/80"
+                                                "text-xs px-2 py-0.5 rounded-md text-right min-w-[62px]",
+                                                getChangeBadgeStyle(item.change)
                                             )}>
                                                 {item.change > 0 ? `+${item.change}%` : `${item.change}%`}
                                             </span>
@@ -1039,44 +1077,52 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. BÖLÜM: PİYASA NABZI (ORDAKİ CANLI METRİKLER BAR-PANELİ) */}
+            {/* 2. BÖLÜM: PİYASA NABZI (FINAI LACİVERT/MAVİ TASARIM DİLİ KART PANELİ) */}
             {/* ========================================================================= */}
-            <div className="w-full bg-white border border-slate-200/90 rounded-[28px] p-4 sm:p-5 shadow-sm space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200/80 flex items-center justify-center text-[#00008B] shrink-0">
+            <div className="w-full bg-gradient-to-br from-[#000066] via-[#00008B] to-[#040436] rounded-[28px] p-4 sm:p-5 md:p-6 shadow-md text-white border border-blue-900/40 space-y-4">
+                
+                {/* BAŞLIK & CANLI DURUM */}
+                <div className="flex items-center justify-between border-b border-blue-800/60 pb-3">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-sky-300 shrink-0">
                             <Activity className="w-4 h-4" />
                         </div>
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">Piyasa Nabzı</h2>
-                            <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60 uppercase tracking-widest flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                {lastUpdatedTime ? `Son Canlı: ${lastUpdatedTime}` : "Canlı Akış"}
-                            </span>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-base sm:text-lg font-black text-white tracking-tight">Piyasa Nabzı</h2>
+                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 uppercase tracking-widest flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    BIST CANLI
+                                </span>
+                            </div>
+                            <p className="text-[10px] font-medium text-blue-200/70">
+                                {lastUpdatedTime ? `Son Canlı Veri Akışı: ${lastUpdatedTime}` : "Canlı Piyasa Verileri Yükleniyor..."}
+                            </p>
                         </div>
                     </div>
+
                     {isRefreshing && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                            <RefreshCw className="w-3 h-3 animate-spin text-[#00008B]" />
-                            <span>Yenileniyor...</span>
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-sky-300 bg-white/10 px-2.5 py-1 rounded-xl border border-white/15">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            <span>Yenileniyor</span>
                         </div>
                     )}
                 </div>
 
-                {/* 5 METRİK KARTI (BIST 100, YÜKSELEN, DÜŞEN, NÖTR, TOPLAM HACİM) */}
+                {/* 5 METRİK PANELİ (BIST 100, YÜKSELEN, DÜŞEN, NÖTR, TOPLAM HACİM) */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                     
-                    {/* BIST 100 ENDEKSİ */}
-                    <div className="bg-slate-50/80 border border-slate-200/80 p-3 rounded-2xl space-y-1">
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">BIST 100</span>
+                    {/* 1. BIST 100 ENDEKSİ */}
+                    <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl space-y-1">
+                        <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">BIST 100</span>
                         <div className="flex items-baseline justify-between gap-1">
-                            <span className="text-sm sm:text-base font-black text-[#00008B]">
+                            <span className="text-base sm:text-lg font-black text-white">
                                 {bist100Quote ? `₺${bist100Quote.price.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}` : "Canlı..."}
                             </span>
                             {bist100Quote && (
                                 <span className={cn(
                                     "text-[10px] font-black px-1.5 py-0.2 rounded border",
-                                    bist100Quote.changePercent >= 0 ? "text-emerald-700 bg-emerald-50 border-emerald-200" : "text-rose-700 bg-rose-50 border-rose-200"
+                                    bist100Quote.changePercent >= 0 ? "text-emerald-300 bg-emerald-500/20 border-emerald-400/30" : "text-rose-300 bg-rose-500/20 border-rose-400/30"
                                 )}>
                                     {bist100Quote.changePercent >= 0 ? `+${bist100Quote.changePercent.toFixed(2)}%` : `${bist100Quote.changePercent.toFixed(2)}%`}
                                 </span>
@@ -1084,55 +1130,55 @@ export default function AssetsPage() {
                         </div>
                     </div>
 
-                    {/* YÜKSELEN HİSSELER */}
-                    <div className="bg-emerald-50/60 border border-emerald-200/70 p-3 rounded-2xl space-y-1">
-                        <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3 text-emerald-600" />
-                            Yükselenler
+                    {/* 2. BIST'TE YÜKSELEN HİSSELER */}
+                    <div className="bg-emerald-950/40 backdrop-blur-md border border-emerald-500/30 p-3.5 rounded-2xl space-y-1">
+                        <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider flex items-center gap-1">
+                            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                            BIST'te Yükselen
                         </span>
                         <div className="flex items-baseline justify-between">
-                            <span className="text-base sm:text-lg font-black text-emerald-700">{marketStats.gainers}</span>
-                            <span className="text-[10px] font-bold text-emerald-600">
-                                %{((marketStats.gainers / marketStats.totalCount) * 100).toFixed(0)}
+                            <span className="text-lg sm:text-xl font-black text-emerald-300">{marketStats.rising}</span>
+                            <span className="text-[10px] font-bold text-emerald-400/80 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
+                                %{marketStats.totalCount > 0 ? ((marketStats.rising / marketStats.totalCount) * 100).toFixed(0) : 0}
                             </span>
                         </div>
                     </div>
 
-                    {/* DÜŞEN HİSSELER */}
-                    <div className="bg-rose-50/60 border border-rose-200/70 p-3 rounded-2xl space-y-1">
-                        <span className="text-[10px] font-black text-rose-800 uppercase tracking-wider flex items-center gap-1">
-                            <TrendingDown className="w-3 h-3 text-rose-600" />
-                            Düşenler
+                    {/* 3. BIST'TE DÜŞEN HİSSELER */}
+                    <div className="bg-rose-950/40 backdrop-blur-md border border-rose-500/30 p-3.5 rounded-2xl space-y-1">
+                        <span className="text-[10px] font-bold text-rose-300 uppercase tracking-wider flex items-center gap-1">
+                            <TrendingDown className="w-3.5 h-3.5 text-rose-400" />
+                            BIST'te Düşen
                         </span>
                         <div className="flex items-baseline justify-between">
-                            <span className="text-base sm:text-lg font-black text-rose-700">{marketStats.losers}</span>
-                            <span className="text-[10px] font-bold text-rose-600">
-                                %{((marketStats.losers / marketStats.totalCount) * 100).toFixed(0)}
+                            <span className="text-lg sm:text-xl font-black text-rose-300">{marketStats.falling}</span>
+                            <span className="text-[10px] font-bold text-rose-400/80 bg-rose-500/10 px-1.5 py-0.2 rounded border border-rose-500/20">
+                                %{marketStats.totalCount > 0 ? ((marketStats.falling / marketStats.totalCount) * 100).toFixed(0) : 0}
                             </span>
                         </div>
                     </div>
 
-                    {/* DEĞİŞMEYEN (NÖTR) HİSSELER */}
-                    <div className="bg-slate-100/70 border border-slate-200/80 p-3 rounded-2xl space-y-1">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <Minus className="w-3 h-3 text-slate-400" />
-                            Nötr / Yatay
+                    {/* 4. DEĞİŞMEYEN / NÖTR HİSSELER */}
+                    <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl space-y-1">
+                        <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1">
+                            <Minus className="w-3.5 h-3.5 text-slate-300" />
+                            Değişmeyen
                         </span>
                         <div className="flex items-baseline justify-between">
-                            <span className="text-base sm:text-lg font-black text-slate-700">{marketStats.neutral}</span>
-                            <span className="text-[10px] font-bold text-slate-400">
-                                %{((marketStats.neutral / marketStats.totalCount) * 100).toFixed(0)}
+                            <span className="text-lg sm:text-xl font-black text-slate-200">{marketStats.unchanged}</span>
+                            <span className="text-[10px] font-bold text-blue-200/80 bg-white/10 px-1.5 py-0.2 rounded border border-white/20">
+                                %{marketStats.totalCount > 0 ? ((marketStats.unchanged / marketStats.totalCount) * 100).toFixed(0) : 0}
                             </span>
                         </div>
                     </div>
 
-                    {/* TOPLAM PİYASA İŞLEM HACMİ */}
-                    <div className="bg-blue-50/60 border border-blue-200/80 p-3 rounded-2xl space-y-1 col-span-2 sm:col-span-1">
-                        <span className="text-[10px] font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1">
-                            <Coins className="w-3 h-3 text-[#00008B]" />
+                    {/* 5. TOPLAM PİYASA İŞLEM HACMİ */}
+                    <div className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl space-y-1 col-span-2 sm:col-span-1">
+                        <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1">
+                            <Coins className="w-3.5 h-3.5 text-amber-300" />
                             Toplam Hacim ({marketStats.totalCount} Hisse)
                         </span>
-                        <span className="text-sm sm:text-base font-black text-[#00008B] truncate block">
+                        <span className="text-base sm:text-lg font-black text-amber-300 truncate block">
                             {marketStats.totalVolFormatted}
                         </span>
                     </div>
@@ -1141,22 +1187,27 @@ export default function AssetsPage() {
             </div>
 
             {/* ========================================================================= */}
-            {/* 3. BÖLÜM: VARLIK MERKEZİ (ARAMA, SEKTÖR FİLTRESİ, TABLO / RESPONSIVE KARTLAR) */}
+            {/* 3. BÖLÜM: VARLIK MERKEZİ (ARAMA, SEKTÖR FİLTRESİ, MASAÜSTÜ TABLO / MOBİL KARTLAR) */}
             {/* ========================================================================= */}
             <div 
                 ref={stockSectionRef}
-                className="w-full bg-white border border-slate-200/90 rounded-[28px] p-4 sm:p-5 md:p-6 shadow-sm space-y-5 relative"
+                className="w-full bg-white border border-slate-200/90 rounded-[28px] p-4 sm:p-5 md:p-6 shadow-xs space-y-5 relative"
             >
                 <div className="space-y-4">
                     
-                    {/* ÜST BAŞLIK */}
+                    {/* ÜST BAŞLIK & SAYAÇ */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                         <div>
-                            <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                                {selectedSector ? `${selectedSector} - Varlık Merkezi` : "Varlık Merkezi"}
-                            </h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                                    {selectedSector ? `${selectedSector} - Varlık Merkezi` : "Varlık Merkezi"}
+                                </h2>
+                                <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200/80">
+                                    {filteredStocks.length} Şirket
+                                </span>
+                            </div>
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                                Tüm BIST şirketlerini inceleyin, sütun başlıklarına tıklayarak sıralayın veya sektor filtresi kullanın.
+                                Tüm BIST şirketlerini inceleyin, sütun başlıklarına tıklayarak sıralayın veya sektör filtresi kullanın.
                             </p>
                         </div>
 
@@ -1225,7 +1276,7 @@ export default function AssetsPage() {
                                     <thead>
                                         <tr className="bg-slate-100/80 border-b border-slate-200 text-[10px] font-black text-slate-600 uppercase tracking-wider select-none">
                                             <th 
-                                                className="py-3 px-4 w-[28%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                                className="py-3 px-4 w-[30%] cursor-pointer hover:bg-slate-200/60 transition-colors"
                                                 onClick={() => handleSort('symbol')}
                                             >
                                                 <div className="flex items-center gap-1">
@@ -1253,7 +1304,7 @@ export default function AssetsPage() {
                                             </th>
 
                                             <th 
-                                                className="py-3 px-2 text-right w-[15%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                                className="py-3 px-2 text-right w-[14%] cursor-pointer hover:bg-slate-200/60 transition-colors"
                                                 onClick={() => handleSort('change')}
                                             >
                                                 <div className="flex items-center justify-end gap-1">
@@ -1265,7 +1316,7 @@ export default function AssetsPage() {
                                             </th>
 
                                             <th 
-                                                className="py-3 px-2 text-right w-[14%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                                className="py-3 px-2 text-right w-[13%] cursor-pointer hover:bg-slate-200/60 transition-colors"
                                                 onClick={() => handleSort('volume')}
                                             >
                                                 <div className="flex items-center justify-end gap-1">
@@ -1277,7 +1328,7 @@ export default function AssetsPage() {
                                             </th>
 
                                             <th 
-                                                className="py-3 px-2 text-right w-[8%] cursor-pointer hover:bg-slate-200/60 transition-colors"
+                                                className="py-3 px-2 text-right w-[6%] cursor-pointer hover:bg-slate-200/60 transition-colors"
                                                 onClick={() => handleSort('pe')}
                                             >
                                                 <div className="flex items-center justify-end gap-1">
@@ -1289,7 +1340,7 @@ export default function AssetsPage() {
                                             </th>
 
                                             <th className="py-3 px-2 text-center w-[5%]">
-                                                <span>Detay</span>
+                                                <span>İncele</span>
                                             </th>
                                         </tr>
                                     </thead>
@@ -1312,7 +1363,7 @@ export default function AssetsPage() {
                                                         >
                                                             {item.symbol}
                                                         </a>
-                                                        <span className="text-[10px] font-semibold text-slate-400 truncate block max-w-[220px]" title={item.name}>
+                                                        <span className="text-[10px] font-semibold text-slate-400 truncate block max-w-[240px]" title={item.name}>
                                                             {item.name}
                                                         </span>
                                                     </div>
@@ -1330,12 +1381,10 @@ export default function AssetsPage() {
 
                                                 <td className="py-3 px-2 text-right">
                                                     <span className={cn(
-                                                        "font-black px-2 py-0.5 rounded-lg text-xs inline-flex items-center gap-0.5",
-                                                        item.change >= 0 
-                                                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60" 
-                                                            : "bg-rose-50 text-rose-700 border border-rose-200/60"
+                                                        "text-xs px-2 py-0.5 rounded-md inline-flex items-center gap-0.5",
+                                                        getChangeBadgeStyle(item.change)
                                                     )}>
-                                                        {item.change >= 0 ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />}
+                                                        {item.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                                         %{item.change > 0 ? `+${item.change}` : item.change}
                                                     </span>
                                                 </td>
@@ -1375,7 +1424,7 @@ export default function AssetsPage() {
                                         rel="noopener noreferrer"
                                         className="bg-white border border-slate-200/90 p-3.5 rounded-2xl space-y-2.5 hover:border-blue-300 hover:shadow-md transition-all block group"
                                     >
-                                        {/* KART ÜST BAŞLIK & DEĞİŞİM BİLİSİ */}
+                                        {/* KART ÜST BAŞLIK & DEĞİŞİM BİLGİSİ */}
                                         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-1.5">
@@ -1392,12 +1441,10 @@ export default function AssetsPage() {
                                             </div>
 
                                             <span className={cn(
-                                                "font-black px-2 py-0.5 rounded-lg text-xs shrink-0 flex items-center gap-0.5",
-                                                item.change >= 0 
-                                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60" 
-                                                    : "bg-rose-50 text-rose-700 border border-rose-200/60"
+                                                "text-xs px-2 py-0.5 rounded-lg shrink-0 flex items-center gap-0.5",
+                                                getChangeBadgeStyle(item.change)
                                             )}>
-                                                {item.change >= 0 ? <TrendingUp className="w-3 h-3 text-emerald-600" /> : <TrendingDown className="w-3 h-3 text-rose-600" />}
+                                                {item.change >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                                                 %{item.change > 0 ? `+${item.change}` : item.change}
                                             </span>
                                         </div>
