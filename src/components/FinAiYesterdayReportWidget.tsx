@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Sparkles, Clock, Loader2, TrendingUp, TrendingDown, Percent } from "lucide-react";
+import { Sparkles, Loader2, TrendingUp, TrendingDown, Percent } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 
 export function FinAiYesterdayReportWidget() {
-    const { user, myAssets = [], prices = {}, isDataLoaded } = useUser();
+    const { user, myAssets = [] } = useUser();
     const [timeframe, setTimeframe] = useState<'weekly' | 'monthly' | 'all-time'>('weekly');
     const [report, setReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -32,57 +32,14 @@ export function FinAiYesterdayReportWidget() {
         fetchReport(timeframe);
     }, [user?.id, myAssets.length, timeframe]);
 
-    // Client-side fallback narrative generator
-    const clientFallbackNarrative = useMemo(() => {
-        if (!myAssets || myAssets.length === 0) {
-            return "Portföyünüzde henüz kaydedilmiş aktif bir varlık bulunmuyor. Varlık ekledikten sonra FinAi analiz raporunuz otomatik olarak üretilecektir.";
-        }
+    const isApiEmpty = !report || !report.narrativeText;
+    const hasEnoughData = report && !report.narrativeText?.includes("yeterli tarihsel veri");
 
-        let currentTotal = 0;
-        let totalCost = 0;
-        const assetGains: { name: string; gain: number }[] = [];
+    const narrativeToDisplay = report?.narrativeText || "Henüz yeterli tarihsel veri oluşmadı. Portföy analiziniz her gün 23:59 TSİ'de kaydedilen otomatik snapshot'lar ile üretilir.";
 
-        myAssets.forEach((asset: any) => {
-            const symUpper = (asset.symbol || '').toUpperCase();
-            const symClean = symUpper.replace(/\.IS$/, '');
-            const price = prices[symUpper] ?? prices[symClean] ?? prices[`${symClean}.IS`] ?? asset.avgCost ?? 0;
-
-            const val = price * asset.quantity;
-            const cost = asset.avgCost * asset.quantity;
-            const gain = val - cost;
-
-            currentTotal += val;
-            totalCost += cost;
-            assetGains.push({ name: asset.symbol.replace(/\.IS$/, ''), gain });
-        });
-
-        const diffVal = currentTotal - totalCost;
-        const diffPct = totalCost > 0 ? (diffVal / totalCost) * 100 : 0;
-        const isPos = diffVal >= 0;
-
-        assetGains.sort((a, b) => Math.abs(b.gain) - Math.abs(a.gain));
-        const topDriver = assetGains[0]?.name || 'ana varlıklarınız';
-
-        const absDiffStr = Math.abs(diffVal).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const absPctStr = Math.abs(diffPct).toFixed(2);
-        const startStr = totalCost.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const endStr = currentTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-        if (timeframe === 'weekly') {
-            return `Son 7 günlük dönemde portföyünüzün toplam değeri ₺${startStr} seviyesinden ₺${endStr} seviyesine ${isPos ? 'yükseldi' : 'geriledi'}. Bu, ₺${absDiffStr} tutarında (${isPos ? '+' : '-'}%${absPctStr}) bir bakiye değişimine karşılık geliyor. Bu süreçteki performansın en güçlü belirleyicisi ${topDriver} pozisyonunuz oldu. Piyasalar yakından takip edilmektedir.`;
-        } else if (timeframe === 'monthly') {
-            return `Son 30 günlük aylık değerlendirmede portföy bakiyeniz ₺${startStr} seviyesinden ₺${endStr} seviyesine ulaşarak ${isPos ? '+' : '-'}%${absPctStr} değişim gösterdi. Aylık süreçteki performansı en çok etkileyen varlık ${topDriver} olurken portföy dengesi korunmaktadır.`;
-        } else {
-            return `Portföyünüz oluşturulduğu günden bugüne kadar ₺${startStr} başlangıç değerinden ₺${endStr} seviyesine ulaştı. Bu süreçte gerçekleşen ₺${absDiffStr} tutarındaki toplam büyümede ${topDriver} pozisyonunuz liderlik etti.`;
-        }
-    }, [myAssets, prices, timeframe]);
-
-    const isApiEmpty = !report || !report.narrativeText || report.narrativeText.includes("bulunmuyor");
-    const narrativeToDisplay = (myAssets.length > 0 && isApiEmpty) ? clientFallbackNarrative : (report?.narrativeText || clientFallbackNarrative);
-
-    const displayDiffValue = (!isApiEmpty && report?.diffValue !== undefined) ? report.diffValue : (myAssets.length > 0 ? (myAssets.reduce((tot: number, a: any) => tot + (prices[a.symbol.toUpperCase()] || a.avgCost) * a.quantity, 0) - myAssets.reduce((tot: number, a: any) => tot + a.avgCost * a.quantity, 0)) : 0);
-    const displayDiffPercent = (!isApiEmpty && report?.diffPercent !== undefined) ? report.diffPercent : (myAssets.length > 0 ? (displayDiffValue / (myAssets.reduce((tot: number, a: any) => tot + a.avgCost * a.quantity, 0) || 1)) * 100 : 0);
-    const twrPercent = report?.twrPercent ?? displayDiffPercent;
+    const displayDiffValue = report?.diffValue ?? 0;
+    const displayDiffPercent = report?.diffPercent ?? 0;
+    const twrPercent = report?.twrPercent ?? 0;
     const isPositive = displayDiffValue >= 0;
 
     return (
@@ -140,7 +97,7 @@ export function FinAiYesterdayReportWidget() {
                 </div>
 
                 {/* Sub-header Metric Pills */}
-                {myAssets.length > 0 && !loading && (
+                {hasEnoughData && !loading && (
                     <div className="flex items-center gap-2">
                         <span className={`text-[9px] sm:text-xs font-black px-2.5 py-1 rounded-xl border flex items-center gap-1 shadow-xs ${
                             isPositive
@@ -151,9 +108,9 @@ export function FinAiYesterdayReportWidget() {
                             {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(2)})
                         </span>
 
-                        <span className="text-[9px] sm:text-xs font-black text-[#00008B] bg-blue-50/80 px-2.5 py-1 rounded-xl border border-blue-200/80 flex items-center gap-1 shadow-xs" title="Time-Weighted Return (Gerçek Yatırım Getirisi)">
+                        <span className="text-[9px] sm:text-xs font-black text-[#00008B] bg-blue-50/80 px-2.5 py-1 rounded-xl border border-blue-200/80 flex items-center gap-1 shadow-xs" title="Net Portföy Getirisi (TWR)">
                             <Percent className="w-3 h-3 text-[#00008B]" />
-                            TWR: %{twrPercent.toFixed(2)}
+                            Net Getiri: %{twrPercent.toFixed(2)}
                         </span>
                     </div>
                 )}
@@ -175,3 +132,4 @@ export function FinAiYesterdayReportWidget() {
         </div>
     );
 }
+

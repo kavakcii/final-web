@@ -73,25 +73,38 @@ export interface FinAiBackendPayload {
 }
 
 /**
- * 1. TWR (Time-Weighted Return) Hesaplama Motoru
- * Para giriş/çıkışlarının (sermaye hareketlerinin) yarattığı yanılsamayı ortadan kaldırarak
- * gerçek yatırım performansını hesaplar.
+ * 1. TWR (Time-Weighted Return / Sermayeden Arındırılmış Net Getiri) Hesaplama Motoru
+ * V2 snapshotlarındaki daily_return_pct oranlarını bileşik olarak çarparak
+ * gerçek net portföy getirisini hesaplar.
  */
 export function calculateTWR(
-    snapshots: PortfolioSnapshotPoint[],
-    transactions: UserTransaction[]
+    snapshots: any[],
+    transactions: UserTransaction[] = []
 ): number {
-    if (snapshots.length < 2) return 0;
+    if (!snapshots || snapshots.length < 2) return 0;
 
-    // Günlük alt dönem getirilerini hesapla (R_i = (End - NetFlow - Start) / Start)
     let cumulativeProduct = 1.0;
+    let hasDailyReturn = false;
 
+    for (let i = 0; i < snapshots.length; i++) {
+        const item = snapshots[i];
+        if (item.daily_return_pct !== null && item.daily_return_pct !== undefined) {
+            cumulativeProduct *= (1 + Number(item.daily_return_pct) / 100);
+            hasDailyReturn = true;
+        }
+    }
+
+    if (hasDailyReturn) {
+        const twrPct = (cumulativeProduct - 1) * 100;
+        return isNaN(twrPct) ? 0 : Number(twrPct.toFixed(2));
+    }
+
+    // Fallback: Eski snapshotlar için manuel alt dönem hesabı
     for (let i = 1; i < snapshots.length; i++) {
         const prevSnap = snapshots[i - 1];
         const currSnap = snapshots[i];
         const dateStr = currSnap.snapshot_date;
 
-        // O gün gerçekleşen net sermaye akışı (Giriş +, Çıkış -)
         const dayFlows = transactions
             .filter(t => t.transactionDate === dateStr)
             .reduce((sum, t) => {
@@ -100,11 +113,10 @@ export function calculateTWR(
                 return sum;
             }, 0);
 
-        const startVal = prevSnap.total_value;
+        const startVal = Number(prevSnap.total_value || 0);
         if (startVal <= 0) continue;
 
-        // Günlük net yatırım getirisi
-        const dayReturn = (currSnap.total_value - dayFlows - startVal) / startVal;
+        const dayReturn = (Number(currSnap.total_value) - dayFlows - startVal) / startVal;
         cumulativeProduct *= (1 + dayReturn);
     }
 
