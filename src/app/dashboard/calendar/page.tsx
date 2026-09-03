@@ -2159,11 +2159,11 @@ function CalendarContent() {
                 </div>
             </div>
 
-            {/* EKONOMİK TAKVİM VE PİYASA GÜNDEMİ — YAN YANA YERLEŞİM */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            {/* EKONOMİK TAKVİM VE PİYASA GÜNDEMİ — 3 KOLONLU SİMETRİK IZGARA (2 Kolon Ekonomik + 1 Kolon Gündem) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
                 
-                {/* SOL: EKONOMİK TAKVİM TABLOSU */}
-                <div className="bg-gradient-to-b from-amber-50/40 via-white to-white border border-amber-100/80 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+                {/* SOL (2 KOLON): EKONOMİK TAKVİM TABLOSU */}
+                <div className="lg:col-span-2 bg-gradient-to-b from-amber-50/40 via-white to-white border border-amber-100/80 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
                     <div>
                         <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100/60">
                             <div className="flex items-center gap-2">
@@ -2184,29 +2184,31 @@ function CalendarContent() {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="border-b border-amber-100/60 text-[10px] font-black text-amber-800/60 uppercase tracking-wider bg-amber-50/30">
-                                        <th className="py-2.5 px-2">Tarih/Saat</th>
-                                        <th className="py-2.5 px-2">Ülke</th>
-                                        <th className="py-2.5 px-2">Veri</th>
-                                        <th className="py-2.5 px-2">Önem</th>
+                                        <th className="py-3 px-3">Tarih</th>
+                                        <th className="py-3 px-3">Saat</th>
+                                        <th className="py-3 px-3">Ülke</th>
+                                        <th className="py-3 px-3">Veri</th>
+                                        <th className="py-3 px-3">Önem</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-amber-100/40 text-xs font-bold">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={4} className="py-8 text-center text-slate-400">Veriler yükleniyor...</td>
+                                            <td colSpan={5} className="py-8 text-center text-slate-400">Veriler yükleniyor...</td>
                                         </tr>
                                     ) : economicEvents.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-8 text-center text-slate-400">Kayıtlı ekonomik veri bulunmuyor.</td>
+                                            <td colSpan={5} className="py-8 text-center text-slate-400">Kayıtlı ekonomik veri bulunmuyor.</td>
                                         </tr>
                                     ) : (
                                         economicEvents.slice(0, 5).map((item, idx) => (
                                             <tr key={idx} className="hover:bg-amber-50/40 transition-colors">
-                                                <td className="py-2.5 px-2 text-[#00008B] whitespace-nowrap">{item.time || '15:30'}</td>
-                                                <td className="py-2.5 px-2 font-black text-slate-700 whitespace-nowrap">{item.country || 'USD'}</td>
-                                                <td className="py-2.5 px-2 text-slate-800 truncate max-w-[130px]">{item.event}</td>
-                                                <td className="py-2.5 px-2 whitespace-nowrap">
-                                                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border ${
+                                                <td className="py-3 px-3 text-[#00008B] whitespace-nowrap">{item.dateFormatted || '19 Mayıs Salı'}</td>
+                                                <td className="py-3 px-3 text-slate-500 whitespace-nowrap">{item.time || '15:30'}</td>
+                                                <td className="py-3 px-3 font-black text-slate-700 whitespace-nowrap">{item.country || 'USD'}</td>
+                                                <td className="py-3 px-3 text-slate-800">{item.event}</td>
+                                                <td className="py-3 px-3 whitespace-nowrap">
+                                                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
                                                         item.impact === 'Yüksek' || item.impact === 3
                                                             ? 'bg-rose-50 text-rose-700 border-rose-200'
                                                             : 'bg-amber-100/80 text-amber-800 border-amber-200'
@@ -2227,52 +2229,52 @@ function CalendarContent() {
                     </Link>
                 </div>
 
-                {/* SAĞ: PİYASA GÜNDEMİ & YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
-                <div className="bg-[#0c101d] text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+                {/* SAĞ (1 KOLON): PİYASA GÜNDEMİ & YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
+                <div className="lg:col-span-1 bg-[#0c101d] text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
                     
                     <div className="relative z-10 space-y-4">
                         <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2">
                                 <div className="w-7 h-7 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400">
                                     <Sparkles className="w-4 h-4 animate-pulse" />
                                 </div>
                                 <div>
                                     <h3 className="text-base font-black text-white">Piyasa Gündemi</h3>
-                                    <p className="text-[10px] font-bold text-slate-400">Yaklaşan önemli tarihler ve özet göstergeler</p>
+                                    <p className="text-[10px] font-bold text-slate-400">Yaklaşan önemli tarihler</p>
                                 </div>
                             </div>
-                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-400/20">Canlı Takip</span>
+                            <span className="text-[9px] font-bold text-blue-400 uppercase tracking-wider bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-400/20">Canlı Takip</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all block">
-                                <span className="text-[10px] font-bold text-blue-300 uppercase block mb-1">Bilanço</span>
-                                <span className="text-base font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
-                                <span className="text-[9px] text-blue-200/60">Yaklaşan Sonuçlar</span>
+                        <div className="grid grid-cols-2 gap-2.5">
+                            <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all block">
+                                <span className="text-[9px] font-bold text-blue-300 uppercase block mb-0.5">Bilanço</span>
+                                <span className="text-sm font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
+                                <span className="text-[8px] text-blue-200/60">Yaklaşan Sonuçlar</span>
                             </Link>
 
-                            <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all block">
-                                <span className="text-[10px] font-bold text-emerald-300 uppercase block mb-1">Temettü</span>
-                                <span className="text-base font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
-                                <span className="text-[9px] text-emerald-200/60">Hak Hakediş</span>
+                            <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all block">
+                                <span className="text-[9px] font-bold text-emerald-300 uppercase block mb-0.5">Temettü</span>
+                                <span className="text-sm font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
+                                <span className="text-[8px] text-emerald-200/60">Hak Hakediş</span>
                             </Link>
 
-                            <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all block">
-                                <span className="text-[10px] font-bold text-purple-300 uppercase block mb-1">Halka Arz</span>
-                                <span className="text-base font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
-                                <span className="text-[9px] text-purple-200/60">Aktif Başvuru</span>
+                            <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-3 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all block">
+                                <span className="text-[9px] font-bold text-purple-300 uppercase block mb-0.5">Halka Arz</span>
+                                <span className="text-sm font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
+                                <span className="text-[8px] text-purple-200/60">Aktif Başvuru</span>
                             </Link>
 
-                            <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all block">
-                                <span className="text-[10px] font-bold text-amber-300 uppercase block mb-1">Ekonomik Veri</span>
-                                <span className="text-base font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
-                                <span className="text-[9px] text-amber-200/60">Makro Göstergeler</span>
+                            <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all block">
+                                <span className="text-[9px] font-bold text-amber-300 uppercase block mb-0.5">Ekonomik Veri</span>
+                                <span className="text-sm font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
+                                <span className="text-[8px] text-amber-200/60">Makro Göstergeler</span>
                             </Link>
                         </div>
                     </div>
 
-                    <div className="relative z-10 pt-3 border-t border-white/10 mt-3 flex items-center justify-between text-[11px] font-bold text-slate-400">
+                    <div className="relative z-10 pt-2 border-t border-white/10 mt-3 flex items-center justify-between text-[10px] font-bold text-slate-400">
                         <span>Piyasa takvimindeki tüm gelişmeler günceldir.</span>
                     </div>
                 </div>
