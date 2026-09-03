@@ -1044,11 +1044,6 @@ export default function PortfolioPage() {
         }
 
         const totalCost = (q * p) + c;
-        if (totalCost > cashBalance) {
-            setFeedback({ message: "Bu işlem için yeterli nakit bakiyesi bulunmuyor.", type: 'error' });
-            setTimeout(() => setFeedback(null), 3500);
-            return;
-        }
 
         try {
             setIsBuySubmitting(true);
@@ -3190,13 +3185,13 @@ export default function PortfolioPage() {
                                             </div>
                                             <div className="flex justify-between text-slate-500 text-[11px] pt-1">
                                                 <span>İşlem Sonrası Nakit:</span>
-                                                <span className={cn("font-bold", isInsufficient ? "text-rose-600" : "text-emerald-700")}>
+                                                <span className={cn("font-bold", nextCash < 0 ? "text-rose-600 font-extrabold" : "text-emerald-700")}>
                                                     {formatCurrency(nextCash)}
                                                 </span>
                                             </div>
-                                            {isInsufficient && (
-                                                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-2.5 rounded-xl text-[11px] font-bold mt-2 text-center">
-                                                    Bu işlem için yeterli nakit bakiyesi bulunmuyor.
+                                            {nextCash < 0 && (
+                                                <div className="bg-amber-50 border border-amber-200/80 text-amber-800 p-2.5 rounded-xl text-[11px] font-semibold mt-2">
+                                                    💡 İşlem sonrası nakit bakiyeniz negatife geçecektir. Dilediğiniz zaman Nakit Ekle ile bakiyeyi kapatabilirsiniz.
                                                 </div>
                                             )}
                                         </div>
@@ -3205,7 +3200,7 @@ export default function PortfolioPage() {
 
                                 <button 
                                     type="submit" 
-                                    disabled={isBuySubmitting || (parseFloat(buyQuantity) * parseFloat(buyUnitPrice) > cashBalance)}
+                                    disabled={isBuySubmitting}
                                     className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-emerald-900/20 transition-all text-sm mt-3 flex items-center justify-center gap-2 active:scale-95 tracking-wide"
                                 >
                                     {isBuySubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : `${buySymbol} AL`}

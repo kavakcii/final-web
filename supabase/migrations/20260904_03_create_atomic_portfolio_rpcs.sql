@@ -90,18 +90,19 @@ BEGIN
         v_cost_basis := v_net_amount;
         v_realized_pnl := NULL;
 
-        -- Step 1: Lock & Verify Cash Balance
+        -- Step 1: Lock Cash Row (If exists)
         SELECT up.id, up.quantity INTO v_cash_id, v_cash_quantity
         FROM public.user_portfolios up
         WHERE up.user_id = v_user_id AND up.symbol = 'NAKİT' AND up.asset_type = 'CASH'
         FOR UPDATE;
 
-        IF v_cash_id IS NULL OR v_cash_quantity < v_net_amount THEN
-            RAISE EXCEPTION 'Yetersiz nakit bakiye! Gereken: % ₺, Mevcut: % ₺', v_net_amount, COALESCE(v_cash_quantity, 0);
+        -- Step 2: Deduct Cash or Create Negative Cash Position (Nakit yetersiz olsa dahi alıma izin verilir)
+        IF v_cash_id IS NOT NULL THEN
+            UPDATE public.user_portfolios up SET quantity = up.quantity - v_net_amount WHERE up.id = v_cash_id;
+        ELSE
+            INSERT INTO public.user_portfolios (user_id, symbol, asset_type, quantity, avg_cost, purchase_date)
+            VALUES (v_user_id, 'NAKİT', 'CASH', -v_net_amount, 1.0000, p_transaction_date);
         END IF;
-
-        -- Step 2: Deduct Cash
-        UPDATE public.user_portfolios up SET quantity = up.quantity - v_net_amount WHERE up.id = v_cash_id;
 
         -- Step 3: Lock & Update/Insert Position
         SELECT up.id, up.quantity, up.avg_cost 
@@ -115,10 +116,7 @@ BEGIN
             v_new_avg_cost := ROUND(v_net_amount / p_quantity, 4);
 
             INSERT INTO public.user_portfolios (user_id, symbol, asset_type, quantity, avg_cost, purchase_date)
-            VALUES (v_user_id, v_symbol, v_asset_type, v_new_quantity, v_new_avg_cost, p_transaction_date)
-            ON CONFLICT (user_id, symbol, asset_type) DO UPDATE SET
-                avg_cost = ROUND(((public.user_portfolios.quantity * public.user_portfolios.avg_cost) + EXCLUDED.quantity * EXCLUDED.avg_cost) / (public.user_portfolios.quantity + EXCLUDED.quantity), 4),
-                quantity = public.user_portfolios.quantity + EXCLUDED.quantity;
+            VALUES (v_user_id, v_symbol, v_asset_type, v_new_quantity, v_new_avg_cost, p_transaction_date);
         ELSE
             v_new_quantity := v_current_quantity + p_quantity;
             v_new_avg_cost := ROUND(((v_current_quantity * v_current_avg_cost) + v_net_amount) / v_new_quantity, 4);
@@ -188,8 +186,7 @@ BEGIN
             UPDATE public.user_portfolios up SET quantity = up.quantity + v_net_amount WHERE up.id = v_cash_id;
         ELSE
             INSERT INTO public.user_portfolios (user_id, symbol, asset_type, quantity, avg_cost, purchase_date)
-            VALUES (v_user_id, 'NAKİT', 'CASH', v_net_amount, 1.0000, p_transaction_date)
-            ON CONFLICT (user_id, symbol, asset_type) DO UPDATE SET quantity = public.user_portfolios.quantity + EXCLUDED.quantity;
+            VALUES (v_user_id, 'NAKİT', 'CASH', v_net_amount, 1.0000, p_transaction_date);
         END IF;
 
     -- ========================================================================
@@ -216,10 +213,7 @@ BEGIN
 
         IF v_target_asset_id IS NULL THEN
             INSERT INTO public.user_portfolios (user_id, symbol, asset_type, quantity, avg_cost, purchase_date)
-            VALUES (v_user_id, v_symbol, v_asset_type, p_quantity, p_unit_price, p_transaction_date)
-            ON CONFLICT (user_id, symbol, asset_type) DO UPDATE SET
-                avg_cost = ROUND(((public.user_portfolios.quantity * public.user_portfolios.avg_cost) + (EXCLUDED.quantity * EXCLUDED.avg_cost)) / (public.user_portfolios.quantity + EXCLUDED.quantity), 4),
-                quantity = public.user_portfolios.quantity + EXCLUDED.quantity;
+            VALUES (v_user_id, v_symbol, v_asset_type, p_quantity, p_unit_price, p_transaction_date);
         ELSE
             v_new_quantity := v_current_quantity + p_quantity;
             v_new_avg_cost := ROUND(((v_current_quantity * v_current_avg_cost) + v_gross_amount) / v_new_quantity, 4);
