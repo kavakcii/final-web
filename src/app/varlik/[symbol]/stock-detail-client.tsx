@@ -118,6 +118,7 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
   const [loading, setLoading] = useState(true);
   const [chartError, setChartError] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
+  const [fundamentalsData, setFundamentalsData] = useState<any>(null);
 
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
   const [newsList, setNewsList] = useState<any[]>([]);
@@ -198,10 +199,24 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
     }
   };
 
+  // Fetch fundamental financial statement metadata
+  const fetchFundamentals = async () => {
+    try {
+      const res = await fetch(`/api/finance/fundamentals?symbol=${symbol}`);
+      if (res.ok) {
+        const data = await res.json();
+        setFundamentalsData(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch fundamentals:", e);
+    }
+  };
+
   // 60 SANİYEDE BİR HER DAKİKA ARKA PLANDA CANLI GÜNCELLEME (POLLING)
   useEffect(() => {
     fetchStockData(activeTimeframe);
     fetchNews();
+    fetchFundamentals();
 
     const intervalId = setInterval(() => {
       fetchStockData(activeTimeframe, true); // Sessiz arka plan güncellemesi
@@ -490,6 +505,19 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
                 Canlı BIST (60s)
               </span>
             </div>
+
+            {/* FİNANSAL VERİ KATMANI METADATA ROZETİ (AŞAMA 2 - DATA PIPELINE ROZETİ) */}
+            {fundamentalsData?.quality && (
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 px-3.5 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-600 shadow-2xs">
+                <div className="flex items-center gap-1.5 truncate">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="truncate">Veri Altyapısı: <strong className="text-[#00008B]">{fundamentalsData.source || "KAP / BİST Doğrulandı"}</strong></span>
+                </div>
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black whitespace-nowrap shrink-0">
+                  %{fundamentalsData.quality.completeness} Tamlık ({fundamentalsData.quality.status})
+                </span>
+              </div>
+            )}
 
             {/* İSTATİSTİK METRİK KARTLARI */}
             <div className="grid grid-cols-2 gap-3.5 flex-1">
