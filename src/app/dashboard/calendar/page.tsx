@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
     Calendar as CalendarIcon,
     ChevronLeft,
     ChevronRight,
+    ArrowLeft,
     Bell,
     TrendingUp,
     Building2,
@@ -20,6 +21,101 @@ import {
     X
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
+
+interface TablePaginationProps {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    onPageChange: (page: number) => void;
+    colorScheme?: 'emerald' | 'blue' | 'purple' | 'amber';
+}
+
+function TablePagination({
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    onPageChange,
+    colorScheme = 'emerald'
+}: TablePaginationProps) {
+    if (totalPages <= 1) return null;
+
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+    const activeStyles = {
+        emerald: 'bg-emerald-600 text-white shadow-xs',
+        blue: 'bg-blue-600 text-white shadow-xs',
+        purple: 'bg-purple-600 text-white shadow-xs',
+        amber: 'bg-amber-600 text-white shadow-xs'
+    }[colorScheme];
+
+    const borderStyles = {
+        emerald: 'border-emerald-200 text-emerald-800 hover:bg-emerald-50',
+        blue: 'border-blue-200 text-blue-800 hover:bg-blue-50',
+        purple: 'border-purple-200 text-purple-800 hover:bg-purple-50',
+        amber: 'border-amber-200 text-amber-800 hover:bg-amber-50'
+    }[colorScheme];
+
+    return (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs font-bold">
+            <span className="text-slate-400 text-[11px]">
+                {totalItems > 0 ? `${startItem} – ${endItem} / Toplam ${totalItems} kayıt` : 'Kayıt bulunamadı'}
+            </span>
+            <div className="flex items-center gap-1 self-center sm:self-auto">
+                <button
+                    onClick={() => {
+                        onPageChange(Math.max(1, currentPage - 1));
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    disabled={currentPage === 1}
+                    className={`px-2 py-1.5 rounded-xl border bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 ${borderStyles}`}
+                >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline text-[11px]">Önceki</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1)
+                        .map((p, idx, arr) => (
+                            <React.Fragment key={p}>
+                                {idx > 0 && arr[idx - 1] !== p - 1 && (
+                                    <span className="text-slate-300 px-1 font-bold">…</span>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        onPageChange(p);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className={`w-7 h-7 rounded-xl text-xs font-black transition-all ${
+                                        p === currentPage
+                                            ? activeStyles
+                                            : `bg-white text-slate-700 border ${borderStyles}`
+                                    }`}
+                                >
+                                    {p}
+                                </button>
+                            </React.Fragment>
+                        ))}
+                </div>
+
+                <button
+                    onClick={() => {
+                        onPageChange(Math.min(totalPages, currentPage + 1));
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    disabled={currentPage === totalPages}
+                    className={`px-2 py-1.5 rounded-xl border bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 ${borderStyles}`}
+                >
+                    <span className="hidden sm:inline text-[11px]">Sonraki</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+            </div>
+        </div>
+    );
+}
 
 function CalendarContent() {
     const { myAssets = [] } = useUser();
@@ -133,6 +229,15 @@ function CalendarContent() {
         () => (searchParams?.get('sort') as any) || 'date-asc'
     );
 
+    // ==========================================
+    // SAYFALAMA (PAGINATION) - 10 Kayıt / Sayfa
+    // ==========================================
+    const ITEMS_PER_PAGE = 10;
+    const [divPage, setDivPage] = useState<number>(1);
+    const [earnPage, setEarnPage] = useState<number>(1);
+    const [ipoPage, setIpoPage] = useState<number>(1);
+    const [ecoPage, setEcoPage] = useState<number>(1);
+
     // Sync URL search params -> state (Sayfa açılışında ve URL değişiminde)
     useEffect(() => {
         const typeParam = searchParams ? (searchParams.get('type') || searchParams.get('focus')) : null;
@@ -199,6 +304,7 @@ function CalendarContent() {
 
     // URL Parametresi Güncelleme Fonksiyonları (UI -> URL)
     const updateDividendUrlParams = (newParams: Partial<Record<string, any>>) => {
+        setDivPage(1);
         const params = new URLSearchParams(window.location.search);
         params.set('type', 'dividend');
         const s = newParams.search !== undefined ? newParams.search : divSearch;
@@ -220,6 +326,7 @@ function CalendarContent() {
     };
 
     const updateEarningsUrlParams = (newParams: Partial<Record<string, any>>) => {
+        setEarnPage(1);
         const params = new URLSearchParams(window.location.search);
         params.set('type', 'earnings');
         const s = newParams.search !== undefined ? newParams.search : earnSearch;
@@ -239,6 +346,7 @@ function CalendarContent() {
     };
 
     const updateIpoUrlParams = (newParams: Partial<Record<string, any>>) => {
+        setIpoPage(1);
         const params = new URLSearchParams(window.location.search);
         params.set('type', 'ipo');
         const s = newParams.search !== undefined ? newParams.search : ipoSearch;
@@ -258,6 +366,7 @@ function CalendarContent() {
     };
 
     const updateEconomicUrlParams = (newParams: Partial<Record<string, any>>) => {
+        setEcoPage(1);
         const params = new URLSearchParams(window.location.search);
         params.set('type', 'economic');
         const s = newParams.search !== undefined ? newParams.search : ecoSearch;
@@ -278,6 +387,10 @@ function CalendarContent() {
 
     const handleFilterSelect = (filterId: 'all' | 'earnings' | 'dividends' | 'ipo' | 'economic') => {
         setActiveFilter(filterId);
+        setDivPage(1);
+        setEarnPage(1);
+        setIpoPage(1);
+        setEcoPage(1);
         const typeMap: Record<string, string> = {
             dividends: 'dividend',
             earnings: 'earnings',
@@ -503,6 +616,12 @@ function CalendarContent() {
         return chips;
     }, [divSearch, divDateFilter, divStatusFilter, divYieldFilter, divAmountFilter, divPortfolioOnly]);
 
+    const divTotalPages = Math.ceil(filteredDividends.length / ITEMS_PER_PAGE) || 1;
+    const paginatedDividends = useMemo(() => {
+        const start = (divPage - 1) * ITEMS_PER_PAGE;
+        return filteredDividends.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredDividends, divPage]);
+
     const clearAllDividendFilters = () => {
         setDivSearch('');
         setDivDateFilter('all');
@@ -511,6 +630,7 @@ function CalendarContent() {
         setDivAmountFilter('all');
         setDivPortfolioOnly(false);
         setDivSort('date-asc');
+        setDivPage(1);
         router.replace('/dashboard/calendar?type=dividend', { scroll: false });
     };
 
@@ -597,6 +717,12 @@ function CalendarContent() {
         return chips;
     }, [earnSearch, earnDateFilter, earnPeriodFilter, earnStatusFilter, earnPortfolioOnly]);
 
+    const earnTotalPages = Math.ceil(filteredEarnings.length / ITEMS_PER_PAGE) || 1;
+    const paginatedEarnings = useMemo(() => {
+        const start = (earnPage - 1) * ITEMS_PER_PAGE;
+        return filteredEarnings.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredEarnings, earnPage]);
+
     const clearAllEarningsFilters = () => {
         setEarnSearch('');
         setEarnDateFilter('all');
@@ -604,6 +730,7 @@ function CalendarContent() {
         setEarnStatusFilter('all');
         setEarnPortfolioOnly(false);
         setEarnSort('date-asc');
+        setEarnPage(1);
         router.replace('/dashboard/calendar?type=earnings', { scroll: false });
     };
 
@@ -698,6 +825,12 @@ function CalendarContent() {
         return chips;
     }, [ipoSearch, ipoDateFilter, ipoStatusFilter, ipoPriceFilter, ipoPortfolioOnly]);
 
+    const ipoTotalPages = Math.ceil(filteredIpos.length / ITEMS_PER_PAGE) || 1;
+    const paginatedIpos = useMemo(() => {
+        const start = (ipoPage - 1) * ITEMS_PER_PAGE;
+        return filteredIpos.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredIpos, ipoPage]);
+
     const clearAllIpoFilters = () => {
         setIpoSearch('');
         setIpoDateFilter('all');
@@ -705,6 +838,7 @@ function CalendarContent() {
         setIpoPriceFilter('all');
         setIpoPortfolioOnly(false);
         setIpoSort('date-asc');
+        setIpoPage(1);
         router.replace('/dashboard/calendar?type=ipo', { scroll: false });
     };
 
@@ -791,6 +925,12 @@ function CalendarContent() {
         return chips;
     }, [ecoSearch, ecoDateFilter, ecoCountryFilter, ecoImportanceFilter, ecoStatusFilter]);
 
+    const ecoTotalPages = Math.ceil(filteredEconomicEvents.length / ITEMS_PER_PAGE) || 1;
+    const paginatedEconomicEvents = useMemo(() => {
+        const start = (ecoPage - 1) * ITEMS_PER_PAGE;
+        return filteredEconomicEvents.slice(start, start + ITEMS_PER_PAGE);
+    }, [filteredEconomicEvents, ecoPage]);
+
     const clearAllEconomicFilters = () => {
         setEcoSearch('');
         setEcoDateFilter('all');
@@ -798,6 +938,7 @@ function CalendarContent() {
         setEcoImportanceFilter('all');
         setEcoStatusFilter('all');
         setEcoSort('date-asc');
+        setEcoPage(1);
         router.replace('/dashboard/calendar?type=economic', { scroll: false });
     };
 
@@ -919,14 +1060,32 @@ function CalendarContent() {
             {/* Header & Controls */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-100 shadow-sm">
                 <div>
+                    {activeFilter !== 'all' && (
+                        <button
+                            onClick={() => handleFilterSelect('all')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-black text-[#00008B] transition-all mb-2.5 shadow-2xs"
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" /> Tüm Takvime Dön
+                        </button>
+                    )}
                     <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center text-[#00008B]">
                             <CalendarIcon className="w-5 h-5" />
                         </div>
-                        <h1 className="text-xl sm:text-2xl font-black text-[#00008B] tracking-tight">Takvim</h1>
+                        <h1 className="text-xl sm:text-2xl font-black text-[#00008B] tracking-tight">
+                            {activeFilter === 'dividends' && 'Temettü Takvimi'}
+                            {activeFilter === 'earnings' && 'Bilanço Takvimi'}
+                            {activeFilter === 'ipo' && 'Halka Arz Takvimi'}
+                            {activeFilter === 'economic' && 'Ekonomik Takvim'}
+                            {activeFilter === 'all' && 'Takvim'}
+                        </h1>
                     </div>
                     <p className="text-xs sm:text-sm font-semibold text-slate-400 mt-1">
-                        Piyasalardaki önemli tarihleri takip edin ve yatırım planlarınızı öne geçirin.
+                        {activeFilter === 'dividends' && 'Borsa İstanbul şirketlerinin temettü dağıtım ve hakediş takvimi.'}
+                        {activeFilter === 'earnings' && 'Şirketlerin finansal sonuç ve bilanço açıklama takvimi.'}
+                        {activeFilter === 'ipo' && 'Yaklaşan ve aktif talep toplayan halka arzların listesi.'}
+                        {activeFilter === 'economic' && 'Küresel makroekonomik veriler ve faiz kararları takvimi.'}
+                        {activeFilter === 'all' && 'Piyasalardaki önemli tarihleri takip edin ve yatırım planlarınızı öne geçirin.'}
                     </p>
                 </div>
 
@@ -1101,29 +1260,74 @@ function CalendarContent() {
                                 <button onClick={clearAllDividendFilters} className="px-4 py-2 text-xs font-black text-white bg-emerald-600 rounded-xl">Filtreleri Temizle</button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredDividends.map((item, idx) => (
-                                    <div key={idx} className="p-4 rounded-2xl bg-white border border-emerald-100 flex flex-col justify-between space-y-3">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-emerald-100/70 border border-emerald-200 text-emerald-800 flex items-center justify-center font-black text-xs">
-                                                    {item.symbol?.substring(0, 3)}
-                                                </div>
-                                                <div>
-                                                    <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
-                                                    <span className="text-[11px] font-bold text-slate-500 line-clamp-1">{item.companyName}</span>
-                                                </div>
-                                            </div>
-                                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md border bg-emerald-50 text-emerald-700 border-emerald-200">
-                                                {item.paymentDate || 'Temettü'}
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs font-bold">
-                                            <div><span className="text-[10px] text-slate-400 block">Tutar</span><span className="text-emerald-700">{item.netAmountFormatted || '6,00 TL'}</span></div>
-                                            <div><span className="text-[10px] text-slate-400 block">Verim</span><span className="text-emerald-800">%{getItemYield(item).toFixed(2)}</span></div>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="space-y-3">
+                                <div className="overflow-x-auto scrollbar-none bg-white rounded-2xl border border-emerald-100 p-2 shadow-2xs">
+                                    <table className="w-full text-left border-collapse text-xs font-bold">
+                                        <thead>
+                                            <tr className="border-b border-emerald-100 text-[10px] font-black text-slate-400 uppercase bg-emerald-50/40">
+                                                <th className="py-3 px-3.5">Hisse / Şirket</th>
+                                                <th className="py-3 px-3.5">Hakediş / Ödeme Tarihi</th>
+                                                <th className="py-3 px-3.5">Hisse Başına Net Tutar</th>
+                                                <th className="py-3 px-3.5">Temettü Verimi</th>
+                                                <th className="py-3 px-3.5">Durum</th>
+                                                <th className="py-3 px-3.5 text-right">Hatırlatıcı</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-emerald-100/60">
+                                            {paginatedDividends.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-emerald-50/50 transition-colors">
+                                                    <td className="py-3 px-3.5">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-8 h-8 rounded-xl bg-emerald-100/80 border border-emerald-200 text-emerald-800 flex items-center justify-center font-black text-xs shrink-0">
+                                                                {item.symbol?.substring(0, 3)}
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                                <span className="text-[11px] font-bold text-slate-500 line-clamp-1 max-w-[220px]" title={item.companyName}>
+                                                                    {item.companyName}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap text-slate-700 font-bold">
+                                                        {item.paymentDate || 'Belirtilmedi'}
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap text-emerald-700 font-black">
+                                                        {item.netAmountFormatted || `${item.netAmountPerShare ? item.netAmountPerShare.toFixed(2) : '0,00'} TL`}
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap">
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-emerald-100/90 text-emerald-900 border border-emerald-200 font-black text-xs">
+                                                            %{getItemYield(item).toFixed(2)}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap">
+                                                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
+                                                            item.paymentDate && item.paymentDate.includes('.')
+                                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                                : 'bg-slate-50 text-slate-600 border-slate-200'
+                                                        }`}>
+                                                            {item.status || 'Açıklandı'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                                                        <button title="Hatırlatıcı Ekle" className="p-1.5 text-slate-400 hover:text-emerald-700 hover:bg-emerald-100/60 rounded-lg transition-all">
+                                                            <Bell className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <TablePagination
+                                    currentPage={divPage}
+                                    totalPages={divTotalPages}
+                                    totalItems={filteredDividends.length}
+                                    itemsPerPage={ITEMS_PER_PAGE}
+                                    onPageChange={setDivPage}
+                                    colorScheme="emerald"
+                                />
                             </div>
                         )}
                     </div>
@@ -1850,116 +2054,124 @@ function CalendarContent() {
                 </div>
             </div>
 
-            {/* EKONOMİK TAKVİM TABLOSU (SOFT AMBER / ORANGE TINT) */}
-            <div className="bg-gradient-to-b from-amber-50/40 via-white to-white border border-amber-100/80 rounded-3xl p-5 sm:p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100/60">
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-xl bg-amber-100/70 border border-amber-200/80 flex items-center justify-center text-amber-700">
-                            <Globe2 className="w-4 h-4" />
+            {/* EKONOMİK TAKVİM VE PİYASA GÜNDEMİ — YAN YANA YERLEŞİM */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+                
+                {/* SOL: EKONOMİK TAKVİM TABLOSU */}
+                <div className="bg-gradient-to-b from-amber-50/40 via-white to-white border border-amber-100/80 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100/60">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-xl bg-amber-100/70 border border-amber-200/80 flex items-center justify-center text-amber-700">
+                                    <Globe2 className="w-4 h-4" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-black text-[#00008B]">Ekonomik Takvim</h3>
+                                    <p className="text-[10px] font-bold text-slate-400">Küresel makroekonomik veriler ve faiz kararları</p>
+                                </div>
+                            </div>
+                            <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-xs font-extrabold text-amber-600 hover:underline">
+                                Tümünü Gör →
+                            </Link>
                         </div>
-                        <div>
-                            <h3 className="text-base font-black text-[#00008B]">Ekonomik Takvim</h3>
-                            <p className="text-[10px] font-bold text-slate-400">Küresel makroekonomik veriler ve faiz kararları</p>
+
+                        <div className="overflow-x-auto scrollbar-none">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-amber-100/60 text-[10px] font-black text-amber-800/60 uppercase tracking-wider bg-amber-50/30">
+                                        <th className="py-2.5 px-2">Tarih/Saat</th>
+                                        <th className="py-2.5 px-2">Ülke</th>
+                                        <th className="py-2.5 px-2">Veri</th>
+                                        <th className="py-2.5 px-2">Önem</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-amber-100/40 text-xs font-bold">
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan={4} className="py-8 text-center text-slate-400">Veriler yükleniyor...</td>
+                                        </tr>
+                                    ) : economicEvents.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="py-8 text-center text-slate-400">Kayıtlı ekonomik veri bulunmuyor.</td>
+                                        </tr>
+                                    ) : (
+                                        economicEvents.slice(0, 5).map((item, idx) => (
+                                            <tr key={idx} className="hover:bg-amber-50/40 transition-colors">
+                                                <td className="py-2.5 px-2 text-[#00008B] whitespace-nowrap">{item.time || '15:30'}</td>
+                                                <td className="py-2.5 px-2 font-black text-slate-700 whitespace-nowrap">{item.country || 'USD'}</td>
+                                                <td className="py-2.5 px-2 text-slate-800 truncate max-w-[130px]">{item.event}</td>
+                                                <td className="py-2.5 px-2 whitespace-nowrap">
+                                                    <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded border ${
+                                                        item.impact === 'Yüksek' || item.impact === 3
+                                                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                                                            : 'bg-amber-100/80 text-amber-800 border-amber-200'
+                                                    }`}>
+                                                        {item.impact === 3 ? 'Yüksek' : 'Orta'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-xs font-extrabold text-amber-600 hover:underline">
-                        Tümünü Gör →
+
+                    <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-4 pt-3 border-t border-amber-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-amber-600 transition-colors">
+                        Tüm Ekonomik Verileri Gör →
                     </Link>
                 </div>
 
-                <div className="overflow-x-auto scrollbar-none">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="border-b border-amber-100/60 text-[10px] font-black text-amber-800/60 uppercase tracking-wider bg-amber-50/30">
-                                <th className="py-3 px-3">Tarih</th>
-                                <th className="py-3 px-3">Saat</th>
-                                <th className="py-3 px-3">Ülke</th>
-                                <th className="py-3 px-3">Veri</th>
-                                <th className="py-3 px-3">Önceki</th>
-                                <th className="py-3 px-3">Beklenti</th>
-                                <th className="py-3 px-3">Önem</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-amber-100/40 text-xs font-bold">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="py-8 text-center text-slate-400">Veriler yükleniyor...</td>
-                                </tr>
-                            ) : economicEvents.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="py-8 text-center text-slate-400">Kayıtlı ekonomik veri bulunmuyor.</td>
-                                </tr>
-                            ) : (
-                                economicEvents.slice(0, 6).map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-amber-50/40 transition-colors">
-                                        <td className="py-3 px-3 text-[#00008B] whitespace-nowrap">{item.dateFormatted || '19 Mayıs Salı'}</td>
-                                        <td className="py-3 px-3 text-slate-500 whitespace-nowrap">{item.time || '15:30'}</td>
-                                        <td className="py-3 px-3 font-black text-slate-700 whitespace-nowrap">{item.country || 'USD'}</td>
-                                        <td className="py-3 px-3 text-slate-800">{item.event}</td>
-                                        <td className="py-3 px-3 text-slate-500 whitespace-nowrap">{item.previous || '-'}</td>
-                                        <td className="py-3 px-3 text-slate-700 whitespace-nowrap">{item.forecast || '-'}</td>
-                                        <td className="py-3 px-3 whitespace-nowrap">
-                                            <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
-                                                item.impact === 'Yüksek' || item.impact === 3
-                                                    ? 'bg-rose-50 text-rose-700 border-rose-200'
-                                                    : item.impact === 'Orta' || item.impact === 2
-                                                    ? 'bg-amber-100/80 text-amber-800 border-amber-200'
-                                                    : 'bg-slate-50 text-slate-600 border-slate-200'
-                                            }`}>
-                                                {item.impact === 3 ? 'Yüksek' : item.impact === 2 ? 'Orta' : 'Düşük'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-4 pt-3 border-t border-amber-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-amber-600 transition-colors">
-                    Tüm Ekonomik Verileri Gör →
-                </Link>
-            </div>
-
-            {/* YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
-            <div className="bg-[#0c101d] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
-                
-                <div className="relative z-10 space-y-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                            <Sparkles className="w-5 h-5 text-blue-400 animate-pulse" />
-                            <h3 className="text-base font-black text-white">Yaklaşan Önemli Tarihler</h3>
+                {/* SAĞ: PİYASA GÜNDEMİ & YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
+                <div className="bg-[#0c101d] text-white rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
+                    
+                    <div className="relative z-10 space-y-4">
+                        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-7 h-7 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400">
+                                    <Sparkles className="w-4 h-4 animate-pulse" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-black text-white">Piyasa Gündemi</h3>
+                                    <p className="text-[10px] font-bold text-slate-400">Yaklaşan önemli tarihler ve özet göstergeler</p>
+                                </div>
+                            </div>
+                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded-xl border border-blue-400/20">Canlı Takip</span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Özet Bilgi</span>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all block">
+                                <span className="text-[10px] font-bold text-blue-300 uppercase block mb-1">Bilanço</span>
+                                <span className="text-base font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
+                                <span className="text-[9px] text-blue-200/60">Yaklaşan Sonuçlar</span>
+                            </Link>
+
+                            <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all block">
+                                <span className="text-[10px] font-bold text-emerald-300 uppercase block mb-1">Temettü</span>
+                                <span className="text-base font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
+                                <span className="text-[9px] text-emerald-200/60">Hak Hakediş</span>
+                            </Link>
+
+                            <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all block">
+                                <span className="text-[10px] font-bold text-purple-300 uppercase block mb-1">Halka Arz</span>
+                                <span className="text-base font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
+                                <span className="text-[9px] text-purple-200/60">Aktif Başvuru</span>
+                            </Link>
+
+                            <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3.5 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all block">
+                                <span className="text-[10px] font-bold text-amber-300 uppercase block mb-1">Ekonomik Veri</span>
+                                <span className="text-base font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
+                                <span className="text-[9px] text-amber-200/60">Makro Göstergeler</span>
+                            </Link>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all block">
-                            <span className="text-[10px] font-bold text-blue-300 uppercase block mb-1">Bilanço</span>
-                            <span className="text-lg font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
-                            <span className="text-[9px] text-blue-200/60">Yaklaşan Sonuçlar</span>
-                        </Link>
-
-                        <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all block">
-                            <span className="text-[10px] font-bold text-emerald-300 uppercase block mb-1">Temettü</span>
-                            <span className="text-lg font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
-                            <span className="text-[9px] text-emerald-200/60">Açıklanan Hak Hakediş</span>
-                        </Link>
-
-                        <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all block">
-                            <span className="text-[10px] font-bold text-purple-300 uppercase block mb-1">Halka Arz</span>
-                            <span className="text-lg font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
-                            <span className="text-[9px] text-purple-200/60">Aktif Başvuru</span>
-                        </Link>
-
-                        <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all block">
-                            <span className="text-[10px] font-bold text-amber-300 uppercase block mb-1">Ekonomik Veri</span>
-                            <span className="text-lg font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
-                            <span className="text-[9px] text-amber-200/60">Makro Göstergeler</span>
-                        </Link>
+                    <div className="relative z-10 pt-3 border-t border-white/10 mt-3 flex items-center justify-between text-[11px] font-bold text-slate-400">
+                        <span>Piyasa takvimindeki tüm gelişmeler günceldir.</span>
                     </div>
                 </div>
+
             </div>
 
         </div>
