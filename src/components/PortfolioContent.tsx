@@ -444,6 +444,7 @@ export default function PortfolioPage() {
     // Widget Definitions (Final Simplified Layout)
     const widgetDefinitions = useMemo(() => [
         { id: 'table', name: 'Portföy Varlıkları', icon: FileText, desc: 'Tüm Varlık Listesi ve Al/Sat' },
+        { id: 'distribution', name: 'Varlık Dağılımı', icon: PieChart, desc: 'Donut Grafik, Isı Haritası ve Sektörler' },
         { id: 'agenda', name: 'Portföy Gündemi', icon: Newspaper, desc: 'Bugün ve Yaklaşan Gelişmeler' },
         { id: 'quickSummary', name: 'Hızlı Portföy Özeti', icon: Zap, desc: 'Metrikler, En Çok Artan ve Düşen' },
         { id: 'extremes', name: '52 Hafta Fiyat Analizi', icon: BarChart3, desc: '52 Haftalık Fiyat Bantları' }
@@ -2831,6 +2832,7 @@ export default function PortfolioPage() {
                         {/* SOL SÜTUN (~%70 - 8/12 Cols) */}
                         <div className="w-full xl:col-span-8 space-y-8 order-2 xl:order-1">
                             {renderWidgetCard('table')}
+                            {renderWidgetCard('distribution')}
                             {renderWidgetCard('quickSummary')}
                             {renderWidgetCard('extremes')}
                         </div>
