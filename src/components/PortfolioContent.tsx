@@ -407,26 +407,6 @@ export default function PortfolioPage() {
         "#7209B7"  // Koyu Mor
     ];
 
-    // Widget Definitions (Final UI Refactor)
-    const widgetDefinitions = useMemo(() => [
-        { id: 'performance', name: 'Portföy Performansı', icon: Activity, desc: 'Zaman İçindeki Değer Değişimi' },
-        { id: 'agenda', name: 'Portföy Gündemi', icon: Newspaper, desc: 'Hisselerinizin Canlı Haber & Bildirimleri' },
-        { id: 'dailyPnL', name: 'Günlük K/Z Grafiği', icon: TrendingUp, desc: 'Günlük Kazanım & Kayıp Dağılımı' },
-        { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Hisse & Sektör Dağılım Oranı' },
-        { id: 'topGainers', name: 'En Çok Kazandıranlar', icon: ArrowUpRight, desc: 'Portföyün Şampiyon Pozisyonları' },
-        { id: 'topLosers', name: 'En Çok Kaybettirenler', icon: TrendingDown, desc: 'En Çok Değer Kaybeden Pozisyonlar' },
-        { id: 'quickSummary', name: 'Hızlı Portföy Özeti', icon: Zap, desc: 'İstatistikler ve İşlem Metrikleri' },
-        { id: 'table', name: 'Portföy Varlıkları', icon: FileText, desc: 'Tüm Varlık Listesi ve Al/Sat' },
-        { id: 'extremes', name: '52 Hafta Fiyat Analizi', icon: BarChart3, desc: '52 Haftalık Fiyat Bantları' }
-    ], []);
-
-    // Active Focused Widget Name
-    const focusedWidgetName = useMemo(() => {
-        if (!focusedWidget) return null;
-        const def = widgetDefinitions.find(w => w.id === focusedWidget);
-        return def ? def.name : null;
-    }, [focusedWidget, widgetDefinitions]);
-
     // Group assets by symbol
     const groupedAssets = useMemo(() => {
         const groups: Record<string, GroupedAsset> = {};
@@ -448,12 +428,162 @@ export default function PortfolioPage() {
             groups[asset.symbol].transactions.push(asset);
         });
 
-        return Object.values(groups).map(group => {
-            group.avgCost = group.totalQuantity > 0 ? group.totalCost / group.totalQuantity : 0;
-            group.transactions.sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime());
-            return group;
-        });
+        return Object.values(groups).map(g => ({
+            ...g,
+            avgCost: g.totalQuantity > 0 ? g.totalCost / g.totalQuantity : 0
+        }));
     }, [assets]);
+
+    // Widget Definitions (Final Simplified Layout)
+    const widgetDefinitions = useMemo(() => [
+        { id: 'table', name: 'Portföy Varlıkları', icon: FileText, desc: 'Tüm Varlık Listesi ve Al/Sat' },
+        { id: 'agenda', name: 'Portföy Gündemi', icon: Newspaper, desc: 'Bugün ve Yaklaşan Gelişmeler' },
+        { id: 'quickSummary', name: 'Hızlı Portföy Özeti', icon: Zap, desc: 'Metrikler, En Çok Artan ve Düşen' },
+        { id: 'extremes', name: '52 Hafta Fiyat Analizi', icon: BarChart3, desc: '52 Haftalık Fiyat Bantları' }
+    ], []);
+
+    // PORTFÖY GÜNDEMİ İÇİN GERÇEK VERİ EŞLEŞTİRME VE ÖNCELİKLENDİRME MOTORU
+    const portfolioAgendaEvents = useMemo(() => {
+        if (!groupedAssets || groupedAssets.length === 0) return [];
+
+        const userSymbols = new Set(
+            groupedAssets
+                .map(g => g.symbol.toUpperCase().replace('.IS', '').trim())
+                .filter(sym => sym !== 'NAKİT' && sym !== 'TRY_CASH')
+        );
+
+        if (userSymbols.size === 0) return [];
+
+        // Europe/Istanbul Zaman Diliminde Bugünkü Tarih (YYYY-MM-DD)
+        const todayIstanbulStr = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
+        const todayDate = new Date(todayIstanbulStr);
+        const thirtyDaysLater = new Date(todayDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        interface AgendaEventItem {
+            id: string;
+            symbol: string;
+            type: 'DIVIDEND' | 'EARNINGS' | 'NEWS';
+            typeLabel: string;
+            title: string;
+            dateStr: string;
+            isoDate: string;
+            isToday: boolean;
+            priorityScore: number;
+            valueFormatted?: string;
+            sourceName?: string;
+            link?: string;
+        }
+
+        const events: AgendaEventItem[] = [];
+
+        // 1. TEMETTÜ AÇIKLAMALARI VE GELECEK ÖDEMELER (HalkArz Dividends)
+        if (Array.isArray(halkarzDividends)) {
+            halkarzDividends.forEach(div => {
+                const sym = div.symbol.toUpperCase().replace('.IS', '').trim();
+                if (!userSymbols.has(sym)) return;
+
+                if (!div.paymentDate || div.paymentDate.includes('Açıklanmadı') || div.paymentDate.includes('Verilmiyor')) return;
+
+                const parts = div.paymentDate.split('.');
+                if (parts.length !== 3) return;
+                const isoDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                const itemDate = new Date(isoDate);
+
+                if (isNaN(itemDate.getTime())) return;
+
+                // Sadece BUGÜN ve SONRAKİ 30 GÜN
+                if (itemDate >= todayDate && itemDate <= thirtyDaysLater) {
+                    const isToday = isoDate === todayIstanbulStr;
+                    const monthName = itemDate.toLocaleDateString('tr-TR', { month: 'long', day: 'numeric' });
+
+                    events.push({
+                        id: `div-${sym}-${isoDate}`,
+                        symbol: sym,
+                        type: 'DIVIDEND',
+                        typeLabel: 'Temettü Ödemesi',
+                        title: `${sym} Temettü Dağıtımı`,
+                        dateStr: monthName,
+                        isoDate,
+                        isToday,
+                        priorityScore: isToday ? 1 : 10 + Math.ceil((itemDate.getTime() - todayDate.getTime()) / 86400000),
+                        valueFormatted: div.netAmountFormatted ? `${div.netAmountFormatted} / pay` : undefined,
+                        sourceName: 'HalkArz',
+                        link: div.link || undefined
+                    });
+                }
+            });
+        }
+
+        // 2. BİLANÇO DÖNEMİ AÇIKLAMALARI (HalkArz Earnings)
+        if (Array.isArray(halkarzEarnings)) {
+            halkarzEarnings.forEach(earn => {
+                const sym = earn.symbol.toUpperCase().replace('.IS', '').trim();
+                if (!userSymbols.has(sym)) return;
+
+                if (!earn.earningsDate || earn.earningsDate.includes('Açıklanmadı')) return;
+
+                const parts = earn.earningsDate.split('.');
+                if (parts.length !== 3) return;
+                const isoDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                const itemDate = new Date(isoDate);
+
+                if (isNaN(itemDate.getTime())) return;
+
+                if (itemDate >= todayDate && itemDate <= thirtyDaysLater) {
+                    const isToday = isoDate === todayIstanbulStr;
+                    const monthName = itemDate.toLocaleDateString('tr-TR', { month: 'long', day: 'numeric' });
+
+                    events.push({
+                        id: `earn-${sym}-${isoDate}`,
+                        symbol: sym,
+                        type: 'EARNINGS',
+                        typeLabel: 'Bilanço Açıklaması',
+                        title: `${sym} Dönemsel Bilanço Açıklaması`,
+                        dateStr: monthName,
+                        isoDate,
+                        isToday,
+                        priorityScore: isToday ? 2 : 20 + Math.ceil((itemDate.getTime() - todayDate.getTime()) / 86400000),
+                        sourceName: 'HalkArz',
+                        link: earn.link || undefined
+                    });
+                }
+            });
+        }
+
+        // ÖNCELİKLENDİRME SIRALAMASI:
+        // 1. Bugün gerçekleşen olaylar ilk sırada (isToday === true)
+        // 2. En yakın gelecek tarihli olaylar
+        // 3. Tür önceliği: Temettü (1) -> Bilanço (2) -> Haber (3)
+        events.sort((a, b) => {
+            if (a.isToday && !b.isToday) return -1;
+            if (!a.isToday && b.isToday) return 1;
+            return a.priorityScore - b.priorityScore;
+        });
+
+        // Mükerrerleri temizle ve EN FAZLA 5 OLAY seç
+        const uniqueEvents: AgendaEventItem[] = [];
+        const seenKeys = new Set<string>();
+
+        for (const ev of events) {
+            const key = `${ev.symbol}_${ev.type}_${ev.isoDate}`;
+            if (!seenKeys.has(key)) {
+                seenKeys.add(key);
+                uniqueEvents.push(ev);
+                if (uniqueEvents.length === 5) break;
+            }
+        }
+
+        return uniqueEvents;
+    }, [groupedAssets, halkarzDividends, halkarzEarnings]);
+
+    // Active Focused Widget Name
+    const focusedWidgetName = useMemo(() => {
+        if (!focusedWidget) return null;
+        const def = widgetDefinitions.find(w => w.id === focusedWidget);
+        return def ? def.name : null;
+    }, [focusedWidget, widgetDefinitions]);
+
+
 
     useEffect(() => {
         if (!groupedAssets || groupedAssets.length === 0) return;
@@ -1362,129 +1492,154 @@ export default function PortfolioPage() {
                 );
             case 'agenda':
                 return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-4">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-2xl bg-blue-50 border border-blue-200/50 text-[#00008B] flex items-center justify-center">
-                                    <Newspaper className="w-5 h-5 text-blue-600" />
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-4 flex flex-col justify-between h-full">
+                        <div>
+                            {/* PORTFÖY GÜNDEMİ BAŞLIĞI VE ALT BAŞLIK */}
+                            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 text-[#00008B] flex items-center justify-center">
+                                        <Newspaper className="w-5 h-5 text-[#00008B]" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-black text-[#00008B] tracking-tight">Portföy Gündemi</h3>
+                                        <p className="text-xs text-slate-400 font-medium">Bugün ve yaklaşan gelişmeler</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-lg font-black text-[#00008B] tracking-tight">Portföy Gündemi</h3>
-                                    <span className="text-xs text-slate-400 font-medium">Hisselerinizle İlgili Canlı Gelişmeler</span>
-                                </div>
+                                <span className="text-[10px] font-bold text-[#00008B] bg-blue-50 border border-blue-200/50 px-2.5 py-1 rounded-full">
+                                    {portfolioAgendaEvents.length} OLAY
+                                </span>
                             </div>
-                            <Link href="/dashboard/news" className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
-                                Tüm Haberler <ChevronRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </div>
-                        <div className="space-y-3">
-                            {groupedAssets.length === 0 ? (
-                                <div className="py-6 text-center text-slate-400 text-xs font-bold">Portföyünüzde henüz hisse bulunmuyor.</div>
-                            ) : (
-                                groupedAssets.slice(0, 4).map((group, i) => (
-                                    <div key={i} className="p-3.5 bg-slate-50/80 hover:bg-blue-50/50 rounded-2xl border border-slate-100 transition-colors flex justify-between items-center gap-3">
-                                        <div className="flex items-center gap-3">
-                                            <span className="px-2.5 py-1 rounded-xl bg-[#00008B] text-white font-black text-xs">{group.symbol}</span>
-                                            <div>
-                                                <h4 className="font-bold text-[#00008B] text-xs">{group.symbol} Şirket & Finansal Güncellemesi</h4>
-                                                <span className="text-[10px] text-slate-400 font-medium">KAP bildirimleri ve BIST haber takibi aktif</span>
+
+                            {/* OLAY LİSTESİ VEYA BOŞ DURUM */}
+                            <div className="mt-4 space-y-3">
+                                {portfolioAgendaEvents.length === 0 ? (
+                                    <div className="py-12 text-center text-slate-400 text-xs font-bold bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
+                                        <p className="text-slate-500 font-extrabold text-sm mb-1">Yaklaşan önemli bir portföy gelişmesi bulunmuyor.</p>
+                                        <span className="text-[11px] text-slate-400 font-medium">Portföyünüzdeki şirketlere ait bilanço, temettü veya resmi haberler açıklandıkça burada listelenir.</span>
+                                    </div>
+                                ) : (
+                                    portfolioAgendaEvents.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => {
+                                                if (item.link) window.open(item.link, '_blank');
+                                            }}
+                                            className={cn(
+                                                "p-4 rounded-2xl border transition-all flex flex-col gap-1.5",
+                                                item.isToday
+                                                    ? "bg-blue-50/60 border-blue-200/80 hover:bg-blue-100/50 shadow-sm"
+                                                    : "bg-slate-50/70 border-slate-100 hover:bg-slate-100/80",
+                                                item.link && "cursor-pointer"
+                                            )}
+                                        >
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    {item.isToday ? (
+                                                        <span className="px-2.5 py-0.5 rounded-lg bg-[#00008B] text-white font-black text-[10px] tracking-wider uppercase shadow-xs">
+                                                            BUGÜN · {item.symbol}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-200 text-slate-700 font-extrabold text-[10px] tracking-wider uppercase">
+                                                            {item.dateStr.toUpperCase()} · {item.symbol}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    {item.typeLabel}
+                                                </span>
                                             </div>
+
+                                            <h4 className="font-bold text-[#00008B] text-xs leading-snug">
+                                                {item.title}
+                                            </h4>
+
+                                            {item.valueFormatted && (
+                                                <span className="text-xs font-black text-emerald-700">
+                                                    {item.valueFormatted}
+                                                </span>
+                                            )}
+
+                                            {item.sourceName && (
+                                                <span className="text-[10px] text-slate-400 font-medium">
+                                                    Kaynak: {item.sourceName}
+                                                </span>
+                                            )}
                                         </div>
-                                        <span className="text-[10px] font-bold text-slate-400 shrink-0">Bugün</span>
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </div>
-                );
 
-            case 'topGainers':
-                const gainers = [...groupedAssets]
-                    .map(g => {
-                        const p = prices[g.symbol] || g.avgCost;
-                        const diff = (p - g.avgCost) * g.totalQuantity;
-                        const pct = g.avgCost > 0 ? ((p - g.avgCost) / g.avgCost) * 100 : 0;
-                        return { symbol: g.symbol, diff, pct, currentPrice: p };
-                    })
-                    .filter(g => g.pct >= 0)
-                    .sort((a, b) => b.pct - a.pct)
-                    .slice(0, 3);
-
-                return (
-                    <div className="bg-white border border-emerald-100 rounded-3xl p-5 shadow-lg space-y-3">
-                        <div className="flex items-center gap-2 border-b border-emerald-100 pb-3">
-                            <TrendingUp className="w-4 h-4 text-emerald-600" />
-                            <h4 className="font-black text-[#00008B] text-sm">En Çok Kazandıranlar</h4>
-                        </div>
-                        <div className="space-y-2">
-                            {gainers.length === 0 ? (
-                                <span className="text-xs text-slate-400 font-bold block text-center py-2">Kârda pozisyon bulunmuyor</span>
-                            ) : (
-                                gainers.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-200/50">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-black text-emerald-900 text-xs">{item.symbol}</span>
-                                            <span className="text-[10px] font-bold text-emerald-700">+{item.pct.toFixed(2)}%</span>
-                                        </div>
-                                        <span className="font-black text-emerald-800 text-xs">+{formatCurrency(item.diff)}</span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
-                );
-
-            case 'topLosers':
-                const losers = [...groupedAssets]
-                    .map(g => {
-                        const p = prices[g.symbol] || g.avgCost;
-                        const diff = (p - g.avgCost) * g.totalQuantity;
-                        const pct = g.avgCost > 0 ? ((p - g.avgCost) / g.avgCost) * 100 : 0;
-                        return { symbol: g.symbol, diff, pct, currentPrice: p };
-                    })
-                    .filter(g => g.pct < 0)
-                    .sort((a, b) => a.pct - b.pct)
-                    .slice(0, 3);
-
-                return (
-                    <div className="bg-white border border-rose-100 rounded-3xl p-5 shadow-lg space-y-3">
-                        <div className="flex items-center gap-2 border-b border-rose-100 pb-3">
-                            <TrendingDown className="w-4 h-4 text-rose-600" />
-                            <h4 className="font-black text-[#00008B] text-sm">En Çok Kaybettirenler</h4>
-                        </div>
-                        <div className="space-y-2">
-                            {losers.length === 0 ? (
-                                <span className="text-xs text-slate-400 font-bold block text-center py-2">Kayıpta pozisyon bulunmuyor 🚀</span>
-                            ) : (
-                                losers.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center p-2.5 bg-rose-50/60 rounded-xl border border-rose-200/50">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-black text-rose-900 text-xs">{item.symbol}</span>
-                                            <span className="text-[10px] font-bold text-rose-700">{item.pct.toFixed(2)}%</span>
-                                        </div>
-                                        <span className="font-black text-rose-800 text-xs">{formatCurrency(item.diff)}</span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
+                        {/* TÜM GÜNDEMİ GÖR BAGLANTISI */}
+                        {portfolioAgendaEvents.length > 0 && (
+                            <div className="pt-3 border-t border-slate-100">
+                                <Link
+                                    href="/dashboard/news"
+                                    className="text-xs font-extrabold text-[#00008B] hover:underline flex items-center justify-center gap-1.5 text-center"
+                                >
+                                    Tüm Gündemi Gör <ChevronRight className="w-3.5 h-3.5" />
+                                </Link>
+                            </div>
+                        )}
                     </div>
                 );
 
             case 'quickSummary':
+                const sortedPerformers = [...groupedAssets]
+                    .map(g => {
+                        const p = prices[g.symbol] || g.avgCost;
+                        const diff = (p - g.avgCost) * g.totalQuantity;
+                        const pct = g.avgCost > 0 ? ((p - g.avgCost) / g.avgCost) * 100 : 0;
+                        return { symbol: g.symbol, diff, pct, currentPrice: p };
+                    })
+                    .sort((a, b) => b.pct - a.pct);
+
+                const topGainer = sortedPerformers.length > 0 && sortedPerformers[0].pct > 0 ? sortedPerformers[0] : null;
+                const topLoser = sortedPerformers.length > 0 && sortedPerformers[sortedPerformers.length - 1].pct < 0 ? sortedPerformers[sortedPerformers.length - 1] : null;
+
                 return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-lg space-y-3">
-                        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                            <Zap className="w-4 h-4 text-amber-500" />
-                            <h4 className="font-black text-[#00008B] text-sm">Hızlı Portföy Özeti</h4>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2.5 text-xs font-semibold">
-                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                <span className="text-[10px] text-slate-400 block uppercase">Varlık Sayısı</span>
-                                <span className="text-base font-black text-[#00008B]">{groupedAssets.length} Pozisyon</span>
+                    <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-xl shadow-[#00008B]/5 space-y-4">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div className="flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-amber-500" />
+                                <h4 className="font-black text-[#00008B] text-sm">Hızlı Portföy Özeti</h4>
                             </div>
+                            <span className="text-[10px] font-bold text-slate-400">Genel Bakış</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-semibold">
                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                <span className="text-[10px] text-slate-400 block uppercase">Kullanılabilir Nakit</span>
-                                <span className="text-base font-black text-emerald-700">{formatCurrency(Math.max(0, cashBalance))}</span>
+                                <span className="text-[10px] text-slate-400 block uppercase font-bold">Toplam Varlık Sayısı</span>
+                                <span className="text-base font-black text-[#00008B] mt-0.5 block">{groupedAssets.length} Pozisyon</span>
+                            </div>
+
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 block uppercase font-bold">En Çok Kazandıran</span>
+                                {topGainer ? (
+                                    <span className="text-base font-black text-emerald-600 mt-0.5 block truncate">
+                                        {topGainer.symbol} (+%{topGainer.pct.toFixed(1)})
+                                    </span>
+                                ) : (
+                                    <span className="text-xs font-bold text-slate-400 mt-1 block">-</span>
+                                )}
+                            </div>
+
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 block uppercase font-bold">En Çok Kaybettiren</span>
+                                {topLoser ? (
+                                    <span className="text-base font-black text-rose-600 mt-0.5 block truncate">
+                                        {topLoser.symbol} (%{topLoser.pct.toFixed(1)})
+                                    </span>
+                                ) : (
+                                    <span className="text-xs font-bold text-slate-400 mt-1 block">-</span>
+                                )}
+                            </div>
+
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 block uppercase font-bold">Nakit Bakiyesi</span>
+                                <span className="text-base font-black text-[#00008B] mt-0.5 block">
+                                    {formatCurrency(Math.max(0, cashBalance))}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -2632,31 +2787,25 @@ export default function PortfolioPage() {
                 className="flex flex-col xl:grid xl:grid-cols-12 gap-8 items-start"
             >
                 {focusedWidget === null ? (
-                    /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
+                    /* 1. BAŞLANGIÇ DURUMU (DEFAULT 70/30 GRID LAYOUT) */
                     <>
                         {/* SOL SÜTUN (~%70 - 8/12 Cols) */}
-                        <div className="xl:col-span-8 space-y-8 order-2 xl:order-1">
-                            {renderWidgetCard('performance')}
-                            {renderWidgetCard('dailyPnL')}
+                        <div className="w-full xl:col-span-8 space-y-8 order-2 xl:order-1">
                             {renderWidgetCard('table')}
+                            {renderWidgetCard('quickSummary')}
                             {renderWidgetCard('extremes')}
                         </div>
 
-                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols) */}
-                        <div className="xl:col-span-4 space-y-6 order-1 xl:order-2">
+                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols - MOBİLDE ÜSTTE) */}
+                        <div className="w-full xl:col-span-4 space-y-6 order-1 xl:order-2">
                             {renderWidgetCard('agenda')}
-                            {renderWidgetCard('topGainers')}
-                            {renderWidgetCard('topLosers')}
-                            {renderWidgetCard('distribution')}
-                            {renderWidgetCard('quickSummary')}
                         </div>
                     </>
                 ) : (
                     /* 2. ODAK MODU DURUMU (DOĞRUDAN WIDGET TIKLAMASIYLA YALIN ODAK) */
                     <>
-                        {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%65 - 8/12 Cols) */}
-                        <div className="xl:col-span-8 space-y-4">
-                            {/* ODAKLANILAN WIDGET CARD */}
+                        {/* SOL TARAFA YAYILAN ODAKLANILAN WIDGET ALANI (%70 - 8/12 Cols) */}
+                        <div className="w-full xl:col-span-8 space-y-4">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={focusedWidget}
@@ -2671,10 +2820,8 @@ export default function PortfolioPage() {
                             </AnimatePresence>
                         </div>
 
-                        {/* SAĞ TARAFTA DİKEY SIKIŞTIRILMIŞ DİĞER ŞERİTLER (%35 - 4/12 Cols) */}
-                        <div className="xl:col-span-4 space-y-5">
-                            
-                            {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER */}
+                        {/* SAĞ TARAFTA DİKEY SIKIŞTIRILMIŞ DİĞER MODÜLLER (%30 - 4/12 Cols) */}
+                        <div className="w-full xl:col-span-4 space-y-5">
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
                                     <span className="text-xs font-black text-[#00008B] uppercase tracking-widest flex items-center gap-1.5">
@@ -2696,26 +2843,23 @@ export default function PortfolioPage() {
                                                         initial={{ opacity: 0, scale: 0.95 }}
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         exit={{ opacity: 0, scale: 0.95 }}
-                                                        transition={iosSpring065Config}
+                                                        whileHover={{ scale: 1.02 }}
+                                                        whileTap={{ scale: 0.98 }}
                                                         onClick={() => setFocusedWidget(widget.id)}
-                                                        className="bg-[#00008B]/5 hover:bg-[#00008B]/10 border border-slate-100 hover:border-blue-300 rounded-2xl p-3 shadow-md hover:shadow-xl cursor-pointer transition-all flex items-center justify-between group overflow-hidden"
+                                                        className="p-3.5 bg-white border border-slate-100 hover:border-blue-300 rounded-2xl shadow-sm hover:shadow-md cursor-pointer transition-all flex items-center justify-between group"
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-xl bg-[#00008B] text-white flex items-center justify-center shrink-0">
+                                                            <div className="p-2 bg-blue-50 text-[#00008B] rounded-xl group-hover:bg-[#00008B] group-hover:text-white transition-colors">
                                                                 <WidgetIcon className="w-4 h-4" />
                                                             </div>
                                                             <div>
-                                                                <h4 className="font-black text-[#00008B] text-xs group-hover:text-blue-600 transition-colors leading-tight">
-                                                                    {widget.name}
-                                                                </h4>
-                                                                <span className="text-[10px] text-slate-400 font-medium block mt-0.5">
-                                                                    {widget.desc}
-                                                                </span>
+                                                                <h4 className="text-xs font-extrabold text-[#00008B] group-hover:text-blue-600 transition-colors">{widget.name}</h4>
+                                                                <p className="text-[10px] text-slate-400 font-medium">{widget.desc}</p>
                                                             </div>
                                                         </div>
 
                                                         <div className="flex items-center gap-1 text-[10px] font-black text-white bg-[#00008B] px-2.5 py-1.5 rounded-xl border border-blue-900 transition-all shrink-0">
-                                                            <span>Sola Taşı</span>
+                                                            <span>Odağa Al</span>
                                                             <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                                                         </div>
                                                     </motion.div>
