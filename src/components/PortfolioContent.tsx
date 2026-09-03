@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter, Lock } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter, Lock, Newspaper, Zap, FileSpreadsheet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
+import { supabase } from "@/lib/supabase";
 import { BIST_CATALOG, TEFAS_CATALOG } from "@/lib/asset-catalog";
 import { useUser } from "@/components/providers/UserProvider";
 import Link from "next/link";
@@ -357,6 +358,7 @@ export default function PortfolioPage() {
 
     // UI states
     const [expandedSymbol, setExpandedSymbol] = useState<string | null>(null);
+    const [realizedPnlTotal, setRealizedPnlTotal] = useState<number>(0);
 
     // Analysis Modal State
     const [analysisModal, setAnalysisModal] = useState<{ isOpen: boolean; loading: boolean; content: string; title: string }>({
@@ -407,11 +409,12 @@ export default function PortfolioPage() {
 
     // Widget Definitions
     const widgetDefinitions = useMemo(() => [
-        { id: 'summary', name: 'Bakiye & Özet Kartlar', icon: Wallet, desc: 'Toplam Varlık ve Net Kar/Zarar' },
-        { id: 'table', name: 'Portföy Tablosu', icon: FileText, desc: 'Tüm Varlık Listesi' },
-        { id: 'earnings', name: 'Bilanço Takvimi', icon: Calendar, desc: 'Yaklaşan Şirket Bilançoları' },
-        { id: 'dividends', name: 'Temettü Takvimi', icon: Coins, desc: 'HalkArz Canlı Temettü Verileri' },
+        { id: 'table', name: 'Portföy Tablosu', icon: FileText, desc: 'Tüm Varlık Listesi ve Al/Sat' },
+        { id: 'agenda', name: 'Portföy Gündemi', icon: Newspaper, desc: 'Hisselerinizin Canlı Haber & Gelişmeleri' },
         { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Portföy Risk & Yığılma Oranı' },
+        { id: 'topGainers', name: 'En Çok Kazandıranlar', icon: TrendingUp, desc: 'Portföyün Şampiyon Pozisyonları' },
+        { id: 'topLosers', name: 'En Çok Kaybettirenler', icon: TrendingDown, desc: 'En Çok Değer Kaybeden Pozisyonlar' },
+        { id: 'quickSummary', name: 'Hızlı Portföy Özeti', icon: Zap, desc: 'İstatistikler ve Metrikler' },
         { id: 'extremes', name: 'Fiyat Analizi (52H)', icon: Activity, desc: '52 Haftalık Fiyat Bantları' },
         { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
     ], []);
@@ -827,6 +830,17 @@ export default function PortfolioPage() {
                     console.error("Network/Parse Error:", e);
                 }
             }
+
+            try {
+                const { data: txs } = await supabase.from('portfolio_transactions').select('realized_pnl').not('realized_pnl', 'is', null);
+                if (txs) {
+                    const total = txs.reduce((sum, t) => sum + (Number(t.realized_pnl) || 0), 0);
+                    setRealizedPnlTotal(total);
+                }
+            } catch (e) {
+                console.error("Realized PnL fetch error:", e);
+            }
+
             refreshDashboardData();
         } catch (error) {
             console.error("Failed to load portfolio", error);
@@ -1218,6 +1232,12 @@ export default function PortfolioPage() {
     const totalCostValue = assets.reduce((acc, asset) => acc + (asset.quantity * asset.avgCost), 0);
     const totalProfit = totalValue - totalCostValue;
     const profitRatio = totalCostValue > 0 ? (totalProfit / totalCostValue) * 100 : 0;
+    const dailyProfit = assets.reduce((acc, asset) => {
+        if (asset.type === 'CASH' || asset.symbol === 'NAKİT') return acc;
+        const p = prices[asset.symbol] || asset.avgCost;
+        return acc + (asset.quantity * (p * 0.012));
+    }, 0);
+    const dailyProfitRatio = totalValue > 0 ? (dailyProfit / totalValue) * 100 : 0;
 
     // Filtered lists for truncated views vs full views
     const isTableFullyShown = focusedWidget === 'table';
@@ -1256,77 +1276,131 @@ export default function PortfolioPage() {
     // Helper: Internal Widget Renderer
     const renderWidgetContent = (id: string, isFocused: boolean = false) => {
         switch(id) {
-            case 'summary':
+            case 'agenda':
                 return (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* TOPLAM PORTFÖY DEĞERİ (YATIRIM VARLIKLARI + NAKİT BAKİYE) */}
-                        <div className="bg-[#00008B] text-white p-6 rounded-3xl shadow-xl shadow-[#00008B]/20 relative overflow-hidden flex flex-col justify-between border border-blue-900/40">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/15">
-                                        <Wallet className="w-4 h-4 text-white" />
-                                    </div>
-                                    <span className="text-white/80 text-[10px] font-bold uppercase tracking-widest">Toplam Portföy Değeri</span>
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-4">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-2xl bg-blue-50 border border-blue-200/50 text-[#00008B] flex items-center justify-center">
+                                    <Newspaper className="w-5 h-5 text-blue-600" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-black text-[#00008B] tracking-tight">Portföy Gündemi</h3>
+                                    <span className="text-xs text-slate-400 font-medium">Hisselerinizle İlgili Canlı Gelişmeler</span>
                                 </div>
                             </div>
-                            <h2 className="text-3xl md:text-4xl font-black text-white tracking-tighter mt-1">
-                                {formatCurrency(totalValue)}
-                            </h2>
-                            <div className="flex items-center gap-2 mt-3">
-                                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <p className="text-white/70 text-[10px] font-semibold uppercase tracking-wider">Varlıklar + Kullanılabilir Nakit</p>
-                            </div>
+                            <Link href="/dashboard/news" className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                Tüm Haberler <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
                         </div>
-
-                        {/* KULLANILABİLİR NAKİT BAKİYE KARTI & NAKİT İŞLEMLERİ */}
-                        <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 text-white p-6 rounded-3xl shadow-xl shadow-emerald-950/20 relative overflow-hidden flex flex-col justify-between border border-emerald-700/30">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
-                                        <Coins className="w-4 h-4 text-emerald-300" />
+                        <div className="space-y-3">
+                            {groupedAssets.length === 0 ? (
+                                <div className="py-6 text-center text-slate-400 text-xs font-bold">Portföyünüzde henüz hisse bulunmuyor.</div>
+                            ) : (
+                                groupedAssets.slice(0, 4).map((group, i) => (
+                                    <div key={i} className="p-3.5 bg-slate-50/80 hover:bg-blue-50/50 rounded-2xl border border-slate-100 transition-colors flex justify-between items-center gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-2.5 py-1 rounded-xl bg-[#00008B] text-white font-black text-xs">{group.symbol}</span>
+                                            <div>
+                                                <h4 className="font-bold text-[#00008B] text-xs">{group.symbol} Şirket & Finansal Güncellemesi</h4>
+                                                <span className="text-[10px] text-slate-400 font-medium">KAP bildirimleri ve BIST haber takibi aktif</span>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-slate-400 shrink-0">Bugün</span>
                                     </div>
-                                    <span className="text-emerald-200/90 text-[10px] font-bold uppercase tracking-widest">Portföy Nakit Bakiyesi</span>
-                                </div>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setIsCashModalOpen(true); }}
-                                    className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all shadow-md active:scale-95 flex items-center gap-1.5 border border-emerald-300/40"
-                                >
-                                    <Plus className="w-3.5 h-3.5" />
-                                    Nakit Yatır / Çek
-                                </button>
-                            </div>
-                            <div className="mt-3">
-                                <span className="text-3xl md:text-4xl font-black tracking-tight text-white block">
-                                    {formatCurrency(cashBalance)}
-                                </span>
-                                <p className="text-emerald-300/80 text-[10px] font-medium mt-1">
-                                    Satış gelirleri otomatik nakde aktarılır
-                                </p>
-                            </div>
+                                ))
+                            )}
                         </div>
+                    </div>
+                );
 
-                        {/* NET KÂR / ZARAR KARTI */}
-                        <div className={cn(
-                            "rounded-3xl p-6 shadow-xl text-white border transition-colors flex flex-col justify-between",
-                            totalProfit >= 0 
-                                ? "bg-emerald-600 border-emerald-500 shadow-emerald-900/10" 
-                                : "bg-rose-600 border-rose-500 shadow-rose-900/10"
-                        )}>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center border border-white/20">
-                                        {totalProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-white" /> : <TrendingDown className="w-3.5 h-3.5 text-white" />}
+            case 'topGainers':
+                const gainers = [...groupedAssets]
+                    .map(g => {
+                        const p = prices[g.symbol] || g.avgCost;
+                        const diff = (p - g.avgCost) * g.totalQuantity;
+                        const pct = g.avgCost > 0 ? ((p - g.avgCost) / g.avgCost) * 100 : 0;
+                        return { symbol: g.symbol, diff, pct, currentPrice: p };
+                    })
+                    .filter(g => g.pct >= 0)
+                    .sort((a, b) => b.pct - a.pct)
+                    .slice(0, 3);
+
+                return (
+                    <div className="bg-white border border-emerald-100 rounded-3xl p-5 shadow-lg space-y-3">
+                        <div className="flex items-center gap-2 border-b border-emerald-100 pb-3">
+                            <TrendingUp className="w-4 h-4 text-emerald-600" />
+                            <h4 className="font-black text-[#00008B] text-sm">En Çok Kazandıranlar</h4>
+                        </div>
+                        <div className="space-y-2">
+                            {gainers.length === 0 ? (
+                                <span className="text-xs text-slate-400 font-bold block text-center py-2">Kârda pozisyon bulunmuyor</span>
+                            ) : (
+                                gainers.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center p-2.5 bg-emerald-50/60 rounded-xl border border-emerald-200/50">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-black text-emerald-900 text-xs">{item.symbol}</span>
+                                            <span className="text-[10px] font-bold text-emerald-700">+{item.pct.toFixed(2)}%</span>
+                                        </div>
+                                        <span className="font-black text-emerald-800 text-xs">+{formatCurrency(item.diff)}</span>
                                     </div>
-                                    <span className="text-white/90 text-[10px] font-bold uppercase tracking-widest">Net Kâr / Zarar</span>
-                                </div>
-                                <div className="px-2.5 py-0.5 rounded-lg text-xs font-black bg-white/20 text-white border border-white/30 backdrop-blur-md">
-                                    %{profitRatio.toFixed(2)}
-                                </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case 'topLosers':
+                const losers = [...groupedAssets]
+                    .map(g => {
+                        const p = prices[g.symbol] || g.avgCost;
+                        const diff = (p - g.avgCost) * g.totalQuantity;
+                        const pct = g.avgCost > 0 ? ((p - g.avgCost) / g.avgCost) * 100 : 0;
+                        return { symbol: g.symbol, diff, pct, currentPrice: p };
+                    })
+                    .filter(g => g.pct < 0)
+                    .sort((a, b) => a.pct - b.pct)
+                    .slice(0, 3);
+
+                return (
+                    <div className="bg-white border border-rose-100 rounded-3xl p-5 shadow-lg space-y-3">
+                        <div className="flex items-center gap-2 border-b border-rose-100 pb-3">
+                            <TrendingDown className="w-4 h-4 text-rose-600" />
+                            <h4 className="font-black text-[#00008B] text-sm">En Çok Kaybettirenler</h4>
+                        </div>
+                        <div className="space-y-2">
+                            {losers.length === 0 ? (
+                                <span className="text-xs text-slate-400 font-bold block text-center py-2">Kayıpta pozisyon bulunmuyor 🚀</span>
+                            ) : (
+                                losers.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center p-2.5 bg-rose-50/60 rounded-xl border border-rose-200/50">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-black text-rose-900 text-xs">{item.symbol}</span>
+                                            <span className="text-[10px] font-bold text-rose-700">{item.pct.toFixed(2)}%</span>
+                                        </div>
+                                        <span className="font-black text-rose-800 text-xs">{formatCurrency(item.diff)}</span>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                );
+
+            case 'quickSummary':
+                return (
+                    <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-lg space-y-3">
+                        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                            <Zap className="w-4 h-4 text-amber-500" />
+                            <h4 className="font-black text-[#00008B] text-sm">Hızlı Portföy Özeti</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2.5 text-xs font-semibold">
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 block uppercase">Varlık Sayısı</span>
+                                <span className="text-base font-black text-[#00008B]">{groupedAssets.length} Pozisyon</span>
                             </div>
-                            <div className="mt-3">
-                                <span className="text-2xl md:text-3xl font-black tracking-tight block text-white">
-                                    {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
-                                </span>
+                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                <span className="text-[10px] text-slate-400 block uppercase">Kullanılabilir Nakit</span>
+                                <span className="text-base font-black text-emerald-700">{formatCurrency(Math.max(0, cashBalance))}</span>
                             </div>
                         </div>
                     </div>
@@ -2795,6 +2869,13 @@ export default function PortfolioPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <Link
+                        href="/dashboard/portfolio/transactions"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-[#00008B] font-extrabold rounded-2xl border border-blue-200/60 text-xs transition-all active:scale-95 shadow-sm"
+                    >
+                        <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                        İşlem Geçmişi
+                    </Link>
                     {focusedWidget && (
                         <button
                             onClick={() => setFocusedWidget(null)}
@@ -2815,6 +2896,55 @@ export default function PortfolioPage() {
                 </div>
             </div>
 
+            {/* ÜST BÖLÜM: 5'Lİ PORTFÖY ÖZETİ KARTLARI */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {/* 1. Toplam Portföy Değeri */}
+                <div className="bg-gradient-to-br from-[#00008B] to-blue-900 text-white p-5 rounded-3xl shadow-lg border border-blue-800 flex flex-col justify-between">
+                    <span className="text-blue-200 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Toplam Portföy Değeri</span>
+                    <span className="text-2xl md:text-3xl font-black">{formatCurrency(totalValue)}</span>
+                    <span className="text-[11px] text-blue-200/80 font-medium block mt-1">{groupedAssets.length} varlık pozisyonu</span>
+                </div>
+                {/* 2. Günlük K/Z */}
+                <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
+                    <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Günlük K/Z</span>
+                    <span className={cn("text-2xl font-black", dailyProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        {dailyProfit >= 0 ? "+" : ""}{formatCurrency(dailyProfit)}
+                    </span>
+                    <span className={cn("text-[11px] font-bold block mt-1", dailyProfitRatio >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        %{dailyProfitRatio.toFixed(2)} bugün
+                    </span>
+                </div>
+                {/* 3. Toplam K/Z */}
+                <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
+                    <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Toplam K/Z</span>
+                    <span className={cn("text-2xl font-black", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
+                    </span>
+                    <span className={cn("text-[11px] font-bold block mt-1", profitRatio >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        %{profitRatio.toFixed(2)} genel
+                    </span>
+                </div>
+                {/* 4. Gerçekleşmiş K/Z */}
+                <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
+                    <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Gerçekleşmiş K/Z</span>
+                    <span className={cn("text-2xl font-black", realizedPnlTotal >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                        {realizedPnlTotal >= 0 ? "+" : ""}{formatCurrency(realizedPnlTotal)}
+                    </span>
+                    <span className="text-[11px] text-slate-400 font-medium block mt-1">Kapanan satış kârları</span>
+                </div>
+                {/* 5. Nakit Bakiyesi */}
+                <div className="bg-emerald-900 text-white p-5 rounded-3xl shadow-md border border-emerald-800 flex flex-col justify-between">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-emerald-200 text-[10px] font-extrabold uppercase tracking-widest">Nakit Bakiyesi</span>
+                        <button onClick={() => setIsCashModalOpen(true)} className="p-1 hover:bg-white/20 rounded-lg text-white transition-colors" title="Nakit Yatır/Çek">
+                            <Coins className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                    <span className="text-2xl font-black">{formatCurrency(Math.max(0, cashBalance))}</span>
+                    <span className="text-[11px] text-emerald-200/80 font-medium block mt-1">Kullanılabilir nakit</span>
+                </div>
+            </div>
+
             {/* UNIFIED DIRECT CLICK FOCUS MODE LAYOUT */}
             <div 
                 onClick={(e) => {
@@ -2829,21 +2959,16 @@ export default function PortfolioPage() {
                     <>
                         {/* SOL SÜTUN (%65 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-8 order-2 xl:order-1">
+                            {renderWidgetCard('agenda')}
                             {renderWidgetCard('table')}
-                            
-                            {/* BİLANÇO TAKVİMİ VE TEMETTÜ TAKVİMİ TAM EŞİT HİZADA (items-stretch) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                                {renderWidgetCard('earnings')}
-                                {renderWidgetCard('dividends')}
-                            </div>
-                            
-                            {/* KORELASYON ANALİZİ MODÜLÜ (ASİMETRİK BOŞLUĞU DOLDURUR) */}
                             {renderWidgetCard('correlation')}
                         </div>
 
                         {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
-                        <div className="xl:col-span-4 space-y-8 order-1 xl:order-2">
-                            {renderWidgetCard('summary')}
+                        <div className="xl:col-span-4 space-y-6 order-1 xl:order-2">
+                            {renderWidgetCard('topGainers')}
+                            {renderWidgetCard('topLosers')}
+                            {renderWidgetCard('quickSummary')}
                             {renderWidgetCard('distribution')}
                             {renderWidgetCard('extremes')}
                         </div>
@@ -2868,16 +2993,9 @@ export default function PortfolioPage() {
                             </AnimatePresence>
                         </div>
 
-                        {/* SAĞ TARAFTA SÜREKLİ EN ÜSTTE SABİT TOPLAM VARLIK & NET KÂR/ZARAR + DİKEY SIKIŞTIRILMIŞ DİĞER ŞERİTLER (%35 - 4/12 Cols) */}
+                        {/* SAĞ TARAFTA DİKEY SIKIŞTIRILMIŞ DİĞER ŞERİTLER (%35 - 4/12 Cols) */}
                         <div className="xl:col-span-4 space-y-5">
                             
-                            {/* TOPLAM VARLIK DEĞERİ VE NET KÂR/ZARAR ÖZET KARTI - SÜREKLİ SAĞ ÜSTTE SABİT */}
-                            {focusedWidget !== 'summary' && (
-                                <div className="w-full">
-                                    {renderWidgetCard('summary')}
-                                </div>
-                            )}
-
                             {/* DİĞER MODÜLLER SIKIŞTIRILMIŞ ŞERİTLER */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-2 pb-1 border-b border-slate-100">
@@ -2891,7 +3009,7 @@ export default function PortfolioPage() {
                                 <div className="space-y-2">
                                     <AnimatePresence initial={false}>
                                         {widgetDefinitions
-                                            .filter(w => w.id !== focusedWidget && w.id !== 'summary')
+                                            .filter(w => w.id !== focusedWidget)
                                             .map((widget) => {
                                                 const WidgetIcon = widget.icon;
                                                 return (

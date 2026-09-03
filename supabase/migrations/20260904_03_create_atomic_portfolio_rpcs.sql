@@ -96,12 +96,16 @@ BEGIN
         WHERE up.user_id = v_user_id AND up.symbol = 'NAKİT' AND up.asset_type = 'CASH'
         FOR UPDATE;
 
-        -- Step 2: Deduct Cash or Create Negative Cash Position (Nakit yetersiz olsa dahi alıma izin verilir)
+        -- Step 2: Deduct Cash (Nakit sıfırın altına düşmez, yetersizse sıfırlanır/otomatik karşılanır)
         IF v_cash_id IS NOT NULL THEN
-            UPDATE public.user_portfolios up SET quantity = up.quantity - v_net_amount WHERE up.id = v_cash_id;
+            IF v_cash_quantity >= v_net_amount THEN
+                UPDATE public.user_portfolios up SET quantity = up.quantity - v_net_amount WHERE up.id = v_cash_id;
+            ELSE
+                UPDATE public.user_portfolios up SET quantity = 0 WHERE up.id = v_cash_id;
+            END IF;
         ELSE
             INSERT INTO public.user_portfolios (user_id, symbol, asset_type, quantity, avg_cost, purchase_date)
-            VALUES (v_user_id, 'NAKİT', 'CASH', -v_net_amount, 1.0000, p_transaction_date);
+            VALUES (v_user_id, 'NAKİT', 'CASH', 0, 1.0000, p_transaction_date);
         END IF;
 
         -- Step 3: Lock & Update/Insert Position
