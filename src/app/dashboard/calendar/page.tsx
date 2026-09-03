@@ -26,9 +26,22 @@ function CalendarContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
 
+    // Initial active filter from URL query param
+    const getInitialFilter = (): 'all' | 'earnings' | 'dividends' | 'ipo' | 'economic' => {
+        const typeParam = searchParams ? (searchParams.get('type') || searchParams.get('focus')) : null;
+        if (typeParam) {
+            const p = typeParam.toLowerCase();
+            if (p === 'dividend' || p === 'dividends' || p === 'temettu') return 'dividends';
+            if (p === 'earnings' || p === 'bilanco') return 'earnings';
+            if (p === 'ipo' || p === 'halka-arz') return 'ipo';
+            if (p === 'economic' || p === 'ekonomik') return 'economic';
+        }
+        return 'all';
+    };
+
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [viewDate, setViewDate] = useState<Date>(new Date());
-    const [activeFilter, setActiveFilter] = useState<'all' | 'earnings' | 'dividends' | 'ipo' | 'economic'>('all');
+    const [activeFilter, setActiveFilter] = useState<'all' | 'earnings' | 'dividends' | 'ipo' | 'economic'>(getInitialFilter);
 
     // Data States
     const [earnings, setEarnings] = useState<any[]>([]);
@@ -40,43 +53,85 @@ function CalendarContent() {
     // ==========================================
     // 1. TEMETTÜ STATE'LERİ
     // ==========================================
-    const [divSearch, setDivSearch] = useState<string>('');
-    const [divDateFilter, setDivDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>('all');
-    const [divStatusFilter, setDivStatusFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
-    const [divYieldFilter, setDivYieldFilter] = useState<'all' | '0-2' | '2-5' | '5plus'>('all');
-    const [divAmountFilter, setDivAmountFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
-    const [divPortfolioOnly, setDivPortfolioOnly] = useState<boolean>(false);
-    const [divSort, setDivSort] = useState<'date-asc' | 'date-desc' | 'yield-desc' | 'yield-asc' | 'amount-desc' | 'name-asc' | 'name-desc'>('date-asc');
+    const [divSearch, setDivSearch] = useState<string>(() => searchParams?.get('search') || '');
+    const [divDateFilter, setDivDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>(
+        () => (searchParams?.get('date') as any) || 'all'
+    );
+    const [divStatusFilter, setDivStatusFilter] = useState<'all' | 'upcoming' | 'completed'>(
+        () => (searchParams?.get('status') as any) || 'all'
+    );
+    const [divYieldFilter, setDivYieldFilter] = useState<'all' | '0-2' | '2-5' | '5plus'>(
+        () => (searchParams?.get('yield') as any) || 'all'
+    );
+    const [divAmountFilter, setDivAmountFilter] = useState<'all' | 'low' | 'medium' | 'high'>(
+        () => (searchParams?.get('amount') as any) || 'all'
+    );
+    const [divPortfolioOnly, setDivPortfolioOnly] = useState<boolean>(
+        () => searchParams?.get('portfolio') === 'true'
+    );
+    const [divSort, setDivSort] = useState<'date-asc' | 'date-desc' | 'yield-desc' | 'yield-asc' | 'amount-desc' | 'name-asc' | 'name-desc'>(
+        () => (searchParams?.get('sort') as any) || 'date-asc'
+    );
 
     // ==========================================
     // 2. BİLANÇO STATE'LERİ
     // ==========================================
-    const [earnSearch, setEarnSearch] = useState<string>('');
-    const [earnDateFilter, setEarnDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>('all');
-    const [earnPeriodFilter, setEarnPeriodFilter] = useState<'all' | '1q' | '2q' | '3q' | '4q'>('all');
-    const [earnStatusFilter, setEarnStatusFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
-    const [earnPortfolioOnly, setEarnPortfolioOnly] = useState<boolean>(false);
-    const [earnSort, setEarnSort] = useState<'date-asc' | 'date-desc' | 'name-asc' | 'name-desc'>('date-asc');
+    const [earnSearch, setEarnSearch] = useState<string>(() => searchParams?.get('search') || '');
+    const [earnDateFilter, setEarnDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>(
+        () => (searchParams?.get('date') as any) || 'all'
+    );
+    const [earnPeriodFilter, setEarnPeriodFilter] = useState<'all' | '1q' | '2q' | '3q' | '4q'>(
+        () => (searchParams?.get('period') as any) || 'all'
+    );
+    const [earnStatusFilter, setEarnStatusFilter] = useState<'all' | 'upcoming' | 'completed'>(
+        () => (searchParams?.get('status') as any) || 'all'
+    );
+    const [earnPortfolioOnly, setEarnPortfolioOnly] = useState<boolean>(
+        () => searchParams?.get('portfolio') === 'true'
+    );
+    const [earnSort, setEarnSort] = useState<'date-asc' | 'date-desc' | 'name-asc' | 'name-desc'>(
+        () => (searchParams?.get('sort') as any) || 'date-asc'
+    );
 
     // ==========================================
     // 3. HALKA ARZ STATE'LERİ
     // ==========================================
-    const [ipoSearch, setIpoSearch] = useState<string>('');
-    const [ipoDateFilter, setIpoDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>('all');
-    const [ipoStatusFilter, setIpoStatusFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>('all');
-    const [ipoPriceFilter, setIpoPriceFilter] = useState<'all' | '0-25' | '25-50' | '50-100' | '100plus'>('all');
-    const [ipoPortfolioOnly, setIpoPortfolioOnly] = useState<boolean>(false);
-    const [ipoSort, setIpoSort] = useState<'date-asc' | 'date-desc' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>('date-asc');
+    const [ipoSearch, setIpoSearch] = useState<string>(() => searchParams?.get('search') || '');
+    const [ipoDateFilter, setIpoDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>(
+        () => (searchParams?.get('date') as any) || 'all'
+    );
+    const [ipoStatusFilter, setIpoStatusFilter] = useState<'all' | 'upcoming' | 'active' | 'completed'>(
+        () => (searchParams?.get('status') as any) || 'all'
+    );
+    const [ipoPriceFilter, setIpoPriceFilter] = useState<'all' | '0-25' | '25-50' | '50-100' | '100plus'>(
+        () => (searchParams?.get('price') as any) || 'all'
+    );
+    const [ipoPortfolioOnly, setIpoPortfolioOnly] = useState<boolean>(
+        () => searchParams?.get('portfolio') === 'true'
+    );
+    const [ipoSort, setIpoSort] = useState<'date-asc' | 'date-desc' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>(
+        () => (searchParams?.get('sort') as any) || 'date-asc'
+    );
 
     // ==========================================
     // 4. EKONOMİK TAKVİM STATE'LERİ
     // ==========================================
-    const [ecoSearch, setEcoSearch] = useState<string>('');
-    const [ecoDateFilter, setEcoDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'this-week' | 'this-month'>('all');
-    const [ecoCountryFilter, setEcoCountryFilter] = useState<'all' | 'tr' | 'us' | 'eu' | 'uk' | 'de' | 'cn' | 'jp' | 'other'>('all');
-    const [ecoImportanceFilter, setEcoImportanceFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all');
-    const [ecoStatusFilter, setEcoStatusFilter] = useState<'all' | 'pending' | 'announced'>('all');
-    const [ecoSort, setEcoSort] = useState<'date-asc' | 'date-desc' | 'importance-desc' | 'name-asc'>('date-asc');
+    const [ecoSearch, setEcoSearch] = useState<string>(() => searchParams?.get('search') || '');
+    const [ecoDateFilter, setEcoDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'this-week' | 'this-month'>(
+        () => (searchParams?.get('date') as any) || 'all'
+    );
+    const [ecoCountryFilter, setEcoCountryFilter] = useState<'all' | 'tr' | 'us' | 'eu' | 'uk' | 'de' | 'cn' | 'jp' | 'other'>(
+        () => (searchParams?.get('country') as any) || 'all'
+    );
+    const [ecoImportanceFilter, setEcoImportanceFilter] = useState<'all' | 'high' | 'medium' | 'low'>(
+        () => (searchParams?.get('importance') as any) || 'all'
+    );
+    const [ecoStatusFilter, setEcoStatusFilter] = useState<'all' | 'pending' | 'announced'>(
+        () => (searchParams?.get('status') as any) || 'all'
+    );
+    const [ecoSort, setEcoSort] = useState<'date-asc' | 'date-desc' | 'importance-desc' | 'name-asc'>(
+        () => (searchParams?.get('sort') as any) || 'date-asc'
+    );
 
     // Sync URL search params -> state (Sayfa açılışında ve URL değişiminde)
     useEffect(() => {
@@ -91,9 +146,11 @@ function CalendarContent() {
                 setActiveFilter('ipo');
             } else if (p === 'economic' || p === 'ekonomik') {
                 setActiveFilter('economic');
-            } else if (p === 'all') {
+            } else {
                 setActiveFilter('all');
             }
+        } else {
+            setActiveFilter('all');
         }
 
         if (!searchParams) return;
@@ -230,10 +287,11 @@ function CalendarContent() {
         };
         const targetType = typeMap[filterId];
         if (targetType === 'all') {
-            router.replace('/dashboard/calendar', { scroll: false });
+            router.push('/dashboard/calendar');
         } else {
-            router.replace(`/dashboard/calendar?type=${targetType}`, { scroll: false });
+            router.push(`/dashboard/calendar?type=${targetType}`);
         }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     // Veri Çekimi
@@ -1651,7 +1709,7 @@ function CalendarContent() {
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Bilanço Takvimi</h3>
                             </div>
-                            <Link href="/dashboard/calendar?type=earnings" onClick={(e) => { e.preventDefault(); handleFilterSelect('earnings'); }} className="text-[10px] font-extrabold text-blue-600 hover:underline">
+                            <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-[10px] font-extrabold text-blue-600 hover:underline">
                                 Tümünü Gör
                             </Link>
                         </div>
@@ -1686,8 +1744,8 @@ function CalendarContent() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/calendar?type=earnings" onClick={(e) => { e.preventDefault(); handleFilterSelect('earnings'); }} className="mt-4 pt-3 border-t border-blue-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-blue-600 transition-colors">
-                        Tüm Bilanço Takvimi →
+                    <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-4 pt-3 border-t border-blue-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-blue-600 transition-colors">
+                        Tüm Bilançoları Gör →
                     </Link>
                 </div>
 
@@ -1701,7 +1759,7 @@ function CalendarContent() {
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Temettü Takvimi</h3>
                             </div>
-                            <Link href="/dashboard/calendar?type=dividend" onClick={(e) => { e.preventDefault(); handleFilterSelect('dividends'); }} className="text-[10px] font-extrabold text-emerald-600 hover:underline">
+                            <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-[10px] font-extrabold text-emerald-600 hover:underline">
                                 Tümünü Gör
                             </Link>
                         </div>
@@ -1738,8 +1796,8 @@ function CalendarContent() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/calendar?type=dividend" onClick={(e) => { e.preventDefault(); handleFilterSelect('dividends'); }} className="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-emerald-600 transition-colors">
-                        Tüm Temettü Takvimi →
+                    <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-emerald-600 transition-colors">
+                        Tüm Temettüleri Gör →
                     </Link>
                 </div>
 
@@ -1753,7 +1811,7 @@ function CalendarContent() {
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Halka Arz Takvimi</h3>
                             </div>
-                            <Link href="/dashboard/calendar?type=ipo" onClick={(e) => { e.preventDefault(); handleFilterSelect('ipo'); }} className="text-[10px] font-extrabold text-purple-600 hover:underline">
+                            <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-[10px] font-extrabold text-purple-600 hover:underline">
                                 Tümünü Gör
                             </Link>
                         </div>
@@ -1786,8 +1844,8 @@ function CalendarContent() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/calendar?type=ipo" onClick={(e) => { e.preventDefault(); handleFilterSelect('ipo'); }} className="mt-4 pt-3 border-t border-purple-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-purple-600 transition-colors">
-                        Tüm Halka Arz Takvimi →
+                    <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-4 pt-3 border-t border-purple-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-purple-600 transition-colors">
+                        Tüm Halka Arzları Gör →
                     </Link>
                 </div>
             </div>
@@ -1804,7 +1862,7 @@ function CalendarContent() {
                             <p className="text-[10px] font-bold text-slate-400">Küresel makroekonomik veriler ve faiz kararları</p>
                         </div>
                     </div>
-                    <Link href="/dashboard/calendar?type=economic" onClick={(e) => { e.preventDefault(); handleFilterSelect('economic'); }} className="text-xs font-extrabold text-amber-600 hover:underline">
+                    <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-xs font-extrabold text-amber-600 hover:underline">
                         Tümünü Gör →
                     </Link>
                 </div>
@@ -1857,6 +1915,10 @@ function CalendarContent() {
                         </tbody>
                     </table>
                 </div>
+
+                <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="mt-4 pt-3 border-t border-amber-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-amber-600 transition-colors">
+                    Tüm Ekonomik Verileri Gör →
+                </Link>
             </div>
 
             {/* YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
@@ -1873,29 +1935,29 @@ function CalendarContent() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div onClick={() => handleFilterSelect('earnings')} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all">
+                        <Link href="/dashboard/calendar?type=earnings" onClick={() => { setActiveFilter('earnings'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all block">
                             <span className="text-[10px] font-bold text-blue-300 uppercase block mb-1">Bilanço</span>
                             <span className="text-lg font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
                             <span className="text-[9px] text-blue-200/60">Yaklaşan Sonuçlar</span>
-                        </div>
+                        </Link>
 
-                        <div onClick={() => handleFilterSelect('dividends')} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all">
+                        <Link href="/dashboard/calendar?type=dividend" onClick={() => { setActiveFilter('dividends'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all block">
                             <span className="text-[10px] font-bold text-emerald-300 uppercase block mb-1">Temettü</span>
                             <span className="text-lg font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
                             <span className="text-[9px] text-emerald-200/60">Açıklanan Hak Hakediş</span>
-                        </div>
+                        </Link>
 
-                        <div onClick={() => handleFilterSelect('ipo')} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all">
+                        <Link href="/dashboard/calendar?type=ipo" onClick={() => { setActiveFilter('ipo'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all block">
                             <span className="text-[10px] font-bold text-purple-300 uppercase block mb-1">Halka Arz</span>
                             <span className="text-lg font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
                             <span className="text-[9px] text-purple-200/60">Aktif Başvuru</span>
-                        </div>
+                        </Link>
 
-                        <div onClick={() => handleFilterSelect('economic')} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all">
+                        <Link href="/dashboard/calendar?type=economic" onClick={() => { setActiveFilter('economic'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all block">
                             <span className="text-[10px] font-bold text-amber-300 uppercase block mb-1">Ekonomik Veri</span>
                             <span className="text-lg font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
                             <span className="text-[9px] text-amber-200/60">Makro Göstergeler</span>
-                        </div>
+                        </Link>
                     </div>
                 </div>
             </div>
