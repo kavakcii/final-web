@@ -197,48 +197,13 @@ export const PortfolioService = {
         }
     },
 
-    saveSnapshot: async (totalValue: number, totalProfit: number, totalCost?: number, assetCount?: number) => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            // Today's date in YYYY-MM-DD (TSİ)
-            const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' });
-
-            const profitPct = (totalCost && totalCost > 0)
-                ? ((totalProfit / totalCost) * 100)
-                : 0;
-
-            const snapshotData = {
-                total_value: totalValue,
-                total_profit: totalProfit,
-                total_cost: totalCost ?? 0,
-                profit_pct: profitPct,
-                asset_count: assetCount ?? 0,
-                updated_at: new Date().toISOString()
-            };
-
-            // Check if snapshot already exists for today
-            const { data: existing } = await supabase
-                .from('portfolio_history')
-                .select('id')
-                .eq('user_id', user.id)
-                .eq('snapshot_date', today)
-                .maybeSingle();
-
-            if (existing) {
-                await supabase
-                    .from('portfolio_history')
-                    .update(snapshotData)
-                    .eq('id', existing.id);
-            } else {
-                await supabase
-                    .from('portfolio_history')
-                    .insert([{ user_id: user.id, snapshot_date: today, ...snapshotData }]);
-            }
-        } catch (error) {
-            console.error('Error saving portfolio snapshot:', error);
-        }
+    /**
+     * @deprecated Client-side snapshot kaydı devre dışı bırakılmıştır.
+     * Günlük snapshotlar yetkili sunucu cron servisi (/api/cron/daily-snapshot) tarafından 23:59 TSİ'de kaydedilir.
+     */
+    saveSnapshot: async (_totalValue: number, _totalProfit: number, _totalCost?: number, _assetCount?: number) => {
+        // No-op: Client-side snapshot generation is disabled to enforce single source of truth.
+        return;
     },
 
     /**
@@ -274,7 +239,7 @@ export const PortfolioService = {
 
             const { data, error } = await supabase
                 .from('portfolio_history')
-                .select('snapshot_date, total_value, total_profit, profit_pct, asset_count')
+                .select('snapshot_date, total_value, cash_value, invested_value, total_cost, realized_pnl, unrealized_pnl, external_cash_flow, daily_return_pct, asset_count')
                 .eq('user_id', user.id)
                 .gte('snapshot_date', fromDateStr)
                 .order('snapshot_date', { ascending: true });
