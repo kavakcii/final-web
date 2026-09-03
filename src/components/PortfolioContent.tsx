@@ -407,16 +407,17 @@ export default function PortfolioPage() {
         "#7209B7"  // Koyu Mor
     ];
 
-    // Widget Definitions
+    // Widget Definitions (Final UI Refactor)
     const widgetDefinitions = useMemo(() => [
-        { id: 'table', name: 'Portföy Tablosu', icon: FileText, desc: 'Tüm Varlık Listesi ve Al/Sat' },
-        { id: 'agenda', name: 'Portföy Gündemi', icon: Newspaper, desc: 'Hisselerinizin Canlı Haber & Gelişmeleri' },
-        { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Portföy Risk & Yığılma Oranı' },
-        { id: 'topGainers', name: 'En Çok Kazandıranlar', icon: TrendingUp, desc: 'Portföyün Şampiyon Pozisyonları' },
+        { id: 'performance', name: 'Portföy Performansı', icon: Activity, desc: 'Zaman İçindeki Değer Değişimi' },
+        { id: 'agenda', name: 'Portföy Gündemi', icon: Newspaper, desc: 'Hisselerinizin Canlı Haber & Bildirimleri' },
+        { id: 'dailyPnL', name: 'Günlük K/Z Grafiği', icon: TrendingUp, desc: 'Günlük Kazanım & Kayıp Dağılımı' },
+        { id: 'distribution', name: 'Varlık Dağılım Grafiği', icon: PieChart, desc: 'Hisse & Sektör Dağılım Oranı' },
+        { id: 'topGainers', name: 'En Çok Kazandıranlar', icon: ArrowUpRight, desc: 'Portföyün Şampiyon Pozisyonları' },
         { id: 'topLosers', name: 'En Çok Kaybettirenler', icon: TrendingDown, desc: 'En Çok Değer Kaybeden Pozisyonlar' },
-        { id: 'quickSummary', name: 'Hızlı Portföy Özeti', icon: Zap, desc: 'İstatistikler ve Metrikler' },
-        { id: 'extremes', name: 'Fiyat Analizi (52H)', icon: Activity, desc: '52 Haftalık Fiyat Bantları' },
-        { id: 'correlation', name: 'Korelasyon Analizi', icon: BarChart3, desc: 'Yapay Zeka Risk Denge Analizi' }
+        { id: 'quickSummary', name: 'Hızlı Portföy Özeti', icon: Zap, desc: 'İstatistikler ve İşlem Metrikleri' },
+        { id: 'table', name: 'Portföy Varlıkları', icon: FileText, desc: 'Tüm Varlık Listesi ve Al/Sat' },
+        { id: 'extremes', name: '52 Hafta Fiyat Analizi', icon: BarChart3, desc: '52 Haftalık Fiyat Bantları' }
     ], []);
 
     // Active Focused Widget Name
@@ -1276,6 +1277,89 @@ export default function PortfolioPage() {
     // Helper: Internal Widget Renderer
     const renderWidgetContent = (id: string, isFocused: boolean = false) => {
         switch(id) {
+            case 'performance':
+                return (
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                            <div>
+                                <h3 className="text-xl font-black text-[#00008B] tracking-tight">Portföy Performansı</h3>
+                                <p className="text-xs text-slate-400 font-medium mt-0.5">Zaman İçindeki Portföy Değeri & Büyüme Trendi</p>
+                            </div>
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl border border-slate-200 self-start sm:self-auto">
+                                {['1G', '1H', '1A', '3A', '1Y', 'Tümü'].map((tf, i) => (
+                                    <button
+                                        key={tf}
+                                        onClick={() => setExtremesTimeframe(tf === '1G' ? '1W' : tf === '1H' ? '1W' : tf === '1A' ? '1M' : tf === '3A' ? '3M' : '1Y')}
+                                        className={cn(
+                                            "px-3 py-1.5 rounded-xl font-extrabold text-xs transition-all",
+                                            (tf === '1A' || tf === 'Tümü') 
+                                                ? "bg-[#00008B] text-white shadow-md" 
+                                                : "text-slate-500 hover:text-[#00008B]"
+                                        )}
+                                    >
+                                        {tf}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* CHARTS SVG AREA */}
+                        <div className="h-64 w-full relative pt-4">
+                            <svg className="w-full h-full overflow-visible" viewBox="0 0 500 180" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="perfGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#00008B" stopOpacity="0.35" />
+                                        <stop offset="100%" stopColor="#00008B" stopOpacity="0.0" />
+                                    </linearGradient>
+                                </defs>
+                                <line x1="0" y1="30" x2="500" y2="30" stroke="#E2E8F0" strokeDasharray="3 3" />
+                                <line x1="0" y1="90" x2="500" y2="90" stroke="#E2E8F0" strokeDasharray="3 3" />
+                                <line x1="0" y1="150" x2="500" y2="150" stroke="#E2E8F0" strokeDasharray="3 3" />
+                                
+                                <path
+                                    d="M 0 150 Q 80 120 160 90 T 320 40 T 420 70 T 500 30 L 500 180 L 0 180 Z"
+                                    fill="url(#perfGrad)"
+                                />
+                                <path
+                                    d="M 0 150 Q 80 120 160 90 T 320 40 T 420 70 T 500 30"
+                                    fill="none"
+                                    stroke="#00008B"
+                                    strokeWidth="3.5"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="flex justify-between text-[11px] text-slate-400 font-bold border-t border-slate-100 pt-3 mt-2">
+                                <span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 'dailyPnL':
+                return (
+                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-4">
+                        <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <div className="flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5 text-emerald-600" />
+                                <h3 className="text-lg font-black text-[#00008B]">Günlük K/Z Değişimi</h3>
+                            </div>
+                            <span className={cn("text-xs font-black px-3 py-1 rounded-xl", dailyProfit >= 0 ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")}>
+                                {dailyProfit >= 0 ? "+" : ""}{formatCurrency(dailyProfit)} ({dailyProfitRatio.toFixed(2)}%)
+                            </span>
+                        </div>
+                        <div className="h-36 flex items-end justify-between gap-2 pt-4 px-2">
+                            {[-1.2, 0.8, 2.1, -0.5, 1.8, 3.2, dailyProfitRatio].map((val, idx) => (
+                                <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+                                    <div 
+                                        style={{ height: `${Math.min(100, Math.max(15, Math.abs(val) * 20))}%` }} 
+                                        className={cn("w-full rounded-t-xl transition-all", val >= 0 ? "bg-emerald-500" : "bg-rose-500")} 
+                                    />
+                                    <span className="text-[10px] font-bold text-slate-400">{idx === 6 ? 'Bugün' : `Gün ${idx+1}`}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
             case 'agenda':
                 return (
                     <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 space-y-4">
@@ -1566,432 +1650,25 @@ export default function PortfolioPage() {
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    </div>
-                );
 
-            case 'earnings':
-                return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 h-full flex flex-col justify-between">
-                        <div>
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-[#00008B]" />
-                                    <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
-                                        {isFocused ? "Tüm Piyasa Bilanço Takvimi" : "Bilanço Takvimi"}
-                                    </h3>
-                                </div>
-                                {isFocused && (
-                                    <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1.5 shadow-sm" onClick={(e) => e.stopPropagation()}>
-                                        <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
-                                        <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
-                                        <select
-                                            value={earningsSortOption}
-                                            onChange={(e) => setEarningsSortOption(e.target.value as any)}
-                                            className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
-                                        >
-                                            <option value="date-asc">Tarih: En Yakın → En Uzak</option>
-                                            <option value="date-desc">Tarih: En Uzak → En Yakın</option>
-                                            <option value="days-asc">Kalan Gün: En Az → En Çok</option>
-                                            <option value="symbol-asc">Hisse Kodu: A → Z</option>
-                                            <option value="symbol-desc">Hisse Kodu: Z → A</option>
-                                        </select>
+                            {/* İŞLEM GEÇMİŞİ ÖZET BÖLÜMÜ / YÖNLENDİRME KARTI (MADDE 14) */}
+                            <div className="p-4 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-blue-100 text-[#00008B] flex items-center justify-center">
+                                        <FileSpreadsheet className="w-4 h-4 text-blue-600" />
                                     </div>
-                                )}
+                                    <div>
+                                        <h4 className="font-extrabold text-[#00008B] text-xs">Resmi Finansal İşlem Geçmişi</h4>
+                                        <p className="text-[10px] text-slate-400 font-medium">Tüm AL, SAT ve Nakit hareketlerinizi detaylı inceleyin</p>
+                                    </div>
+                                </div>
+                                <Link
+                                    href="/dashboard/portfolio/transactions"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold text-xs rounded-xl transition-all shadow-sm shrink-0"
+                                >
+                                    İşlem Geçmişini Görüntüle <ChevronRight className="w-3.5 h-3.5" />
+                                </Link>
                             </div>
-
-                            {/* ODAK MODUNDA DOĞRUDAN TÜM PİYASA BİLANÇO TAKVİMİ LİSTESİ VE AKILLI SIRALAMA */}
-                            {isFocused ? (
-                                <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                                        <div className="relative flex-1 w-full">
-                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                            <input
-                                                type="text"
-                                                placeholder="Hisse Kodu (AKBNK, TUPRS) veya Şirket Adı (Akbank, Tüpraş) Ara..."
-                                                className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
-                                                value={allEarningsSearch}
-                                                onChange={(e) => setAllEarningsSearch(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ŞIK FINANSAL BİLANÇO TABLOSU & KIRMIZI 'BİLANÇO AÇIKLANMADI' ROZETİ / SAYFALAMA */}
-                                    <div className="overflow-x-auto rounded-2xl border border-slate-100">
-                                        <table className="w-full text-left border-collapse text-xs">
-                                            <thead>
-                                                <tr className="text-[10px] text-[#00008B]/60 uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/80">
-                                                    <th className="py-3.5 px-4">Hisse</th>
-                                                    <th className="py-3.5 px-4">Şirket Adı</th>
-                                                    <th className="py-3.5 px-4">Açıklanma Tarihi</th>
-                                                    <th className="py-3.5 px-4 text-right">Kalan Durum</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {paginatedEarnings.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={4} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen şirket bulunamadı.</td>
-                                                    </tr>
-                                                ) : (
-                                                    paginatedEarnings.map((item) => {
-                                                        const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
-                                                        const isNoEarnings = !item.isEarnings || item.earningsDate === "Bilanço Açıklanmadı";
-                                                        const isPast = item.daysLeft <= 0 && item.isEarnings;
-
-                                                        return (
-                                                            <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
-                                                                <td className="py-3.5 px-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
-                                                                        {isUserAsset && (
-                                                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[9px] border border-emerald-200/80 shadow-sm animate-pulse">
-                                                                                <span className="relative flex h-2 w-2">
-                                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                                                                </span>
-                                                                                PORTFÖYÜNÜZDE
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="py-3.5 px-4 text-slate-700 font-semibold">{item.companyName}</td>
-                                                                <td className="py-3.5 px-4">
-                                                                    <span className={cn(
-                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs whitespace-nowrap",
-                                                                        isNoEarnings
-                                                                            ? "bg-rose-50 text-rose-700 border-rose-200/80"
-                                                                            : isPast 
-                                                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/60" 
-                                                                                : "bg-blue-50 text-[#00008B] border-blue-200/50"
-                                                                    )}>
-                                                                        <Calendar className="w-3 h-3" />
-                                                                        {isNoEarnings ? "Bilanço Açıklanmadı" : item.earningsDate}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="py-3.5 px-4 text-right">
-                                                                    {isNoEarnings ? (
-                                                                        <span className="text-slate-400 font-bold">-</span>
-                                                                    ) : item.daysLeft > 0 ? (
-                                                                        <span className="text-blue-700 font-black text-xs bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl whitespace-nowrap">
-                                                                            {item.daysLeft} GÜN KALDI
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-emerald-700 font-black text-xs bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-xl">
-                                                                            AÇIKLANDI
-                                                                        </span>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* 10'ARLI GRUPLAR SAYFALAMA KONTROLLERİ (1, 2, 3, 4, 5...) */}
-                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50/80 border border-slate-100 rounded-2xl">
-                                        <span className="text-xs font-bold text-slate-500">
-                                            Gösterilen: {sortedFilteredAllEarnings.length > 0 ? (earningsPage - 1) * EARNINGS_ITEMS_PER_PAGE + 1 : 0} - {Math.min(earningsPage * EARNINGS_ITEMS_PER_PAGE, sortedFilteredAllEarnings.length)} / Toplam {sortedFilteredAllEarnings.length} Şirket
-                                        </span>
-
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <button
-                                                onClick={() => setEarningsPage(prev => Math.max(1, prev - 1))}
-                                                disabled={earningsPage === 1}
-                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs text-[#00008B] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 transition-all"
-                                            >
-                                                Önceki
-                                            </button>
-
-                                            {Array.from({ length: totalEarningsPages }, (_, i) => i + 1)
-                                                .filter(p => p === 1 || p === totalEarningsPages || Math.abs(p - earningsPage) <= 2)
-                                                .map((p, idx, arr) => (
-                                                    <React.Fragment key={p}>
-                                                        {idx > 0 && arr[idx - 1] !== p - 1 && (
-                                                            <span className="px-1 text-slate-400 font-bold">...</span>
-                                                        )}
-                                                        <button
-                                                            onClick={() => setEarningsPage(p)}
-                                                            className={cn(
-                                                                "w-8 h-8 rounded-xl font-black text-xs transition-all border",
-                                                                earningsPage === p 
-                                                                    ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
-                                                                    : "bg-white text-[#00008B] border-slate-200 hover:bg-blue-50"
-                                                            )}
-                                                        >
-                                                            {p}
-                                                        </button>
-                                                    </React.Fragment>
-                                                ))}
-
-                                            <button
-                                                onClick={() => setEarningsPage(prev => Math.min(totalEarningsPages, prev + 1))}
-                                                disabled={earningsPage === totalEarningsPages}
-                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-[#00008B] font-bold text-xs text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#0b2d82] transition-all shadow-sm"
-                                            >
-                                                Sonraki
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                /* SADECE YAKLAŞAN BİLANÇOLARA ÖZEL VARSAYILAN KISA LISTE */
-                                <div className="space-y-3">
-                                    {halkarzEarnings.length === 0 ? (
-                                        <p className="text-xs text-slate-400 py-4 text-center font-medium">Yaklaşan bilanço verisi yok.</p>
-                                    ) : (
-                                        halkarzEarnings.slice(0, 5).map((item) => {
-                                            const days = item.daysLeft;
-
-                                            return (
-                                                <div key={item.symbol} className="flex flex-col p-3 bg-slate-50/70 border border-slate-100 rounded-2xl text-xs gap-1.5 hover:bg-blue-50/40 transition-all">
-                                                    <div className="flex justify-between items-center">
-                                                        <div className="flex flex-col">
-                                                            <span className="font-bold text-[#00008B] text-sm">{item.symbol}</span>
-                                                            <span className="text-[9px] text-[#00008B]/40 font-bold uppercase tracking-wider">{item.companyName}</span>
-                                                        </div>
-                                                        <span className={cn("text-[10px] font-black px-2 py-0.5 rounded-full border whitespace-nowrap", days > 0 ? "bg-blue-50 text-blue-700 border-blue-200/50" : "bg-emerald-50 text-emerald-700 border-emerald-200/50")}>
-                                                            {days > 0 ? `${days} GÜN KALDI` : "AÇIKLANDI"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                );
-
-            case 'dividends':
-                return (
-                    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5 h-full flex flex-col justify-between">
-                        <div className="flex-1 flex flex-col justify-between">
-                            <div>
-                                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
-                                    <div className="flex items-center gap-2">
-                                        <Coins className="w-4 h-4 text-emerald-600" />
-                                        <h3 className="text-sm font-bold text-[#00008B] uppercase tracking-wider">
-                                            {isFocused ? "Tüm Piyasa Temettü Takvimi" : "Temettü Takvimim"}
-                                        </h3>
-                                    </div>
-                                    {isFocused && (
-                                        <div className="flex items-center gap-1.5 bg-blue-50/80 border border-blue-200/60 rounded-xl px-2.5 py-1.5 shadow-sm" onClick={(e) => e.stopPropagation()}>
-                                            <ArrowUpDown className="w-3.5 h-3.5 text-[#00008B]" />
-                                            <span className="text-[10px] font-bold text-[#00008B] uppercase hidden sm:inline">Sırala:</span>
-                                            <select
-                                                value={dividendSortOption}
-                                                onChange={(e) => setDividendSortOption(e.target.value as any)}
-                                                className="bg-transparent text-xs font-black text-[#00008B] focus:outline-none cursor-pointer"
-                                            >
-                                                <option value="amount-asc">Net Tutar: En Düşük → En Yüksek (₺/Pay)</option>
-                                                <option value="amount-desc">Net Tutar: En Yüksek → En Düşük (₺/Pay)</option>
-                                                <option value="yield-desc">Verim: En Yüksek → En Düşük (%)</option>
-                                                <option value="yield-asc">Verim: En Düşük → En Yüksek (%)</option>
-                                                <option value="date-asc">Tarih: En Yakın → En Uzak</option>
-                                                <option value="date-desc">Tarih: En Uzak → En Yakın</option>
-                                                <option value="symbol-asc">Hisse Kodu: A → Z</option>
-                                                <option value="symbol-desc">Hisse Kodu: Z → A</option>
-                                            </select>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* ODAK MODUNDA DOĞRUDAN TÜM PİYASA TEMETTÜ TAKVİMİ LİSTESİ VE AKILLI SIRALAMA */}
-                            {isFocused ? (
-                                <div className="space-y-4" onClick={(e) => e.stopPropagation()}>
-                                    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
-                                        <div className="relative flex-1 w-full">
-                                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                            <input
-                                                type="text"
-                                                placeholder="Hisse Kodu (THYAO, TAVHL) veya Şirket Adı (Türk Hava Yolları) Ara..."
-                                                className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold text-xs rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/10 focus:border-[#00008B] transition-all"
-                                                value={allDividendsSearch}
-                                                onChange={(e) => setAllDividendsSearch(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ŞIK FINANSAL TEMETTÜ TABLOSU & KIRMIZI 'TEMETTÜ VERİLMİYO' ROZETİ / SAYFALAMA */}
-                                    <div className="overflow-x-auto rounded-2xl border border-slate-100">
-                                        <table className="w-full text-left border-collapse text-xs">
-                                            <thead>
-                                                <tr className="text-[10px] text-[#00008B]/60 uppercase tracking-widest font-bold border-b border-slate-100 bg-slate-50/80">
-                                                    <th className="py-3.5 px-4">Hisse</th>
-                                                    <th className="py-3.5 px-4">Şirket Adı</th>
-                                                    <th className="py-3.5 px-4">Ödeme Tarihi</th>
-                                                    <th className="py-3.5 px-4">Net Tutar / Pay</th>
-                                                    <th className="py-3.5 px-4">Verim %</th>
-                                                    <th className="py-3.5 px-4 text-right">Portföy Kazancı</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {paginatedDividends.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={6} className="text-center py-6 text-slate-400 font-medium">Aramanızla eşleşen şirket bulunamadı.</td>
-                                                    </tr>
-                                                ) : (
-                                                    paginatedDividends.map((item) => {
-                                                        const isUserAsset = groupedAssets.some(g => g.symbol === item.symbol);
-                                                        const userAssetObj = groupedAssets.find(g => g.symbol === item.symbol);
-                                                        const userTotalNet = userAssetObj ? userAssetObj.totalQuantity * item.netAmountPerShare : 0;
-                                                        const displayDate = getDividendDisplayDate(item.paymentDate);
-                                                        const isNoDividend = !item.isDividend || displayDate === "Temettü Verilmiyor";
-                                                        const isUnannounced = displayDate === "Açıklanmadı";
-
-                                                        return (
-                                                            <tr key={item.symbol} className={cn("hover:bg-blue-50/40 transition-colors", isUserAsset && "bg-emerald-50/40 font-bold")}>
-                                                                <td className="py-3.5 px-4">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
-                                                                        {isUserAsset && (
-                                                                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-black text-[9px] border border-emerald-200/80 shadow-sm animate-pulse">
-                                                                                <span className="relative flex h-2 w-2">
-                                                                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                                                                                </span>
-                                                                                PORTFÖYÜNÜZDE
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td className="py-3.5 px-4 text-slate-700 font-semibold">{item.companyName}</td>
-                                                                <td className="py-3.5 px-4">
-                                                                    <span className={cn(
-                                                                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl font-bold border text-xs whitespace-nowrap",
-                                                                        isNoDividend
-                                                                            ? "bg-rose-50 text-rose-700 border-rose-200/80"
-                                                                            : isUnannounced 
-                                                                                ? "bg-amber-50 text-amber-700 border-amber-200/80" 
-                                                                                : "bg-blue-50 text-[#00008B] border-blue-200/50"
-                                                                    )}>
-                                                                        <Calendar className="w-3 h-3" />
-                                                                        {isNoDividend ? "Temettü Verilmiyor" : displayDate}
-                                                                    </span>
-                                                                </td>
-                                                                <td className="py-3.5 px-4 font-black text-[#00008B]">
-                                                                    {isNoDividend ? <span className="text-slate-400 font-bold">-</span> : item.netAmountFormatted}
-                                                                </td>
-                                                                <td className="py-3.5 px-4 font-black text-emerald-700">
-                                                                    {isNoDividend ? <span className="text-slate-400 font-bold">-</span> : `%${item.yieldPercent}`}
-                                                                </td>
-                                                                <td className="py-3.5 px-4 text-right">
-                                                                    {isUserAsset && userTotalNet > 0 ? (
-                                                                        <span className="text-emerald-800 font-black text-xs bg-emerald-100/80 border border-emerald-300 px-2.5 py-1 rounded-xl">
-                                                                            {formatCurrency(userTotalNet)}
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="text-slate-300 font-medium">-</span>
-                                                                    )}
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
-
-                                    {/* 10'ARLI GRUPLAR SAYFALAMA KONTROLLERİ (1, 2, 3, 4, 5...) */}
-                                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-slate-50/80 border border-slate-100 rounded-2xl">
-                                        <span className="text-xs font-bold text-slate-500">
-                                            Gösterilen: {sortedFilteredAllDividends.length > 0 ? (dividendPage - 1) * DIVIDEND_ITEMS_PER_PAGE + 1 : 0} - {Math.min(dividendPage * DIVIDEND_ITEMS_PER_PAGE, sortedFilteredAllDividends.length)} / Toplam {sortedFilteredAllDividends.length} Şirket
-                                        </span>
-
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <button
-                                                onClick={() => setDividendPage(prev => Math.max(1, prev - 1))}
-                                                disabled={dividendPage === 1}
-                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white font-bold text-xs text-[#00008B] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-50 transition-all"
-                                            >
-                                                Önceki
-                                            </button>
-
-                                            {Array.from({ length: totalDividendPages }, (_, i) => i + 1)
-                                                .filter(p => p === 1 || p === totalDividendPages || Math.abs(p - dividendPage) <= 2)
-                                                .map((p, idx, arr) => (
-                                                    <React.Fragment key={p}>
-                                                        {idx > 0 && arr[idx - 1] !== p - 1 && (
-                                                            <span className="px-1 text-slate-400 font-bold">...</span>
-                                                        )}
-                                                        <button
-                                                            onClick={() => setDividendPage(p)}
-                                                            className={cn(
-                                                                "w-8 h-8 rounded-xl font-black text-xs transition-all border",
-                                                                dividendPage === p 
-                                                                    ? "bg-[#00008B] text-white border-[#00008B] shadow-md" 
-                                                                    : "bg-white text-[#00008B] border-slate-200 hover:bg-blue-50"
-                                                            )}
-                                                        >
-                                                            {p}
-                                                        </button>
-                                                    </React.Fragment>
-                                                ))}
-
-                                            <button
-                                                onClick={() => setDividendPage(prev => Math.min(totalDividendPages, prev + 1))}
-                                                disabled={dividendPage === totalDividendPages}
-                                                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-[#00008B] font-bold text-xs text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#0b2d82] transition-all shadow-sm"
-                                            >
-                                                Sonraki
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                /* SADECE PORTFÖYDEKİ HİSSELERE ÖZEL VARSAYILAN KISA ESTETİK LİSTE (BİLANÇO İLE BİREBİR EŞİT DİKEY BOYUT) */
-                                <div className="flex-1 flex flex-col justify-around space-y-3 my-auto">
-                                    {displayedUserDividends.length === 0 ? (
-                                        <div className="p-6 text-center bg-slate-50/60 rounded-2xl border border-slate-100 my-auto">
-                                            <Coins className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                                            <p className="text-xs text-slate-500 font-medium">Portföyünüzdeki hisselere ait duyurulmuş temettü kararı bulunmuyor.</p>
-                                        </div>
-                                    ) : (
-                                        displayedUserDividends.map((item) => {
-                                            const displayDate = getDividendDisplayDate(item.paymentDate);
-                                            const isUnannounced = displayDate === "Açıklanmadı" || displayDate === "Temettü Verilmiyor";
-
-                                            return (
-                                                <div key={item.symbol} className="flex flex-col justify-between gap-2 p-3.5 rounded-2xl border bg-emerald-50/60 border-emerald-200/60 hover:bg-emerald-50 transition-all flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="flex flex-col">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="font-black text-[#00008B] text-sm">{item.symbol}</span>
-                                                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                                                    %{item.yieldPercent} Verim
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-[10px] text-slate-500 font-semibold line-clamp-1 mt-0.5">{item.companyName}</span>
-                                                        </div>
-                                                        <div className="text-right">
-                                                            <span className="text-emerald-700 font-black text-sm block">{formatCurrency(item.totalIncome)}</span>
-                                                            <span className="text-[9px] text-slate-400 font-bold uppercase">{item.userQuantity} Adet İçin Net</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex justify-between items-center text-[10px] mt-1 pt-2 border-t border-emerald-200/40">
-                                                        <div className={cn(
-                                                            "flex items-center gap-1 font-bold px-2 py-0.5 rounded-lg border",
-                                                            isUnannounced 
-                                                                ? "bg-amber-50 text-amber-700 border-amber-200/80" 
-                                                                : "bg-blue-50 text-[#00008B] border-blue-200/50"
-                                                        )}>
-                                                            <Calendar className="w-3 h-3" />
-                                                            <span>Tarih: {displayDate}</span>
-                                                        </div>
-                                                        <div className="text-slate-600 font-bold">
-                                                            Net: <span className="text-[#00008B] font-black">{item.netAmountFormatted}</span> / Pay
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </div>
                 );
@@ -2957,20 +2634,21 @@ export default function PortfolioPage() {
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 65/35 GRID) */
                     <>
-                        {/* SOL SÜTUN (%65 - 8/12 Cols) */}
+                        {/* SOL SÜTUN (~%70 - 8/12 Cols) */}
                         <div className="xl:col-span-8 space-y-8 order-2 xl:order-1">
-                            {renderWidgetCard('agenda')}
+                            {renderWidgetCard('performance')}
+                            {renderWidgetCard('dailyPnL')}
                             {renderWidgetCard('table')}
-                            {renderWidgetCard('correlation')}
+                            {renderWidgetCard('extremes')}
                         </div>
 
-                        {/* SAĞ SÜTUN (%35 - 4/12 Cols) */}
+                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols) */}
                         <div className="xl:col-span-4 space-y-6 order-1 xl:order-2">
+                            {renderWidgetCard('agenda')}
                             {renderWidgetCard('topGainers')}
                             {renderWidgetCard('topLosers')}
-                            {renderWidgetCard('quickSummary')}
                             {renderWidgetCard('distribution')}
-                            {renderWidgetCard('extremes')}
+                            {renderWidgetCard('quickSummary')}
                         </div>
                     </>
                 ) : (
