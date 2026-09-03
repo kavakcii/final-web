@@ -15,7 +15,12 @@ import {
     Globe2,
     Briefcase,
     Loader2,
-    Clock
+    Clock,
+    Search,
+    Filter,
+    X,
+    ArrowUpDown,
+    Check
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 
@@ -35,7 +40,16 @@ function CalendarContent() {
     const [economicEvents, setEconomicEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Sync URL search param ?type=... -> activeFilter state
+    // Temettü Özel Filtre & Arama State'leri
+    const [divSearch, setDivSearch] = useState<string>('');
+    const [divDateFilter, setDivDateFilter] = useState<'all' | 'today' | 'this-week' | 'this-month' | 'next-3-months'>('all');
+    const [divStatusFilter, setDivStatusFilter] = useState<'all' | 'upcoming' | 'completed'>('all');
+    const [divYieldFilter, setDivYieldFilter] = useState<'all' | '0-2' | '2-5' | '5plus'>('all');
+    const [divAmountFilter, setDivAmountFilter] = useState<'all' | 'low' | 'medium' | 'high'>('all');
+    const [divPortfolioOnly, setDivPortfolioOnly] = useState<boolean>(false);
+    const [divSort, setDivSort] = useState<'date-asc' | 'date-desc' | 'yield-desc' | 'yield-asc' | 'amount-desc' | 'name-asc' | 'name-desc'>('date-asc');
+
+    // Sync URL search params -> state (sayfa yüklenme ve URL değişiminde)
     useEffect(() => {
         const typeParam = searchParams ? (searchParams.get('type') || searchParams.get('focus')) : null;
         if (typeParam) {
@@ -52,9 +66,60 @@ function CalendarContent() {
                 setActiveFilter('all');
             }
         }
+
+        // Temettü parametrelerini oku
+        if (searchParams && (typeParam === 'dividend' || typeParam === 'dividends' || typeParam === 'temettu')) {
+            const s = searchParams.get('search') || '';
+            const d = searchParams.get('date') || 'all';
+            const st = searchParams.get('status') || 'all';
+            const y = searchParams.get('yield') || 'all';
+            const a = searchParams.get('amount') || 'all';
+            const p = searchParams.get('portfolio') === 'true';
+            const so = searchParams.get('sort') || 'date-asc';
+
+            setDivSearch(s);
+            setDivDateFilter(d as any);
+            setDivStatusFilter(st as any);
+            setDivYieldFilter(y as any);
+            setDivAmountFilter(a as any);
+            setDivPortfolioOnly(p);
+            setDivSort(so as any);
+        }
     }, [searchParams]);
 
-    // Handle Filter Select & Update URL
+    // Temettü URL Parametrelerini Güncelleme Yardımcısı
+    const updateDividendUrlParams = (newParams: Partial<{
+        search: string;
+        date: string;
+        status: string;
+        yield: string;
+        amount: string;
+        portfolio: boolean;
+        sort: string;
+    }>) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('type', 'dividend');
+
+        const s = newParams.search !== undefined ? newParams.search : divSearch;
+        const d = newParams.date !== undefined ? newParams.date : divDateFilter;
+        const st = newParams.status !== undefined ? newParams.status : divStatusFilter;
+        const y = newParams.yield !== undefined ? newParams.yield : divYieldFilter;
+        const a = newParams.amount !== undefined ? newParams.amount : divAmountFilter;
+        const p = newParams.portfolio !== undefined ? newParams.portfolio : divPortfolioOnly;
+        const so = newParams.sort !== undefined ? newParams.sort : divSort;
+
+        if (s) params.set('search', s); else params.delete('search');
+        if (d && d !== 'all') params.set('date', d); else params.delete('date');
+        if (st && st !== 'all') params.set('status', st); else params.delete('status');
+        if (y && y !== 'all') params.set('yield', y); else params.delete('yield');
+        if (a && a !== 'all') params.set('amount', a); else params.delete('amount');
+        if (p) params.set('portfolio', 'true'); else params.delete('portfolio');
+        if (so && so !== 'date-asc') params.set('sort', so); else params.delete('sort');
+
+        router.replace(`/dashboard/calendar?${params.toString()}`, { scroll: false });
+    };
+
+    // Filtre Seçimlerini İşleme ve URL Senkronizasyonu
     const handleFilterSelect = (filterId: 'all' | 'earnings' | 'dividends' | 'ipo' | 'economic') => {
         setActiveFilter(filterId);
         const typeMap: Record<string, string> = {
@@ -72,7 +137,7 @@ function CalendarContent() {
         }
     };
 
-    // Fetch Calendar Data
+    // Veri Çekimi
     useEffect(() => {
         let isMounted = true;
 
@@ -103,7 +168,7 @@ function CalendarContent() {
         return () => { isMounted = false; };
     }, []);
 
-    // Month Navigation Controls
+    // Ay Navigasyon Kontrolleri
     const handlePrevMonth = () => {
         const d = new Date(viewDate);
         d.setMonth(d.getMonth() - 1);
@@ -122,12 +187,12 @@ function CalendarContent() {
         setViewDate(today);
     };
 
-    // User's Portfolio Symbols
+    // Portföy Sembol Seti
     const portfolioSymbols = useMemo(() => {
         return new Set((myAssets || []).map((a: any) => (a.symbol || '').toUpperCase().replace(/\.IS$/, '')));
     }, [myAssets]);
 
-    // Portfolio Specific Events
+    // Portföye Özel Olaylar
     const portfolioEvents = useMemo(() => {
         if (portfolioSymbols.size === 0) return [];
         const list: any[] = [];
@@ -149,7 +214,189 @@ function CalendarContent() {
         return list;
     }, [portfolioSymbols, earnings, dividends]);
 
-    // Mini Calendar Grid Calculation
+    // Tarih Ayrıştırma Yardımcıları
+    const getItemTimestamp = (item: any): number => {
+        if (item.timestamp) return item.timestamp;
+        if (item.paymentDate) {
+            const parts = item.paymentDate.split('.');
+            if (parts.length === 3) {
+                return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+            }
+            return new Date(item.paymentDate).getTime() || 0;
+        }
+        return 0;
+    };
+
+    const getItemYield = (item: any): number => {
+        if (item.yieldPercent !== undefined && item.yieldPercent !== null) return Number(item.yieldPercent);
+        if (item.yield !== undefined && item.yield !== null) return Number(item.yield);
+        return 0;
+    };
+
+    const getItemAmount = (item: any): number => {
+        if (item.netAmountPerShare !== undefined && item.netAmountPerShare !== null) return Number(item.netAmountPerShare);
+        if (item.netAmount !== undefined && item.netAmount !== null) return Number(item.netAmount);
+        if (item.netAmountFormatted) {
+            const parsed = parseFloat(item.netAmountFormatted.replace('TL', '').replace(',', '.').trim());
+            if (!isNaN(parsed)) return parsed;
+        }
+        return 0;
+    };
+
+    // TEMETTÜ GELİŞMİŞ FİLTRELEME & SIRALAMA MANTIĞI
+    const filteredDividends = useMemo(() => {
+        let list = [...dividends];
+
+        // 1. Manuel Arama (Hisse Kodu veya Şirket Adı)
+        if (divSearch.trim()) {
+            const q = divSearch.trim().toLowerCase();
+            list = list.filter(item =>
+                (item.symbol || '').toLowerCase().includes(q) ||
+                (item.companyName || '').toLowerCase().includes(q)
+            );
+        }
+
+        // 2. Tarih Filtresi
+        const now = new Date();
+        if (divDateFilter !== 'all') {
+            list = list.filter(item => {
+                const ts = getItemTimestamp(item);
+                if (!ts) return false;
+                const itemDate = new Date(ts);
+                if (divDateFilter === 'today') {
+                    return itemDate.toDateString() === now.toDateString();
+                }
+                if (divDateFilter === 'this-week') {
+                    const diffTime = itemDate.getTime() - now.getTime();
+                    const diffDays = diffTime / (1000 * 3600 * 24);
+                    return diffDays >= -1 && diffDays <= 7;
+                }
+                if (divDateFilter === 'this-month') {
+                    return itemDate.getMonth() === now.getMonth() && itemDate.getFullYear() === now.getFullYear();
+                }
+                if (divDateFilter === 'next-3-months') {
+                    const diffTime = itemDate.getTime() - now.getTime();
+                    const diffDays = diffTime / (1000 * 3600 * 24);
+                    return diffDays >= 0 && diffDays <= 90;
+                }
+                return true;
+            });
+        }
+
+        // 3. Durum Filtresi (Yaklaşan / Gerçekleşen)
+        if (divStatusFilter !== 'all') {
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            list = list.filter(item => {
+                const ts = getItemTimestamp(item);
+                if (!ts) return true;
+                if (divStatusFilter === 'upcoming') {
+                    return ts >= todayStart;
+                } else if (divStatusFilter === 'completed') {
+                    return ts < todayStart;
+                }
+                return true;
+            });
+        }
+
+        // 4. Temettü Verimi Filtresi
+        if (divYieldFilter !== 'all') {
+            list = list.filter(item => {
+                const y = getItemYield(item);
+                if (divYieldFilter === '0-2') return y > 0 && y <= 2;
+                if (divYieldFilter === '2-5') return y > 2 && y <= 5;
+                if (divYieldFilter === '5plus') return y > 5;
+                return true;
+            });
+        }
+
+        // 5. Net Temettü Tutarı Filtresi
+        if (divAmountFilter !== 'all') {
+            list = list.filter(item => {
+                const amt = getItemAmount(item);
+                if (divAmountFilter === 'low') return amt > 0 && amt < 2;
+                if (divAmountFilter === 'medium') return amt >= 2 && amt <= 10;
+                if (divAmountFilter === 'high') return amt > 10;
+                return true;
+            });
+        }
+
+        // 6. Portföyümdekiler Filtresi
+        if (divPortfolioOnly) {
+            list = list.filter(item => {
+                const sym = (item.symbol || '').toUpperCase().replace(/\.IS$/, '');
+                return portfolioSymbols.has(sym);
+            });
+        }
+
+        // 8. Sıralama Mantığı
+        list.sort((a, b) => {
+            const tsA = getItemTimestamp(a);
+            const tsB = getItemTimestamp(b);
+            const yA = getItemYield(a);
+            const yB = getItemYield(b);
+            const amtA = getItemAmount(a);
+            const amtB = getItemAmount(b);
+
+            if (divSort === 'date-asc') return tsA - tsB;
+            if (divSort === 'date-desc') return tsB - tsA;
+            if (divSort === 'yield-desc') return yB - yA;
+            if (divSort === 'yield-asc') return yA - yB;
+            if (divSort === 'amount-desc') return amtB - amtA;
+            if (divSort === 'name-asc') return (a.companyName || '').localeCompare(b.companyName || '');
+            if (divSort === 'name-desc') return (b.companyName || '').localeCompare(a.companyName || '');
+            return 0;
+        });
+
+        return list;
+    }, [dividends, divSearch, divDateFilter, divStatusFilter, divYieldFilter, divAmountFilter, divPortfolioOnly, divSort, portfolioSymbols]);
+
+    // Aktif Filtre Chips Listesi
+    const activeChips = useMemo(() => {
+        const chips: { id: string; label: string; clear: () => void }[] = [];
+
+        if (divSearch.trim()) {
+            chips.push({ id: 'search', label: `Arama: "${divSearch}"`, clear: () => { setDivSearch(''); updateDividendUrlParams({ search: '' }); } });
+        }
+        if (divDateFilter !== 'all') {
+            const labels: Record<string, string> = {
+                today: 'Bugün',
+                'this-week': 'Bu Hafta',
+                'this-month': 'Bu Ay',
+                'next-3-months': 'Önümüzdeki 3 Ay'
+            };
+            chips.push({ id: 'date', label: `Tarih: ${labels[divDateFilter]}`, clear: () => { setDivDateFilter('all'); updateDividendUrlParams({ date: 'all' }); } });
+        }
+        if (divStatusFilter !== 'all') {
+            chips.push({ id: 'status', label: `Durum: ${divStatusFilter === 'upcoming' ? 'Yaklaşan' : 'Gerçekleşen'}`, clear: () => { setDivStatusFilter('all'); updateDividendUrlParams({ status: 'all' }); } });
+        }
+        if (divYieldFilter !== 'all') {
+            const labels: Record<string, string> = { '0-2': '%0–2', '2-5': '%2–5', '5plus': '%5+' };
+            chips.push({ id: 'yield', label: `Verim: ${labels[divYieldFilter]}`, clear: () => { setDivYieldFilter('all'); updateDividendUrlParams({ yield: 'all' }); } });
+        }
+        if (divAmountFilter !== 'all') {
+            const labels: Record<string, string> = { low: 'Düşük (<2 TL)', medium: 'Orta (2–10 TL)', high: 'Yüksek (>10 TL)' };
+            chips.push({ id: 'amount', label: `Tutar: ${labels[divAmountFilter]}`, clear: () => { setDivAmountFilter('all'); updateDividendUrlParams({ amount: 'all' }); } });
+        }
+        if (divPortfolioOnly) {
+            chips.push({ id: 'portfolio', label: 'Portföyümdekiler', clear: () => { setDivPortfolioOnly(false); updateDividendUrlParams({ portfolio: false }); } });
+        }
+
+        return chips;
+    }, [divSearch, divDateFilter, divStatusFilter, divYieldFilter, divAmountFilter, divPortfolioOnly]);
+
+    // Tüm Temettü Filtrelerini Temizle
+    const clearAllDividendFilters = () => {
+        setDivSearch('');
+        setDivDateFilter('all');
+        setDivStatusFilter('all');
+        setDivYieldFilter('all');
+        setDivAmountFilter('all');
+        setDivPortfolioOnly(false);
+        setDivSort('date-asc');
+        router.replace('/dashboard/calendar?type=dividend', { scroll: false });
+    };
+
+    // Sol Mini Takvim Grid Hesaplaması
     const monthCalendarGrid = useMemo(() => {
         const year = viewDate.getFullYear();
         const month = viewDate.getMonth();
@@ -191,15 +438,12 @@ function CalendarContent() {
         return grid;
     }, [viewDate]);
 
-    // Selected Day Agenda Events
+    // Seçili Günün Ajandası
     const selectedDayAgenda = useMemo(() => {
         const targetStr = selectedDate.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const targetParts = targetStr.split('.');
-        const targetIsoDate = `${targetParts[2]}-${targetParts[1]}-${targetParts[0]}`;
-
         const agendaList: any[] = [];
 
-        // Earnings
         if (activeFilter === 'all' || activeFilter === 'earnings') {
             earnings.forEach(e => {
                 if (e.earningsDate === targetStr || e.earningsDate?.includes(targetParts[0])) {
@@ -215,7 +459,6 @@ function CalendarContent() {
             });
         }
 
-        // Dividends
         if (activeFilter === 'all' || activeFilter === 'dividends') {
             dividends.forEach(d => {
                 if (d.paymentDate === targetStr || d.paymentDate?.includes(targetParts[0])) {
@@ -231,7 +474,6 @@ function CalendarContent() {
             });
         }
 
-        // IPOs
         if (activeFilter === 'all' || activeFilter === 'ipo') {
             ipos.forEach(ipo => {
                 agendaList.push({
@@ -245,7 +487,6 @@ function CalendarContent() {
             });
         }
 
-        // Economic Calendar
         if (activeFilter === 'all' || activeFilter === 'economic') {
             economicEvents.forEach(ev => {
                 if (ev.isToday || ev.dateFormatted?.includes(targetParts[0])) {
@@ -339,6 +580,276 @@ function CalendarContent() {
                     );
                 })}
             </div>
+
+            {/* TEMETTÜ MODU AKTİFSE: ÖZEL ARAMA VE GELİŞMİŞ FİLTRELEME BÖLÜMÜ */}
+            {activeFilter === 'dividends' && (
+                <div className="bg-gradient-to-b from-emerald-50/60 via-white to-white border border-emerald-100 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
+                    
+                    {/* Üst Başlık & Arama Çubuğu */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-emerald-100/60">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                                <Coins className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <h2 className="text-base font-black text-[#00008B]">Temettü Takvimi ve Filtreleme</h2>
+                                <p className="text-[11px] font-bold text-slate-400">Şirket adına, verime, tutara ve tarihe göre temettü araması yapın</p>
+                            </div>
+                        </div>
+
+                        {/* Manuel Arama Çubuğu */}
+                        <div className="relative w-full md:w-80">
+                            <Search className="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="text"
+                                value={divSearch}
+                                onChange={(e) => {
+                                    setDivSearch(e.target.value);
+                                    updateDividendUrlParams({ search: e.target.value });
+                                }}
+                                placeholder="Hisse Kodu veya Şirket Ara (örn: THYAO)..."
+                                className="w-full pl-9 pr-8 py-2 text-xs font-bold text-slate-800 bg-white border border-emerald-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-xs"
+                            />
+                            {divSearch && (
+                                <button
+                                    onClick={() => {
+                                        setDivSearch('');
+                                        updateDividendUrlParams({ search: '' });
+                                    }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Filtre Açılır Menüleri Izgarası */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs font-bold">
+                        
+                        {/* 1. Tarih Filtresi */}
+                        <div>
+                            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Tarih</label>
+                            <select
+                                value={divDateFilter}
+                                onChange={(e) => {
+                                    const val = e.target.value as any;
+                                    setDivDateFilter(val);
+                                    updateDividendUrlParams({ date: val });
+                                }}
+                                className="w-full p-2 bg-white border border-emerald-200/80 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            >
+                                <option value="all">Tüm Tarihler</option>
+                                <option value="today">Bugün</option>
+                                <option value="this-week">Bu Hafta</option>
+                                <option value="this-month">Bu Ay</option>
+                                <option value="next-3-months">Önümüzdeki 3 Ay</option>
+                            </select>
+                        </div>
+
+                        {/* 2. Durum Filtresi */}
+                        <div>
+                            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Durum</label>
+                            <select
+                                value={divStatusFilter}
+                                onChange={(e) => {
+                                    const val = e.target.value as any;
+                                    setDivStatusFilter(val);
+                                    updateDividendUrlParams({ status: val });
+                                }}
+                                className="w-full p-2 bg-white border border-emerald-200/80 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            >
+                                <option value="all">Tüm Durumlar</option>
+                                <option value="upcoming">Yaklaşan</option>
+                                <option value="completed">Gerçekleşen</option>
+                            </select>
+                        </div>
+
+                        {/* 3. Verim Filtresi */}
+                        <div>
+                            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Temettü Verimi</label>
+                            <select
+                                value={divYieldFilter}
+                                onChange={(e) => {
+                                    const val = e.target.value as any;
+                                    setDivYieldFilter(val);
+                                    updateDividendUrlParams({ yield: val });
+                                }}
+                                className="w-full p-2 bg-white border border-emerald-200/80 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            >
+                                <option value="all">Tüm Verimler</option>
+                                <option value="0-2">%0 – %2</option>
+                                <option value="2-5">%2 – %5</option>
+                                <option value="5plus">%5 ve Üzeri</option>
+                            </select>
+                        </div>
+
+                        {/* 4. Net Tutar Filtresi */}
+                        <div>
+                            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Net Tutar</label>
+                            <select
+                                value={divAmountFilter}
+                                onChange={(e) => {
+                                    const val = e.target.value as any;
+                                    setDivAmountFilter(val);
+                                    updateDividendUrlParams({ amount: val });
+                                }}
+                                className="w-full p-2 bg-white border border-emerald-200/80 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            >
+                                <option value="all">Tüm Tutarlar</option>
+                                <option value="low">Düşük (&lt; 2 TL)</option>
+                                <option value="medium">Orta (2 – 10 TL)</option>
+                                <option value="high">Yüksek (&gt; 10 TL)</option>
+                            </select>
+                        </div>
+
+                        {/* 5. Portföyımdekiler Butonu */}
+                        <div>
+                            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Portföy</label>
+                            <button
+                                onClick={() => {
+                                    const newVal = !divPortfolioOnly;
+                                    setDivPortfolioOnly(newVal);
+                                    updateDividendUrlParams({ portfolio: newVal });
+                                }}
+                                className={`w-full p-2 rounded-xl border transition-all flex items-center justify-center gap-1.5 ${
+                                    divPortfolioOnly
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                        : 'bg-white text-slate-700 border-emerald-200/80 hover:bg-emerald-50/50'
+                                }`}
+                            >
+                                <Briefcase className="w-3.5 h-3.5" />
+                                <span>Portföyümdekiler</span>
+                            </button>
+                        </div>
+
+                        {/* 6. Sıralama Seçeneği */}
+                        <div>
+                            <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1">Sıralama</label>
+                            <select
+                                value={divSort}
+                                onChange={(e) => {
+                                    const val = e.target.value as any;
+                                    setDivSort(val);
+                                    updateDividendUrlParams({ sort: val });
+                                }}
+                                className="w-full p-2 bg-white border border-emerald-200/80 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                            >
+                                <option value="date-asc">En Yakın Tarih</option>
+                                <option value="date-desc">En Uzak Tarih</option>
+                                <option value="yield-desc">En Yüksek Verim</option>
+                                <option value="yield-asc">En Düşük Verim</option>
+                                <option value="amount-desc">En Yüksek Net Tutar</option>
+                                <option value="name-asc">Şirket (A-Z)</option>
+                                <option value="name-desc">Şirket (Z-A)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Aktif Filtre Chip'leri Çubuğu */}
+                    {activeChips.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-emerald-100/60">
+                            <span className="text-[10px] font-extrabold text-slate-400 uppercase">Aktif Filtreler:</span>
+                            {activeChips.map(chip => (
+                                <span
+                                    key={chip.id}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-emerald-100/80 text-emerald-900 border border-emerald-200 shadow-2xs"
+                                >
+                                    <span>{chip.label}</span>
+                                    <button
+                                        onClick={chip.clear}
+                                        className="hover:bg-emerald-200/80 rounded-full p-0.5 transition-colors"
+                                        title="Filtreyi Kaldır"
+                                    >
+                                        <X className="w-3 h-3 text-emerald-800" />
+                                    </button>
+                                </span>
+                            ))}
+                            <button
+                                onClick={clearAllDividendFilters}
+                                className="text-xs font-extrabold text-rose-600 hover:text-rose-700 underline ml-2"
+                            >
+                                Filtreleri Temizle
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Temettü Sonuç Sayısı ve Liste Görünümü */}
+                    <div className="pt-2">
+                        <div className="flex items-center justify-between mb-3">
+                            <span className="text-xs font-black text-[#00008B]">
+                                Toplam {filteredDividends.length} Temettü Kaydı
+                            </span>
+                        </div>
+
+                        {loading ? (
+                            <div className="py-12 text-center text-xs font-bold text-slate-400">Temettü verileri yükleniyor...</div>
+                        ) : filteredDividends.length === 0 ? (
+                            <div className="py-12 bg-white rounded-2xl border border-dashed border-emerald-200 flex flex-col items-center justify-center gap-2 text-center">
+                                <Clock className="w-8 h-8 text-emerald-300" />
+                                <p className="text-sm font-black text-slate-700">Sonuç bulunamadı</p>
+                                <p className="text-xs text-slate-400 max-w-sm">
+                                    Seçtiğiniz filtre kriterlerine uygun temettü kaydı bulunamadı. Lütfen arama teriminizi veya filtrelerinizi değiştirin.
+                                </p>
+                                <button
+                                    onClick={clearAllDividendFilters}
+                                    className="mt-2 px-4 py-2 text-xs font-black text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all shadow-xs"
+                                >
+                                    Filtreleri Temizle
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {filteredDividends.map((item, idx) => {
+                                    const y = getItemYield(item);
+                                    const amt = getItemAmount(item);
+                                    const ts = getItemTimestamp(item);
+                                    const isUpcoming = ts >= new Date().setHours(0,0,0,0);
+
+                                    return (
+                                        <div key={idx} className="p-4 rounded-2xl bg-white border border-emerald-100 hover:border-emerald-300 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between space-y-3">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-emerald-100/70 border border-emerald-200 text-emerald-800 flex items-center justify-center font-black text-xs">
+                                                        {item.symbol?.substring(0, 3)}
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                        <span className="text-[11px] font-bold text-slate-500 line-clamp-1">{item.companyName}</span>
+                                                    </div>
+                                                </div>
+                                                <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
+                                                    isUpcoming ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-600 border-slate-200'
+                                                }`}>
+                                                    {isUpcoming ? 'Yaklaşan' : 'Gerçekleşen'}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-slate-400 block">Ödeme Tarihi</span>
+                                                    <span className="font-black text-slate-800">{item.paymentDate || 'Belirtilmedi'}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[10px] font-bold text-slate-400 block">Net Temettü</span>
+                                                    <span className="font-black text-emerald-700">{item.netAmountFormatted || (amt > 0 ? `${amt.toFixed(2)} TL` : 'Belirtilmedi')}</span>
+                                                </div>
+                                                {y > 0 && (
+                                                    <div>
+                                                        <span className="text-[10px] font-bold text-slate-400 block">Temettü Verimi</span>
+                                                        <span className="font-black text-emerald-800">%{y.toFixed(2)}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                </div>
+            )}
 
             {/* ANA TAKVİM ALANI: Sol Mini Takvim & Sağ Günün Ajandası */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
