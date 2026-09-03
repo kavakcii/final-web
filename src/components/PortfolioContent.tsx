@@ -291,7 +291,27 @@ export default function PortfolioPage() {
     const [isCashModalOpen, setIsCashModalOpen] = useState(false);
     const [cashActionType, setCashActionType] = useState<'DEPOSIT' | 'WITHDRAWAL'>('DEPOSIT');
     const [cashAmountInput, setCashAmountInput] = useState('');
+    const [cashDateInput, setCashDateInput] = useState(() => new Date().toISOString().split('T')[0]);
     const [isCashSubmitting, setIsCashSubmitting] = useState(false);
+
+    // BUY Modal State'leri (Alış İşlemi)
+    const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
+    const [buySymbol, setBuySymbol] = useState('');
+    const [buyType, setBuyType] = useState<Asset["type"]>("STOCK");
+    const [buyQuantity, setBuyQuantity] = useState('');
+    const [buyUnitPrice, setBuyUnitPrice] = useState('');
+    const [buyCommission, setBuyCommission] = useState('0');
+    const [buyDate, setBuyDate] = useState(() => new Date().toISOString().split('T')[0]);
+    const [isBuySubmitting, setIsBuySubmitting] = useState(false);
+
+    // SELL Modal State'leri (Satış İşlemi)
+    const [isSellModalOpen, setIsSellModalOpen] = useState(false);
+    const [sellTargetGroup, setSellTargetGroup] = useState<GroupedAsset | null>(null);
+    const [sellQuantity, setSellQuantity] = useState('');
+    const [sellUnitPrice, setSellUnitPrice] = useState('');
+    const [sellCommission, setSellCommission] = useState('0');
+    const [sellDate, setSellDate] = useState(() => new Date().toISOString().split('T')[0]);
+    const [isSellSubmitting, setIsSellSubmitting] = useState(false);
 
     const searchParams = useSearchParams();
     const focusQuery = searchParams ? searchParams.get("focus") : null;
@@ -941,8 +961,13 @@ export default function PortfolioPage() {
         if (newItemValues.symbol && newItemValues.quantity && newItemValues.avgCost) {
             try {
                 const quantity = Number(newItemValues.quantity);
-                const totalCost = Number(newItemValues.avgCost);
-                const unitCost = quantity > 0 ? Number((totalCost / quantity).toFixed(4)) : 0;
+                const unitCost = Number(newItemValues.avgCost);
+
+                if (isNaN(quantity) || quantity <= 0 || isNaN(unitCost) || unitCost <= 0) {
+                    setFeedback({ message: "Lütfen miktar ve birim maliyeti sıfırdan büyük giriniz.", type: 'error' });
+                    setTimeout(() => setFeedback(null), 3000);
+                    return;
+                }
 
                 await PortfolioService.addAsset({
                     symbol: newItemValues.symbol.toUpperCase(),
@@ -964,6 +989,186 @@ export default function PortfolioPage() {
             } finally {
                 setLoading(false);
             }
+        }
+    };
+
+    // Modal Açma Yardımcıları
+    const openBuyModal = (target: GroupedAsset | string) => {
+        if (typeof target === 'string') {
+            const sym = target.toUpperCase();
+            setBuySymbol(sym);
+            setBuyType('STOCK');
+            const p = prices[sym];
+            setBuyUnitPrice(p && p > 0 ? String(p) : '');
+        } else {
+            setBuySymbol(target.symbol);
+            setBuyType(target.type);
+            const p = prices[target.symbol] || target.avgCost;
+            setBuyUnitPrice(p && p > 0 ? String(p) : '');
+        }
+        setBuyQuantity('');
+        setBuyCommission('0');
+        setBuyDate(new Date().toISOString().split('T')[0]);
+        setIsBuyModalOpen(true);
+    };
+
+    const openSellModal = (group: GroupedAsset) => {
+        setSellTargetGroup(group);
+        setSellQuantity('');
+        const p = prices[group.symbol] || group.avgCost;
+        setSellUnitPrice(p && p > 0 ? String(p) : '');
+        setSellCommission('0');
+        setSellDate(new Date().toISOString().split('T')[0]);
+        setIsSellModalOpen(true);
+    };
+
+    // AL İşlemi Gönderme (BUY)
+    const handleExecuteBuy = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isBuySubmitting) return;
+
+        const q = parseFloat(buyQuantity.replace(',', '.'));
+        const p = parseFloat(buyUnitPrice.replace(',', '.'));
+        const c = parseFloat(buyCommission.replace(',', '.')) || 0;
+
+        if (isNaN(q) || q <= 0) {
+            setFeedback({ message: "Geçerli bir miktar giriniz.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3000);
+            return;
+        }
+
+        if (isNaN(p) || p <= 0) {
+            setFeedback({ message: "Geçerli bir alış fiyatı giriniz.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3000);
+            return;
+        }
+
+        const totalCost = (q * p) + c;
+        if (totalCost > cashBalance) {
+            setFeedback({ message: "Bu işlem için yeterli nakit bakiyesi bulunmuyor.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+            return;
+        }
+
+        try {
+            setIsBuySubmitting(true);
+            await PortfolioService.buyAsset({
+                symbol: buySymbol.toUpperCase().trim(),
+                type: buyType,
+                quantity: q,
+                avgCost: p,
+                dateAdded: buyDate
+            }, c, buyDate);
+
+            setIsBuyModalOpen(false);
+            setFeedback({ message: `${buySymbol.toUpperCase()} alış işlemi başarıyla kaydedildi.`, type: 'success' });
+            setTimeout(() => setFeedback(null), 3000);
+            await fetchPortfolioData();
+            refreshDashboardData();
+        } catch (error: any) {
+            console.error("BUY RPC Error:", error);
+            setFeedback({ message: error.message || "Alış işlemi gerçekleştirilemedi.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+        } finally {
+            setIsBuySubmitting(false);
+        }
+    };
+
+    // SAT İşlemi Gönderme (SELL)
+    const handleExecuteSell = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isSellSubmitting || !sellTargetGroup) return;
+
+        const q = parseFloat(sellQuantity.replace(',', '.'));
+        const p = parseFloat(sellUnitPrice.replace(',', '.'));
+        const c = parseFloat(sellCommission.replace(',', '.')) || 0;
+
+        if (isNaN(q) || q <= 0) {
+            setFeedback({ message: "Geçerli bir satış miktarı giriniz.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3000);
+            return;
+        }
+
+        if (q > sellTargetGroup.totalQuantity) {
+            setFeedback({ message: `Satılabilir miktardan fazlası girilemez. En fazla ${sellTargetGroup.totalQuantity} adet satabilirsiniz.`, type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+            return;
+        }
+
+        if (isNaN(p) || p <= 0) {
+            setFeedback({ message: "Geçerli bir satış fiyatı giriniz.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3000);
+            return;
+        }
+
+        const netProceeds = (q * p) - c;
+        if (netProceeds <= 0) {
+            setFeedback({ message: "Komisyon sonrası net satış geliri sıfırdan büyük olmalıdır.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+            return;
+        }
+
+        try {
+            setIsSellSubmitting(true);
+            const repAsset: Asset = sellTargetGroup.transactions[0] || {
+                id: '',
+                symbol: sellTargetGroup.symbol,
+                type: sellTargetGroup.type,
+                quantity: sellTargetGroup.totalQuantity,
+                avgCost: sellTargetGroup.avgCost,
+                dateAdded: new Date().toISOString()
+            };
+
+            await PortfolioService.sellAssetToCash(repAsset, q, p, c, sellDate);
+
+            setIsSellModalOpen(false);
+            setFeedback({ message: `${sellTargetGroup.symbol} satış işlemi başarıyla kaydedildi.`, type: 'success' });
+            setTimeout(() => setFeedback(null), 3000);
+            await fetchPortfolioData();
+            refreshDashboardData();
+        } catch (error: any) {
+            console.error("SELL RPC Error:", error);
+            setFeedback({ message: error.message || "Satış işlemi gerçekleştirilemedi.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+        } finally {
+            setIsSellSubmitting(false);
+        }
+    };
+
+    // Nakit İşlemi Gönderme (CASH DEPOSIT / WITHDRAW)
+    const handleExecuteCash = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isCashSubmitting) return;
+
+        const amount = parseFloat(cashAmountInput.replace(',', '.'));
+        if (isNaN(amount) || amount <= 0) {
+            setFeedback({ message: "Geçerli bir nakit tutarı giriniz.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3000);
+            return;
+        }
+
+        if (cashActionType === 'WITHDRAWAL' && amount > cashBalance) {
+            setFeedback({ message: "Çekilebilecek nakit bakiyesi yetersiz.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+            return;
+        }
+
+        try {
+            setIsCashSubmitting(true);
+            await PortfolioService.addCashTransaction(amount, cashActionType, cashDateInput);
+
+            setIsCashModalOpen(false);
+            setCashAmountInput('');
+            setFeedback({ message: "Nakit işlemi başarıyla kaydedildi.", type: 'success' });
+            setTimeout(() => setFeedback(null), 3000);
+            await fetchPortfolioData();
+            refreshDashboardData();
+        } catch (error: any) {
+            console.error("Cash RPC Error:", error);
+            setFeedback({ message: error.message || "Nakit işlemi gerçekleştirilemedi.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+        } finally {
+            setIsCashSubmitting(false);
         }
     };
 
@@ -1145,13 +1350,22 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
-                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs shadow-md shadow-[#00008B]/20 transition-all active:scale-95"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Varlık Ekle
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setIsCashModalOpen(true); }}
+                                        className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-extrabold rounded-2xl text-xs border border-emerald-200/60 shadow-sm transition-all active:scale-95"
+                                    >
+                                        <Coins className="w-4 h-4 text-emerald-600" />
+                                        Nakit İşlemleri
+                                    </button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#00008B] hover:bg-[#0b2d82] text-white font-bold rounded-2xl text-xs shadow-md shadow-[#00008B]/20 transition-all active:scale-95"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Varlık Tanımla
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="overflow-x-auto">
@@ -1219,11 +1433,25 @@ export default function PortfolioPage() {
                                                                     </div>
                                                                 </td>
                                                                 <td className="py-4 px-6 text-right">
-                                                                    <div className="flex items-center justify-end gap-1">
+                                                                    <div className="flex items-center justify-end gap-1.5 flex-wrap sm:flex-nowrap">
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); openBuyModal(group); }}
+                                                                            className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 font-extrabold text-xs border border-emerald-200/80 transition-all active:scale-95 flex items-center gap-1 shadow-sm"
+                                                                            title={`${group.symbol} varlık alımı yap`}
+                                                                        >
+                                                                            <Plus className="w-3.5 h-3.5" /> AL
+                                                                        </button>
+                                                                        <button 
+                                                                            onClick={(e) => { e.stopPropagation(); openSellModal(group); }}
+                                                                            className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-500 hover:text-white text-rose-700 font-extrabold text-xs border border-rose-200/80 transition-all active:scale-95 flex items-center gap-1 shadow-sm"
+                                                                            title={`${group.symbol} varlık satışı yap (Nakit Bakiyesine Aktarılır)`}
+                                                                        >
+                                                                            <TrendingDown className="w-3.5 h-3.5" /> SAT
+                                                                        </button>
                                                                         <button 
                                                                             onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }} 
-                                                                            className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-colors"
-                                                                            title={`${group.symbol} varlığını tümüyle sil`}
+                                                                            className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-rose-600 rounded-xl transition-colors"
+                                                                            title={`${group.symbol} varlığını sil (pozisyon kaydını kaldır)`}
                                                                         >
                                                                             <Trash2 className="w-4 h-4" />
                                                                         </button>
@@ -2822,11 +3050,11 @@ export default function PortfolioPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-2 block">Toplam Maliyet (₺)</label>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-2 block">Birim Maliyet (₺)</label>
                                         <input 
                                             type="number" 
                                             step="any"
-                                            placeholder="Maliyet" 
+                                            placeholder="Örn: 250.50" 
                                             className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold placeholder:text-[#00008B]/30 rounded-2xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-[#00008B]/20 focus:border-[#00008B] transition-all text-sm" 
                                             value={newItemValues.avgCost} 
                                             onChange={e => setNewItemValues({...newItemValues, avgCost: e.target.value})} 
@@ -2835,12 +3063,402 @@ export default function PortfolioPage() {
                                     </div>
                                 </div>
 
+                                {/* Canlı Toplam Maliyet Önizlemesi */}
+                                {(() => {
+                                    const q = parseFloat(newItemValues.quantity.replace(',', '.'));
+                                    const c = parseFloat(newItemValues.avgCost.replace(',', '.'));
+                                    const calculatedTotal = (!isNaN(q) && !isNaN(c) && q > 0 && c > 0) ? q * c : 0;
+                                    return calculatedTotal > 0 ? (
+                                        <div className="text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200/60 p-3.5 rounded-2xl flex justify-between items-center shadow-sm">
+                                            <span className="text-[#00008B]">Hesaplanan Toplam Maliyet:</span>
+                                            <span className="text-sm font-black text-emerald-700">
+                                                {calculatedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+                                            </span>
+                                        </div>
+                                    ) : null;
+                                })()}
+
                                 <button 
                                     type="submit" 
                                     disabled={loading}
                                     className="w-full py-4 bg-[#00008B] hover:bg-[#0b2d82] text-white font-black rounded-2xl shadow-lg shadow-[#00008B]/25 transition-all text-sm mt-4 flex items-center justify-center gap-2 active:scale-95 tracking-wide"
                                 >
                                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Varlık Ekle"}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* AL (BUY) TRANSACTION MODAL */}
+            <AnimatePresence>
+                {isBuyModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md" onClick={() => setIsBuyModalOpen(false)} />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-emerald-100 rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-emerald-950/20 text-[#00008B]">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-900/20">
+                                        <Plus className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#00008B] tracking-tight">AL — {buySymbol}</h2>
+                                        <span className="text-xs font-bold text-slate-400">Canlı Fiyat: {prices[buySymbol] ? formatCurrency(prices[buySymbol]) : '-'}</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsBuyModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            <form onSubmit={handleExecuteBuy} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Alınacak Adet</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            placeholder="100" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-sm" 
+                                            value={buyQuantity} 
+                                            onChange={e => setBuyQuantity(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Alış Fiyatı (₺)</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            placeholder="250.50" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-sm" 
+                                            value={buyUnitPrice} 
+                                            onChange={e => setBuyUnitPrice(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Komisyon (₺)</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            placeholder="0.00" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-sm" 
+                                            value={buyCommission} 
+                                            onChange={e => setBuyCommission(e.target.value)} 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">İşlem Tarihi</label>
+                                        <input 
+                                            type="date" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-xs" 
+                                            value={buyDate} 
+                                            onChange={e => setBuyDate(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* AL HESAPLAMA ÖZETİ */}
+                                {(() => {
+                                    const q = parseFloat(buyQuantity.replace(',', '.')) || 0;
+                                    const p = parseFloat(buyUnitPrice.replace(',', '.')) || 0;
+                                    const c = parseFloat(buyCommission.replace(',', '.')) || 0;
+                                    const gross = q * p;
+                                    const totalCost = gross + c;
+                                    const nextCash = cashBalance - totalCost;
+                                    const isInsufficient = totalCost > cashBalance && totalCost > 0;
+
+                                    return totalCost > 0 ? (
+                                        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 text-xs">
+                                            <div className="flex justify-between text-slate-500">
+                                                <span>Brüt Tutar:</span>
+                                                <span className="font-bold text-slate-700">{formatCurrency(gross)}</span>
+                                            </div>
+                                            {c > 0 && (
+                                                <div className="flex justify-between text-slate-500">
+                                                    <span>Komisyon Kesintisi:</span>
+                                                    <span className="font-bold text-slate-700">+{formatCurrency(c)}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between text-emerald-800 font-extrabold border-t border-slate-200 pt-2 text-sm">
+                                                <span>Toplam Maliyet:</span>
+                                                <span>{formatCurrency(totalCost)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-500 text-[11px] pt-1">
+                                                <span>İşlem Sonrası Nakit:</span>
+                                                <span className={cn("font-bold", isInsufficient ? "text-rose-600" : "text-emerald-700")}>
+                                                    {formatCurrency(nextCash)}
+                                                </span>
+                                            </div>
+                                            {isInsufficient && (
+                                                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-2.5 rounded-xl text-[11px] font-bold mt-2 text-center">
+                                                    Bu işlem için yeterli nakit bakiyesi bulunmuyor.
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null;
+                                })()}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={isBuySubmitting || (parseFloat(buyQuantity) * parseFloat(buyUnitPrice) > cashBalance)}
+                                    className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-emerald-900/20 transition-all text-sm mt-3 flex items-center justify-center gap-2 active:scale-95 tracking-wide"
+                                >
+                                    {isBuySubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : `${buySymbol} AL`}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* SAT (SELL) TRANSACTION MODAL */}
+            <AnimatePresence>
+                {isSellModalOpen && sellTargetGroup && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md" onClick={() => setIsSellModalOpen(false)} />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-rose-100 rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-rose-950/20 text-[#00008B]">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-900/20">
+                                        <TrendingDown className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#00008B] tracking-tight">SAT — {sellTargetGroup.symbol}</h2>
+                                        <span className="text-xs font-bold text-slate-400">Satılabilir Miktar: {sellTargetGroup.totalQuantity} adet</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsSellModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            <form onSubmit={handleExecuteSell} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Satılacak Adet</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            max={sellTargetGroup.totalQuantity}
+                                            placeholder={`En fazla ${sellTargetGroup.totalQuantity}`} 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 text-sm" 
+                                            value={sellQuantity} 
+                                            onChange={e => setSellQuantity(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Satış Fiyatı (₺)</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            placeholder="250.50" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 text-sm" 
+                                            value={sellUnitPrice} 
+                                            onChange={e => setSellUnitPrice(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Komisyon (₺)</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            placeholder="0.00" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 text-sm" 
+                                            value={sellCommission} 
+                                            onChange={e => setSellCommission(e.target.value)} 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">İşlem Tarihi</label>
+                                        <input 
+                                            type="date" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 text-xs" 
+                                            value={sellDate} 
+                                            onChange={e => setSellDate(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* SAT HESAPLAMA ÖZETİ */}
+                                {(() => {
+                                    const q = parseFloat(sellQuantity.replace(',', '.')) || 0;
+                                    const p = parseFloat(sellUnitPrice.replace(',', '.')) || 0;
+                                    const c = parseFloat(sellCommission.replace(',', '.')) || 0;
+                                    const gross = q * p;
+                                    const netProceeds = Math.max(0, gross - c);
+                                    const sellCostBasis = q * sellTargetGroup.avgCost;
+                                    const realizedPnl = netProceeds - sellCostBasis;
+                                    const nextCash = cashBalance + netProceeds;
+                                    const isQuantityExceeded = q > sellTargetGroup.totalQuantity;
+
+                                    return gross > 0 ? (
+                                        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 text-xs">
+                                            <div className="flex justify-between text-slate-500">
+                                                <span>Brüt Satış Tutarı:</span>
+                                                <span className="font-bold text-slate-700">{formatCurrency(gross)}</span>
+                                            </div>
+                                            {c > 0 && (
+                                                <div className="flex justify-between text-slate-500">
+                                                    <span>Komisyon Kesintisi:</span>
+                                                    <span className="font-bold text-rose-600">-{formatCurrency(c)}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between text-rose-800 font-extrabold border-t border-slate-200 pt-2 text-sm">
+                                                <span>Net Satış Geliri:</span>
+                                                <span>{formatCurrency(netProceeds)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-500 text-[11px]">
+                                                <span>Maliyet Bedeli:</span>
+                                                <span className="font-bold text-slate-600">{formatCurrency(sellCostBasis)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-600 font-extrabold text-[11px] pt-1">
+                                                <span>Tahmini Gerçekleşen K/Z:</span>
+                                                <span className={cn("font-black", realizedPnl >= 0 ? "text-emerald-700" : "text-rose-600")}>
+                                                    {realizedPnl >= 0 ? "+" : ""}{formatCurrency(realizedPnl)}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-500 text-[11px]">
+                                                <span>İşlem Sonrası Nakit:</span>
+                                                <span className="font-bold text-emerald-700">{formatCurrency(nextCash)}</span>
+                                            </div>
+                                            {isQuantityExceeded && (
+                                                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-2.5 rounded-xl text-[11px] font-bold mt-2 text-center">
+                                                    Satılabilir miktardan ({sellTargetGroup.totalQuantity} adet) fazlası satılamaz.
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null;
+                                })()}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={isSellSubmitting || parseFloat(sellQuantity) > sellTargetGroup.totalQuantity}
+                                    className="w-full py-4 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-rose-900/20 transition-all text-sm mt-3 flex items-center justify-center gap-2 active:scale-95 tracking-wide"
+                                >
+                                    {isSellSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : `${sellTargetGroup.symbol} SAT`}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* NAKİT YATIR / ÇEK MODALI (CASH TRANSACTIONS) */}
+            <AnimatePresence>
+                {isCashModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md" onClick={() => setIsCashModalOpen(false)} />
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-emerald-100 rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-emerald-950/20 text-[#00008B]">
+                            <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-md shadow-emerald-900/20">
+                                        <Coins className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#00008B] tracking-tight">Nakit İşlemleri</h2>
+                                        <span className="text-xs font-bold text-slate-400">Mevcut Bakiyeniz: {formatCurrency(cashBalance)}</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsCashModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                            </div>
+
+                            <form onSubmit={handleExecuteCash} className="space-y-4">
+                                <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCashActionType('DEPOSIT')}
+                                        className={cn(
+                                            "flex-1 py-2.5 rounded-xl font-black text-xs transition-all uppercase tracking-wider",
+                                            cashActionType === 'DEPOSIT'
+                                                ? "bg-emerald-600 text-white shadow-md"
+                                                : "text-slate-500 hover:text-[#00008B]"
+                                        )}
+                                    >
+                                        + Nakit Yatır
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCashActionType('WITHDRAWAL')}
+                                        className={cn(
+                                            "flex-1 py-2.5 rounded-xl font-black text-xs transition-all uppercase tracking-wider",
+                                            cashActionType === 'WITHDRAWAL'
+                                                ? "bg-rose-600 text-white shadow-md"
+                                                : "text-slate-500 hover:text-[#00008B]"
+                                        )}
+                                    >
+                                        - Nakit Çek
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">Tutar (₺)</label>
+                                        <input 
+                                            type="number" 
+                                            step="any"
+                                            placeholder="1000" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-sm" 
+                                            value={cashAmountInput} 
+                                            onChange={e => setCashAmountInput(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-extrabold text-[#00008B]/70 uppercase tracking-widest mb-1.5 block">İşlem Tarihi</label>
+                                        <input 
+                                            type="date" 
+                                            className="w-full bg-slate-50 border border-slate-200 text-[#00008B] font-bold rounded-2xl px-3 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 text-xs" 
+                                            value={cashDateInput} 
+                                            onChange={e => setCashDateInput(e.target.value)} 
+                                            required 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* NAKİT HESAPLAMA ÖZETİ */}
+                                {(() => {
+                                    const amt = parseFloat(cashAmountInput.replace(',', '.')) || 0;
+                                    const nextCash = cashActionType === 'DEPOSIT' ? cashBalance + amt : cashBalance - amt;
+                                    const isWithdrawExceeded = cashActionType === 'WITHDRAWAL' && amt > cashBalance;
+
+                                    return amt > 0 ? (
+                                        <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 space-y-2 text-xs">
+                                            <div className="flex justify-between text-slate-500">
+                                                <span>İşlem Türü:</span>
+                                                <span className="font-bold text-slate-700">{cashActionType === 'DEPOSIT' ? 'Nakit Yatırma' : 'Nakit Çekme'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-slate-500">
+                                                <span>Mevcut Nakit:</span>
+                                                <span className="font-bold text-slate-700">{formatCurrency(cashBalance)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[#00008B] font-extrabold border-t border-slate-200 pt-2 text-sm">
+                                                <span>İşlem Sonrası Nakit:</span>
+                                                <span className={cn(isWithdrawExceeded ? "text-rose-600" : "text-emerald-700")}>{formatCurrency(nextCash)}</span>
+                                            </div>
+                                            {isWithdrawExceeded && (
+                                                <div className="bg-rose-50 border border-rose-200 text-rose-700 p-2.5 rounded-xl text-[11px] font-bold mt-2 text-center">
+                                                    Çekilebilecek nakit bakiyesi yetersiz.
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : null;
+                                })()}
+
+                                <button 
+                                    type="submit" 
+                                    disabled={isCashSubmitting || (cashActionType === 'WITHDRAWAL' && parseFloat(cashAmountInput) > cashBalance)}
+                                    className="w-full py-4 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white font-black rounded-2xl shadow-lg shadow-emerald-950/20 transition-all text-sm mt-3 flex items-center justify-center gap-2 active:scale-95 tracking-wide"
+                                >
+                                    {isCashSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Nakit İşlemini Tamamla"}
                                 </button>
                             </form>
                         </motion.div>

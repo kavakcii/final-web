@@ -43,36 +43,48 @@ export const PortfolioService = {
 
     addAsset: async (asset: Omit<Asset, "id">) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("User not authenticated");
+            const { data, error } = await supabase.rpc('execute_stock_transaction', {
+                p_transaction_type: 'OPENING_BALANCE',
+                p_asset_id: null,
+                p_symbol: asset.symbol,
+                p_asset_type: asset.type,
+                p_quantity: asset.quantity,
+                p_unit_price: asset.avgCost,
+                p_transaction_date: asset.dateAdded || new Date().toISOString(),
+                p_commission_fee: 0,
+                p_tax_fee: 0
+            });
 
-            const { data, error } = await supabase
-                .from('user_portfolios')
-                .insert([
-                    {
-                        user_id: user.id,
-                        symbol: asset.symbol,
-                        asset_type: asset.type,
-                        quantity: asset.quantity,
-                        avg_cost: asset.avgCost,
-                        purchase_date: asset.dateAdded
-                    }
-                ])
-                .select()
-                .single();
+            if (error) throw new Error(error.message);
+            if (!data || !data.success) throw new Error("Varlık ekleme işlemi veritabanında başarısız oldu.");
 
-            if (error) throw error;
-
-            return {
-                id: data.id,
-                symbol: data.symbol,
-                type: data.asset_type as any,
-                quantity: Number(data.quantity),
-                avgCost: Number(data.avg_cost),
-                dateAdded: data.purchase_date
-            };
+            return data;
         } catch (error) {
-            console.error('Error adding asset:', error);
+            console.error('Error adding asset via RPC:', error);
+            throw error;
+        }
+    },
+
+    buyAsset: async (asset: Omit<Asset, "id">, commissionFee: number = 0, transactionDate?: string) => {
+        try {
+            const { data, error } = await supabase.rpc('execute_stock_transaction', {
+                p_transaction_type: 'BUY',
+                p_asset_id: null,
+                p_symbol: asset.symbol,
+                p_asset_type: asset.type,
+                p_quantity: asset.quantity,
+                p_unit_price: asset.avgCost,
+                p_transaction_date: transactionDate || asset.dateAdded || new Date().toISOString(),
+                p_commission_fee: commissionFee,
+                p_tax_fee: 0
+            });
+
+            if (error) throw new Error(error.message);
+            if (!data || !data.success) throw new Error("Alım işlemi veritabanında başarısız oldu.");
+
+            return data;
+        } catch (error) {
+            console.error('Error buying asset via RPC:', error);
             throw error;
         }
     },
@@ -127,81 +139,60 @@ export const PortfolioService = {
     },
 
     /**
-     * Manuel Nakit Ekleme (DEPOSIT) veya Nakit Çekimi (WITHDRAWAL) İşlemi
+     * Manuel Nakit Ekleme (DEPOSIT) veya Nakit Çekimi (WITHDRAWAL) İşlemi (Atomic RPC)
      */
-    addCashTransaction: async (amount: number, type: 'DEPOSIT' | 'WITHDRAWAL') => {
+    addCashTransaction: async (amount: number, type: 'DEPOSIT' | 'WITHDRAWAL', transactionDate?: string) => {
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Kullanıcı oturumu bulunamadı");
-
             if (amount <= 0) throw new Error("Geçerli bir tutar giriniz");
 
-            const assets = await PortfolioService.getAssets();
-            const existingCash = assets.find(a => a.type === "CASH" || a.symbol === "TRY_CASH" || a.symbol === "NAKİT");
+            const rpcType = type === 'DEPOSIT' ? 'CASH_DEPOSIT' : 'CASH_WITHDRAW';
 
-            const currentCashAmount = existingCash ? (existingCash.quantity * existingCash.avgCost) : 0;
+            const { data, error } = await supabase.rpc('execute_cash_transaction', {
+                p_transaction_type: rpcType,
+                p_amount: amount,
+                p_transaction_date: transactionDate || new Date().toISOString()
+            });
 
-            if (type === 'WITHDRAWAL' && amount > currentCashAmount) {
-                throw new Error(`Yetersiz nakit bakiye! Mevcut nakitiniz: ${currentCashAmount.toLocaleString('tr-TR')} ₺`);
-            }
+            if (error) throw new Error(error.message);
+            if (!data || !data.success) throw new Error("Nakit işlemi veritabanında başarısız oldu.");
 
-            const newCashAmount = type === 'DEPOSIT' 
-                ? currentCashAmount + amount 
-                : currentCashAmount - amount;
-
-            if (existingCash) {
-                if (newCashAmount <= 0) {
-                    await PortfolioService.removeAsset(existingCash.id);
-                } else {
-                    await PortfolioService.updateAsset(existingCash.id, {
-                        quantity: newCashAmount,
-                        avgCost: 1
-                    });
-                }
-            } else if (type === 'DEPOSIT') {
-                await PortfolioService.addAsset({
-                    symbol: "NAKİT",
-                    type: "CASH",
-                    quantity: amount,
-                    avgCost: 1,
-                    dateAdded: new Date().toISOString()
-                });
-            }
-
-            return newCashAmount;
+            return Number(data.new_cash_balance);
         } catch (error) {
-            console.error('Nakit işlem hatası:', error);
+            console.error('Nakit işlem RPC hatası:', error);
             throw error;
         }
     },
 
     /**
-     * Varlık Satışı (Satılan Tutar Otomatik Portföy Nakit Bakiyesine Aktarılır - Portföy Değeri Düşmez)
+     * Varlık Satışı (Atomic RPC: execute_stock_transaction - SELL)
      */
-    sellAssetToCash: async (asset: Asset, sellQuantity: number, sellUnitPrice: number) => {
+    sellAssetToCash: async (asset: Asset, sellQuantity: number, sellUnitPrice: number, commissionFee: number = 0, transactionDate?: string) => {
         try {
             if (sellQuantity <= 0 || sellQuantity > asset.quantity) {
                 throw new Error("Geçersiz satış miktarı");
             }
-
-            const totalProceeds = sellQuantity * sellUnitPrice; // Satıştan elde edilen toplam TL nakit
-
-            // 1. Satılan varlığın miktarını azalt veya pozisyonu tamamen kapat
-            const remainingQuantity = asset.quantity - sellQuantity;
-            if (remainingQuantity <= 0) {
-                await PortfolioService.removeAsset(asset.id);
-            } else {
-                await PortfolioService.updateAsset(asset.id, {
-                    quantity: remainingQuantity
-                });
+            if (sellUnitPrice <= 0) {
+                throw new Error("Geçersiz satış birim fiyatı");
             }
 
-            // 2. Elde edilen satılan tutarı otomatik Nakit Bakiyesine aktar (DEPOSIT)
-            await PortfolioService.addCashTransaction(totalProceeds, 'DEPOSIT');
+            const { data, error } = await supabase.rpc('execute_stock_transaction', {
+                p_transaction_type: 'SELL',
+                p_asset_id: asset.id,
+                p_symbol: asset.symbol,
+                p_asset_type: asset.type,
+                p_quantity: sellQuantity,
+                p_unit_price: sellUnitPrice,
+                p_transaction_date: transactionDate || new Date().toISOString(),
+                p_commission_fee: commissionFee,
+                p_tax_fee: 0
+            });
 
-            return totalProceeds;
+            if (error) throw new Error(error.message);
+            if (!data || !data.success) throw new Error("Varlık satışı veritabanında başarısız oldu.");
+
+            return Number(data.net_amount);
         } catch (error) {
-            console.error('Varlık satışı nakit aktarım hatası:', error);
+            console.error('Varlık satışı RPC hatası:', error);
             throw error;
         }
     },
