@@ -1438,25 +1438,70 @@ function CalendarContent() {
                                 <button onClick={clearAllEarningsFilters} className="px-4 py-2 text-xs font-black text-white bg-blue-600 rounded-xl">Filtreleri Temizle</button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredEarnings.map((item, idx) => (
-                                    <div key={idx} className="p-4 rounded-2xl bg-white border border-blue-100 flex flex-col justify-between space-y-3">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-blue-100/70 border border-blue-200 text-blue-800 flex items-center justify-center font-black text-xs">
-                                                    {item.symbol?.substring(0, 3)}
-                                                </div>
-                                                <div>
-                                                    <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
-                                                    <span className="text-[11px] font-bold text-slate-500 line-clamp-1">{item.companyName}</span>
-                                                </div>
-                                            </div>
-                                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md border bg-blue-50 text-blue-700 border-blue-200">
-                                                {item.earningsDate || '2026/1Ç'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="space-y-3">
+                                <div className="overflow-x-auto scrollbar-none bg-white rounded-2xl border border-blue-100 p-2 shadow-2xs">
+                                    <table className="w-full text-left border-collapse text-xs font-bold">
+                                        <thead>
+                                            <tr className="border-b border-blue-100 text-[10px] font-black text-slate-400 uppercase bg-blue-50/40">
+                                                <th className="py-3 px-3.5">Hisse / Şirket</th>
+                                                <th className="py-3 px-3.5">Bilanço Dönemi</th>
+                                                <th className="py-3 px-3.5">Açıklanma Tarihi</th>
+                                                <th className="py-3 px-3.5">Kalan Süre</th>
+                                                <th className="py-3 px-3.5">Durum</th>
+                                                <th className="py-3 px-3.5 text-right">Hatırlatıcı</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-blue-100/60">
+                                            {paginatedEarnings.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
+                                                    <td className="py-3 px-3.5">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-8 h-8 rounded-xl bg-blue-100/80 border border-blue-200 text-blue-800 flex items-center justify-center font-black text-xs shrink-0">
+                                                                {item.symbol?.substring(0, 3)}
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                                <span className="text-[11px] font-bold text-slate-500 line-clamp-1 max-w-[220px]" title={item.companyName}>
+                                                                    {item.companyName}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap">
+                                                        <span className="text-[10px] font-extrabold text-blue-800 bg-blue-100/70 border border-blue-200 px-2 py-0.5 rounded-md">
+                                                            2026/1Ç
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap text-slate-700 font-bold">
+                                                        {item.earningsDate || 'Belirtilmedi'}
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap text-slate-500 font-semibold">
+                                                        {item.daysLeft !== undefined && item.daysLeft > 0 ? `${item.daysLeft} gün kaldı` : 'Yakında'}
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap">
+                                                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md border bg-blue-50 text-blue-700 border-blue-200">
+                                                            Bekleniyor
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                                                        <button title="Hatırlatıcı Ekle" className="p-1.5 text-slate-400 hover:text-blue-700 hover:bg-blue-100/60 rounded-lg transition-all">
+                                                            <Bell className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <TablePagination
+                                    currentPage={earnPage}
+                                    totalPages={earnTotalPages}
+                                    totalItems={filteredEarnings.length}
+                                    itemsPerPage={ITEMS_PER_PAGE}
+                                    onPageChange={setEarnPage}
+                                    colorScheme="blue"
+                                />
                             </div>
                         )}
                     </div>
@@ -1570,20 +1615,64 @@ function CalendarContent() {
                                 <button onClick={clearAllIpoFilters} className="px-4 py-2 text-xs font-black text-white bg-purple-600 rounded-xl">Filtreleri Temizle</button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                {filteredIpos.map((item, idx) => (
-                                    <div key={idx} className="p-4 rounded-2xl bg-white border border-purple-100 flex flex-col justify-between space-y-3">
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
-                                                <span className="text-[11px] font-bold text-slate-500 line-clamp-1">{item.companyName}</span>
-                                            </div>
-                                            <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md border bg-purple-50 text-purple-700 border-purple-200">
-                                                {item.status || 'Talep Toplama'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="space-y-3">
+                                <div className="overflow-x-auto scrollbar-none bg-white rounded-2xl border border-purple-100 p-2 shadow-2xs">
+                                    <table className="w-full text-left border-collapse text-xs font-bold">
+                                        <thead>
+                                            <tr className="border-b border-purple-100 text-[10px] font-black text-slate-400 uppercase bg-purple-50/40">
+                                                <th className="py-3 px-3.5">Hisse / Şirket</th>
+                                                <th className="py-3 px-3.5">Talep Toplama Tarihleri</th>
+                                                <th className="py-3 px-3.5">Halka Arz Fiyatı</th>
+                                                <th className="py-3 px-3.5">Durum</th>
+                                                <th className="py-3 px-3.5 text-right">Hatırlatıcı</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-purple-100/60">
+                                            {paginatedIpos.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-purple-50/50 transition-colors">
+                                                    <td className="py-3 px-3.5">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-8 h-8 rounded-xl bg-purple-100/80 border border-purple-200 text-purple-800 flex items-center justify-center font-black text-xs shrink-0">
+                                                                {item.symbol?.substring(0, 3)}
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                                <span className="text-[11px] font-bold text-slate-500 line-clamp-1 max-w-[220px]" title={item.companyName}>
+                                                                    {item.companyName}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap text-slate-700 font-bold">
+                                                        {item.dateRange || 'Yakında'}
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap font-black text-purple-700">
+                                                        {item.price ? `${item.price} TL` : 'Belirlenmedi'}
+                                                    </td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap">
+                                                        <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-md border bg-purple-50 text-purple-700 border-purple-200">
+                                                            {item.status || 'Talep Toplama'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                                                        <button title="Hatırlatıcı Ekle" className="p-1.5 text-slate-400 hover:text-purple-700 hover:bg-purple-100/60 rounded-lg transition-all">
+                                                            <Bell className="w-4 h-4" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <TablePagination
+                                    currentPage={ipoPage}
+                                    totalPages={ipoTotalPages}
+                                    totalItems={filteredIpos.length}
+                                    itemsPerPage={ITEMS_PER_PAGE}
+                                    onPageChange={setIpoPage}
+                                    colorScheme="purple"
+                                />
                             </div>
                         )}
                     </div>
@@ -1698,47 +1787,63 @@ function CalendarContent() {
                                 <button onClick={clearAllEconomicFilters} className="px-4 py-2 text-xs font-black text-white bg-amber-600 rounded-xl">Filtreleri Temizle</button>
                             </div>
                         ) : (
-                            <div className="overflow-x-auto scrollbar-none bg-white rounded-2xl border border-amber-100 p-2">
-                                <table className="w-full text-left border-collapse text-xs font-bold">
-                                    <thead>
-                                        <tr className="border-b border-amber-100 text-[10px] font-black text-slate-400 uppercase">
-                                            <th className="py-2.5 px-3">Tarih / Saat</th>
-                                            <th className="py-2.5 px-3">Ülke</th>
-                                            <th className="py-2.5 px-3">Veri</th>
-                                            <th className="py-2.5 px-3">Önceki</th>
-                                            <th className="py-2.5 px-3">Beklenti</th>
-                                            <th className="py-2.5 px-3">Açıklanan</th>
-                                            <th className="py-2.5 px-3">Önem</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-amber-100/50">
-                                        {filteredEconomicEvents.map((item, idx) => (
-                                            <tr key={idx} className="hover:bg-amber-50/40">
-                                                <td className="py-2.5 px-3 text-[#00008B]">{item.dateFormatted || 'Bugün'} {item.time || '15:30'}</td>
-                                                <td className="py-2.5 px-3 font-black text-slate-700">{item.country || 'USD'}</td>
-                                                <td className="py-2.5 px-3 text-slate-800">{item.event}</td>
-                                                <td className="py-2.5 px-3 text-slate-500">{item.previous || '—'}</td>
-                                                <td className="py-2.5 px-3 text-slate-700">{item.forecast || '—'}</td>
-                                                <td className="py-2.5 px-3 text-amber-700 font-black">{item.actual || '—'}</td>
-                                                <td className="py-2.5 px-3">
-                                                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
-                                                        item.impact === 'Yüksek' || item.impact === 3 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-100/80 text-amber-800 border-amber-200'
-                                                    }`}>
-                                                        {item.impact === 3 ? 'Yüksek' : 'Orta'}
-                                                    </span>
-                                                </td>
+                            <div className="space-y-3">
+                                <div className="overflow-x-auto scrollbar-none bg-white rounded-2xl border border-amber-100 p-2 shadow-2xs">
+                                    <table className="w-full text-left border-collapse text-xs font-bold">
+                                        <thead>
+                                            <tr className="border-b border-amber-100 text-[10px] font-black text-slate-400 uppercase bg-amber-50/40">
+                                                <th className="py-3 px-3.5">Tarih / Saat</th>
+                                                <th className="py-3 px-3.5">Ülke</th>
+                                                <th className="py-3 px-3.5">Veri</th>
+                                                <th className="py-3 px-3.5">Önceki</th>
+                                                <th className="py-3 px-3.5">Beklenti</th>
+                                                <th className="py-3 px-3.5">Açıklanan</th>
+                                                <th className="py-3 px-3.5">Önem</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-amber-100/50">
+                                            {paginatedEconomicEvents.map((item, idx) => (
+                                                <tr key={idx} className="hover:bg-amber-50/40 transition-colors">
+                                                    <td className="py-3 px-3.5 text-[#00008B] whitespace-nowrap">{item.dateFormatted || 'Bugün'} {item.time || '15:30'}</td>
+                                                    <td className="py-3 px-3.5 font-black text-slate-700 whitespace-nowrap">{item.country || 'USD'}</td>
+                                                    <td className="py-3 px-3.5 text-slate-800">{item.event}</td>
+                                                    <td className="py-3 px-3.5 text-slate-500 whitespace-nowrap">{item.previous || '—'}</td>
+                                                    <td className="py-3 px-3.5 text-slate-700 whitespace-nowrap">{item.forecast || '—'}</td>
+                                                    <td className="py-3 px-3.5 text-amber-700 font-black whitespace-nowrap">{item.actual || '—'}</td>
+                                                    <td className="py-3 px-3.5 whitespace-nowrap">
+                                                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
+                                                            item.impact === 'Yüksek' || item.impact === 3 ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-100/80 text-amber-800 border-amber-200'
+                                                        }`}>
+                                                            {item.impact === 3 ? 'Yüksek' : 'Orta'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <TablePagination
+                                    currentPage={ecoPage}
+                                    totalPages={ecoTotalPages}
+                                    totalItems={filteredEconomicEvents.length}
+                                    itemsPerPage={ITEMS_PER_PAGE}
+                                    onPageChange={setEcoPage}
+                                    colorScheme="amber"
+                                />
                             </div>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* ANA TAKVİM ALANI: Sol Mini Takvim & Sağ Günün Ajandası */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* ================================================= */}
+            {/* GENEL TAKVİM ÖZET GÖRÜNÜMÜ (SADECE TÜMÜ SEÇİLİYKEN) */}
+            {/* ================================================= */}
+            {activeFilter === 'all' && (
+                <>
+                    {/* ANA TAKVİM ALANI: Sol Mini Takvim & Sağ Günün Ajandası */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 
                 {/* Sol: Mini Takvim */}
                 <div className="lg:col-span-5 bg-white border border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
@@ -2173,6 +2278,8 @@ function CalendarContent() {
                 </div>
 
             </div>
+                </>
+            )}
 
         </div>
     );
