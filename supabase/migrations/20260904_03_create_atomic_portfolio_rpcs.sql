@@ -275,8 +275,7 @@ BEGIN
         IF v_cash_id IS NULL THEN
             v_new_cash := p_amount;
             INSERT INTO public.user_portfolios (user_id, symbol, asset_type, quantity, avg_cost, purchase_date)
-            VALUES (v_user_id, 'NAKİT', 'CASH', p_amount, 1.0000, p_transaction_date)
-            ON CONFLICT (user_id, symbol, asset_type) DO UPDATE SET quantity = public.user_portfolios.quantity + EXCLUDED.quantity;
+            VALUES (v_user_id, 'NAKİT', 'CASH', p_amount, 1.0000, p_transaction_date);
         ELSE
             v_new_cash := v_current_cash + p_amount;
             UPDATE public.user_portfolios up SET quantity = v_new_cash WHERE up.id = v_cash_id;
