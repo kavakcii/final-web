@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
     Calendar as CalendarIcon,
     ChevronLeft,
@@ -12,17 +13,17 @@ import {
     Coins,
     Sparkles,
     Globe2,
-    ArrowUpRight,
     Briefcase,
     Loader2,
-    CheckCircle2,
-    Clock,
-    AlertCircle
+    Clock
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 
-export default function CalendarPage() {
+function CalendarContent() {
     const { myAssets = [] } = useUser();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [viewDate, setViewDate] = useState<Date>(new Date());
     const [activeFilter, setActiveFilter] = useState<'all' | 'earnings' | 'dividends' | 'ipo' | 'economic'>('all');
@@ -33,6 +34,43 @@ export default function CalendarPage() {
     const [ipos, setIpos] = useState<any[]>([]);
     const [economicEvents, setEconomicEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    // Sync URL search param ?type=... -> activeFilter state
+    useEffect(() => {
+        const typeParam = searchParams ? (searchParams.get('type') || searchParams.get('focus')) : null;
+        if (typeParam) {
+            const p = typeParam.toLowerCase();
+            if (p === 'dividend' || p === 'dividends' || p === 'temettu') {
+                setActiveFilter('dividends');
+            } else if (p === 'earnings' || p === 'bilanco') {
+                setActiveFilter('earnings');
+            } else if (p === 'ipo' || p === 'halka-arz') {
+                setActiveFilter('ipo');
+            } else if (p === 'economic' || p === 'ekonomik') {
+                setActiveFilter('economic');
+            } else if (p === 'all') {
+                setActiveFilter('all');
+            }
+        }
+    }, [searchParams]);
+
+    // Handle Filter Select & Update URL
+    const handleFilterSelect = (filterId: 'all' | 'earnings' | 'dividends' | 'ipo' | 'economic') => {
+        setActiveFilter(filterId);
+        const typeMap: Record<string, string> = {
+            dividends: 'dividend',
+            earnings: 'earnings',
+            ipo: 'ipo',
+            economic: 'economic',
+            all: 'all'
+        };
+        const targetType = typeMap[filterId];
+        if (targetType === 'all') {
+            router.replace('/dashboard/calendar', { scroll: false });
+        } else {
+            router.replace(`/dashboard/calendar?type=${targetType}`, { scroll: false });
+        }
+    };
 
     // Fetch Calendar Data
     useEffect(() => {
@@ -118,14 +156,12 @@ export default function CalendarPage() {
         const firstDayOfMonth = new Date(year, month, 1);
         const lastDayOfMonth = new Date(year, month + 1, 0);
 
-        // Day of week index (Monday = 0, Sunday = 6)
         let firstDayIndex = firstDayOfMonth.getDay() - 1;
-        if (firstDayIndex === -1) firstDayIndex = 6; // Sunday
+        if (firstDayIndex === -1) firstDayIndex = 6;
 
         const daysInMonth = lastDayOfMonth.getDate();
         const grid: { date: Date; isCurrentMonth: boolean; dayNum: number }[] = [];
 
-        // Previous month padding
         const prevMonthLastDay = new Date(year, month, 0).getDate();
         for (let i = firstDayIndex - 1; i >= 0; i--) {
             grid.push({
@@ -135,7 +171,6 @@ export default function CalendarPage() {
             });
         }
 
-        // Current month days
         for (let d = 1; d <= daysInMonth; d++) {
             grid.push({
                 date: new Date(year, month, d),
@@ -144,7 +179,6 @@ export default function CalendarPage() {
             });
         }
 
-        // Next month padding (to fill 35 or 42 cells)
         const remaining = 35 - grid.length > 0 ? 35 - grid.length : 42 - grid.length;
         for (let i = 1; i <= remaining; i++) {
             grid.push({
@@ -160,7 +194,7 @@ export default function CalendarPage() {
     // Selected Day Agenda Events
     const selectedDayAgenda = useMemo(() => {
         const targetStr = selectedDate.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        const targetParts = targetStr.split('.'); // [DD, MM, YYYY]
+        const targetParts = targetStr.split('.');
         const targetIsoDate = `${targetParts[2]}-${targetParts[1]}-${targetParts[0]}`;
 
         const agendaList: any[] = [];
@@ -294,7 +328,7 @@ export default function CalendarPage() {
                     return (
                         <button
                             key={tab.id}
-                            onClick={() => setActiveFilter(tab.id as any)}
+                            onClick={() => handleFilterSelect(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black rounded-2xl border transition-all whitespace-nowrap shadow-xs ${
                                 isActive ? tab.activeStyle : tab.inactiveStyle
                             }`}
@@ -351,7 +385,6 @@ export default function CalendarPage() {
                                         }`}
                                     >
                                         <span>{cell.dayNum}</span>
-                                        {/* Dot Indicator */}
                                         {(cell.dayNum % 3 === 0 && cell.isCurrentMonth) && (
                                             <span className={`w-1 h-1 rounded-full absolute bottom-1 ${isSelected ? 'bg-white' : 'bg-[#00008B]'}`} />
                                         )}
@@ -483,7 +516,7 @@ export default function CalendarPage() {
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Bilanço Takvimi</h3>
                             </div>
-                            <Link href="/dashboard/portfolio?focus=earnings" className="text-[10px] font-extrabold text-blue-600 hover:underline">
+                            <Link href="/dashboard/calendar?type=earnings" onClick={(e) => { e.preventDefault(); handleFilterSelect('earnings'); }} className="text-[10px] font-extrabold text-blue-600 hover:underline">
                                 Tümünü Gör
                             </Link>
                         </div>
@@ -518,7 +551,7 @@ export default function CalendarPage() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/portfolio?focus=earnings" className="mt-4 pt-3 border-t border-blue-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-blue-600 transition-colors">
+                    <Link href="/dashboard/calendar?type=earnings" onClick={(e) => { e.preventDefault(); handleFilterSelect('earnings'); }} className="mt-4 pt-3 border-t border-blue-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-blue-600 transition-colors">
                         Tüm Bilanço Takvimi →
                     </Link>
                 </div>
@@ -533,7 +566,7 @@ export default function CalendarPage() {
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Temettü Takvimi</h3>
                             </div>
-                            <Link href="/dashboard/portfolio?focus=dividends" className="text-[10px] font-extrabold text-emerald-600 hover:underline">
+                            <Link href="/dashboard/calendar?type=dividend" onClick={(e) => { e.preventDefault(); handleFilterSelect('dividends'); }} className="text-[10px] font-extrabold text-emerald-600 hover:underline">
                                 Tümünü Gör
                             </Link>
                         </div>
@@ -570,7 +603,7 @@ export default function CalendarPage() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/portfolio?focus=dividends" className="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-emerald-600 transition-colors">
+                    <Link href="/dashboard/calendar?type=dividend" onClick={(e) => { e.preventDefault(); handleFilterSelect('dividends'); }} className="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-emerald-600 transition-colors">
                         Tüm Temettü Takvimi →
                     </Link>
                 </div>
@@ -585,7 +618,9 @@ export default function CalendarPage() {
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Halka Arz Takvimi</h3>
                             </div>
-                            <span className="text-[10px] font-bold text-purple-600">Timeline</span>
+                            <Link href="/dashboard/calendar?type=ipo" onClick={(e) => { e.preventDefault(); handleFilterSelect('ipo'); }} className="text-[10px] font-extrabold text-purple-600 hover:underline">
+                                Tümünü Gör
+                            </Link>
                         </div>
 
                         {loading ? (
@@ -596,7 +631,6 @@ export default function CalendarPage() {
                             <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-purple-200">
                                 {ipos.slice(0, 4).map((item, idx) => (
                                     <div key={idx} className="relative flex items-center justify-between p-2 rounded-2xl bg-purple-50/40 border border-purple-100/70 hover:bg-purple-100/40 transition-all">
-                                        {/* Timeline Dot */}
                                         <div className="absolute -left-[19px] w-3 h-3 rounded-full bg-purple-600 ring-4 ring-purple-100" />
                                         
                                         <div>
@@ -617,7 +651,7 @@ export default function CalendarPage() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/data" className="mt-4 pt-3 border-t border-purple-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-purple-600 transition-colors">
+                    <Link href="/dashboard/calendar?type=ipo" onClick={(e) => { e.preventDefault(); handleFilterSelect('ipo'); }} className="mt-4 pt-3 border-t border-purple-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-purple-600 transition-colors">
                         Tüm Halka Arz Takvimi →
                     </Link>
                 </div>
@@ -635,7 +669,7 @@ export default function CalendarPage() {
                             <p className="text-[10px] font-bold text-slate-400">Küresel makroekonomik veriler ve faiz kararları</p>
                         </div>
                     </div>
-                    <Link href="/dashboard/economic-calendar" className="text-xs font-extrabold text-amber-600 hover:underline">
+                    <Link href="/dashboard/calendar?type=economic" onClick={(e) => { e.preventDefault(); handleFilterSelect('economic'); }} className="text-xs font-extrabold text-amber-600 hover:underline">
                         Tümünü Gör →
                     </Link>
                 </div>
@@ -690,7 +724,7 @@ export default function CalendarPage() {
                 </div>
             </div>
 
-            {/* YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ - RENKLİ KUTUCUKLAR) */}
+            {/* YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
             <div className="bg-[#0c101d] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
                 
@@ -704,29 +738,25 @@ export default function CalendarPage() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {/* Bilanço Soft Blue Box */}
-                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-md">
+                        <div onClick={() => handleFilterSelect('earnings')} className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-blue-500/20 transition-all">
                             <span className="text-[10px] font-bold text-blue-300 uppercase block mb-1">Bilanço</span>
                             <span className="text-lg font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
                             <span className="text-[9px] text-blue-200/60">Yaklaşan Sonuçlar</span>
                         </div>
 
-                        {/* Temettü Soft Emerald Box */}
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 backdrop-blur-md">
+                        <div onClick={() => handleFilterSelect('dividends')} className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-emerald-500/20 transition-all">
                             <span className="text-[10px] font-bold text-emerald-300 uppercase block mb-1">Temettü</span>
                             <span className="text-lg font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
                             <span className="text-[9px] text-emerald-200/60">Açıklanan Hak Hakediş</span>
                         </div>
 
-                        {/* Halka Arz Soft Purple Box */}
-                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 backdrop-blur-md">
+                        <div onClick={() => handleFilterSelect('ipo')} className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-purple-500/20 transition-all">
                             <span className="text-[10px] font-bold text-purple-300 uppercase block mb-1">Halka Arz</span>
                             <span className="text-lg font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
                             <span className="text-[9px] text-purple-200/60">Aktif Başvuru</span>
                         </div>
 
-                        {/* Ekonomik Soft Amber Box */}
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 backdrop-blur-md">
+                        <div onClick={() => handleFilterSelect('economic')} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 backdrop-blur-md cursor-pointer hover:bg-amber-500/20 transition-all">
                             <span className="text-[10px] font-bold text-amber-300 uppercase block mb-1">Ekonomik Veri</span>
                             <span className="text-lg font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
                             <span className="text-[9px] text-amber-200/60">Makro Göstergeler</span>
@@ -736,5 +766,20 @@ export default function CalendarPage() {
             </div>
 
         </div>
+    );
+}
+
+export default function CalendarPage() {
+    return (
+        <Suspense fallback={
+            <div className="w-full min-h-screen bg-slate-50/50 p-8 flex items-center justify-center">
+                <div className="flex items-center gap-2 text-xs font-bold text-[#00008B]">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Takvim Yükleniyor...
+                </div>
+            </div>
+        }>
+            <CalendarContent />
+        </Suspense>
     );
 }
