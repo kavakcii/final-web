@@ -1615,7 +1615,7 @@ export default function PortfolioPage() {
                             <span className="text-[10px] font-bold text-slate-400">Genel Bakış</span>
                         </div>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-semibold">
+                        <div className="grid grid-cols-2 gap-3 text-xs font-semibold">
                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                                 <span className="text-[10px] text-slate-400 block uppercase font-bold">Toplam Varlık Sayısı</span>
                                 <span className="text-base font-black text-[#00008B] mt-0.5 block">{groupedAssets.length} Pozisyon</span>
@@ -2824,22 +2824,22 @@ export default function PortfolioPage() {
                         setFocusedWidget(null);
                     }
                 }}
-                className="flex flex-col xl:grid xl:grid-cols-12 gap-8 items-start"
+                className="flex flex-col xl:grid xl:grid-cols-12 gap-8 xl:items-stretch"
             >
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 70/30 GRID LAYOUT) */
                     <>
                         {/* SOL SÜTUN (~%70 - 8/12 Cols) */}
-                        <div className="w-full xl:col-span-8 space-y-8 order-2 xl:order-1">
+                        <div className="w-full xl:col-span-8 flex flex-col justify-between space-y-8 order-2 xl:order-1">
                             {renderWidgetCard('table')}
                             {renderWidgetCard('extremes')}
                         </div>
 
-                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols) */}
-                        <div className="w-full xl:col-span-4 space-y-6 order-1 xl:order-2">
+                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols - HIZLI PORTFÖY ÖZETİ İLK WIDGET) */}
+                        <div className="w-full xl:col-span-4 flex flex-col justify-between space-y-6 order-1 xl:order-2">
+                            {renderWidgetCard('quickSummary')}
                             {renderWidgetCard('agenda')}
                             {renderWidgetCard('distribution')}
-                            {renderWidgetCard('quickSummary')}
                         </div>
                     </>
                 ) : (
