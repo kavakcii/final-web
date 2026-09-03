@@ -283,11 +283,11 @@ export default function CalendarPage() {
             {/* Üst Kategori Filtre Butonları */}
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
                 {[
-                    { id: 'all', label: 'Tümü', icon: Sparkles },
-                    { id: 'earnings', label: 'Bilanço', icon: Building2 },
-                    { id: 'dividends', label: 'Temettü', icon: Coins },
-                    { id: 'ipo', label: 'Halka Arz', icon: TrendingUp },
-                    { id: 'economic', label: 'Ekonomik', icon: Globe2 }
+                    { id: 'all', label: 'Tümü', icon: Sparkles, activeStyle: 'bg-[#00008B] text-white border-[#00008B] shadow-md shadow-[#00008B]/20', inactiveStyle: 'bg-white text-slate-600 border-slate-200/80 hover:border-[#00008B]/30 hover:text-[#00008B]' },
+                    { id: 'earnings', label: 'Bilanço', icon: Building2, activeStyle: 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20', inactiveStyle: 'bg-blue-50/60 text-blue-700 border-blue-200/60 hover:bg-blue-100/60' },
+                    { id: 'dividends', label: 'Temettü', icon: Coins, activeStyle: 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20', inactiveStyle: 'bg-emerald-50/60 text-emerald-700 border-emerald-200/60 hover:bg-emerald-100/60' },
+                    { id: 'ipo', label: 'Halka Arz', icon: TrendingUp, activeStyle: 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20', inactiveStyle: 'bg-purple-50/60 text-purple-700 border-purple-200/60 hover:bg-purple-100/60' },
+                    { id: 'economic', label: 'Ekonomik', icon: Globe2, activeStyle: 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20', inactiveStyle: 'bg-amber-50/60 text-amber-700 border-amber-200/60 hover:bg-amber-100/60' }
                 ].map(tab => {
                     const TabIcon = tab.icon;
                     const isActive = activeFilter === tab.id;
@@ -296,12 +296,10 @@ export default function CalendarPage() {
                             key={tab.id}
                             onClick={() => setActiveFilter(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-2.5 text-xs font-black rounded-2xl border transition-all whitespace-nowrap shadow-xs ${
-                                isActive
-                                    ? 'bg-[#00008B] text-white border-[#00008B] shadow-md shadow-[#00008B]/20 scale-102'
-                                    : 'bg-white text-slate-600 border-slate-200/80 hover:border-[#00008B]/30 hover:text-[#00008B]'
+                                isActive ? tab.activeStyle : tab.inactiveStyle
                             }`}
                         >
-                            <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-[#00008B]'}`} />
+                            <TabIcon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : ''}`} />
                             <span>{tab.label}</span>
                         </button>
                     );
@@ -391,24 +389,34 @@ export default function CalendarPage() {
                             </div>
                         ) : (
                             <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                                {selectedDayAgenda.map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 border border-slate-100 hover:border-slate-200 transition-all">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <span className="text-xs font-black text-slate-500 w-10 shrink-0">{item.time}</span>
-                                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-lg border shrink-0 ${item.categoryColor}`}>
-                                                {item.category}
-                                            </span>
-                                            <span className="text-xs font-black text-[#00008B] shrink-0">{item.symbol}</span>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
-                                                <p className="text-[10px] text-slate-400 truncate">{item.subtitle}</p>
+                                {selectedDayAgenda.map((item, idx) => {
+                                    const rowBg = item.category === 'Bilanço'
+                                        ? 'bg-blue-50/40 border-blue-100/80 hover:bg-blue-50/70'
+                                        : item.category === 'Temettü'
+                                        ? 'bg-emerald-50/40 border-emerald-100/80 hover:bg-emerald-50/70'
+                                        : item.category === 'Halka Arz'
+                                        ? 'bg-purple-50/40 border-purple-100/80 hover:bg-purple-50/70'
+                                        : 'bg-amber-50/40 border-amber-100/80 hover:bg-amber-50/70';
+
+                                    return (
+                                        <div key={idx} className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${rowBg}`}>
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <span className="text-xs font-black text-slate-600 w-10 shrink-0">{item.time}</span>
+                                                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-lg border shrink-0 ${item.categoryColor}`}>
+                                                    {item.category}
+                                                </span>
+                                                <span className="text-xs font-black text-[#00008B] shrink-0">{item.symbol}</span>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-bold text-slate-800 truncate">{item.title}</p>
+                                                    <p className="text-[10px] text-slate-500 truncate">{item.subtitle}</p>
+                                                </div>
                                             </div>
+                                            <button title="Hatırlatıcı Ekle" className="p-1.5 text-slate-400 hover:text-[#00008B] hover:bg-white rounded-lg transition-all shrink-0">
+                                                <Bell className="w-3.5 h-3.5" />
+                                            </button>
                                         </div>
-                                        <button title="Hatırlatıcı Ekle" className="p-1.5 text-slate-400 hover:text-[#00008B] hover:bg-white rounded-lg transition-all shrink-0">
-                                            <Bell className="w-3.5 h-3.5" />
-                                        </button>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -417,7 +425,7 @@ export default function CalendarPage() {
 
             {/* PORTFÖY İLE ENTEGRASYON: Portföyümdeki Şirketlerin Yaklaşan Olayları */}
             {myAssets.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
+                <div className="bg-gradient-to-r from-[#00008B]/[0.03] via-white to-blue-50/30 border border-[#00008B]/10 rounded-3xl p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                         <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700">
@@ -437,7 +445,7 @@ export default function CalendarPage() {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {portfolioEvents.slice(0, 6).map((item, idx) => (
-                                <div key={idx} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                                <div key={idx} className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 flex items-center justify-between shadow-2xs">
                                     <div className="flex items-center gap-3">
                                         <div className="w-9 h-9 rounded-xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center text-[#00008B] font-black text-xs">
                                             {item.symbol?.substring(0, 3)}
@@ -465,12 +473,12 @@ export default function CalendarPage() {
             {/* ÜÇLÜ KART IZGARASI: Bilanço, Temettü, Halka Arz */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* 1. BİLANÇO TAKVİMİ */}
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
+                {/* 1. BİLANÇO TAKVİMİ (SOFT BLUE TINT) */}
+                <div className="bg-gradient-to-b from-blue-50/50 via-white to-white border border-blue-100/80 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-blue-100/60">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700">
+                                <div className="w-7 h-7 rounded-xl bg-blue-100/70 border border-blue-200/80 flex items-center justify-center text-blue-700">
                                     <Building2 className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Bilanço Takvimi</h3>
@@ -487,20 +495,20 @@ export default function CalendarPage() {
                         ) : (
                             <div className="space-y-3">
                                 {earnings.slice(0, 4).map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100/50 transition-all">
+                                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-blue-50/50 border border-blue-100/70 hover:bg-blue-100/50 transition-all">
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-blue-100/60 text-blue-800 px-2 py-1 rounded-xl text-center min-w-[44px]">
+                                            <div className="bg-blue-100/80 text-blue-800 px-2 py-1 rounded-xl text-center min-w-[44px]">
                                                 <span className="text-[9px] font-black uppercase block leading-tight">{item.earningsDate?.split('.')[1] || 'MAY'}</span>
                                                 <span className="text-xs font-black block leading-tight">{item.earningsDate?.split('.')[0] || '20'}</span>
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-[#00008B]">{item.symbol}</p>
-                                                <p className="text-[10px] font-bold text-slate-500 truncate max-w-[130px]">{item.companyName}</p>
+                                                <p className="text-[10px] font-bold text-slate-600 truncate max-w-[130px]">{item.companyName}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-lg border border-slate-200">2026/1Ç</span>
-                                            <button title="Hatırlat" className="p-1 text-slate-400 hover:text-[#00008B]">
+                                            <span className="text-[9px] font-bold text-blue-700 bg-white/80 px-2 py-0.5 rounded-lg border border-blue-200/80">2026/1Ç</span>
+                                            <button title="Hatırlat" className="p-1 text-blue-400 hover:text-[#00008B]">
                                                 <Bell className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
@@ -510,17 +518,17 @@ export default function CalendarPage() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/portfolio?focus=earnings" className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-blue-600 transition-colors">
+                    <Link href="/dashboard/portfolio?focus=earnings" className="mt-4 pt-3 border-t border-blue-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-blue-600 transition-colors">
                         Tüm Bilanço Takvimi →
                     </Link>
                 </div>
 
-                {/* 2. TEMETTÜ TAKVİMİ */}
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
+                {/* 2. TEMETTÜ TAKVİMİ (SOFT EMERALD GREEN TINT) */}
+                <div className="bg-gradient-to-b from-emerald-50/50 via-white to-white border border-emerald-100/80 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-emerald-100/60">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700">
+                                <div className="w-7 h-7 rounded-xl bg-emerald-100/70 border border-emerald-200/80 flex items-center justify-center text-emerald-700">
                                     <Coins className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Temettü Takvimi</h3>
@@ -537,22 +545,22 @@ export default function CalendarPage() {
                         ) : (
                             <div className="space-y-3">
                                 {dividends.slice(0, 4).map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100/50 transition-all">
+                                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-2xl bg-emerald-50/50 border border-emerald-100/70 hover:bg-emerald-100/50 transition-all">
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-emerald-100/60 text-emerald-800 px-2 py-1 rounded-xl text-center min-w-[44px]">
+                                            <div className="bg-emerald-100/80 text-emerald-800 px-2 py-1 rounded-xl text-center min-w-[44px]">
                                                 <span className="text-[9px] font-black uppercase block leading-tight">{item.paymentDate?.split('.')[1] || 'MAY'}</span>
                                                 <span className="text-xs font-black block leading-tight">{item.paymentDate?.split('.')[0] || '19'}</span>
                                             </div>
                                             <div>
                                                 <p className="text-xs font-black text-[#00008B]">{item.symbol}</p>
-                                                <p className="text-[10px] font-bold text-slate-500 truncate max-w-[120px]">{item.companyName}</p>
+                                                <p className="text-[10px] font-bold text-slate-600 truncate max-w-[120px]">{item.companyName}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                                            <span className="text-[10px] font-black text-emerald-800 bg-white/80 px-2 py-0.5 rounded-lg border border-emerald-200/80">
                                                 {item.netAmountFormatted || '6,00 TL'}
                                             </span>
-                                            <button title="Hatırlat" className="p-1 text-slate-400 hover:text-[#00008B]">
+                                            <button title="Hatırlat" className="p-1 text-emerald-500 hover:text-[#00008B]">
                                                 <Bell className="w-3.5 h-3.5" />
                                             </button>
                                         </div>
@@ -562,22 +570,22 @@ export default function CalendarPage() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/portfolio?focus=dividends" className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-emerald-600 transition-colors">
+                    <Link href="/dashboard/portfolio?focus=dividends" className="mt-4 pt-3 border-t border-emerald-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-emerald-600 transition-colors">
                         Tüm Temettü Takvimi →
                     </Link>
                 </div>
 
-                {/* 3. HALKA ARZ TAKVİMİ (TIMELINE) */}
-                <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
+                {/* 3. HALKA ARZ TAKVİMİ (SOFT PURPLE TINT) */}
+                <div className="bg-gradient-to-b from-purple-50/50 via-white to-white border border-purple-100/80 rounded-3xl p-5 shadow-sm flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-purple-100/60">
                             <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700">
+                                <div className="w-7 h-7 rounded-xl bg-purple-100/70 border border-purple-200/80 flex items-center justify-center text-purple-700">
                                     <TrendingUp className="w-4 h-4" />
                                 </div>
                                 <h3 className="text-sm font-black text-[#00008B]">Halka Arz Takvimi</h3>
                             </div>
-                            <span className="text-[10px] font-bold text-slate-400">Timeline</span>
+                            <span className="text-[10px] font-bold text-purple-600">Timeline</span>
                         </div>
 
                         {loading ? (
@@ -585,22 +593,22 @@ export default function CalendarPage() {
                         ) : ipos.length === 0 ? (
                             <div className="py-8 text-center text-xs font-bold text-slate-400">Yaklaşan halka arz bulunmuyor.</div>
                         ) : (
-                            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-purple-100">
+                            <div className="relative pl-6 space-y-4 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-purple-200">
                                 {ipos.slice(0, 4).map((item, idx) => (
-                                    <div key={idx} className="relative flex items-center justify-between">
+                                    <div key={idx} className="relative flex items-center justify-between p-2 rounded-2xl bg-purple-50/40 border border-purple-100/70 hover:bg-purple-100/40 transition-all">
                                         {/* Timeline Dot */}
                                         <div className="absolute -left-[19px] w-3 h-3 rounded-full bg-purple-600 ring-4 ring-purple-100" />
                                         
                                         <div>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-black text-[#00008B]">{item.symbol}</span>
-                                                <span className="text-[9px] font-extrabold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
+                                                <span className="text-[9px] font-extrabold text-purple-800 bg-purple-100/80 px-1.5 py-0.5 rounded border border-purple-200/80">
                                                     {item.status}
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] font-bold text-slate-500 truncate max-w-[150px]">{item.companyName}</p>
+                                            <p className="text-[10px] font-bold text-slate-600 truncate max-w-[140px]">{item.companyName}</p>
                                         </div>
-                                        <span className="text-[10px] font-black text-slate-400 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                                        <span className="text-[10px] font-black text-purple-800 bg-white/80 px-2 py-1 rounded-lg border border-purple-200/80">
                                             {item.dateRange || 'Yakında'}
                                         </span>
                                     </div>
@@ -609,17 +617,17 @@ export default function CalendarPage() {
                         )}
                     </div>
 
-                    <Link href="/dashboard/data" className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-purple-600 transition-colors">
+                    <Link href="/dashboard/data" className="mt-4 pt-3 border-t border-purple-100/60 flex items-center justify-center text-xs font-black text-[#00008B] hover:text-purple-600 transition-colors">
                         Tüm Halka Arz Takvimi →
                     </Link>
                 </div>
             </div>
 
-            {/* EKONOMİK TAKVİM TABLOSU */}
-            <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            {/* EKONOMİK TAKVİM TABLOSU (SOFT AMBER / ORANGE TINT) */}
+            <div className="bg-gradient-to-b from-amber-50/40 via-white to-white border border-amber-100/80 rounded-3xl p-5 sm:p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-amber-100/60">
                     <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-700">
+                        <div className="w-7 h-7 rounded-xl bg-amber-100/70 border border-amber-200/80 flex items-center justify-center text-amber-700">
                             <Globe2 className="w-4 h-4" />
                         </div>
                         <div>
@@ -635,7 +643,7 @@ export default function CalendarPage() {
                 <div className="overflow-x-auto scrollbar-none">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                            <tr className="border-b border-amber-100/60 text-[10px] font-black text-amber-800/60 uppercase tracking-wider bg-amber-50/30">
                                 <th className="py-3 px-3">Tarih</th>
                                 <th className="py-3 px-3">Saat</th>
                                 <th className="py-3 px-3">Ülke</th>
@@ -645,7 +653,7 @@ export default function CalendarPage() {
                                 <th className="py-3 px-3">Önem</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 text-xs font-bold">
+                        <tbody className="divide-y divide-amber-100/40 text-xs font-bold">
                             {loading ? (
                                 <tr>
                                     <td colSpan={7} className="py-8 text-center text-slate-400">Veriler yükleniyor...</td>
@@ -656,7 +664,7 @@ export default function CalendarPage() {
                                 </tr>
                             ) : (
                                 economicEvents.slice(0, 6).map((item, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                                    <tr key={idx} className="hover:bg-amber-50/40 transition-colors">
                                         <td className="py-3 px-3 text-[#00008B] whitespace-nowrap">{item.dateFormatted || '19 Mayıs Salı'}</td>
                                         <td className="py-3 px-3 text-slate-500 whitespace-nowrap">{item.time || '15:30'}</td>
                                         <td className="py-3 px-3 font-black text-slate-700 whitespace-nowrap">{item.country || 'USD'}</td>
@@ -668,7 +676,7 @@ export default function CalendarPage() {
                                                 item.impact === 'Yüksek' || item.impact === 3
                                                     ? 'bg-rose-50 text-rose-700 border-rose-200'
                                                     : item.impact === 'Orta' || item.impact === 2
-                                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                                    ? 'bg-amber-100/80 text-amber-800 border-amber-200'
                                                     : 'bg-slate-50 text-slate-600 border-slate-200'
                                             }`}>
                                                 {item.impact === 3 ? 'Yüksek' : item.impact === 2 ? 'Orta' : 'Düşük'}
@@ -682,7 +690,7 @@ export default function CalendarPage() {
                 </div>
             </div>
 
-            {/* YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ) */}
+            {/* YAKLAŞAN ÖNEMLİ TARİHLER (KOYU SUMMARY PANELİ - RENKLİ KUTUCUKLAR) */}
             <div className="bg-[#0c101d] text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/20 rounded-full blur-3xl pointer-events-none" />
                 
@@ -696,28 +704,32 @@ export default function CalendarPage() {
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Bilanço</span>
+                        {/* Bilanço Soft Blue Box */}
+                        <div className="bg-blue-500/10 border border-blue-500/20 rounded-2xl p-4 backdrop-blur-md">
+                            <span className="text-[10px] font-bold text-blue-300 uppercase block mb-1">Bilanço</span>
                             <span className="text-lg font-black text-blue-400 block">{earnings.length || 5} Şirket</span>
-                            <span className="text-[9px] text-slate-400">Yaklaşan Sonuçlar</span>
+                            <span className="text-[9px] text-blue-200/60">Yaklaşan Sonuçlar</span>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Temettü</span>
+                        {/* Temettü Soft Emerald Box */}
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 backdrop-blur-md">
+                            <span className="text-[10px] font-bold text-emerald-300 uppercase block mb-1">Temettü</span>
                             <span className="text-lg font-black text-emerald-400 block">{dividends.length || 4} Ödeme</span>
-                            <span className="text-[9px] text-slate-400">Açıklanan Hak Hakediş</span>
+                            <span className="text-[9px] text-emerald-200/60">Açıklanan Hak Hakediş</span>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Halka Arz</span>
+                        {/* Halka Arz Soft Purple Box */}
+                        <div className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 backdrop-blur-md">
+                            <span className="text-[10px] font-bold text-purple-300 uppercase block mb-1">Halka Arz</span>
                             <span className="text-lg font-black text-purple-400 block">{ipos.length || 3} Talep Toplama</span>
-                            <span className="text-[9px] text-slate-400">Aktif Başvuru</span>
+                            <span className="text-[9px] text-purple-200/60">Aktif Başvuru</span>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-md">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Ekonomik Veri</span>
+                        {/* Ekonomik Soft Amber Box */}
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 backdrop-blur-md">
+                            <span className="text-[10px] font-bold text-amber-300 uppercase block mb-1">Ekonomik Veri</span>
                             <span className="text-lg font-black text-amber-400 block">{economicEvents.length || 7} Önemli Veri</span>
-                            <span className="text-[9px] text-slate-400">Makro Göstergeler</span>
+                            <span className="text-[9px] text-amber-200/60">Makro Göstergeler</span>
                         </div>
                     </div>
                 </div>
