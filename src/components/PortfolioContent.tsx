@@ -2832,14 +2832,14 @@ export default function PortfolioPage() {
                         {/* SOL SÜTUN (~%70 - 8/12 Cols) */}
                         <div className="w-full xl:col-span-8 space-y-8 order-2 xl:order-1">
                             {renderWidgetCard('table')}
-                            {renderWidgetCard('distribution')}
-                            {renderWidgetCard('quickSummary')}
                             {renderWidgetCard('extremes')}
                         </div>
 
-                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols - MOBİLDE ÜSTTE) */}
+                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols) */}
                         <div className="w-full xl:col-span-4 space-y-6 order-1 xl:order-2">
                             {renderWidgetCard('agenda')}
+                            {renderWidgetCard('distribution')}
+                            {renderWidgetCard('quickSummary')}
                         </div>
                     </>
                 ) : (
