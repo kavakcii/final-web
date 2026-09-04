@@ -27,6 +27,18 @@ export type QualityStatus =
   | 'invalid'
   | 'unavailable';
 
+export type RatioStatus =
+  | 'available'
+  | 'not_applicable'
+  | 'insufficient_data'
+  | 'source_unavailable'
+  | 'validation_failed'
+  | 'negative_input'
+  | 'zero_denominator'
+  | 'insufficient_history'
+  | 'currency_mismatch'
+  | 'consolidation_mismatch';
+
 export type PeriodType = 'Quarter' | 'YTD' | 'Annual' | 'TTM';
 
 export interface SectorInfo {

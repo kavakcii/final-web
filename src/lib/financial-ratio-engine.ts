@@ -3,14 +3,7 @@
  * Comprehensive Financial Ratio Calculator, Sector Adaptor & Educational Tooltip Engine
  */
 
-import { ValidatedFinancialData } from '@/types/financials';
-
-export type RatioStatus =
-  | 'available'
-  | 'unavailable'
-  | 'not_applicable'
-  | 'insufficient_history'
-  | 'low_quality';
+import { ValidatedFinancialData, RatioStatus } from '@/types/financials';
 
 export interface EducationalTooltip {
   whatItMeasures: string;
@@ -100,18 +93,29 @@ export function calculateFinancialRatios(
   const periodLabel = ttm ? `TTM · ${quarters[0]?.period?.year || ''} Q${quarters[0]?.period?.quarter || ''}` : (quarters && quarters.length > 0 ? `${quarters[0].period.year} Q${quarters[0].period.quarter}` : 'Dönem Bilgisi Yok');
   const hasTTM = ttm != null && ttm.isVerified;
 
+  // FX Currency Awareness (e.g. THYAO reports in USD, stock trades in TRY)
+  const financialCurrency = quarters && quarters.length > 0 ? (quarters[0].period.currency || 'TRY') : 'TRY';
+  const isUSD = financialCurrency === 'USD';
+  const isEUR = financialCurrency === 'EUR';
+  // Approximate FX conversion rate when stock trades in TRY but reports in USD/EUR
+  const fxMultiplier = isUSD ? 48.44 : (isEUR ? 50.80 : 1.0);
+
   // Live Price and Shares Calculation (STRICT: NO FAKE SYNTHETIC PRICE FALLBACK)
   const totalShares = latestPs?.weightedAverageShares || latestPs?.totalShares || null;
   const livePrice = (livePriceInput != null && livePriceInput > 0) ? livePriceInput : null;
   
   const marketCap = (livePrice != null && totalShares != null && totalShares > 0) ? livePrice * totalShares : null;
-  const financialDebt = latestBs?.financialDebt ?? null;
-  const cash = latestBs?.cashAndEquivalents ?? null;
-  const netDebt = latestBs?.netDebt ?? (isBank || isInsurance ? null : (financialDebt != null && cash != null ? financialDebt - cash : null));
+  const financialDebtRaw = latestBs?.financialDebt ?? null;
+  const cashRaw = latestBs?.cashAndEquivalents ?? null;
+
+  const financialDebtTRY = financialDebtRaw != null ? financialDebtRaw * fxMultiplier : null;
+  const cashTRY = cashRaw != null ? cashRaw * fxMultiplier : null;
+
+  const netDebtTRY = isBank || isInsurance ? null : (financialDebtTRY != null && cashTRY != null ? financialDebtTRY - cashTRY : null);
   
-  // EV Calculation (STRICT: Requires valid market cap, financial debt, and cash)
-  const enterpriseValue = (marketCap != null && financialDebt != null && cash != null) 
-    ? marketCap + financialDebt - cash 
+  // EV Calculation in TRY
+  const enterpriseValue = (marketCap != null && financialDebtTRY != null && cashTRY != null) 
+    ? marketCap + financialDebtTRY - cashTRY 
     : null;
 
   let availableCount = 0;
@@ -128,6 +132,7 @@ export function calculateFinancialRatios(
     methodology: string,
     tooltip: EducationalTooltip,
     requiresTTM: boolean = false,
+    customOverrideStatus?: RatioStatus,
     customOverrideReason?: string
   ): RatioItem {
     totalCount++;
@@ -143,16 +148,16 @@ export function calculateFinancialRatios(
       status = 'not_applicable';
       reason = sectorDisabledReason;
       val = null;
+    } else if (customOverrideStatus) {
+      status = customOverrideStatus;
+      reason = customOverrideReason || 'Şartlar sağlanmadı.';
+      val = null;
     } else if (requiresTTM && !hasTTM) {
       status = 'insufficient_history';
       reason = 'TTM hesabı için 4 çeyreklik bilanço geçmişi henüz tamamlanmadı.';
       val = null;
-    } else if (customOverrideReason) {
-      status = 'unavailable';
-      reason = customOverrideReason;
-      val = null;
     } else if (val == null || isNaN(val) || !isFinite(val)) {
-      status = 'unavailable';
+      status = 'insufficient_data';
       reason = 'Gerekli bilanço veya gelir tablosu verisi temin edilemedi.';
       val = null;
     } else {
@@ -173,57 +178,81 @@ export function calculateFinancialRatios(
     };
   }
 
-  // Income Statement TTM Metrics
-  const revenue = latestIsTTM?.revenue ?? null;
-  const grossProfit = latestIsTTM?.grossProfit ?? null;
-  const operatingIncome = latestIsTTM?.operatingIncome ?? null;
-  const ebitda = latestIsTTM?.ebitda ?? null;
-  const netIncome = latestIsTTM?.netIncome ?? null;
+  // Income Statement TTM Metrics (converted to TRY if needed)
+  const revenueRaw = latestIsTTM?.revenue ?? null;
+  const grossProfitRaw = latestIsTTM?.grossProfit ?? null;
+  const operatingIncomeRaw = latestIsTTM?.operatingIncome ?? null;
+  const ebitdaRaw = latestIsTTM?.ebitda ?? null;
+  const netIncomeRaw = latestIsTTM?.netIncome ?? null;
 
-  // Balance Sheet Items for ROE & ROA (Average calculation if 2+ periods available)
-  const endingEquity = latestBs?.totalEquity ?? null;
-  const endingAssets = latestBs?.totalAssets ?? null;
+  const revenueTRY = revenueRaw != null ? revenueRaw * fxMultiplier : null;
+  const grossProfitTRY = grossProfitRaw != null ? grossProfitRaw * fxMultiplier : null;
+  const operatingIncomeTRY = operatingIncomeRaw != null ? operatingIncomeRaw * fxMultiplier : null;
+  const ebitdaTRY = ebitdaRaw != null ? ebitdaRaw * fxMultiplier : null;
+  const netIncomeTRY = netIncomeRaw != null ? netIncomeRaw * fxMultiplier : null;
+
+  // Balance Sheet Items for ROE & ROA
+  const endingEquityRaw = latestBs?.totalEquity ?? null;
+  const endingAssetsRaw = latestBs?.totalAssets ?? null;
+
+  const endingEquityTRY = endingEquityRaw != null ? endingEquityRaw * fxMultiplier : null;
+  const endingAssetsTRY = endingAssetsRaw != null ? endingAssetsRaw * fxMultiplier : null;
 
   const beginningPeriod = quarters && quarters.length >= 4 
     ? quarters[3] 
     : (quarters && quarters.length >= 2 ? quarters[quarters.length - 1] : null);
 
-  const beginningEquity = beginningPeriod?.balanceSheet?.totalEquity ?? null;
-  const beginningAssets = beginningPeriod?.balanceSheet?.totalAssets ?? null;
+  const beginningEquityRaw = beginningPeriod?.balanceSheet?.totalEquity ?? null;
+  const beginningAssetsRaw = beginningPeriod?.balanceSheet?.totalAssets ?? null;
 
-  // ROE (Net Income / Average Equity)
+  const beginningEquityTRY = beginningEquityRaw != null ? beginningEquityRaw * fxMultiplier : null;
+  const beginningAssetsTRY = beginningAssetsRaw != null ? beginningAssetsRaw * fxMultiplier : null;
+
+  // ROE (Net Income / Average Equity - unitless %)
   let roeVal: number | null = null;
+  let roeStatus: RatioStatus | undefined = undefined;
+  let roeReason: string | undefined = undefined;
   let roeMethodology = 'TTM Net Kâr / Ortalama Özkaynak';
-  if (netIncome != null) {
-    if (endingEquity != null && beginningEquity != null && (endingEquity + beginningEquity) > 0) {
-      const avgEquity = (endingEquity + beginningEquity) / 2;
-      roeVal = (netIncome / avgEquity) * 100;
+
+  if (endingEquityRaw != null && endingEquityRaw <= 0) {
+    roeStatus = 'negative_input';
+    roeReason = 'Özkaynaklar negatif veya sıfır olduğu için ROE hesaplanmadı.';
+  } else if (netIncomeRaw != null) {
+    if (endingEquityRaw != null && beginningEquityRaw != null && (endingEquityRaw + beginningEquityRaw) > 0) {
+      const avgEquity = (endingEquityRaw + beginningEquityRaw) / 2;
+      roeVal = (netIncomeRaw / avgEquity) * 100;
       roeMethodology = 'TTM Net Kâr / Ortalama Özkaynak ((Başlangıç + Bitiş) / 2)';
-    } else if (endingEquity != null && endingEquity > 0) {
-      roeVal = (netIncome / endingEquity) * 100;
-      roeMethodology = 'TTM Net Kâr / Dönem Sonu Özkaynak (Tek Dönem Fallback)';
+    } else if (endingEquityRaw != null && endingEquityRaw > 0) {
+      roeVal = (netIncomeRaw / endingEquityRaw) * 100;
+      roeMethodology = 'ending_equity_single_period';
     }
   }
 
-  // ROA (Net Income / Average Assets)
+  // ROA (Net Income / Average Assets - unitless %)
   let roaVal: number | null = null;
+  let roaStatus: RatioStatus | undefined = undefined;
+  let roaReason: string | undefined = undefined;
   let roaMethodology = 'TTM Net Kâr / Ortalama Toplam Varlıklar';
-  if (netIncome != null) {
-    if (endingAssets != null && beginningAssets != null && (endingAssets + beginningAssets) > 0) {
-      const avgAssets = (endingAssets + beginningAssets) / 2;
-      roaVal = (netIncome / avgAssets) * 100;
+
+  if (endingAssetsRaw != null && endingAssetsRaw <= 0) {
+    roaStatus = 'negative_input';
+    roaReason = 'Toplam varlıklar negatif veya sıfır olduğu için ROA hesaplanmadı.';
+  } else if (netIncomeRaw != null) {
+    if (endingAssetsRaw != null && beginningAssetsRaw != null && (endingAssetsRaw + beginningAssetsRaw) > 0) {
+      const avgAssets = (endingAssetsRaw + beginningAssetsRaw) / 2;
+      roaVal = (netIncomeRaw / avgAssets) * 100;
       roaMethodology = 'TTM Net Kâr / Ortalama Toplam Varlıklar ((Başlangıç + Bitiş) / 2)';
-    } else if (endingAssets != null && endingAssets > 0) {
-      roaVal = (netIncome / endingAssets) * 100;
-      roaMethodology = 'TTM Net Kâr / Dönem Sonu Varlıklar (Tek Dönem Fallback)';
+    } else if (endingAssetsRaw != null && endingAssetsRaw > 0) {
+      roaVal = (netIncomeRaw / endingAssetsRaw) * 100;
+      roaMethodology = 'ending_assets_single_period';
     }
   }
 
   // Margins
-  const grossMarginVal = (grossProfit != null && revenue != null && revenue > 0) ? (grossProfit / revenue) * 100 : null;
-  const operatingMarginVal = (operatingIncome != null && revenue != null && revenue > 0) ? (operatingIncome / revenue) * 100 : null;
-  const ebitdaMarginVal = (ebitda != null && revenue != null && revenue > 0) ? (ebitda / revenue) * 100 : null;
-  const netMarginVal = (netIncome != null && revenue != null && revenue > 0) ? (netIncome / revenue) * 100 : null;
+  const grossMarginVal = (grossProfitRaw != null && revenueRaw != null && revenueRaw > 0) ? (grossProfitRaw / revenueRaw) * 100 : null;
+  const operatingMarginVal = (operatingIncomeRaw != null && revenueRaw != null && revenueRaw > 0) ? (operatingIncomeRaw / revenueRaw) * 100 : null;
+  const ebitdaMarginVal = (ebitdaRaw != null && revenueRaw != null && revenueRaw > 0) ? (ebitdaRaw / revenueRaw) * 100 : null;
+  const netMarginVal = (netIncomeRaw != null && revenueRaw != null && revenueRaw > 0) ? (netIncomeRaw / revenueRaw) * 100 : null;
 
   // A) PROFITABILITY RATIOS (KÂRLILIK)
   const profitability: CategoryRatios = {
@@ -314,7 +343,9 @@ export function calculateFinancialRatios(
           sectorCaution: 'Aşırı borçlanan şirketlerde ROE yüksek çıkabilir; borçlulukla birlikte incelenmelidir.',
           finaiFormula: 'ROE (%) = (TTM Net Kâr / Ortalama Özkaynaklar) × 100'
         },
-        true
+        true,
+        roeStatus,
+        roeReason
       ),
       createRatio(
         'roa',
@@ -331,7 +362,9 @@ export function calculateFinancialRatios(
           sectorCaution: 'Bankalarda varlık yapısı kredi odaklı olduğundan ROA %1-3 bandında seyreder.',
           finaiFormula: 'ROA (%) = (TTM Net Kâr / Ortalama Toplam Varlıklar) × 100'
         },
-        true
+        true,
+        roaStatus,
+        roaReason
       )
     ]
   };
@@ -387,23 +420,23 @@ export function calculateFinancialRatios(
   };
 
   // C) LEVERAGE RATIOS (BORÇLULUK)
-  const debtToAssetsVal = (financialDebt != null && endingAssets != null && endingAssets > 0) 
-    ? (financialDebt / endingAssets) * 100 
-    : ((latestBs?.totalLiabilities != null && endingAssets != null && endingAssets > 0) ? (latestBs.totalLiabilities / endingAssets) * 100 : null);
+  const debtToAssetsVal = (financialDebtRaw != null && endingAssetsRaw != null && endingAssetsRaw > 0) 
+    ? (financialDebtRaw / endingAssetsRaw) * 100 
+    : ((latestBs?.totalLiabilities != null && endingAssetsRaw != null && endingAssetsRaw > 0) ? (latestBs.totalLiabilities / endingAssetsRaw) * 100 : null);
   
-  const debtToEquityVal = (financialDebt != null && endingEquity != null && endingEquity > 0) ? financialDebt / endingEquity : null;
+  const debtToEquityVal = (financialDebtRaw != null && endingEquityRaw != null && endingEquityRaw > 0) ? financialDebtRaw / endingEquityRaw : null;
 
-  // Net Debt / EBITDA Rule: EBITDA <= 0 => NULL
+  // Net Debt / EBITDA Rule: EBITDA <= 0 => negative_input
   let netDebtToEBITDAVal: number | null = null;
+  let netDebtToEBITDAStatus: RatioStatus | undefined = undefined;
   let netDebtToEBITDAReason: string | undefined = undefined;
 
-  if (ebitda != null && ebitda <= 0) {
+  if (ebitdaRaw != null && ebitdaRaw <= 0) {
     netDebtToEBITDAVal = null;
-    netDebtToEBITDAReason = 'Net Borç / FAVÖK hesaplanamıyor — TTM FAVÖK negatif veya sıfır.';
-  } else if (netDebt != null && ebitda != null && ebitda > 0) {
-    netDebtToEBITDAVal = netDebt / ebitda;
-  } else if (netDebt == null) {
-    netDebtToEBITDAReason = 'Net borç verisi temin edilemedi.';
+    netDebtToEBITDAStatus = 'negative_input';
+    netDebtToEBITDAReason = 'TTM FAVÖK negatif veya sıfır olduğu için Net Borç / FAVÖK hesaplanmadı.';
+  } else if (netDebtTRY != null && ebitdaTRY != null && ebitdaTRY > 0) {
+    netDebtToEBITDAVal = netDebtTRY / ebitdaTRY;
   }
 
   const leverage: CategoryRatios = {
@@ -459,6 +492,7 @@ export function calculateFinancialRatios(
           finaiFormula: 'Net Borç / FAVÖK = (Finansal Borç - Nakit) / TTM FAVÖK'
         },
         true,
+        netDebtToEBITDAStatus,
         netDebtToEBITDAReason
       )
     ]
@@ -466,87 +500,108 @@ export function calculateFinancialRatios(
 
   // D) VALUATION RATIOS (DEĞERLEME)
   const weightedShares = latestPs?.weightedAverageShares || latestPs?.totalShares || null;
-  const shareCount = latestPs?.totalShares || latestPs?.weightedAverageShares || null;
 
   // EPS Method: TTM Net Profit / Weighted Average Shares
   let epsVal: number | null = null;
-  let epsReason: string | undefined = undefined;
-  if (netIncome != null && weightedShares != null && weightedShares > 0) {
-    epsVal = netIncome / weightedShares;
+  if (netIncomeRaw != null && weightedShares != null && weightedShares > 0) {
+    epsVal = netIncomeRaw / weightedShares;
   } else if (latestPs?.basicEPS != null) {
     epsVal = latestPs.basicEPS;
-  } else {
-    epsVal = null;
-    epsReason = 'Yeterli hisse adedi veya TTM net kâr verisi bulunamadı.';
   }
+  const epsValTRY = epsVal != null ? epsVal * fxMultiplier : null;
 
   // BVPS Method: Equity / Share Count
   let bvpsVal: number | null = null;
-  if (endingEquity != null && shareCount != null && shareCount > 0) {
-    bvpsVal = endingEquity / shareCount;
+  if (endingEquityRaw != null && weightedShares != null && weightedShares > 0) {
+    bvpsVal = endingEquityRaw / weightedShares;
   } else if (latestPs?.bookValuePerShare != null) {
     bvpsVal = latestPs.bookValuePerShare;
   }
+  const bvpsValTRY = bvpsVal != null ? bvpsVal * fxMultiplier : null;
 
-  // P/E Rule: Net Income <= 0 or EPS <= 0 => NULL
+  // P/E Rule: Net Income <= 0 or EPS <= 0 => negative_input
   let peVal: number | null = null;
+  let peStatus: RatioStatus | undefined = undefined;
   let peReason: string | undefined = undefined;
-  if (netIncome != null && netIncome <= 0) {
+
+  if (netIncomeRaw != null && netIncomeRaw <= 0) {
     peVal = null;
-    peReason = 'F/K hesaplanamıyor — TTM net kâr negatif veya sıfır.';
-  } else if (epsVal != null && epsVal <= 0) {
+    peStatus = 'negative_input';
+    peReason = 'TTM net kâr negatif olduğu için F/K hesaplanmadı.';
+  } else if (epsValTRY != null && epsValTRY <= 0) {
     peVal = null;
-    peReason = 'F/K hesaplanamıyor — Hisse başı kâr (EPS) negatif veya sıfır.';
-  } else if (livePrice != null && epsVal != null && epsVal > 0) {
-    peVal = livePrice / epsVal;
-  } else if (marketCap != null && netIncome != null && netIncome > 0) {
-    peVal = marketCap / netIncome;
+    peStatus = 'negative_input';
+    peReason = 'Hisse başı kâr (EPS) negatif olduğu için F/K hesaplanmadı.';
   } else if (livePrice == null) {
-    peReason = 'Canlı fiyat verisi bekleniyor.';
+    peStatus = 'source_unavailable';
+    peReason = 'Canlı hisse fiyatı bekleniyor.';
+  } else if (epsValTRY != null && epsValTRY > 0) {
+    peVal = livePrice / epsValTRY;
+  } else if (marketCap != null && netIncomeTRY != null && netIncomeTRY > 0) {
+    peVal = marketCap / netIncomeTRY;
+  } else {
+    peStatus = 'insufficient_data';
+    peReason = 'Doğrulanmış hisse sayısı veya TTM net kâr verisi bulunamadı.';
   }
 
-  // P/B Rule: Equity <= 0 or BVPS <= 0 => NULL
+  // P/B Rule: Equity <= 0 or BVPS <= 0 => negative_input
   let pbVal: number | null = null;
+  let pbStatus: RatioStatus | undefined = undefined;
   let pbReason: string | undefined = undefined;
-  if (endingEquity != null && endingEquity <= 0) {
+
+  if (endingEquityRaw != null && endingEquityRaw <= 0) {
     pbVal = null;
-    pbReason = 'PD/DD hesaplanamıyor — Toplam özkaynaklar negatif veya sıfır.';
-  } else if (bvpsVal != null && bvpsVal <= 0) {
+    pbStatus = 'negative_input';
+    pbReason = 'Toplam özkaynaklar negatif veya sıfır olduğu için PD/DD hesaplanmadı.';
+  } else if (bvpsValTRY != null && bvpsValTRY <= 0) {
     pbVal = null;
-    pbReason = 'PD/DD hesaplanamıyor — Hisse başı defter değeri (BVPS) negatif veya sıfır.';
-  } else if (livePrice != null && bvpsVal != null && bvpsVal > 0) {
-    pbVal = livePrice / bvpsVal;
-  } else if (marketCap != null && endingEquity != null && endingEquity > 0) {
-    pbVal = marketCap / endingEquity;
+    pbStatus = 'negative_input';
+    pbReason = 'Hisse başı defter değeri (BVPS) negatif veya sıfır olduğu için PD/DD hesaplanmadı.';
   } else if (livePrice == null) {
-    pbReason = 'Canlı fiyat verisi bekleniyor.';
+    pbStatus = 'source_unavailable';
+    pbReason = 'Canlı hisse fiyatı bekleniyor.';
+  } else if (bvpsValTRY != null && bvpsValTRY > 0) {
+    pbVal = livePrice / bvpsValTRY;
+  } else if (marketCap != null && endingEquityTRY != null && endingEquityTRY > 0) {
+    pbVal = marketCap / endingEquityTRY;
+  } else {
+    pbStatus = 'insufficient_data';
+    pbReason = 'Toplam özkaynak veya hisse sayısı bulunamadı.';
   }
 
-  // EV/EBITDA Rule: EBITDA <= 0 or EV == null => NULL
+  // EV/EBITDA Rule: EBITDA <= 0 or EV == null => negative_input / insufficient_data
   let evToEBITDAVal: number | null = null;
+  let evToEBITDAStatus: RatioStatus | undefined = undefined;
   let evToEBITDAReason: string | undefined = undefined;
+
   if (isBank || isInsurance) {
     evToEBITDAVal = null;
-  } else if (ebitda != null && ebitda <= 0) {
+  } else if (ebitdaRaw != null && ebitdaRaw <= 0) {
     evToEBITDAVal = null;
-    evToEBITDAReason = 'FD/FAVÖK hesaplanamıyor — TTM FAVÖK negatif veya sıfır.';
-  } else if (enterpriseValue != null && ebitda != null && ebitda > 0) {
-    evToEBITDAVal = enterpriseValue / ebitda;
+    evToEBITDAStatus = 'negative_input';
+    evToEBITDAReason = 'TTM FAVÖK negatif veya sıfır olduğu için FD/FAVÖK hesaplanmadı.';
+  } else if (enterpriseValue != null && ebitdaTRY != null && ebitdaTRY > 0) {
+    evToEBITDAVal = enterpriseValue / ebitdaTRY;
   } else if (enterpriseValue == null) {
+    evToEBITDAStatus = 'insufficient_data';
     evToEBITDAReason = 'Firma Değeri (EV) için gerekli borç/nakit veya piyasa değeri eksik.';
   }
 
-  // EV/Sales Rule: Revenue <= 0 or EV == null => NULL
+  // EV/Sales Rule: Revenue <= 0 or EV == null => negative_input / insufficient_data
   let evToSalesVal: number | null = null;
+  let evToSalesStatus: RatioStatus | undefined = undefined;
   let evToSalesReason: string | undefined = undefined;
+
   if (isBank || isInsurance) {
     evToSalesVal = null;
-  } else if (revenue != null && revenue <= 0) {
+  } else if (revenueRaw != null && revenueRaw <= 0) {
     evToSalesVal = null;
-    evToSalesReason = 'FD/Satışlar hesaplanamıyor — TTM satışlar negatif veya sıfır.';
-  } else if (enterpriseValue != null && revenue != null && revenue > 0) {
-    evToSalesVal = enterpriseValue / revenue;
+    evToSalesStatus = 'negative_input';
+    evToSalesReason = 'TTM satışlar negatif veya sıfır olduğu için FD/Satışlar hesaplanmadı.';
+  } else if (enterpriseValue != null && revenueTRY != null && revenueTRY > 0) {
+    evToSalesVal = enterpriseValue / revenueTRY;
   } else if (enterpriseValue == null) {
+    evToSalesStatus = 'insufficient_data';
     evToSalesReason = 'Firma Değeri (EV) için gerekli veriler eksik.';
   }
 
@@ -571,6 +626,7 @@ export function calculateFinancialRatios(
           finaiFormula: 'F/K = Canlı Hisse Fiyatı / TTM Hisse Başı Kâr (EPS)'
         },
         true,
+        peStatus,
         peReason
       ),
       createRatio(
@@ -589,6 +645,7 @@ export function calculateFinancialRatios(
           finaiFormula: 'PD/DD = Canlı Hisse Fiyatı / Hisse Başı Defter Değeri (BVPS)'
         },
         false,
+        pbStatus,
         pbReason
       ),
       createRatio(
@@ -607,6 +664,7 @@ export function calculateFinancialRatios(
           finaiFormula: 'FD/FAVÖK = (Piyasa Değeri + Net Borç) / TTM FAVÖK'
         },
         true,
+        evToEBITDAStatus,
         evToEBITDAReason
       ),
       createRatio(
@@ -625,6 +683,7 @@ export function calculateFinancialRatios(
           finaiFormula: 'FD/Satışlar = (Piyasa Değeri + Net Borç) / TTM Toplam Satışlar'
         },
         true,
+        evToSalesStatus,
         evToSalesReason
       )
     ]
@@ -652,7 +711,8 @@ export function calculateFinancialRatios(
           finaiFormula: 'EPS = TTM Net Kâr / Ağırlıklı Ortalama Hisse Adedi'
         },
         true,
-        epsReason
+        epsVal == null ? 'insufficient_data' : undefined,
+        epsVal == null ? 'Doğrulanmış hisse sayısı veya TTM net kâr verisi bulunamadı.' : undefined
       ),
       createRatio(
         'bvps',
@@ -676,17 +736,17 @@ export function calculateFinancialRatios(
   // F) OPERATIONAL RATIOS (OPERASYONEL VERİMLİLİK)
   let assetTurnoverVal: number | null = null;
   if (!isBank && !isInsurance) {
-    if (revenue != null && endingAssets != null && beginningAssets != null && (endingAssets + beginningAssets) > 0) {
-      const avgAssets = (endingAssets + beginningAssets) / 2;
-      assetTurnoverVal = revenue / avgAssets;
-    } else if (revenue != null && endingAssets != null && endingAssets > 0) {
-      assetTurnoverVal = revenue / endingAssets;
+    if (revenueRaw != null && endingAssetsRaw != null && beginningAssetsRaw != null && (endingAssetsRaw + beginningAssetsRaw) > 0) {
+      const avgAssets = (endingAssetsRaw + beginningAssetsRaw) / 2;
+      assetTurnoverVal = revenueRaw / avgAssets;
+    } else if (revenueRaw != null && endingAssetsRaw != null && endingAssetsRaw > 0) {
+      assetTurnoverVal = revenueRaw / endingAssetsRaw;
     }
   }
 
   let inventoryTurnoverVal: number | null = null;
   const beginningInventories = beginningPeriod?.balanceSheet?.inventories ?? null;
-  const cogs = (revenue != null && grossProfit != null) ? (revenue - grossProfit) : null;
+  const cogs = (revenueRaw != null && grossProfitRaw != null) ? (revenueRaw - grossProfitRaw) : null;
 
   if (!isBank && !isInsurance && !isREIT) {
     if (cogs != null && inventories != null && beginningInventories != null && (inventories + beginningInventories) > 0) {
@@ -702,11 +762,11 @@ export function calculateFinancialRatios(
   const beginningReceivables = beginningPeriod?.balanceSheet?.receivables ?? null;
 
   if (!isBank && !isInsurance) {
-    if (revenue != null && receivables != null && beginningReceivables != null && (receivables + beginningReceivables) > 0) {
+    if (revenueRaw != null && receivables != null && beginningReceivables != null && (receivables + beginningReceivables) > 0) {
       const avgRec = (receivables + beginningReceivables) / 2;
-      receivablesTurnoverVal = revenue / avgRec;
-    } else if (revenue != null && receivables != null && receivables > 0) {
-      receivablesTurnoverVal = revenue / receivables;
+      receivablesTurnoverVal = revenueRaw / avgRec;
+    } else if (revenueRaw != null && receivables != null && receivables > 0) {
+      receivablesTurnoverVal = revenueRaw / receivables;
     }
   }
 

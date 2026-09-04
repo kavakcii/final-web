@@ -884,6 +884,12 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
                                 ? "Doğrulandı"
                                 : item.status === "not_applicable"
                                 ? "Sektör Dışı"
+                                : item.status === "negative_input"
+                                ? "Negatif Kâr / FAVÖK"
+                                : item.status === "insufficient_data"
+                                ? "Eksik Veri"
+                                : item.status === "source_unavailable"
+                                ? "Fiyat Bekleniyor"
                                 : item.status === "insufficient_history"
                                 ? "Yetersiz Geçmiş"
                                 : "Veri Yok"}

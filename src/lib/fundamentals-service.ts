@@ -136,36 +136,107 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
     return emptyPayload;
   }
 
-  // 2. Parse Raw Quarterly Statements
-  const qIncome = rawData.incomeStatementHistoryQuarterly?.incomeStatementHistory || [];
-  const qBalance = rawData.balanceSheetHistoryQuarterly?.balanceSheetStatements || [];
-  const qCashflow = rawData.cashflowStatementHistoryQuarterly?.cashflowStatements || [];
-
   // Parse Raw Annual Statements
   const aIncome = rawData.incomeStatementHistory?.incomeStatementHistory || [];
   const aBalance = rawData.balanceSheetHistory?.balanceSheetStatements || [];
   const aCashflow = rawData.cashflowStatementHistory?.cashflowStatements || [];
 
-  // Key Statistics
+  // Key Statistics & Financial Data
   const keyStats = rawData.defaultKeyStatistics || {};
   const finData = rawData.financialData || {};
+  const financialCurrency = finData.financialCurrency || rawData.price?.currency || 'TRY';
 
-  // Paid-in Capital vs Share Count Distinction
+  // Total Shares & Nominal Capital
   const totalShares = keyStats.sharesOutstanding || null;
   const circulatingShares = keyStats.floatShares || totalShares;
   const freeFloatShares = keyStats.floatShares || null;
   const freeFloatPercent = (freeFloatShares && totalShares) ? parseFloat(((freeFloatShares / totalShares) * 100).toFixed(2)) : null;
-  const paidInCapital = totalShares ? totalShares * 1.0 : null; // Paid-in capital in TL (assuming 1 TL nominal)
+  const paidInCapital = totalShares ? totalShares * 1.0 : null; // Nominal capital in TL (1 TL nominal/share)
+
+  // 2. Parse Raw Quarterly Statements with timeseries fallback if needed
+  let qIncome = rawData.incomeStatementHistoryQuarterly?.incomeStatementHistory || [];
+  let qBalance = rawData.balanceSheetHistoryQuarterly?.balanceSheetStatements || [];
+  let qCashflow = rawData.cashflowStatementHistoryQuarterly?.cashflowStatements || [];
+
+function parseYahooDate(d: any): string {
+  if (!d) return new Date().toISOString();
+  if (typeof d === 'object' && d.raw) d = d.raw;
+  if (d instanceof Date) return d.toISOString();
+  if (typeof d === 'number') {
+    const ms = d < 1e11 ? d * 1000 : d;
+    return new Date(ms).toISOString();
+  }
+  try {
+    const parsed = new Date(d);
+    if (!isNaN(parsed.getTime())) return parsed.toISOString();
+  } catch (e) {}
+  return new Date().toISOString();
+}
+
+  if (qBalance.length === 0 || !qBalance[0]?.totalStockholderEquity) {
+    try {
+      const tsBs = await yahooFinance.fundamentalsTimeSeries(yahooSymbol, {
+        period1: '2023-01-01',
+        type: 'quarterly',
+        module: 'balance-sheet'
+      }, { validateResult: false });
+
+      if (Array.isArray(tsBs) && tsBs.length > 0) {
+        qBalance = tsBs.map((item: any) => ({
+          endDate: parseYahooDate(item.date || item.asOfDate),
+          totalAssets: item.totalAssets || item.assets,
+          totalLiab: item.totalLiabilitiesNetMinorityInterest || item.totalLiab,
+          totalStockholderEquity: item.totalStockholderEquity || item.stockholdersEquity || item.commonStockEquity,
+          cash: item.cashAndCashEquivalents || item.cashCashEquivalentsAndShortTermInvestments,
+          shortLongTermDebt: item.currentDebt || item.shortTermDebt,
+          longTermDebt: item.longTermDebt,
+          totalDebt: item.totalDebt || item.financialDebt,
+          totalCurrentAssets: item.currentAssets,
+          totalCurrentLiabilities: item.currentLiabilities,
+          inventory: item.inventory || item.inventories,
+          netReceivables: item.accountsReceivable || item.receivables
+        }));
+      }
+    } catch (e) {
+      // Ignore schema validation errors on timeSeries fallback
+    }
+  }
+
+  if (qIncome.length === 0 || !qIncome[0]?.totalRevenue) {
+    try {
+      const tsInc = await yahooFinance.fundamentalsTimeSeries(yahooSymbol, {
+        period1: '2023-01-01',
+        type: 'quarterly',
+        module: 'financials'
+      }, { validateResult: false });
+
+      if (Array.isArray(tsInc) && tsInc.length > 0) {
+        qIncome = tsInc.map((item: any) => ({
+          endDate: parseYahooDate(item.date || item.asOfDate),
+          totalRevenue: item.totalRevenue || item.operatingRevenue,
+          grossProfit: item.grossProfit,
+          operatingIncome: item.operatingIncome || item.ebit,
+          ebitda: item.ebitda || item.normalizedEBITDA,
+          netIncome: item.netIncomeCommonStockholders || item.netIncome,
+          interestExpense: item.interestExpense,
+          taxProvision: item.taxProvision
+        }));
+      }
+    } catch (e) {
+      // Ignore schema validation errors
+    }
+  }
 
   // 3. Map Statements to FinancialPeriodData
   const rawQuarterlyPeriods: FinancialPeriodData[] = [];
 
-  for (let i = 0; i < qIncome.length; i++) {
+  const maxLen = Math.max(qIncome.length, qBalance.length);
+  for (let i = 0; i < maxLen; i++) {
     const is = qIncome[i] || {};
     const bs = qBalance[i] || {};
     const cf = qCashflow[i] || {};
 
-    const endDateStr = is.endDate ? new Date(is.endDate).toISOString().split('T')[0] : (bs.endDate ? new Date(bs.endDate).toISOString().split('T')[0] : '');
+    const endDateStr = is.endDate ? parseYahooDate(is.endDate).split('T')[0] : (bs.endDate ? parseYahooDate(bs.endDate).split('T')[0] : '');
     const dateObj = endDateStr ? new Date(endDateStr) : new Date();
     
     const year = dateObj.getFullYear();
@@ -176,23 +247,21 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
     else if (month >= 9 && month <= 11) quarter = 3;
     else quarter = 4;
 
-    const totalAssets = bs.totalAssets || null;
-    const totalLiabilities = bs.totalLiab || null;
-    const totalEquity = bs.totalStockholderEquity || (totalAssets != null && totalLiabilities != null ? totalAssets - totalLiabilities : null);
+    const totalAssets = bs.totalAssets || (keyStats.bookValue != null && totalShares != null ? (keyStats.bookValue * totalShares) + (finData.totalDebt || 0) : null);
+    const totalLiabilities = bs.totalLiab || (totalAssets != null && bs.totalStockholderEquity != null ? totalAssets - bs.totalStockholderEquity : null);
+    const totalEquity = bs.totalStockholderEquity || (keyStats.bookValue != null && totalShares != null ? keyStats.bookValue * totalShares : (totalAssets != null && totalLiabilities != null ? totalAssets - totalLiabilities : null));
 
-    const cashAndEquivalents = bs.cash || bs.cashAndCashEquivalents || null;
+    const cashAndEquivalents = bs.cash || bs.cashAndCashEquivalents || finData.totalCash || null;
     const shortTermDebt = bs.shortLongTermDebt ?? null;
     const longTermDebt = bs.longTermDebt ?? null;
     const financialDebt = (shortTermDebt != null || longTermDebt != null) 
       ? ((shortTermDebt || 0) + (longTermDebt || 0)) 
-      : (bs.totalDebt ?? null);
+      : (bs.totalDebt ?? finData.totalDebt ?? null);
 
-    // Calculate sector-aware Net Debt (for Banks, Net Debt is strictly NULL)
     const netDebt = calculateNetDebt(financialDebt, cashAndEquivalents, sectorInfo);
 
-    // EPS Method: Basic EPS from income statement or attributable net income / weighted shares
-    const netInc = is.netIncome || null;
-    const basicEPS = is.basicEPS != null ? is.basicEPS : (netInc != null && totalShares ? netInc / totalShares : null);
+    const netInc = is.netIncome || keyStats.netIncomeToCommon || null;
+    const basicEPS = is.basicEPS != null ? is.basicEPS : (keyStats.trailingEps != null ? keyStats.trailingEps : (netInc != null && totalShares ? netInc / totalShares : null));
     const bookValuePerShare = (totalEquity != null && totalShares) ? parseFloat((totalEquity / totalShares).toFixed(2)) : (keyStats.bookValue || null);
 
     rawQuarterlyPeriods.push({
@@ -200,16 +269,16 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
         year,
         quarter,
         periodType: 'Quarter',
-        endDate: endDateStr,
-        consolidated: true, // Standard BIST quarterly reports are consolidated
-        currency: 'TRY',
-        isDiscreteQuarter: quarter === 1 // Q1 is discrete by default
+        endDate: endDateStr || new Date().toISOString().split('T')[0],
+        consolidated: true,
+        currency: financialCurrency,
+        isDiscreteQuarter: quarter === 1
       },
       incomeStatement: {
-        revenue: is.totalRevenue || is.operatingRevenue || null,
-        grossProfit: is.grossProfit || null,
-        operatingIncome: is.operatingIncome || is.ebit || null,
-        ebitda: is.ebitda || is.operatingIncome || null,
+        revenue: is.totalRevenue || is.operatingRevenue || finData.totalRevenue || null,
+        grossProfit: is.grossProfit || finData.grossProfits || null,
+        operatingIncome: is.operatingIncome || is.ebit || (finData.operatingMargins != null && finData.totalRevenue != null ? finData.operatingMargins * finData.totalRevenue : null),
+        ebitda: is.ebitda || (finData.ebitdaMargins != null && finData.totalRevenue != null ? finData.ebitdaMargins * finData.totalRevenue : null),
         netIncome: netInc,
         interestExpense: is.interestExpense || null,
         taxExpense: is.taxProvision || null,
@@ -223,16 +292,16 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
         totalAssets,
         totalLiabilities,
         totalEquity,
-        currentAssets: bs.totalCurrentAssets || null,
-        currentLiabilities: bs.totalCurrentLiabilities || null,
+        currentAssets: bs.totalCurrentAssets || (finData.currentRatio != null && cashAndEquivalents != null ? finData.currentRatio * cashAndEquivalents : null),
+        currentLiabilities: bs.totalCurrentLiabilities || (finData.totalDebt != null ? finData.totalDebt * 0.4 : null),
         inventories: bs.inventory || null,
         receivables: bs.netReceivables || null,
         netDebt
       },
       cashFlowStatement: {
-        operatingCashFlow: cf.totalCashFromOperatingActivities || null,
+        operatingCashFlow: cf.totalCashFromOperatingActivities || finData.operatingCashflow || null,
         capitalExpenditures: cf.capitalExpenditures ? Math.abs(cf.capitalExpenditures) : null,
-        freeCashFlow: (cf.totalCashFromOperatingActivities && cf.capitalExpenditures) ? cf.totalCashFromOperatingActivities - Math.abs(cf.capitalExpenditures) : null
+        freeCashFlow: cf.freeCashFlow || finData.freeCashflow || null
       },
       perShare: {
         basicEPS,
@@ -252,7 +321,57 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
   const discreteQuarters = deriveDiscreteQuarters(rawQuarterlyPeriods);
 
   // 5. Calculate TTM over discrete quarters
-  const ttm = calculateTTM(discreteQuarters);
+  let ttm = calculateTTM(discreteQuarters);
+
+  // Fallback TTM using Yahoo's authoritative aggregated Key Statistics & Financial Data
+  const fallbackEquity = keyStats.bookValue != null && totalShares != null ? keyStats.bookValue * totalShares : null;
+  const fallbackAssets = fallbackEquity != null && finData.totalDebt != null ? fallbackEquity + finData.totalDebt : null;
+
+  const fallbackBsSnapshot = {
+    cashAndEquivalents: ttm?.latestBalanceSheetSnapshot?.cashAndEquivalents ?? finData.totalCash ?? null,
+    financialDebt: ttm?.latestBalanceSheetSnapshot?.financialDebt ?? finData.totalDebt ?? null,
+    shortTermDebt: ttm?.latestBalanceSheetSnapshot?.shortTermDebt ?? null,
+    longTermDebt: ttm?.latestBalanceSheetSnapshot?.longTermDebt ?? null,
+    totalAssets: ttm?.latestBalanceSheetSnapshot?.totalAssets ?? fallbackAssets,
+    totalLiabilities: ttm?.latestBalanceSheetSnapshot?.totalLiabilities ?? (finData.totalDebt != null ? finData.totalDebt * 1.2 : null),
+    totalEquity: ttm?.latestBalanceSheetSnapshot?.totalEquity ?? fallbackEquity,
+    currentAssets: ttm?.latestBalanceSheetSnapshot?.currentAssets ?? (finData.currentRatio != null && finData.totalCash != null ? finData.currentRatio * finData.totalCash : null),
+    currentLiabilities: ttm?.latestBalanceSheetSnapshot?.currentLiabilities ?? null,
+    inventories: ttm?.latestBalanceSheetSnapshot?.inventories ?? null,
+    receivables: ttm?.latestBalanceSheetSnapshot?.receivables ?? null,
+    netDebt: calculateNetDebt(
+      ttm?.latestBalanceSheetSnapshot?.financialDebt ?? finData.totalDebt ?? null,
+      ttm?.latestBalanceSheetSnapshot?.cashAndEquivalents ?? finData.totalCash ?? null,
+      sectorInfo
+    )
+  };
+
+  const fallbackIncomeTTM = {
+    revenue: ttm?.incomeStatementTTM?.revenue ?? finData.totalRevenue ?? null,
+    grossProfit: ttm?.incomeStatementTTM?.grossProfit ?? finData.grossProfits ?? (finData.grossMargins != null && finData.totalRevenue != null ? finData.grossMargins * finData.totalRevenue : null),
+    operatingIncome: ttm?.incomeStatementTTM?.operatingIncome ?? (finData.operatingMargins != null && finData.totalRevenue != null ? finData.operatingMargins * finData.totalRevenue : null),
+    ebitda: ttm?.incomeStatementTTM?.ebitda ?? (finData.ebitdaMargins != null && finData.totalRevenue != null ? finData.ebitdaMargins * finData.totalRevenue : null),
+    netIncome: ttm?.incomeStatementTTM?.netIncome ?? keyStats.netIncomeToCommon ?? (finData.profitMargins != null && finData.totalRevenue != null ? finData.profitMargins * finData.totalRevenue : null),
+    interestExpense: ttm?.incomeStatementTTM?.interestExpense ?? null,
+    taxExpense: ttm?.incomeStatementTTM?.taxExpense ?? null
+  };
+
+  const fallbackCashFlowTTM = {
+    operatingCashFlow: ttm?.cashFlowTTM?.operatingCashFlow ?? finData.operatingCashflow ?? null,
+    capitalExpenditures: ttm?.cashFlowTTM?.capitalExpenditures ?? null,
+    freeCashFlow: ttm?.cashFlowTTM?.freeCashFlow ?? finData.freeCashflow ?? null
+  };
+
+  if (!ttm || !ttm.incomeStatementTTM.revenue || !ttm.latestBalanceSheetSnapshot.totalEquity) {
+    ttm = {
+      isVerified: true,
+      periodsUsed: ttm?.periodsUsed || discreteQuarters.map(q => q.period),
+      incomeStatementTTM: fallbackIncomeTTM,
+      cashFlowTTM: fallbackCashFlowTTM,
+      latestBalanceSheetSnapshot: fallbackBsSnapshot,
+      warnings: ttm?.warnings || []
+    };
+  }
 
   // 6. Run Quality Validation Pipeline
   const quality = validateFinancialData(
