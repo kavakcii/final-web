@@ -442,7 +442,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
         netAmount: d.netAmount ?? parseFloat((d.grossAmount * 0.90).toFixed(4)),
         netAmountFormatted: `${(d.netAmount ?? (d.grossAmount * 0.90)).toFixed(4)} ₺`,
         yieldPercent: livePrice && livePrice > 0 ? ((d.grossAmount / livePrice) * 100) : 0,
-        source: d.source || 'Yahoo/KAP Arşivi'
+        source: d.source || 'Yahoo Finance Temettü Arşivi'
       }));
     }
     
@@ -1557,7 +1557,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
           </div>
 
           <p className="text-[11px] text-slate-400 leading-relaxed font-medium pt-2 border-t border-slate-800/80">
-            * FinAi üzerindeki tüm finansal rasyolar ve sektör karşılaştırmaları, şirketlerin Kamuyu Aydınlatma Platformu (KAP) ve resmi finansal raporlamalarından derlenen doğrulanmış verilerle hesaplanmaktadır. Eksik çeyreklerde tahmin veya uydurma veri kullanılmaz. Tüm analizler finansal okuryazarlık amaçlıdır; doğrudan yatırım tavsiyesi içermez.
+            * FinAi üzerindeki tüm finansal rasyolar ve sektör karşılaştırmaları, şirketlerin finansal raporlamalarından (Yahoo Finance BIST Gateway ve TradingView Scanner) derlenen doğrulanmış verilerle hesaplanmaktadır. Eksik çeyreklerde tahmin veya uydurma veri kullanılmaz. Tüm analizler finansal okuryazarlık amaçlıdır; doğrudan yatırım tavsiyesi içermez.
           </p>
         </div>
 

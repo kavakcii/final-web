@@ -703,12 +703,12 @@ export function calculateFinancialRatios(
         '₺',
         false,
         '',
-        'TTM Net Kâr / Ağırlıklı Ortalama Hisse Adedi',
+        'TTM Ana Ortaklık Net Kârı / Ağırlıklı Ortalama Hisse Adedi',
         {
           whatItMeasures: 'Tek bir adet hisse senedinin son 1 yılda ürettiği net kâr tutarını gösterir.',
           howToInterpret: 'EPS değerinin düzenli artması şirket kârlılığının büyüdüğünü teyit eder.',
-          sectorCaution: 'Sermaye artırımlarında (bedelsiz/bedelli) pay sayısı değiştiğinden ağırlıklı ortalama hisse adedi kullanılır.',
-          finaiFormula: 'EPS = TTM Net Kâr / Ağırlıklı Ortalama Hisse Adedi'
+          sectorCaution: 'Sermaye artırımlarında pay adedi değiştiğinden ağırlıklı ortalama hisse adedi (weightedAverageShares) kullanılır; nominal ödenmiş sermaye tutarı bölen olarak kullanılmaz.',
+          finaiFormula: 'EPS = TTM Ana Ortaklık Net Kârı / Ağırlıklı Ortalama Hisse Adedi'
         },
         true,
         epsVal == null ? 'insufficient_data' : undefined,
