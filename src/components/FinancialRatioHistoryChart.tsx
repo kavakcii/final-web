@@ -144,8 +144,14 @@ export default function FinancialRatioHistoryChart({
       }
     } else if (statusObj?.status === 'negative_input') {
       formattedText = 'Negatif Girdi';
+    } else if (statusObj?.status === 'insufficient_history') {
+      formattedText = 'Yetersiz Geçmiş Veri';
+    } else if (statusObj?.status === 'insufficient_data') {
+      formattedText = 'Eksik Veri';
+    } else if (statusObj?.status === 'validation_failed' || statusObj?.status === 'unavailable') {
+      formattedText = 'Kullanılamıyor';
     } else {
-      formattedText = 'Veri Yok';
+      formattedText = 'Eksik Veri';
     }
 
     return {
