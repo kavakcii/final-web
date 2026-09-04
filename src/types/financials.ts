@@ -1,6 +1,6 @@
 /**
- * FinAI Financial Data Layer - Stage 2.1 Types
- * Comprehensive TypeScript Interfaces for Stock Fundamentals & Validation
+ * FinAI Financial Data Layer - Stage 5B Types
+ * Comprehensive TypeScript Interfaces for Stock Fundamentals, Multi-Period Archive, & Validation
  */
 
 export type SectorCategory =
@@ -27,6 +27,12 @@ export type QualityStatus =
   | 'invalid'
   | 'unavailable';
 
+export type ValidationStatus =
+  | 'VALID'
+  | 'WARNING'
+  | 'INVALID'
+  | 'CONFLICT';
+
 export type RatioStatus =
   | 'available'
   | 'not_applicable'
@@ -39,7 +45,7 @@ export type RatioStatus =
   | 'currency_mismatch'
   | 'consolidation_mismatch';
 
-export type PeriodType = 'Quarter' | 'YTD' | 'Annual' | 'TTM';
+export type PeriodType = 'Quarter' | 'YTD' | 'Annual' | 'TTM' | 'QUARTERLY' | 'ANNUAL';
 
 export interface SectorInfo {
   category: SectorCategory;
@@ -54,21 +60,38 @@ export interface SectorInfo {
 export interface StatementPeriod {
   year: number;
   quarter: number; // 1, 2, 3, 4
-  periodType: PeriodType;
+  periodType: 'Quarter' | 'Annual' | 'TTM' | 'QUARTERLY' | 'ANNUAL';
+  startDate?: string;
   endDate: string; // ISO format e.g. "2025-12-31"
   consolidated: boolean;
   currency: string | null; // e.g. "TRY", "USD"
-  isDiscreteQuarter: boolean; // true if Q1, or derived discrete Q2=H1-Q1, Q3=9M-H1, Q4=Annual-9M
+  sourceCurrency?: string | null;
+  reportedCurrency?: string | null;
+  isDiscreteQuarter: boolean; // true if Q1, or Yahoo 3M discrete quarter
+  isRestated?: boolean;
+  version?: number;
 }
 
 export interface IncomeStatement {
   revenue: number | null;
+  costOfRevenue?: number | null;
   grossProfit: number | null;
+  operatingExpenses?: number | null;
   operatingIncome: number | null;
   ebitda: number | null;
-  netIncome: number | null;
-  interestExpense?: number | null;
+  pretaxIncome?: number | null;
   taxExpense?: number | null;
+  netIncome: number | null;
+  netIncomeToParent?: number | null;
+  interestIncome?: number | null;
+  interestExpense?: number | null;
+  
+  // Margins (Derived / Percentage 0-100%)
+  grossMargin?: number | null;
+  operatingMargin?: number | null;
+  ebitdaMargin?: number | null;
+  netMargin?: number | null;
+
   // Bank specific fields
   netInterestIncome?: number | null;
   provisionForCreditLosses?: number | null;
@@ -83,11 +106,13 @@ export interface BalanceSheet {
   totalAssets: number | null;
   totalLiabilities: number | null;
   totalEquity: number | null;
+  parentEquity?: number | null;
   currentAssets: number | null;
   currentLiabilities: number | null;
   inventories: number | null;
   receivables: number | null;
   netDebt: number | null; // Null/NotApplicable for Banks!
+  
   // Bank specific fields
   totalDeposits?: number | null;
   totalLoans?: number | null;
@@ -96,22 +121,40 @@ export interface BalanceSheet {
 
 export interface CashFlowStatement {
   operatingCashFlow: number | null;
-  capitalExpenditures: number | null;
-  freeCashFlow: number | null; // operatingCashFlow - capEx
-  financingCashFlow?: number | null;
   investingCashFlow?: number | null;
+  financingCashFlow?: number | null;
+  capitalExpenditures: number | null;
+  freeCashFlow: number | null; // operatingCashFlow - capEx or reported FCF
+  dividendsPaid?: number | null;
+  netChangeInCash?: number | null;
 }
 
 export interface PerShareData {
   basicEPS: number | null;
   dilutedEPS: number | null;
   bookValuePerShare: number | null;
-  paidInCapital: number | null;       // Ödenmiş Sermaye (TL)
+  paidInCapital: number | null;       // Ödenmiş Sermaye (TL) - NEVER USED AS DENOMINATOR
   totalShares: number | null;         // Toplam Hisse Adedi
   circulatingShares: number | null;   // Dolaşımdaki Hisse Adedi
   freeFloatShares: number | null;     // Halka Açık Hisse Adedi
   freeFloatPercent: number | null;    // Halka Açıklık Oranı %
   weightedAverageShares: number | null; // Ağırlıklı Ortalama Hisse Adedi
+}
+
+export interface HistoricalDividendRecord {
+  symbol: string;
+  companyName?: string;
+  exDate: string;           // ISO date e.g. "2024-04-18"
+  recordDate?: string | null;
+  paymentDate?: string | null;
+  announcementDate?: string | null;
+  grossAmount: number;      // TL per share
+  netAmount?: number | null;// TL per share
+  currency: string;
+  source: string;
+  sourceUrl?: string;
+  validationStatus: ValidationStatus;
+  isCurrent?: boolean;
 }
 
 export interface FinancialPeriodData {
@@ -134,6 +177,7 @@ export interface CalculatedTTM {
 export interface QualityMetadata {
   completenessScore: number; // 0 - 100%
   status: QualityStatus;
+  validationStatus: ValidationStatus;
   warnings: string[];
   errors: string[];
   balanceSheetChecks: {
@@ -160,7 +204,8 @@ export interface ValidatedFinancialData {
   sectorInfo: SectorInfo;
   quality: QualityMetadata;
   ttm: CalculatedTTM | null;
-  quarters: FinancialPeriodData[]; // Discrete quarterly financial statements
-  annuals: FinancialPeriodData[];  // Annual financial statements
+  quarters: FinancialPeriodData[]; // Discrete quarterly financial statements (5-7 periods)
+  annuals: FinancialPeriodData[];  // Annual financial statements (4-5 years)
+  dividends?: HistoricalDividendRecord[]; // 10-year real cash dividend distribution history
   lastUpdated: string;
 }

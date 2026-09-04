@@ -128,6 +128,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
   const [activeTimeframe, setActiveTimeframe] = useState("1G");
   const [activeNavTab, setActiveNavTab] = useState("genel");
   const [activeFinancialTab, setActiveFinancialTab] = useState<"income" | "balance" | "cashFlow">("income");
+  const [statementPeriodType, setStatementPeriodType] = useState<"quarterly" | "annual">("quarterly");
   
   // Real BIST Price & Chart Data State
   const [stockData, setStockData] = useState<any>(null);
@@ -397,10 +398,37 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
     ];
   }, [fundamentalsData, ttmIncome, ttmCashFlow, latestBs, isBank, finCurrency, isUsdFinancials]);
 
-  // Discrete Quarters list for Financial Statements Table
-  const discreteQuarters = useMemo(() => {
+  // Multi-Period Statements (Quarterly vs Annual)
+  const displayedPeriods = useMemo(() => {
+    if (statementPeriodType === 'annual') {
+      return fundamentalsData?.annuals && fundamentalsData.annuals.length > 0
+        ? fundamentalsData.annuals
+        : (fundamentalsData?.quarters || []);
+    }
     return fundamentalsData?.quarters || [];
-  }, [fundamentalsData]);
+  }, [fundamentalsData, statementPeriodType]);
+
+  // Combined Historical Dividends
+  const combinedDividends = useMemo(() => {
+    const livePrice = stockData?.currentPrice || BIST_REAL_PRICES[symbol]?.current || null;
+    const historyDivs = fundamentalsData?.dividends || [];
+    
+    if (historyDivs.length > 0) {
+      return historyDivs.map((d: any) => ({
+        paymentDate: d.exDate || d.paymentDate,
+        grossAmount: d.grossAmount,
+        netAmount: d.netAmount ?? parseFloat((d.grossAmount * 0.90).toFixed(4)),
+        netAmountFormatted: `${(d.netAmount ?? (d.grossAmount * 0.90)).toFixed(4)} ₺`,
+        yieldPercent: livePrice && livePrice > 0 ? ((d.grossAmount / livePrice) * 100) : 0,
+        source: d.source || 'Yahoo/KAP Arşivi'
+      }));
+    }
+    
+    return dividendList.map((item: any) => ({
+      ...item,
+      source: 'Halkarz / BIST Kataloğu'
+    }));
+  }, [fundamentalsData, dividendList, stockData, symbol]);
 
   return (
     <div className="flex min-h-screen bg-[#F8FAFC] w-full overflow-x-hidden relative">
@@ -1058,41 +1086,71 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
               </p>
             </div>
 
-            {/* Tablo Seçici Butonlar */}
-            <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
-              {[
-                { id: "income", label: "Gelir Tablosu" },
-                { id: "balance", label: "Bilanço" },
-                { id: "cashFlow", label: "Nakit Akışı" }
-              ].map(tab => (
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+              {/* Dönem Tipi Seçici (Çeyreklik / Yıllık) */}
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveFinancialTab(tab.id as any)}
+                  onClick={() => setStatementPeriodType("quarterly")}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-black rounded-lg transition-all",
-                    activeFinancialTab === tab.id
-                      ? "bg-[#00008B] text-white shadow-sm"
-                      : "text-slate-600 hover:text-[#00008B]"
+                    "px-2.5 py-1 text-[11px] font-black rounded-lg transition-all",
+                    statementPeriodType === "quarterly"
+                      ? "bg-white text-[#00008B] shadow-sm"
+                      : "text-slate-500 hover:text-[#00008B]"
                   )}
                 >
-                  {tab.label}
+                  Çeyreklik (3A)
                 </button>
-              ))}
+                <button
+                  onClick={() => setStatementPeriodType("annual")}
+                  className={cn(
+                    "px-2.5 py-1 text-[11px] font-black rounded-lg transition-all",
+                    statementPeriodType === "annual"
+                      ? "bg-white text-[#00008B] shadow-sm"
+                      : "text-slate-500 hover:text-[#00008B]"
+                  )}
+                >
+                  Yıllık (12A)
+                </button>
+              </div>
+
+              {/* Tablo Seçici Butonlar */}
+              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                {[
+                  { id: "income", label: "Gelir Tablosu" },
+                  { id: "balance", label: "Bilanço" },
+                  { id: "cashFlow", label: "Nakit Akışı" }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveFinancialTab(tab.id as any)}
+                    className={cn(
+                      "px-3 py-1.5 text-xs font-black rounded-lg transition-all",
+                      activeFinancialTab === tab.id
+                        ? "bg-[#00008B] text-white shadow-sm"
+                        : "text-slate-600 hover:text-[#00008B]"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {discreteQuarters.length > 0 ? (
+          {displayedPeriods.length > 0 ? (
             <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-wider">
                     <th className="py-3 px-4">Kalem ({finCurrency})</th>
-                    {discreteQuarters.map((q: any, i: number) => (
+                    {displayedPeriods.map((q: any, i: number) => (
                       <th key={i} className="py-3 px-4 text-right">
-                        {q.period.periodLabel || `${q.period.year} Q${q.period.quarter}`}
+                        {q.period.periodType === 'ANNUAL' 
+                          ? `${q.period.year} Yıllık`
+                          : (q.period.periodLabel || `${q.period.year} Q${q.period.quarter}`)}
                       </th>
                     ))}
-                    {fundamentalsData?.ttm?.isVerified && (
+                    {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                       <th className="py-3 px-4 text-right text-[#00008B] bg-blue-50/50">
                         TTM (Son 4 Çeyrek)
                       </th>
@@ -1104,12 +1162,12 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                     <>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 font-black text-slate-900">Satış Gelirleri (Revenue)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right text-slate-900 font-black">
                             {q.incomeStatement?.revenue != null ? formatMoney(q.incomeStatement.revenue, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] font-black bg-blue-50/30">
                             {ttmIncome?.revenue != null ? formatMoney(ttmIncome.revenue, finCurrency) : "Veri Yok"}
                           </td>
@@ -1117,12 +1175,12 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">Brüt Kâr (Gross Profit)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {q.incomeStatement?.grossProfit != null ? formatMoney(q.incomeStatement.grossProfit, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] bg-blue-50/30">
                             {ttmIncome?.grossProfit != null ? formatMoney(ttmIncome.grossProfit, finCurrency) : "Veri Yok"}
                           </td>
@@ -1130,12 +1188,12 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">Faaliyet Kârı (EBIT)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {q.incomeStatement?.operatingIncome != null ? formatMoney(q.incomeStatement.operatingIncome, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] bg-blue-50/30">
                             {ttmIncome?.operatingIncome != null ? formatMoney(ttmIncome.operatingIncome, finCurrency) : "Veri Yok"}
                           </td>
@@ -1143,12 +1201,12 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">FAVÖK (EBITDA)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {isBank ? "Sektör Dışı (N/A)" : (q.incomeStatement?.ebitda != null ? formatMoney(q.incomeStatement.ebitda, finCurrency) : "Veri Yok")}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] bg-blue-50/30">
                             {isBank ? "Sektör Dışı (N/A)" : (ttmIncome?.ebitda != null ? formatMoney(ttmIncome.ebitda, finCurrency) : "Veri Yok")}
                           </td>
@@ -1156,12 +1214,12 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                       </tr>
                       <tr className="hover:bg-slate-50 bg-slate-50/40">
                         <td className="py-3 px-4 font-black text-slate-900">Net Dönem Kârı (Net Income)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right font-black text-[#00008B]">
                             {q.incomeStatement?.netIncome != null ? formatMoney(q.incomeStatement.netIncome, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] font-black bg-blue-50/60">
                             {ttmIncome?.netIncome != null ? formatMoney(ttmIncome.netIncome, finCurrency) : "Veri Yok"}
                           </td>
@@ -1174,57 +1232,57 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                     <>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 font-black text-slate-900">Nakit ve Benzerleri</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {q.balanceSheet?.cashAndEquivalents != null ? formatMoney(q.balanceSheet.cashAndEquivalents, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">Dönen Varlıklar (Current Assets)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {q.balanceSheet?.currentAssets != null ? formatMoney(q.balanceSheet.currentAssets, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
                       </tr>
                       <tr className="hover:bg-slate-50 bg-slate-50/40">
                         <td className="py-3 px-4 font-black text-slate-900">Toplam Varlıklar (Total Assets)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right font-black text-[#00008B]">
                             {q.balanceSheet?.totalAssets != null ? formatMoney(q.balanceSheet.totalAssets, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">Kısa Vadeli Borçlar</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {q.balanceSheet?.currentLiabilities != null ? formatMoney(q.balanceSheet.currentLiabilities, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">Net Finansal Borç</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {isBank ? "Sektör Dışı (N/A)" : (q.balanceSheet?.netDebt != null ? formatMoney(q.balanceSheet.netDebt, finCurrency) : "Veri Yok")}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
                       </tr>
                       <tr className="hover:bg-slate-50 bg-slate-50/40">
                         <td className="py-3 px-4 font-black text-slate-900">Toplam Özkaynaklar (Equity)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right font-black text-[#00008B]">
                             {q.balanceSheet?.totalEquity != null ? formatMoney(q.balanceSheet.totalEquity, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
                       </tr>
                     </>
                   )}
@@ -1233,36 +1291,92 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                     <>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 font-black text-slate-900">İşletme Nakit Akışı (Operating CF)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
-                          <td key={i} className="py-3 px-4 text-right">
+                        {displayedPeriods.map((q: any, i: number) => (
+                          <td key={i} className="py-3 px-4 text-right text-slate-900 font-black">
                             {q.cashFlowStatement?.operatingCashFlow != null ? formatMoney(q.cashFlowStatement.operatingCashFlow, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] bg-blue-50/30 font-black">
-                            {ttmCashFlow?.freeCashFlow != null ? formatMoney(ttmCashFlow.freeCashFlow, finCurrency) : "Veri Yok"}
+                            {ttmCashFlow?.operatingCashFlow != null ? formatMoney(ttmCashFlow.operatingCashFlow, finCurrency) : "Veri Yok"}
                           </td>
                         )}
                       </tr>
                       <tr className="hover:bg-slate-50">
                         <td className="py-3 px-4 text-slate-800">Yatırım Harcamaları (CapEx)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right">
                             {q.cashFlowStatement?.capitalExpenditures != null ? formatMoney(q.cashFlowStatement.capitalExpenditures, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && <td className="py-3 px-4 text-right bg-blue-50/30">—</td>}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
+                          <td className="py-3 px-4 text-right bg-blue-50/30">
+                            {ttmCashFlow?.capitalExpenditures != null ? formatMoney(ttmCashFlow.capitalExpenditures, finCurrency) : "—"}
+                          </td>
+                        )}
                       </tr>
                       <tr className="hover:bg-slate-50 bg-slate-50/40">
                         <td className="py-3 px-4 font-black text-slate-900">Serbest Nakit Akışı (Free Cash Flow)</td>
-                        {discreteQuarters.map((q: any, i: number) => (
+                        {displayedPeriods.map((q: any, i: number) => (
                           <td key={i} className="py-3 px-4 text-right font-black text-[#00008B]">
                             {q.cashFlowStatement?.freeCashFlow != null ? formatMoney(q.cashFlowStatement.freeCashFlow, finCurrency) : "Veri Yok"}
                           </td>
                         ))}
-                        {fundamentalsData?.ttm?.isVerified && (
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
                           <td className="py-3 px-4 text-right text-[#00008B] font-black bg-blue-50/60">
                             {ttmCashFlow?.freeCashFlow != null ? formatMoney(ttmCashFlow.freeCashFlow, finCurrency) : "Veri Yok"}
+                          </td>
+                        )}
+                      </tr>
+                      <tr className="hover:bg-slate-50">
+                        <td className="py-3 px-4 text-slate-800">Yatırım Faaliyetlerinden Nakit Akışı</td>
+                        {displayedPeriods.map((q: any, i: number) => (
+                          <td key={i} className="py-3 px-4 text-right">
+                            {q.cashFlowStatement?.investingCashFlow != null ? formatMoney(q.cashFlowStatement.investingCashFlow, finCurrency) : "Veri Yok"}
+                          </td>
+                        ))}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
+                          <td className="py-3 px-4 text-right bg-blue-50/30">
+                            {ttmCashFlow?.investingCashFlow != null ? formatMoney(ttmCashFlow.investingCashFlow, finCurrency) : "—"}
+                          </td>
+                        )}
+                      </tr>
+                      <tr className="hover:bg-slate-50">
+                        <td className="py-3 px-4 text-slate-800">Finansman Faaliyetlerinden Nakit Akışı</td>
+                        {displayedPeriods.map((q: any, i: number) => (
+                          <td key={i} className="py-3 px-4 text-right">
+                            {q.cashFlowStatement?.financingCashFlow != null ? formatMoney(q.cashFlowStatement.financingCashFlow, finCurrency) : "Veri Yok"}
+                          </td>
+                        ))}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
+                          <td className="py-3 px-4 text-right bg-blue-50/30">
+                            {ttmCashFlow?.financingCashFlow != null ? formatMoney(ttmCashFlow.financingCashFlow, finCurrency) : "—"}
+                          </td>
+                        )}
+                      </tr>
+                      <tr className="hover:bg-slate-50">
+                        <td className="py-3 px-4 text-slate-800">Ödenen Temettüler (Dividends Paid)</td>
+                        {displayedPeriods.map((q: any, i: number) => (
+                          <td key={i} className="py-3 px-4 text-right">
+                            {q.cashFlowStatement?.dividendsPaid != null ? formatMoney(q.cashFlowStatement.dividendsPaid, finCurrency) : "Veri Yok"}
+                          </td>
+                        ))}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
+                          <td className="py-3 px-4 text-right bg-blue-50/30">
+                            {ttmCashFlow?.dividendsPaid != null ? formatMoney(ttmCashFlow.dividendsPaid, finCurrency) : "—"}
+                          </td>
+                        )}
+                      </tr>
+                      <tr className="hover:bg-slate-50">
+                        <td className="py-3 px-4 text-slate-800">Net Nakit Değişimi</td>
+                        {displayedPeriods.map((q: any, i: number) => (
+                          <td key={i} className="py-3 px-4 text-right">
+                            {q.cashFlowStatement?.netChangeInCash != null ? formatMoney(q.cashFlowStatement.netChangeInCash, finCurrency) : "Veri Yok"}
+                          </td>
+                        ))}
+                        {statementPeriodType === 'quarterly' && fundamentalsData?.ttm?.isVerified && (
+                          <td className="py-3 px-4 text-right bg-blue-50/30">
+                            {ttmCashFlow?.netChangeInCash != null ? formatMoney(ttmCashFlow.netChangeInCash, finCurrency) : "—"}
                           </td>
                         )}
                       </tr>
@@ -1288,7 +1402,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
               {symbol} Temettü Dağıtım Geçmişi & Kâr Payı
             </h3>
             <span className="text-[10px] font-black px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
-              Resmi Temettü Kayıtları
+              Resmi Temettü Kayıtları ({combinedDividends.length} Ödeme)
             </span>
           </div>
 
@@ -1297,7 +1411,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
               <RefreshCw className="w-4 h-4 animate-spin text-[#00008B]" />
               Temettü verileri yükleniyor...
             </div>
-          ) : dividendList.length > 0 ? (
+          ) : combinedDividends.length > 0 ? (
             <div className="overflow-x-auto rounded-2xl border border-slate-200">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -1305,15 +1419,21 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                     <th className="py-3 px-4">Hak Kullanım / Ödeme Tarihi</th>
                     <th className="py-3 px-4">Pay Başına Net Temettü</th>
                     <th className="py-3 px-4">Temettü Verimi</th>
+                    <th className="py-3 px-4">Kaynak</th>
                     <th className="py-3 px-4 text-right">Durum</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700">
-                  {dividendList.map((item, idx) => (
+                  {combinedDividends.map((item: any, idx: number) => (
                     <tr key={idx} className="hover:bg-slate-50 transition-colors">
                       <td className="py-3 px-4 font-black text-slate-900">{item.paymentDate}</td>
                       <td className="py-3 px-4 text-[#00008B] font-black">{item.netAmountFormatted}</td>
-                      <td className="py-3 px-4 text-emerald-700 font-black">%{item.yieldPercent.toFixed(2)}</td>
+                      <td className="py-3 px-4 text-emerald-700 font-black">
+                        {item.yieldPercent > 0 ? `%${item.yieldPercent.toFixed(2)}` : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-[10px] text-slate-400 font-medium">
+                        {item.source}
+                      </td>
                       <td className="py-3 px-4 text-right">
                         <span className="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-200">
                           Ödendi / Kesinleşti
@@ -1345,23 +1465,25 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
             </div>
 
             <span className="text-[10px] font-black px-3 py-1 rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-800 self-start sm:self-auto">
-              Doğrulanmış Finansal Katman
+              {fundamentalsData?.quality?.status === 'verified' ? 'Doğrulanmış Finansal Katman' : 'Kısmi / Doğrulama Aşamasında'}
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
             <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Veri Kaynağı</span>
-              <p className="text-xs font-black text-white">Doğrulanmış BIST Finansal Tablo Katmanı</p>
-              <span className="text-[9px] text-slate-400 font-medium block">Resmi Raporlama</span>
+              <p className="text-xs font-black text-white">{fundamentalsData?.quality?.sourceMetadata?.source || "Doğrulanmış BIST Finansal Tablo Katmanı"}</p>
+              <span className="text-[9px] text-slate-400 font-medium block">
+                {fundamentalsData?.quality?.sourceMetadata?.verifiedAt ? `Son Doğrulama: ${new Date(fundamentalsData.quality.sourceMetadata.verifiedAt).toLocaleDateString('tr-TR')}` : "Resmi Raporlama"}
+              </span>
             </div>
 
             <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Son Rapor Dönemi</span>
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Kayıtlı Dönemler</span>
               <p className="text-xs font-black text-emerald-300">
-                {discreteQuarters.length > 0 ? (discreteQuarters[discreteQuarters.length - 1]?.period?.periodLabel || "2026 Q2") : "2026 Q2"}
+                {fundamentalsData?.quarters?.length || 0} Çeyrek • {fundamentalsData?.annuals?.length || 0} Yıl
               </p>
-              <span className="text-[9px] text-slate-400 font-medium block">Konsolide Bilanço</span>
+              <span className="text-[9px] text-slate-400 font-medium block">Ayrık Finansal Tablolar</span>
             </div>
 
             <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
@@ -1378,7 +1500,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                 {finCurrency} • Konsolide
               </p>
               <span className="text-[9px] text-slate-400 font-medium block">
-                {isUsdFinancials ? "FX Dönüşümü Uygulanmıştır" : "BIST Standart TRY"}
+                {isUsdFinancials ? "USD Orijinal Bilanço Raporu" : "BIST Standart TRY"}
               </span>
             </div>
           </div>

@@ -1,406 +1,353 @@
 /**
- * FinAI Fundamentals Service - Stage 2.1
- * Data Retrieval, Sector Categorization, Statement Normalization, Validation & TTM Service
+ * FinAI Fundamentals Service - Stage 5B
+ * Resilient Historical Financial Repository, Multi-Period Statements, Quality Engine, & Adapter Orchestrator
  */
 
 import { 
   FinancialPeriodData, 
-  ValidatedFinancialData 
+  ValidatedFinancialData,
+  HistoricalDividendRecord
 } from '@/types/financials';
 import { getSectorCategory, normalizeSymbol } from '@/lib/sector-categorizer';
-import { calculateNetDebt, validateFinancialData } from '@/lib/financial-validator';
-import { calculateTTM, deriveDiscreteQuarters } from '@/lib/ttm-calculator';
+import { validateFinancialData } from '@/lib/financial-validator';
+import { calculateTTM } from '@/lib/ttm-calculator';
+import { YahooFinanceAdapter } from '@/lib/adapters/yahoo-finance.adapter';
+import { TradingViewAdapter } from '@/lib/adapters/tradingview.adapter';
+import { supabase } from '@/lib/supabase';
 
-// Initialize Yahoo Finance module safely
-const yfModule = require('yahoo-finance2');
-const YahooFinanceClass = yfModule.YahooFinance || yfModule.default?.YahooFinance || yfModule.default;
-const yahooFinance = new YahooFinanceClass({ suppressNotices: ['yahooSurvey'] });
-
-// In-memory server cache (5 minutes TTL for fundamentals)
+// In-memory server cache (10 minutes TTL for active fundamentals)
 const fundamentalsCache = new Map<string, { data: ValidatedFinancialData; timestamp: number }>();
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
+const yahooAdapter = new YahooFinanceAdapter();
+const tradingViewAdapter = new TradingViewAdapter();
+
+/**
+ * Persists normalized statements and provenance to Supabase historical archive asynchronously (non-blocking)
+ */
+async function persistToSupabaseArchive(data: ValidatedFinancialData, provenance: any[] = []): Promise<void> {
+  try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+      return; // Skip if Supabase is not configured
+    }
+
+    const cleanSymbol = data.normalizedSymbol;
+    const now = new Date().toISOString();
+
+    // 1. Persist Raw Provenance Payloads
+    for (const prov of provenance) {
+      try {
+        await supabase.from('raw_source_payloads').insert({
+          source: prov.source,
+          source_url: prov.sourceUrl || null,
+          symbol: cleanSymbol,
+          endpoint: prov.endpoint,
+          response_hash: prov.responseHash,
+          http_status: prov.httpStatus || 200,
+          fetched_at: prov.fetchedAt || now,
+          raw_payload: prov.rawPayload
+        });
+      } catch (e) {}
+    }
+
+    // 2. Persist Normalized Periods (Quarterly & Annual)
+    const allPeriods = [
+      ...data.quarters.map(q => ({ ...q, periodType: 'QUARTERLY' })),
+      ...data.annuals.map(a => ({ ...a, periodType: 'ANNUAL' }))
+    ];
+
+    for (const item of allPeriods) {
+      const p = item.period;
+      const is = item.incomeStatement;
+      const bs = item.balanceSheet;
+      const cf = item.cashFlowStatement;
+      const ps = item.perShare;
+
+      try {
+        await supabase.from('financial_statement_periods').upsert({
+          symbol: cleanSymbol,
+          company_name: data.companyName,
+          period_type: p.periodType,
+          period_start: p.startDate || null,
+          period_end: p.endDate,
+          fiscal_year: p.year,
+          fiscal_quarter: p.quarter,
+          report_date: p.endDate,
+          statement_type: 'CONSOLIDATED',
+          consolidation_type: 'CONSOLIDATED',
+          currency: p.currency || 'TRY',
+          source_currency: p.sourceCurrency || p.currency || 'TRY',
+          reported_currency: p.reportedCurrency || p.currency || 'TRY',
+          source: data.quality.sourceMetadata.source || 'Yahoo Finance BIST Gateway',
+          validation_status: data.quality.validationStatus || 'VALID',
+          quality_score: data.quality.completenessScore,
+          is_restated: p.isRestated || false,
+          is_current: true,
+          version: p.version || 1,
+          
+          // Flow Items
+          revenue: is.revenue,
+          cost_of_revenue: is.costOfRevenue,
+          gross_profit: is.grossProfit,
+          operating_income: is.operatingIncome,
+          ebitda: is.ebitda,
+          pretax_income: is.pretaxIncome,
+          tax_expense: is.taxExpense,
+          net_income: is.netIncome,
+          net_income_to_parent: is.netIncomeToParent,
+
+          // Balance Sheet Items
+          cash_and_equivalents: bs.cashAndEquivalents,
+          total_current_assets: bs.currentAssets,
+          total_assets: bs.totalAssets,
+          current_liabilities: bs.currentLiabilities,
+          total_liabilities: bs.totalLiabilities,
+          total_equity: bs.totalEquity,
+          parent_equity: bs.parentEquity,
+          financial_debt: bs.financialDebt,
+          net_debt: bs.netDebt,
+
+          // Cash Flow Items
+          operating_cash_flow: cf.operatingCashFlow,
+          investing_cash_flow: cf.investingCashFlow,
+          financing_cash_flow: cf.financingCashFlow,
+          capital_expenditures: cf.capitalExpenditures,
+          free_cash_flow: cf.freeCashFlow,
+          dividends_paid: cf.dividendsPaid,
+          net_change_in_cash: cf.netChangeInCash,
+
+          // Per Share Items
+          weighted_average_shares: ps.weightedAverageShares,
+          diluted_weighted_average_shares: ps.weightedAverageShares,
+          total_shares: ps.totalShares,
+          circulating_shares: ps.circulatingShares,
+          free_float_shares: ps.freeFloatShares,
+          eps: ps.basicEPS,
+          diluted_eps: ps.dilutedEPS,
+          bvps: ps.bookValuePerShare,
+          paid_in_capital: ps.paidInCapital,
+
+          // Raw Details
+          income_statement_details: is,
+          balance_sheet_details: bs,
+          cash_flow_details: cf,
+          per_share_details: ps,
+
+          fetched_at: data.quality.sourceMetadata.fetchedAt,
+          last_verified_at: data.quality.sourceMetadata.verifiedAt,
+          updated_at: now
+        }, { onConflict: 'symbol,period_type,period_end,statement_type,version' });
+      } catch (e) {}
+    }
+
+    // 3. Persist Historical Dividends
+    if (data.dividends && data.dividends.length > 0) {
+      for (const div of data.dividends) {
+        try {
+          await supabase.from('historical_dividends').upsert({
+            symbol: cleanSymbol,
+            company_name: data.companyName,
+            ex_date: div.exDate,
+            record_date: div.recordDate || null,
+            payment_date: div.paymentDate || null,
+            announcement_date: div.announcementDate || null,
+            gross_amount: div.grossAmount,
+            net_amount: div.netAmount || null,
+            currency: div.currency || 'TRY',
+            source: div.source || 'Yahoo Finance Events API',
+            source_url: div.sourceUrl || null,
+            validation_status: div.validationStatus || 'VALID',
+            is_current: true,
+            version: 1,
+            fetched_at: now,
+            last_verified_at: now,
+            updated_at: now
+          }, { onConflict: 'symbol,ex_date,source,version' });
+        } catch (e) {}
+      }
+    }
+  } catch (err: any) {
+    console.warn(`[FundamentalsService] Supabase archive write error for ${data.symbol}:`, err?.message || err);
+  }
+}
+
+/**
+ * Main Entry Point: Fetches Multi-Period Stock Fundamentals, Statements, & Dividends
+ */
 export async function fetchStockFundamentals(rawSymbol: string): Promise<ValidatedFinancialData> {
   const cleanSymbol = normalizeSymbol(rawSymbol);
-  const yahooSymbol = `${cleanSymbol}.IS`;
   const cacheKey = cleanSymbol;
   const now = Date.now();
 
+  // 1. Check In-Memory Server Cache
   const cached = fundamentalsCache.get(cacheKey);
   if (cached && (now - cached.timestamp < CACHE_TTL_MS)) {
     return cached.data;
   }
 
-  // 1. Determine Sector & Category
+  // 2. Fetch via Primary Source Adapter (Yahoo Finance)
   const sectorInfo = getSectorCategory(cleanSymbol);
-
-  let rawData: any = null;
-  let companyName = `${cleanSymbol} Sanayi ve Ticaret A.Ş.`;
-  let sourceName = 'Yahoo Finance BIST Gateway';
-  let fallbackUsed = false;
-  let fallbackReason: string | undefined = undefined;
+  let adapterStatements: any = null;
   let primarySourceFailed = false;
 
-  // Primary Candidate: Yahoo Finance quoteSummary
   try {
-    const summary = await yahooFinance.quoteSummary(yahooSymbol, {
-      modules: [
-        'price',
-        'financialData',
-        'defaultKeyStatistics',
-        'incomeStatementHistory',
-        'balanceSheetHistory',
-        'cashflowStatementHistory',
-        'incomeStatementHistoryQuarterly',
-        'balanceSheetHistoryQuarterly',
-        'cashflowStatementHistoryQuarterly'
-      ]
-    });
-    if (summary && summary.price) {
-      rawData = summary;
-      if (summary?.price?.longName) {
-        companyName = summary.price.longName;
-      } else if (summary?.price?.shortName) {
-        companyName = summary.price.shortName;
-      }
-    } else {
-      primarySourceFailed = true;
-    }
+    adapterStatements = await yahooAdapter.getFinancialStatements(cleanSymbol);
   } catch (e: any) {
     primarySourceFailed = true;
-    console.warn(`Primary source (Yahoo quoteSummary) failed for ${yahooSymbol}:`, e?.message || e);
+    console.warn(`[FundamentalsService] Primary source failed for ${cleanSymbol}:`, e?.message || e);
   }
 
-  // Fallback 1: Yahoo Finance Chart Metadata
-  if (!rawData) {
-    try {
-      const chartRes = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1d&interval=1d`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
-      if (chartRes.ok) {
-        const chartJson = await chartRes.json();
-        const meta = chartJson?.chart?.result?.[0]?.meta;
-        if (meta && meta.symbol) {
-          sourceName = 'Yahoo Finance Chart API (Fallback 1)';
-          fallbackUsed = true;
-          fallbackReason = 'Primary quoteSummary returned null or 401. Resolved company profile via Chart API.';
-          if (meta.longName) companyName = meta.longName;
-          else if (meta.shortName) companyName = meta.shortName;
-          rawData = { price: meta, financialData: {}, defaultKeyStatistics: {} };
-        }
+  // If primary adapter returned statements
+  if (adapterStatements && (adapterStatements.quarters.length > 0 || adapterStatements.annuals.length > 0)) {
+    const quarters: FinancialPeriodData[] = adapterStatements.quarters;
+    const annuals: FinancialPeriodData[] = adapterStatements.annuals;
+    const dividends: HistoricalDividendRecord[] = adapterStatements.dividends || [];
+    const companyName = adapterStatements.metadata.companyName;
+
+    // Calculate TTM over 4 discrete quarters
+    let ttm = calculateTTM(quarters);
+
+    // Cross-check with TradingView Scanner for live valuation & completeness check
+    if (!ttm || !ttm.isVerified || ttm.incomeStatementTTM.revenue == null) {
+      const tvSnapshot = await tradingViewAdapter.getCurrentSnapshot(cleanSymbol);
+      if (tvSnapshot && tvSnapshot.ttmRevenue != null) {
+        const fallbackBs = {
+          cashAndEquivalents: ttm?.latestBalanceSheetSnapshot?.cashAndEquivalents ?? null,
+          financialDebt: ttm?.latestBalanceSheetSnapshot?.financialDebt ?? tvSnapshot.totalDebt ?? null,
+          shortTermDebt: ttm?.latestBalanceSheetSnapshot?.shortTermDebt ?? null,
+          longTermDebt: ttm?.latestBalanceSheetSnapshot?.longTermDebt ?? null,
+          totalAssets: ttm?.latestBalanceSheetSnapshot?.totalAssets ?? tvSnapshot.totalAssets ?? null,
+          totalLiabilities: ttm?.latestBalanceSheetSnapshot?.totalLiabilities ?? null,
+          totalEquity: ttm?.latestBalanceSheetSnapshot?.totalEquity ?? null,
+          currentAssets: ttm?.latestBalanceSheetSnapshot?.currentAssets ?? null,
+          currentLiabilities: ttm?.latestBalanceSheetSnapshot?.currentLiabilities ?? null,
+          inventories: ttm?.latestBalanceSheetSnapshot?.inventories ?? null,
+          receivables: ttm?.latestBalanceSheetSnapshot?.receivables ?? null,
+          netDebt: ttm?.latestBalanceSheetSnapshot?.netDebt ?? null
+        };
+
+        const fallbackIncome = {
+          revenue: ttm?.incomeStatementTTM?.revenue ?? tvSnapshot.ttmRevenue ?? null,
+          costOfRevenue: ttm?.incomeStatementTTM?.costOfRevenue ?? null,
+          grossProfit: ttm?.incomeStatementTTM?.grossProfit ?? null,
+          operatingIncome: ttm?.incomeStatementTTM?.operatingIncome ?? null,
+          ebitda: ttm?.incomeStatementTTM?.ebitda ?? null,
+          pretaxIncome: ttm?.incomeStatementTTM?.pretaxIncome ?? null,
+          taxExpense: ttm?.incomeStatementTTM?.taxExpense ?? null,
+          netIncome: ttm?.incomeStatementTTM?.netIncome ?? tvSnapshot.ttmNetIncome ?? null,
+          netIncomeToParent: ttm?.incomeStatementTTM?.netIncomeToParent ?? tvSnapshot.ttmNetIncome ?? null
+        };
+
+        ttm = {
+          isVerified: quarters.length >= 4,
+          periodsUsed: ttm?.periodsUsed || quarters.slice(0, 4).map(q => q.period),
+          incomeStatementTTM: fallbackIncome,
+          cashFlowTTM: ttm?.cashFlowTTM || {
+            operatingCashFlow: null,
+            capitalExpenditures: null,
+            freeCashFlow: null
+          },
+          latestBalanceSheetSnapshot: fallbackBs,
+          warnings: [
+            ...(ttm?.warnings || []),
+            ...(quarters.length < 4 ? ['Son 4 çeyreklik geçmiş tamamlanmadığı için TTM göstergeleri kısmi hesaplanmıştır.'] : [])
+          ]
+        };
       }
-    } catch (e: any) {
-      console.warn(`Fallback 1 (Yahoo Chart) failed for ${yahooSymbol}:`, e?.message || e);
     }
-  }
 
-  // Fallback 2: Ekofin Net / Standard BIST Catalog
-  if (!rawData) {
-    try {
-      const ekofinRes = await fetch(`https://ekofin.net/sirket/detay/${cleanSymbol}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
-      if (ekofinRes.ok) {
-        sourceName = 'Ekofin Net Public Gateway (Fallback 2)';
-        fallbackUsed = true;
-        fallbackReason = 'Primary & Fallback 1 failed. Resolved basic profile via Ekofin Net.';
-      }
-    } catch (e: any) {
-      console.warn(`Fallback 2 (Ekofin Net) failed for ${cleanSymbol}:`, e?.message || e);
-    }
-  }
-
-  // If no raw provider data returned, output unavailable structure with fallback flags (NEVER DROP STOCK)
-  if (!rawData) {
-    const emptyQuality = validateFinancialData(
+    // Run Full Quality Validation Pipeline
+    const quality = validateFinancialData(
       cleanSymbol,
       sectorInfo,
-      [],
-      [],
-      sourceName,
-      fallbackUsed,
-      fallbackReason || 'All primary and fallback data providers failed to return financial statements.',
-      primarySourceFailed
+      quarters,
+      annuals,
+      'Yahoo Finance BIST Gateway',
+      false,
+      undefined,
+      false
     );
-    const emptyPayload: ValidatedFinancialData = {
+
+    const payload: ValidatedFinancialData = {
       symbol: cleanSymbol,
       normalizedSymbol: cleanSymbol,
       companyName,
       sectorInfo,
-      quality: emptyQuality,
-      ttm: null,
-      quarters: [],
-      annuals: [],
+      quality,
+      ttm,
+      quarters,
+      annuals,
+      dividends,
       lastUpdated: new Date().toISOString()
     };
-    return emptyPayload;
+
+    // Store in In-Memory Server Cache
+    fundamentalsCache.set(cacheKey, { data: payload, timestamp: now });
+
+    // Persist to Supabase Archive (non-blocking)
+    persistToSupabaseArchive(payload, adapterStatements.provenance);
+
+    return payload;
   }
 
-  // Parse Raw Annual Statements
-  const aIncome = rawData.incomeStatementHistory?.incomeStatementHistory || [];
-  const aBalance = rawData.balanceSheetHistory?.balanceSheetStatements || [];
-  const aCashflow = rawData.cashflowStatementHistory?.cashflowStatements || [];
+  // Fallback: If primary source failed, try TradingView for basic profile (NEVER INVENT HISTORICAL SERIES)
+  const tvSnapshot = await tradingViewAdapter.getCurrentSnapshot(cleanSymbol);
+  const companyName = `${cleanSymbol} Sanayi ve Ticaret A.Ş.`;
 
-  // Key Statistics & Financial Data
-  const keyStats = rawData.defaultKeyStatistics || {};
-  const finData = rawData.financialData || {};
-  const financialCurrency = finData.financialCurrency || rawData.price?.currency || 'TRY';
-
-  // Total Shares & Nominal Capital
-  const totalShares = keyStats.sharesOutstanding || null;
-  const circulatingShares = keyStats.floatShares || totalShares;
-  const freeFloatShares = keyStats.floatShares || null;
-  const freeFloatPercent = (freeFloatShares && totalShares) ? parseFloat(((freeFloatShares / totalShares) * 100).toFixed(2)) : null;
-  const paidInCapital = totalShares ? totalShares * 1.0 : null; // Nominal capital in TL (1 TL nominal/share)
-
-  // 2. Parse Raw Quarterly Statements with timeseries fallback if needed
-  let qIncome = rawData.incomeStatementHistoryQuarterly?.incomeStatementHistory || [];
-  let qBalance = rawData.balanceSheetHistoryQuarterly?.balanceSheetStatements || [];
-  let qCashflow = rawData.cashflowStatementHistoryQuarterly?.cashflowStatements || [];
-
-function parseYahooDate(d: any): string {
-  if (!d) return new Date().toISOString();
-  if (typeof d === 'object' && d.raw) d = d.raw;
-  if (d instanceof Date) return d.toISOString();
-  if (typeof d === 'number') {
-    const ms = d < 1e11 ? d * 1000 : d;
-    return new Date(ms).toISOString();
-  }
-  try {
-    const parsed = new Date(d);
-    if (!isNaN(parsed.getTime())) return parsed.toISOString();
-  } catch (e) {}
-  return new Date().toISOString();
-}
-
-  if (qBalance.length === 0 || !qBalance[0]?.totalStockholderEquity) {
-    try {
-      const tsBs = await yahooFinance.fundamentalsTimeSeries(yahooSymbol, {
-        period1: '2023-01-01',
-        type: 'quarterly',
-        module: 'balance-sheet'
-      }, { validateResult: false });
-
-      if (Array.isArray(tsBs) && tsBs.length > 0) {
-        qBalance = tsBs.map((item: any) => ({
-          endDate: parseYahooDate(item.date || item.asOfDate),
-          totalAssets: item.totalAssets || item.assets,
-          totalLiab: item.totalLiabilitiesNetMinorityInterest || item.totalLiab,
-          totalStockholderEquity: item.totalStockholderEquity || item.stockholdersEquity || item.commonStockEquity,
-          cash: item.cashAndCashEquivalents || item.cashCashEquivalentsAndShortTermInvestments,
-          shortLongTermDebt: item.currentDebt || item.shortTermDebt,
-          longTermDebt: item.longTermDebt,
-          totalDebt: item.totalDebt || item.financialDebt,
-          totalCurrentAssets: item.currentAssets,
-          totalCurrentLiabilities: item.currentLiabilities,
-          inventory: item.inventory || item.inventories,
-          netReceivables: item.accountsReceivable || item.receivables
-        }));
-      }
-    } catch (e) {
-      // Ignore schema validation errors on timeSeries fallback
-    }
-  }
-
-  if (qIncome.length === 0 || !qIncome[0]?.totalRevenue) {
-    try {
-      const tsInc = await yahooFinance.fundamentalsTimeSeries(yahooSymbol, {
-        period1: '2023-01-01',
-        type: 'quarterly',
-        module: 'financials'
-      }, { validateResult: false });
-
-      if (Array.isArray(tsInc) && tsInc.length > 0) {
-        qIncome = tsInc.map((item: any) => ({
-          endDate: parseYahooDate(item.date || item.asOfDate),
-          totalRevenue: item.totalRevenue || item.operatingRevenue,
-          grossProfit: item.grossProfit,
-          operatingIncome: item.operatingIncome || item.ebit,
-          ebitda: item.ebitda || item.normalizedEBITDA,
-          netIncome: item.netIncomeCommonStockholders || item.netIncome,
-          interestExpense: item.interestExpense,
-          taxProvision: item.taxProvision
-        }));
-      }
-    } catch (e) {
-      // Ignore schema validation errors
-    }
-  }
-
-  // 3. Map Statements to FinancialPeriodData
-  const rawQuarterlyPeriods: FinancialPeriodData[] = [];
-
-  const maxLen = Math.max(qIncome.length, qBalance.length);
-  for (let i = 0; i < maxLen; i++) {
-    const is = qIncome[i] || {};
-    const bs = qBalance[i] || {};
-    const cf = qCashflow[i] || {};
-
-    const endDateStr = is.endDate ? parseYahooDate(is.endDate).split('T')[0] : (bs.endDate ? parseYahooDate(bs.endDate).split('T')[0] : '');
-    const dateObj = endDateStr ? new Date(endDateStr) : new Date();
-    
-    const year = dateObj.getFullYear();
-    const month = dateObj.getMonth() + 1;
-    let quarter = 1;
-    if (month >= 3 && month <= 5) quarter = 1;
-    else if (month >= 6 && month <= 8) quarter = 2;
-    else if (month >= 9 && month <= 11) quarter = 3;
-    else quarter = 4;
-
-    const totalAssets = bs.totalAssets ?? null;
-    const totalEquity = bs.totalStockholderEquity ?? null;
-    const totalLiabilities = bs.totalLiab ?? (totalAssets != null && totalEquity != null ? totalAssets - totalEquity : null);
-
-    const cashAndEquivalents = bs.cash || bs.cashAndCashEquivalents || null;
-    const shortTermDebt = bs.shortLongTermDebt ?? null;
-    const longTermDebt = bs.longTermDebt ?? null;
-    const financialDebt = (shortTermDebt != null || longTermDebt != null) 
-      ? ((shortTermDebt || 0) + (longTermDebt || 0)) 
-      : (bs.totalDebt ?? null);
-
-    const netDebt = calculateNetDebt(financialDebt, cashAndEquivalents, sectorInfo);
-
-    const netInc = is.netIncome ?? null;
-    const basicEPS = is.basicEPS != null ? is.basicEPS : (netInc != null && totalShares ? netInc / totalShares : null);
-    const bookValuePerShare = (totalEquity != null && totalShares) ? parseFloat((totalEquity / totalShares).toFixed(2)) : null;
-
-    rawQuarterlyPeriods.push({
-      period: {
-        year,
-        quarter,
-        periodType: 'Quarter',
-        endDate: endDateStr || new Date().toISOString().split('T')[0],
-        consolidated: true,
-        currency: financialCurrency,
-        isDiscreteQuarter: quarter === 1
-      },
-      incomeStatement: {
-        revenue: is.totalRevenue || is.operatingRevenue || null,
-        grossProfit: is.grossProfit || null,
-        operatingIncome: is.operatingIncome || is.ebit || null,
-        ebitda: is.ebitda || null,
-        netIncome: netInc,
-        interestExpense: is.interestExpense || null,
-        taxExpense: is.taxProvision || null,
-        netInterestIncome: is.netInterestIncome || null
-      },
-      balanceSheet: {
-        cashAndEquivalents,
-        financialDebt,
-        shortTermDebt,
-        longTermDebt,
-        totalAssets,
-        totalLiabilities,
-        totalEquity,
-        currentAssets: bs.totalCurrentAssets || null,
-        currentLiabilities: bs.totalCurrentLiabilities || null,
-        inventories: bs.inventory || null,
-        receivables: bs.netReceivables || null,
-        netDebt
-      },
-      cashFlowStatement: {
-        operatingCashFlow: cf.totalCashFromOperatingActivities || null,
-        capitalExpenditures: cf.capitalExpenditures ? Math.abs(cf.capitalExpenditures) : null,
-        freeCashFlow: cf.freeCashFlow || null
-      },
-      perShare: {
-        basicEPS,
-        dilutedEPS: basicEPS,
-        bookValuePerShare,
-        paidInCapital,
-        totalShares,
-        circulatingShares,
-        freeFloatShares,
-        freeFloatPercent,
-        weightedAverageShares: totalShares
-      }
-    });
-  }
-
-  // 4. Derive Discrete Quarters from YTD
-  const discreteQuarters = deriveDiscreteQuarters(rawQuarterlyPeriods);
-
-  // 5. Calculate TTM over discrete quarters
-  let ttm = calculateTTM(discreteQuarters);
-
-  // Fallback TTM using Yahoo's authoritative aggregated Key Statistics & Financial Data
-  const fallbackEquity = keyStats.bookValue != null && totalShares != null ? keyStats.bookValue * totalShares : null;
-  const fallbackAssets = fallbackEquity != null && finData.totalDebt != null ? fallbackEquity + finData.totalDebt : null;
-
-  const fallbackBsSnapshot = {
-    cashAndEquivalents: ttm?.latestBalanceSheetSnapshot?.cashAndEquivalents ?? finData.totalCash ?? null,
-    financialDebt: ttm?.latestBalanceSheetSnapshot?.financialDebt ?? finData.totalDebt ?? null,
-    shortTermDebt: ttm?.latestBalanceSheetSnapshot?.shortTermDebt ?? null,
-    longTermDebt: ttm?.latestBalanceSheetSnapshot?.longTermDebt ?? null,
-    totalAssets: ttm?.latestBalanceSheetSnapshot?.totalAssets ?? fallbackAssets,
-    totalLiabilities: ttm?.latestBalanceSheetSnapshot?.totalLiabilities ?? null,
-    totalEquity: ttm?.latestBalanceSheetSnapshot?.totalEquity ?? fallbackEquity,
-    currentAssets: ttm?.latestBalanceSheetSnapshot?.currentAssets ?? null,
-    currentLiabilities: ttm?.latestBalanceSheetSnapshot?.currentLiabilities ?? null,
-    inventories: ttm?.latestBalanceSheetSnapshot?.inventories ?? null,
-    receivables: ttm?.latestBalanceSheetSnapshot?.receivables ?? null,
-    netDebt: calculateNetDebt(
-      ttm?.latestBalanceSheetSnapshot?.financialDebt ?? finData.totalDebt ?? null,
-      ttm?.latestBalanceSheetSnapshot?.cashAndEquivalents ?? finData.totalCash ?? null,
-      sectorInfo
-    )
-  };
-
-  const fallbackIncomeTTM = {
-    revenue: ttm?.incomeStatementTTM?.revenue ?? finData.totalRevenue ?? null,
-    grossProfit: ttm?.incomeStatementTTM?.grossProfit ?? finData.grossProfits ?? null,
-    operatingIncome: ttm?.incomeStatementTTM?.operatingIncome ?? null,
-    ebitda: ttm?.incomeStatementTTM?.ebitda ?? null,
-    netIncome: ttm?.incomeStatementTTM?.netIncome ?? keyStats.netIncomeToCommon ?? null,
-    interestExpense: ttm?.incomeStatementTTM?.interestExpense ?? null,
-    taxExpense: ttm?.incomeStatementTTM?.taxExpense ?? null
-  };
-
-  const fallbackCashFlowTTM = {
-    operatingCashFlow: ttm?.cashFlowTTM?.operatingCashFlow ?? finData.operatingCashflow ?? null,
-    capitalExpenditures: ttm?.cashFlowTTM?.capitalExpenditures ?? null,
-    freeCashFlow: ttm?.cashFlowTTM?.freeCashFlow ?? finData.freeCashflow ?? null
-  };
-
-  if (!ttm || !ttm.isVerified || !ttm.incomeStatementTTM.revenue || !ttm.latestBalanceSheetSnapshot.totalEquity) {
-    const isComplete = ttm?.isVerified && ttm?.incomeStatementTTM?.revenue != null && ttm?.latestBalanceSheetSnapshot?.totalEquity != null;
-    ttm = {
-      isVerified: isComplete ? true : false,
-      periodsUsed: ttm?.periodsUsed || discreteQuarters.map(q => q.period),
-      incomeStatementTTM: fallbackIncomeTTM,
-      cashFlowTTM: fallbackCashFlowTTM,
-      latestBalanceSheetSnapshot: fallbackBsSnapshot,
-      warnings: [
-        ...(ttm?.warnings || []),
-        ...(!isComplete ? ['4 çeyreklik bilanço geçmişi henüz tamamlanmadığı için TTM rasyoları kısıtlanmıştır.'] : [])
-      ]
-    };
-  }
-
-  // 6. Run Quality Validation Pipeline
-  const quality = validateFinancialData(
+  const emptyQuality = validateFinancialData(
     cleanSymbol,
     sectorInfo,
-    discreteQuarters,
     [],
-    sourceName,
-    fallbackUsed,
-    fallbackReason,
+    [],
+    tvSnapshot ? 'TradingView Scanner API (Fallback)' : 'FinAI Primary Data Gateway',
+    tvSnapshot != null,
+    tvSnapshot ? 'Primary source failed. Resolved current market snapshot via TradingView Scanner.' : 'All financial data sources returned empty.',
     primarySourceFailed
   );
 
-  const payload: ValidatedFinancialData = {
+  const fallbackPayload: ValidatedFinancialData = {
     symbol: cleanSymbol,
     normalizedSymbol: cleanSymbol,
     companyName,
     sectorInfo,
-    quality,
-    ttm,
-    quarters: discreteQuarters,
+    quality: emptyQuality,
+    ttm: tvSnapshot && tvSnapshot.ttmRevenue != null ? {
+      isVerified: false,
+      periodsUsed: [],
+      incomeStatementTTM: {
+        revenue: tvSnapshot.ttmRevenue,
+        grossProfit: null,
+        operatingIncome: null,
+        ebitda: null,
+        netIncome: tvSnapshot.ttmNetIncome
+      },
+      cashFlowTTM: {
+        operatingCashFlow: null,
+        capitalExpenditures: null,
+        freeCashFlow: null
+      },
+      latestBalanceSheetSnapshot: {
+        cashAndEquivalents: null,
+        financialDebt: tvSnapshot.totalDebt,
+        shortTermDebt: null,
+        longTermDebt: null,
+        totalAssets: tvSnapshot.totalAssets,
+        totalLiabilities: null,
+        totalEquity: null,
+        currentAssets: null,
+        currentLiabilities: null,
+        inventories: null,
+        receivables: null,
+        netDebt: null
+      },
+      warnings: ['Tarihsel çeyreklik veriler bulunamadığı için TTM göstergesi salt anlık piyasa tarayıcısından alınmıştır.']
+    } : null,
+    quarters: [],
     annuals: [],
+    dividends: [],
     lastUpdated: new Date().toISOString()
   };
 
-  fundamentalsCache.set(cacheKey, { data: payload, timestamp: now });
-  return payload;
+  fundamentalsCache.set(cacheKey, { data: fallbackPayload, timestamp: now });
+  return fallbackPayload;
 }

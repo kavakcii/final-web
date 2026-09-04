@@ -1,13 +1,14 @@
 /**
- * FinAI Financial Data Validator - Stage 2.1
- * Financial Statement Math Checks, Balance Sheet Verification & Quality Scorer
+ * FinAI Financial Data Validator - Stage 5B
+ * Financial Statement Math Checks, Balance Sheet Verification, & Quality Engine
  */
 
 import { 
   FinancialPeriodData, 
   QualityMetadata, 
   QualityStatus, 
-  SectorInfo 
+  SectorInfo,
+  ValidationStatus 
 } from '@/types/financials';
 
 /**
@@ -16,8 +17,9 @@ import {
 export function validateBalanceSheet(
   totalAssets: number | null,
   totalLiabilities: number | null,
-  totalEquity: number | null
-): { isValid: boolean; diff: number | null } {
+  totalEquity: number | null,
+  sectorInfo?: SectorInfo
+): { isValid: boolean; diff: number | null; isWarningOnly?: boolean } {
   if (totalAssets == null || totalLiabilities == null || totalEquity == null) {
     return { isValid: true, diff: null }; // Cannot disprove if fields are missing
   }
@@ -25,11 +27,18 @@ export function validateBalanceSheet(
   const expectedAssets = totalLiabilities + totalEquity;
   const diff = Math.abs(totalAssets - expectedAssets);
 
-  // Tolerance: 2% of total assets or 100,000 TRY (whichever is larger, to account for rounding)
-  const maxTolerance = Math.max(totalAssets * 0.02, 100000);
+  // For holding companies with vast minority interests (e.g. SAHOL, KCHOL), tolerance is 10% of total assets
+  const toleranceRatio = sectorInfo?.isHolding ? 0.10 : 0.03;
+  const maxTolerance = Math.max(totalAssets * toleranceRatio, 500000);
   const isValid = diff <= maxTolerance;
 
-  return { isValid, diff };
+  const isAcceptable = Boolean(isValid || (sectorInfo?.isHolding && diff <= totalAssets * 0.12));
+
+  return { 
+    isValid: isAcceptable, 
+    diff,
+    isWarningOnly: sectorInfo?.isHolding && !isValid
+  };
 }
 
 /**
@@ -95,8 +104,8 @@ export function calculateCompletenessScore(periods: FinancialPeriodData[]): numb
   let psCount = 0;
   if (ps.basicEPS != null) psCount++;
   if (ps.bookValuePerShare != null) psCount++;
-  if (ps.paidInCapital != null) psCount++;
   if (ps.totalShares != null) psCount++;
+  if (ps.weightedAverageShares != null) psCount++;
   score += (psCount / 4) * 20;
 
   return Math.min(100, Math.round(score));
@@ -110,7 +119,7 @@ export function validateFinancialData(
   sectorInfo: SectorInfo,
   quarters: FinancialPeriodData[],
   annuals: FinancialPeriodData[],
-  sourceName: string = 'FinAI Primary Data Provider',
+  sourceName: string = 'FinAI Primary Data Gateway',
   fallbackUsed: boolean = false,
   fallbackReason?: string,
   primarySourceFailed: boolean = false,
@@ -123,6 +132,7 @@ export function validateFinancialData(
     return {
       completenessScore: 0,
       status: 'unavailable',
+      validationStatus: 'INVALID',
       warnings: ['Finansal tablo verisi temin edilemedi.'],
       errors: ['No financial periods found for symbol.'],
       balanceSheetChecks: { isAssetsEqualLiabilitiesAndEquity: false, differenceAmount: null },
@@ -144,54 +154,47 @@ export function validateFinancialData(
 
   // 1. Balance Sheet Accounting Check
   const bs = latestPeriod.balanceSheet;
-  const bsCheck = validateBalanceSheet(bs.totalAssets, bs.totalLiabilities, bs.totalEquity);
+  const bsCheck = validateBalanceSheet(bs.totalAssets, bs.totalLiabilities, bs.totalEquity, sectorInfo);
 
   if (!bsCheck.isValid && bsCheck.diff !== null) {
-    errors.push(
-      `Bilanço denkliği uyuşmazlığı: Varlıklar (${bs.totalAssets?.toLocaleString('tr-TR')} TL) ≠ Yükümlülükler + Özkaynaklar farkı ${bsCheck.diff.toLocaleString('tr-TR')} TL.`
-    );
+    if (sectorInfo.isHolding) {
+      warnings.push(
+        `Konsolide Holding Bilanço Azınlık Payı: Toplam Varlıklar (${bs.totalAssets?.toLocaleString('tr-TR')} TL) ile Borç + Özkaynak (${((bs.totalLiabilities || 0) + (bs.totalEquity || 0)).toLocaleString('tr-TR')} TL) arasında kontrol gücü olmayan paylardan kaynaklı ${bsCheck.diff.toLocaleString('tr-TR')} TL fark bulunmaktadır.`
+      );
+    } else {
+      errors.push(
+        `Bilanço denklik hatası: Toplam Varlıklar (${bs.totalAssets?.toLocaleString('tr-TR')} TL) ile Borç + Özkaynak (${((bs.totalLiabilities || 0) + (bs.totalEquity || 0)).toLocaleString('tr-TR')} TL) arasında ${bsCheck.diff.toLocaleString('tr-TR')} TL fark var.`
+      );
+    }
   }
 
-  // 2. Bank / Sector Checks
-  if (sectorInfo.isFinancialInstitution) {
-    warnings.push(
-      `Finansal Kurum / Banka Modeli: Net Borç, Borç/FAVÖK ve Cari Oran formülleri sanayi sektörü mantığıyla uygulanmaz.`
-    );
+  // 2. Negative Cash / Abnormal Items
+  if (bs.cashAndEquivalents !== null && bs.cashAndEquivalents < 0) {
+    errors.push('Bilanço nakit ve nakit benzerleri kalemi negatif olamaz.');
   }
 
-  // 3. Currency Consistency Check
-  const currencies = new Set(allPeriods.map(p => p.period.currency).filter(Boolean));
-  if (currencies.size > 1) {
-    warnings.push(`Farklı para birimi tespit edildi (${Array.from(currencies).join(', ')}). Dönemler arası kur çevrimi yapılmamıştır.`);
-  } else if (currencies.size === 0) {
-    warnings.push('Finansal veride para birimi bilgisi belirtilmemiştir.');
-  }
+  // 3. Completeness Score Calculation
+  const score = calculateCompletenessScore(quarters.length > 0 ? quarters : annuals);
 
-  // 4. Consolidated Scope Consistency Check
-  const consolidatedScopes = new Set(allPeriods.map(p => p.period.consolidated));
-  if (consolidatedScopes.size > 1) {
-    warnings.push('Farklı finansal dönemlerde konsolide ve solo raporlama kapsamları karışıktır.');
-  }
-
-  // 5. Completeness Score
-  const completenessScore = calculateCompletenessScore(quarters.length > 0 ? quarters : annuals);
-
-  // 6. Final Quality Status Determination
+  // 4. Determine Validation Status
   let status: QualityStatus = 'verified';
+  let validationStatus: ValidationStatus = 'VALID';
 
-  if (!bsCheck.isValid && bsCheck.diff !== null) {
+  if (errors.length > 0) {
     status = 'invalid';
-  } else if (errors.length > 0) {
-    status = 'invalid';
-  } else if (warnings.length > 2 || completenessScore < 50) {
+    validationStatus = 'INVALID';
+  } else if (warnings.length > 0 || fallbackUsed || score < 60) {
     status = 'warning';
-  } else if (completenessScore < 75) {
+    validationStatus = 'WARNING';
+  } else if (score < 90) {
     status = 'partial';
+    validationStatus = 'VALID';
   }
 
   return {
-    completenessScore,
+    completenessScore: score,
     status,
+    validationStatus,
     warnings,
     errors,
     balanceSheetChecks: {
@@ -205,7 +208,7 @@ export function validateFinancialData(
       fallbackUsed,
       fallbackReason,
       primarySourceFailed,
-      quality: status === 'verified' ? 'high' : status === 'partial' ? 'medium' : status === 'warning' ? 'low' : 'unavailable',
+      quality: score >= 80 ? 'high' : (score >= 50 ? 'medium' : 'low'),
       errorCode
     }
   };
