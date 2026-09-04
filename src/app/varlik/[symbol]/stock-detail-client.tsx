@@ -36,6 +36,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import halkarzAboutDb from "@/data/halkarz_about_db.json";
 import TradingViewAdvancedChart from "@/components/TradingViewAdvancedChart";
+import FinancialRatioHistoryChart from "@/components/FinancialRatioHistoryChart";
 
 // REEL BIST FİYAT KATALOĞU (Investing 1. Görsel Birebir Eşleşme - ASELS = 363.25 ₺ / 433.09 ₺ Tepe / 320.00 ₺ Dip)
 const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: number; change: number; changePercent: number; prevClose: number }> = {
@@ -140,6 +141,10 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
   const [selectedRatioTooltip, setSelectedRatioTooltip] = useState<any>(null);
   const [activeRatioCategory, setActiveRatioCategory] = useState<string>("profitability");
 
+  // STAGE 4 SEKTÖR KARŞILAŞTIRMA & TARİHSEL TREND STATE
+  const [comparisonData, setComparisonData] = useState<any>(null);
+  const [comparisonLoading, setComparisonLoading] = useState<boolean>(true);
+
   useEffect(() => {
     async function loadFundamentals() {
       try {
@@ -170,8 +175,26 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
       }
     }
 
+    async function loadComparison() {
+      try {
+        setComparisonLoading(true);
+        const res = await fetch(`/api/finance/comparison?symbol=${symbol}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setComparisonData(json.data);
+          }
+        }
+      } catch (e) {
+        console.error('Comparison load error:', e);
+      } finally {
+        setComparisonLoading(false);
+      }
+    }
+
     loadFundamentals();
     loadRatios();
+    loadComparison();
   }, [symbol]);
 
   // SECTION REFS FOR SMOOTH SCROLLING
@@ -179,6 +202,7 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
   const grafikRef = useRef<HTMLDivElement>(null);
   const ozelliklerRef = useRef<HTMLDivElement>(null);
   const oranlarRef = useRef<HTMLDivElement>(null);
+  const karsilastirmaRef = useRef<HTMLDivElement>(null);
   const haberlerRef = useRef<HTMLDivElement>(null);
   const temettulerRef = useRef<HTMLDivElement>(null);
 
@@ -270,6 +294,7 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
     if (tabId === "genel") targetRef = genelRef;
     else if (tabId === "grafik" || tabId === "ozellikler") targetRef = grafikRef;
     else if (tabId === "oranlar") targetRef = oranlarRef;
+    else if (tabId === "karsilastirma") targetRef = karsilastirmaRef;
     else if (tabId === "haberler") targetRef = haberlerRef;
     else if (tabId === "temettuler") targetRef = temettulerRef;
 
@@ -868,6 +893,209 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
           ) : (
             <div className="py-8 text-center text-slate-400 font-bold text-xs">
               Finansal oranlar hesaplanamadı.
+            </div>
+          )}
+        </div>
+
+        {/* STAGE 4: KARŞILAŞTIRMALI FİNANSAL ANALİZ VE SEKTÖR KARŞILAŞTIRMASI */}
+        <div ref={karsilastirmaRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#00008B] border border-blue-200 flex items-center justify-center shadow-sm">
+                <BarChart3 className="w-5 h-5 text-[#00008B]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Sektör Karşılaştırma & Tarihsel Trend</h2>
+                <p className="text-xs font-bold text-slate-400">
+                  Uç Değerlerden Arındırılmış Sektör Medyanı (Median), Persentil Konumu ve Tarihsel Gelişim
+                </p>
+              </div>
+            </div>
+
+            {comparisonData && (
+              <div className="flex flex-wrap items-center gap-2 text-xs font-black self-start md:self-auto">
+                <span className="bg-blue-50 text-[#00008B] border border-blue-200 px-3 py-1 rounded-xl">
+                  Sektör: {comparisonData.sectorDisplayName}
+                </span>
+                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-xl">
+                  Doğrulanmış Akran: {comparisonData.validPeerCount} Şirket
+                </span>
+              </div>
+            )}
+          </div>
+
+          {comparisonLoading ? (
+            <div className="py-12 flex items-center justify-center text-slate-400 font-bold text-xs gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-[#00008B]" />
+              Sektör akran verileri toplanıyor ve medyanlar hesaplanıyor...
+            </div>
+          ) : comparisonData?.metrics ? (
+            <div className="space-y-6">
+              
+              {/* SEKTÖR KARŞILAŞTIRMA TABLOSU */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-[#00008B]" />
+                    Sektör Karşılaştırma Tablosu (Sektör Medyanı Referanslı)
+                  </h3>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    * Sektör İstatistiğinde Medyan (Ortanca) Kullanılmıştır.
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                        <th className="py-3 px-4">Metrik Adı</th>
+                        <th className="py-3 px-4">Şirket Değeri</th>
+                        <th className="py-3 px-4">Sektör Medyanı</th>
+                        <th className="py-3 px-4">Fark</th>
+                        <th className="py-3 px-4">Sektör İçi Konum</th>
+                        <th className="py-3 px-4 text-right">Durum</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700">
+                      {Object.values(comparisonData.metrics as Record<string, any>).map((m: any) => (
+                        <tr key={m.key} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3.5 px-4 font-black text-slate-900 flex items-center gap-1.5">
+                            {m.name}
+                            <button
+                              onClick={() => setSelectedRatioTooltip({
+                                name: m.name,
+                                formattedValue: m.formattedCompanyValue,
+                                educationalTooltip: {
+                                  whatItMeasures: m.educationalNote,
+                                  howToInterpret: m.positionText,
+                                  sectorCaution: `Sektör Medyanı: ${m.formattedSectorMedian} (Örneklem: ${m.sampleSize} şirket). Uç değerler ve negatif kârlar medyan hesabına dahil edilmez.`,
+                                  finaiFormula: `Fark = Şirket Değeri - Sektör Medyanı (${m.formattedDifference})`
+                                }
+                              })}
+                              className="p-0.5 rounded text-blue-600 hover:bg-blue-50"
+                              title="Eğitici Not & Metodoloji"
+                            >
+                              <HelpCircle className="w-3.5 h-3.5" />
+                            </button>
+                          </td>
+                          <td className="py-3.5 px-4 font-black text-[#00008B]">
+                            {m.formattedCompanyValue}
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-600">
+                            {m.formattedSectorMedian}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            {m.difference != null ? (
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-md font-black text-[11px]",
+                                m.difference > 0 ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-blue-50 text-blue-900 border border-blue-200"
+                              )}>
+                                {m.formattedDifference}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400">—</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            {m.percentile != null ? (
+                              <span className="text-xs font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200" title="Sektör içi persentil yüzdesi">
+                                %{m.percentile} persentil
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 text-[10px]">{m.reason}</span>
+                            )}
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <span className={cn(
+                              "text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider",
+                              m.status === "available"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : m.status === "not_applicable"
+                                ? "bg-slate-100 text-slate-600 border-slate-200"
+                                : m.status === "insufficient_sample"
+                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                : "bg-rose-50 text-rose-800 border-rose-200"
+                            )} title={m.reason}>
+                              {m.status === "available"
+                                ? "Karşılaştırıldı"
+                                : m.status === "not_applicable"
+                                ? "Sektör Dışı"
+                                : m.status === "insufficient_sample"
+                                ? "Yetersiz Örneklem"
+                                : "Veri Yok"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* YILLIK BÜYÜME METRİKLERİ ROZETLERİ */}
+              {comparisonData.growth && (
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-[#00008B]" />
+                    Karşılaştırmalı Yıllık Büyüme Oranları (YoY)
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    {[
+                      comparisonData.growth.revenueGrowthYoY,
+                      comparisonData.growth.ebitdaGrowthYoY,
+                      comparisonData.growth.netIncomeGrowthYoY,
+                      comparisonData.growth.epsGrowthYoY
+                    ].map((g: any, idx: number) => (
+                      <div key={idx} className="bg-slate-50 border border-slate-200/90 p-3.5 rounded-2xl space-y-1 shadow-sm">
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block truncate">
+                          {g?.metricName}
+                        </span>
+                        <div className="flex items-baseline justify-between pt-1">
+                          <span className={cn(
+                            "text-lg font-black tracking-tight",
+                            g?.status === 'available' ? (g.value >= 0 ? "text-emerald-700" : "text-rose-700") : "text-slate-400"
+                          )}>
+                            {g?.formattedValue || '—'}
+                          </span>
+                          <span className="text-[9px] text-slate-400 font-bold" title={g?.reason}>
+                            {g?.status === 'available' ? 'Yıllık (YoY)' : 'Hesaplanamadı'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TARİHSEL TREND GRAFİĞİ BİLEŞENİ */}
+              {comparisonData.historicalTrend && comparisonData.historicalTrend.length > 0 && (
+                <div className="pt-3">
+                  <FinancialRatioHistoryChart 
+                    historicalTrend={comparisonData.historicalTrend} 
+                    symbol={symbol} 
+                  />
+                </div>
+              )}
+
+              {/* EĞİTİCİ METODOLOJİ UYARI KUTUSU */}
+              <div className="bg-blue-50/60 border border-blue-200/80 p-4 rounded-2xl flex items-start gap-3 text-xs font-semibold text-slate-700">
+                <Info className="w-5 h-5 text-[#00008B] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-black text-[#00008B] block uppercase tracking-wider text-[10px]">
+                    FinAI Karşılaştırmalı Okuryazarlık Metodolojisi
+                  </span>
+                  <p className="leading-relaxed">
+                    Sektör medyanı hesaplamasında aşırı uç değerleri nötralize etmek amacıyla ortanca değer (Median) tercih edilir. 
+                    Persentil konumu, şirketin sektör akranları arasındaki göreli sıralamasını simgeler. Tüm veriler eğitici amaçlıdır; doğrudan yatırım kararı göstergesi değildir.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            <div className="py-8 text-center text-slate-400 font-bold text-xs">
+              Sektör karşılaştırma verisi temin edilemedi.
             </div>
           )}
         </div>
