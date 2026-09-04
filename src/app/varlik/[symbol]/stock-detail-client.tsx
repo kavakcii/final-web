@@ -156,6 +156,10 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
   const [comparisonData, setComparisonData] = useState<any>(null);
   const [comparisonLoading, setComparisonLoading] = useState<boolean>(true);
 
+  // Stage 6 Historical Multi-Period Analysis State
+  const [historicalAnalysisData, setHistoricalAnalysisData] = useState<any>(null);
+  const [historicalAnalysisLoading, setHistoricalAnalysisLoading] = useState<boolean>(true);
+
   // Fetch Fundamentals, Ratios, Comparison & Dividends
   useEffect(() => {
     async function loadFundamentals() {
@@ -207,6 +211,23 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
       }
     }
 
+    async function loadHistoricalAnalysis() {
+      try {
+        setHistoricalAnalysisLoading(true);
+        const res = await fetch(`/api/finance/historical-analysis?symbol=${symbol}&periodType=${statementPeriodType}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setHistoricalAnalysisData(json.data);
+          }
+        }
+      } catch (e) {
+        console.error('Historical analysis load error:', e);
+      } finally {
+        setHistoricalAnalysisLoading(false);
+      }
+    }
+
     async function loadDividends() {
       try {
         setDividendLoading(true);
@@ -228,8 +249,9 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
     loadFundamentals();
     loadRatios();
     loadComparison();
+    loadHistoricalAnalysis();
     loadDividends();
-  }, [symbol]);
+  }, [symbol, statementPeriodType]);
 
   // Section Refs for Smooth Scrolling
   const genelRef = useRef<HTMLDivElement>(null);
@@ -1048,19 +1070,48 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
         {/* F) FİNANSAL TRENDLER (HISTORICAL CHART) */}
         {/* ========================================================================= */}
         <div ref={trendlerRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
-          <div className="border-b border-slate-100 pb-4">
-            <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-[#00008B]" />
-              {symbol} Tarihsel Finansal Trendler
-            </h3>
-            <p className="text-xs font-bold text-slate-400">
-              Şirketin Gerçek Çeyreklik Raporlama Dönemleri Boyunca Finansal Gelişimi
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+            <div>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#00008B]" />
+                {symbol} Tarihsel Finansal Trendler & Rasyo Analizi
+              </h3>
+              <p className="text-xs font-bold text-slate-400">
+                Şirketin Gerçek Raporlama Dönemleri Boyunca Finansal Gelişimi ({statementPeriodType === 'annual' ? 'Yıllık' : 'Çeyreklik'})
+              </p>
+            </div>
+
+            {/* Dönem Tipi Seçici */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
+              <button
+                onClick={() => setStatementPeriodType("quarterly")}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-black rounded-lg transition-all",
+                  statementPeriodType === "quarterly"
+                    ? "bg-[#00008B] text-white shadow-sm"
+                    : "text-slate-600 hover:text-[#00008B]"
+                )}
+              >
+                Çeyreklik (3A)
+              </button>
+              <button
+                onClick={() => setStatementPeriodType("annual")}
+                className={cn(
+                  "px-2.5 py-1 text-[11px] font-black rounded-lg transition-all",
+                  statementPeriodType === "annual"
+                    ? "bg-[#00008B] text-white shadow-sm"
+                    : "text-slate-600 hover:text-[#00008B]"
+                )}
+              >
+                Yıllık (12A)
+              </button>
+            </div>
           </div>
 
-          {comparisonData?.historicalTrend && comparisonData.historicalTrend.length > 0 ? (
+          {(historicalAnalysisData?.periods && historicalAnalysisData.periods.length > 0) || (comparisonData?.historicalTrend && comparisonData.historicalTrend.length > 0) ? (
             <FinancialRatioHistoryChart 
-              historicalTrend={comparisonData.historicalTrend} 
+              historicalData={historicalAnalysisData}
+              historicalTrend={comparisonData?.historicalTrend} 
               symbol={symbol}
               currency={finCurrency === 'USD' ? '$' : '₺'}
             />
