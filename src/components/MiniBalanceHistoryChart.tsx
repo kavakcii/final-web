@@ -97,7 +97,7 @@ export function MiniBalanceHistoryChart({ history = [] }: MiniBalanceHistoryChar
                             </linearGradient>
                         </defs>
                         <Tooltip 
-                            content={({ active, payload }) => {
+                            content={({ active, payload }: any) => {
                                 if (active && payload && payload.length) {
                                     return (
                                         <div className="bg-white/95 backdrop-blur-md border border-slate-100 p-2 rounded-lg shadow-xl ring-1 ring-black/5">
