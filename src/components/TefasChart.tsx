@@ -92,9 +92,9 @@ export function TefasChart({ fundCode, height = 400 }: TefasChartProps) {
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(str) => {
+                        tickFormatter={(str: any) => {
                             // Format dd.mm.yyyy to dd/mm
-                            const parts = str.split('.');
+                            const parts = String(str).split('.');
                             return parts.length >= 2 ? `${parts[0]}/${parts[1]}` : str;
                         }}
                         minTickGap={30}
@@ -104,7 +104,7 @@ export function TefasChart({ fundCode, height = 400 }: TefasChartProps) {
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
-                        tickFormatter={(val) => `₺${val.toFixed(2)}`}
+                        tickFormatter={(val: any) => `₺${Number(val).toFixed(2)}`}
                         domain={['auto', 'auto']}
                     />
                     <Tooltip
