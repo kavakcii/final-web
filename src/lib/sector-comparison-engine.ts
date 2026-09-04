@@ -1,16 +1,19 @@
 /**
- * FinAI Sector Comparative Analysis Engine - Stage 4
- * Sector Median (Outlier-resistant), Percentile Ranking, Historical Ratio Trends & Growth Engine
+ * FinAI Sector Comparative Analysis Engine - Stage 2.3
+ * Sector Median (Outlier-resistant), Percentile Ranking (P25/Median/P75),
+ * Historical Ratio Trends & YoY Growth Engine
  */
 
-import { SectorCategory, ValidatedFinancialData } from '@/types/financials';
-import { getSectorCategory, normalizeSymbol } from '@/lib/sector-categorizer';
+import { SectorCategory } from '@/types/financials';
+import { normalizeSymbol } from '@/lib/sector-categorizer';
 import { fetchStockFundamentals } from '@/lib/fundamentals-service';
-import { calculateFinancialRatios, CalculatedFinancialRatios, RatioItem } from '@/lib/financial-ratio-engine';
+import { calculateFinancialRatios, RatioItem } from '@/lib/financial-ratio-engine';
 
-export const MIN_SAMPLE_SIZE = 5; // Constant minimum valid peer count required for sector median
+export const MIN_SAMPLE_SIZE = 5; // Minimum valid peer count required per metric for sector median
+export const MIN_PERCENTILE_SAMPLE_SIZE = 10; // Minimum valid peer count required for P25/P75 percentiles
 
 export interface MetricComparison {
+  metric: string;
   key: string;
   name: string;
   unit: string;
@@ -19,14 +22,20 @@ export interface MetricComparison {
   formattedCompanyValue: string;
   sectorMedian: number | null;
   formattedSectorMedian: string;
+  p25: number | null;
+  formattedP25: string;
+  p75: number | null;
+  formattedP75: string;
   difference: number | null;
   formattedDifference: string;
-  percentile: number | null; // 0 - 100
+  percentile: number | null; // 0 - 100 percentile rank
   sampleSize: number;
+  validCompanyCount: number;
   status: 'available' | 'not_applicable' | 'insufficient_sample' | 'unavailable';
   reason: string;
   positionText: string;
   educationalNote: string;
+  sector: SectorCategory;
 }
 
 export interface HistoricalTrendPoint {
@@ -61,6 +70,7 @@ export interface ComparativeAnalysisResponse {
   validPeerCount: number;
   minSampleSize: number;
   asOf: string;
+  lastUpdated: string;
   metrics: Record<string, MetricComparison>;
   historicalTrend: HistoricalTrendPoint[];
   growth: {
@@ -75,6 +85,8 @@ export interface ComparativeAnalysisResponse {
 interface CachedSectorMedians {
   timestamp: number;
   medians: Record<string, number | null>;
+  p25s: Record<string, number | null>;
+  p75s: Record<string, number | null>;
   valuesMap: Record<string, number[]>;
   validPeerCount: number;
   totalPeerCount: number;
@@ -83,7 +95,8 @@ interface CachedSectorMedians {
 const sectorMedianCache = new Map<SectorCategory, CachedSectorMedians>();
 const SECTOR_CACHE_TTL = 15 * 60 * 1000;
 
-// Sector Universe Peer List Mapping (All Active BIST Stocks grouped by SectorCategory)
+// Sector Universe Peer List Mapping (Active BIST Equity Stocks grouped by SectorCategory)
+// Price-only instruments, certificates, and ETFs are explicitly excluded.
 const SECTOR_PEER_MAP: Record<SectorCategory, string[]> = {
   BANK: ['GARAN', 'AKBNK', 'YKBNK', 'ISCTR', 'VAKBN', 'HALKB', 'TSKB', 'ALBRK', 'SKBNK', 'ICBCT', 'QNBFK', 'QNBTR', 'KLNMA'],
   INSURANCE: ['ANHYT', 'ANSGR', 'AGESA', 'AKGRT', 'RAYSG', 'TURSG'],
@@ -99,14 +112,14 @@ const SECTOR_PEER_MAP: Record<SectorCategory, string[]> = {
   HEALTHCARE: ['DEVA', 'GENIL', 'MPARK', 'MEDTR', 'ECILC', 'TNZTP', 'EGEPO', 'ONCSM', 'RTALB', 'LKMNH', 'TRILC', 'ANGEN'],
   CONSTRUCTION: ['OYAKC', 'CIMSA', 'BUCIM', 'NUHCM', 'ENKAI', 'BOBET', 'LMKDC', 'KLSER', 'BIENY', 'QUAGR', 'BSOKE', 'AKCNS', 'BTCIM', 'GOLTS', 'AFYON', 'KONYA', 'GESAN'],
   INDUSTRIAL: ['EREGL', 'KRDMD', 'ISDMR', 'SASA', 'HEKTS', 'ARCLK', 'VESBE', 'VESTL', 'EGEEN', 'BRISA', 'GOODY', 'CEMTS', 'KORDS', 'ALARK', 'DITTM', 'PRKME', 'KOZAL', 'KOZAA', 'IPEKE'],
-  OTHER: ['Z30KE', 'ZPBDL', 'USDTR', 'GMSTR']
+  OTHER: []
 };
 
 /**
  * Calculates median of a sorted array of numbers
  */
 function calculateMedian(arr: number[]): number | null {
-  if (!arr || arr.length === 0) return null;
+  if (!arr || arr.length < MIN_SAMPLE_SIZE) return null;
   const sorted = [...arr].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   if (sorted.length % 2 !== 0) {
@@ -116,10 +129,25 @@ function calculateMedian(arr: number[]): number | null {
 }
 
 /**
- * Calculates percentile rank of a target value within a sorted array of numbers (0 - 100)
+ * Calculates specific percentile value (e.g. P25, P75) of an array of numbers.
+ * Requires minimum 10 valid companies (MIN_PERCENTILE_SAMPLE_SIZE).
  */
-function calculatePercentile(targetVal: number | null, arr: number[]): number | null {
-  if (targetVal == null || !arr || arr.length === 0) return null;
+function calculatePercentileValue(arr: number[], percentileRank: number): number | null {
+  if (!arr || arr.length < MIN_PERCENTILE_SAMPLE_SIZE) return null;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const index = (percentileRank / 100) * (sorted.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return sorted[lower];
+  const weight = index - lower;
+  return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+}
+
+/**
+ * Calculates percentile rank of a target value within an array of numbers (0 - 100)
+ */
+function calculatePercentileRank(targetVal: number | null, arr: number[]): number | null {
+  if (targetVal == null || !arr || arr.length < MIN_SAMPLE_SIZE) return null;
   const sorted = [...arr].sort((a, b) => a - b);
   let countBelow = 0;
   let countEqual = 0;
@@ -173,7 +201,7 @@ async function getOrComputeSectorMedians(sectorCat: SectorCategory): Promise<Cac
         const peerRatios = calculateFinancialRatios(peerData, null);
         validCount++;
 
-        // Helper to extract clean numeric value
+        // Helper to extract clean numeric value (only if status === 'available')
         const extractVal = (categoryKey: 'profitability' | 'liquidity' | 'leverage' | 'valuation' | 'perShare' | 'operational', ratioKey: string) => {
           const ratio = peerRatios.categories[categoryKey]?.ratios.find((r: RatioItem) => r.key === ratioKey);
           if (ratio && ratio.status === 'available' && ratio.value != null && !isNaN(ratio.value) && isFinite(ratio.value)) {
@@ -236,13 +264,20 @@ async function getOrComputeSectorMedians(sectorCat: SectorCategory): Promise<Cac
   }));
 
   const medians: Record<string, number | null> = {};
+  const p25s: Record<string, number | null> = {};
+  const p75s: Record<string, number | null> = {};
+
   for (const k of Object.keys(valuesMap)) {
     medians[k] = calculateMedian(valuesMap[k]);
+    p25s[k] = calculatePercentileValue(valuesMap[k], 25);
+    p75s[k] = calculatePercentileValue(valuesMap[k], 75);
   }
 
   const result: CachedSectorMedians = {
     timestamp: now,
     medians,
+    p25s,
+    p75s,
     valuesMap,
     validPeerCount: validCount,
     totalPeerCount: peers.length
@@ -258,7 +293,7 @@ async function getOrComputeSectorMedians(sectorCat: SectorCategory): Promise<Cac
 export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<ComparativeAnalysisResponse> {
   const cleanSymbol = normalizeSymbol(rawSymbol);
 
-  // 1. Fetch Target Fundamentals & Compute Stage 3 Financial Ratios
+  // 1. Fetch Target Fundamentals & Compute Stage 2.2 Verified Ratios
   const fundamentals = await fetchStockFundamentals(cleanSymbol);
   const targetRatios = calculateFinancialRatios(fundamentals, null);
   const sectorCat = fundamentals.sectorInfo.category;
@@ -364,6 +399,7 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
     
     if (!targetItem || targetItem.status === 'not_applicable') {
       metrics[cfg.key] = {
+        metric: cfg.key,
         key: cfg.key,
         name: cfg.name,
         unit: cfg.unit,
@@ -372,14 +408,20 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
         formattedCompanyValue: '—',
         sectorMedian: null,
         formattedSectorMedian: '—',
+        p25: null,
+        formattedP25: '—',
+        p75: null,
+        formattedP75: '—',
         difference: null,
         formattedDifference: '—',
         percentile: null,
         sampleSize: 0,
+        validCompanyCount: 0,
         status: 'not_applicable',
         reason: targetItem?.reason || 'Bu sektör için metodolojik olarak uygulanmaz (N/A).',
-        positionText: 'Sektör dışı metrik.',
-        educationalNote: cfg.educationalNote
+        positionText: 'Sektör dışı metrik (N/A).',
+        educationalNote: cfg.educationalNote,
+        sector: sectorCat
       };
       continue;
     }
@@ -390,6 +432,7 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
 
     if (sampleSize < MIN_SAMPLE_SIZE) {
       metrics[cfg.key] = {
+        metric: cfg.key,
         key: cfg.key,
         name: cfg.name,
         unit: cfg.unit,
@@ -398,20 +441,33 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
         formattedCompanyValue: targetItem.formattedValue,
         sectorMedian: null,
         formattedSectorMedian: '—',
+        p25: null,
+        formattedP25: '—',
+        p75: null,
+        formattedP75: '—',
         difference: null,
         formattedDifference: '—',
         percentile: null,
         sampleSize,
+        validCompanyCount: sampleSize,
         status: 'insufficient_sample',
-        reason: `Sektör karşılaştırması için yeterli veri bulunmuyor (Mevcut geçerli şirket: ${sampleSize}, Minimum gerekli: ${MIN_SAMPLE_SIZE}).`,
-        positionText: 'Yetersiz sektör örneklemi.',
-        educationalNote: cfg.educationalNote
+        reason: `Karşılaştırma için yeterli veri bulunmuyor (Geçerli şirket: ${sampleSize}, Minimum gerekli: ${MIN_SAMPLE_SIZE}).`,
+        positionText: 'Karşılaştırma için yeterli veri yok.',
+        educationalNote: cfg.educationalNote,
+        sector: sectorCat
       };
       continue;
     }
 
     const median = sectorMedianData.medians[cfg.key] ?? null;
-    const percentile = calculatePercentile(val, peerValues);
+    const p25 = sectorMedianData.p25s[cfg.key] ?? null;
+    const p75 = sectorMedianData.p75s[cfg.key] ?? null;
+    const percentile = calculatePercentileRank(val, peerValues);
+
+    const formatVal = (v: number | null) => {
+      if (v == null) return '—';
+      return cfg.formatType === 'percent' ? `%${v.toFixed(2)}` : `${v.toFixed(2)}x`;
+    };
 
     let diff: number | null = null;
     let formattedDiff = '—';
@@ -419,32 +475,24 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
 
     if (val != null && median != null) {
       diff = val - median;
-      if (cfg.formatType === 'percent') {
-        const sign = diff >= 0 ? '+' : '';
-        formattedDiff = `${sign}${diff.toFixed(2)} puan`;
-        if (diff > 0.01) {
-          positionText = `Şirket ${cfg.name} değeri (%${val.toFixed(2)}), sektör medyanının (%${median.toFixed(2)}) ${Math.abs(diff).toFixed(2)} puan üzerindedir.`;
-        } else if (diff < -0.01) {
-          positionText = `Şirket ${cfg.name} değeri (%${val.toFixed(2)}), sektör medyanının (%${median.toFixed(2)}) ${Math.abs(diff).toFixed(2)} puan altındadır.`;
-        } else {
-          positionText = `Şirket ${cfg.name} değeri (%${val.toFixed(2)}), sektör medyanı (%${median.toFixed(2)}) ile aynı seviyededir.`;
-        }
+      const sign = diff >= 0 ? '+' : '';
+      formattedDiff = cfg.formatType === 'percent' 
+        ? `${sign}${diff.toFixed(2)} puan` 
+        : `${sign}${diff.toFixed(2)}x`;
+
+      if (diff > 0.01) {
+        positionText = 'Sektör medyanının üzerinde';
+      } else if (diff < -0.01) {
+        positionText = 'Sektör medyanının altında';
       } else {
-        const sign = diff >= 0 ? '+' : '';
-        formattedDiff = `${sign}${diff.toFixed(2)}x`;
-        if (diff > 0.01) {
-          positionText = `Şirket ${cfg.name} değeri (${val.toFixed(2)}x), sektör medyanının (${median.toFixed(2)}x) ${Math.abs(diff).toFixed(2)}x üzerindedir.`;
-        } else if (diff < -0.01) {
-          positionText = `Şirket ${cfg.name} değeri (${val.toFixed(2)}x), sektör medyanının (${median.toFixed(2)}x) ${Math.abs(diff).toFixed(2)}x altındadır.`;
-        } else {
-          positionText = `Şirket ${cfg.name} değeri (${val.toFixed(2)}x), sektör medyanı (${median.toFixed(2)}x) ile aynı seviyededir.`;
-        }
+        positionText = 'Medyan ile benzer';
       }
     } else if (val == null) {
-      positionText = targetItem.reason || 'Şirket verisi mevcut değil.';
+      positionText = targetItem.reason || 'Şirket verisi hesaplanamadı.';
     }
 
     metrics[cfg.key] = {
+      metric: cfg.key,
       key: cfg.key,
       name: cfg.name,
       unit: cfg.unit,
@@ -452,15 +500,21 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
       companyValue: val,
       formattedCompanyValue: targetItem.formattedValue,
       sectorMedian: median,
-      formattedSectorMedian: median != null ? (cfg.formatType === 'percent' ? `%${median.toFixed(2)}` : `${median.toFixed(2)}x`) : '—',
+      formattedSectorMedian: formatVal(median),
+      p25,
+      formattedP25: formatVal(p25),
+      p75,
+      formattedP75: formatVal(p75),
       difference: diff,
       formattedDifference: formattedDiff,
       percentile,
       sampleSize,
+      validCompanyCount: sampleSize,
       status: targetItem.status === 'available' ? 'available' : 'unavailable',
-      reason: targetItem.reason,
+      reason: targetItem.reason || '',
       positionText,
-      educationalNote: cfg.educationalNote
+      educationalNote: cfg.educationalNote,
+      sector: sectorCat
     };
   }
 
@@ -517,8 +571,16 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
       return { metricName: label, value: null, formattedValue: '—', status: 'unavailable', reason: 'İlgili finansal kalem eksik.' };
     }
 
-    if (previous <= 0) {
-      return { metricName: label, value: null, formattedValue: '—', status: 'uncalculable', reason: 'Anlamlı büyüme oranı hesaplanamıyor (Önceki dönem negatif veya sıfır).' };
+    if (previous === 0) {
+      return { metricName: label, value: null, formattedValue: '—', status: 'uncalculable', reason: 'Önceki dönem baz değeri sıfır olduğu için büyüme hesaplanamaz.' };
+    }
+
+    if (previous < 0) {
+      if (current > 0) {
+        return { metricName: label, value: null, formattedValue: 'Negatiften Pozitife Geçiş', status: 'uncalculable', reason: 'Şirket önceki dönem zarardan bu dönem kâra geçmiştir.' };
+      } else {
+        return { metricName: label, value: null, formattedValue: 'Zarar Devam Ediyor', status: 'uncalculable', reason: 'Her iki dönemde de net zarar açıklanmıştır.' };
+      }
     }
 
     const growthVal = ((current - previous) / Math.abs(previous)) * 100;
@@ -532,6 +594,8 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
     };
   }
 
+  const nowIso = new Date().toISOString();
+
   return {
     symbol: cleanSymbol,
     companyName: fundamentals.companyName,
@@ -540,7 +604,8 @@ export async function getSectorComparativeAnalysis(rawSymbol: string): Promise<C
     totalSectorPeerCount: sectorMedianData.totalPeerCount,
     validPeerCount: sectorMedianData.validPeerCount,
     minSampleSize: MIN_SAMPLE_SIZE,
-    asOf: new Date().toISOString(),
+    asOf: nowIso,
+    lastUpdated: nowIso,
     metrics,
     historicalTrend,
     growth: {
