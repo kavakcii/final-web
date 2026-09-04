@@ -24,7 +24,12 @@ import {
   ListFilter,
   DollarSign,
   Layers,
-  LineChart
+  LineChart,
+  HelpCircle,
+  Info,
+  Calculator,
+  Percent,
+  Award
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -125,6 +130,12 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
   // STAGE 2.1 VERİ ALTYAPISI TAMLIK & DOĞRULAMA STATE
   const [fundamentalsData, setFundamentalsData] = useState<any>(null);
 
+  // STAGE 3 FİNANSAL ORAN ENGINE & İNTERAKTİF TOOLTIP STATE
+  const [ratiosData, setRatiosData] = useState<any>(null);
+  const [ratiosLoading, setRatiosLoading] = useState<boolean>(true);
+  const [selectedRatioTooltip, setSelectedRatioTooltip] = useState<any>(null);
+  const [activeRatioCategory, setActiveRatioCategory] = useState<string>("profitability");
+
   useEffect(() => {
     async function loadFundamentals() {
       try {
@@ -137,13 +148,33 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
         console.error('Fundamentals load error:', e);
       }
     }
+
+    async function loadRatios() {
+      try {
+        setRatiosLoading(true);
+        const res = await fetch(`/api/finance/ratios?symbol=${symbol}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setRatiosData(json.data);
+          }
+        }
+      } catch (e) {
+        console.error('Ratios load error:', e);
+      } finally {
+        setRatiosLoading(false);
+      }
+    }
+
     loadFundamentals();
+    loadRatios();
   }, [symbol]);
 
   // SECTION REFS FOR SMOOTH SCROLLING
   const genelRef = useRef<HTMLDivElement>(null);
   const grafikRef = useRef<HTMLDivElement>(null);
   const ozelliklerRef = useRef<HTMLDivElement>(null);
+  const oranlarRef = useRef<HTMLDivElement>(null);
   const haberlerRef = useRef<HTMLDivElement>(null);
   const temettulerRef = useRef<HTMLDivElement>(null);
 
@@ -224,6 +255,7 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
     let targetRef: React.RefObject<HTMLDivElement | null> | null = null;
     if (tabId === "genel") targetRef = genelRef;
     else if (tabId === "grafik" || tabId === "ozellikler") targetRef = grafikRef;
+    else if (tabId === "oranlar") targetRef = oranlarRef;
     else if (tabId === "haberler") targetRef = haberlerRef;
     else if (tabId === "temettuler") targetRef = temettulerRef;
 
@@ -359,10 +391,11 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
             </div>
           </div>
 
-          {/* MENÜ BAŞLIKLARI (Genel Bilgi, Haberler, Grafik, Hisse Özellikleri, Temettüler) */}
+          {/* MENÜ BAŞLIKLARI (Genel Bilgi, Oranlar & Analiz, Haberler, Grafik, Hisse Özellikleri, Temettüler) */}
           <div className="space-y-1.5 pt-2">
             {[
               { id: "genel", label: "Genel Bilgi", icon: FileText },
+              { id: "oranlar", label: "Finansal Oranlar & Analiz", icon: Calculator },
               { id: "haberler", label: "Haberler", icon: Newspaper },
               { id: "grafik", label: "Grafik & İstatistikler", icon: BarChart3 },
               { id: "ozellikler", label: "Hisse Özellikleri", icon: Activity },
@@ -808,6 +841,137 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
 
         </div>
 
+        {/* STAGE 3: FİNANSAL ORAN ENGINE & İNTERAKTİF ANALİZ SEKSİYONU */}
+        <div ref={oranlarRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#00008B] border border-blue-200 flex items-center justify-center shadow-sm">
+                <Calculator className="w-5 h-5 text-[#00008B]" />
+              </div>
+              <div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">{symbol} Finansal Rasyolar & Akıllı Analiz</h2>
+                <p className="text-xs font-bold text-slate-400">Sektör Uyumlu Oranlar, Değerleme Çarpanları ve Öğretici Metodoloji</p>
+              </div>
+            </div>
+
+            {ratiosData?.quality && (
+              <div className="flex items-center gap-2 text-xs font-black self-start md:self-auto">
+                <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-xl">
+                  Erişilebilir Oranlar: {ratiosData.quality.availableRatioCount} / {ratiosData.quality.totalRatioCount}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {ratiosLoading ? (
+            <div className="py-12 flex items-center justify-center text-slate-400 font-bold text-xs gap-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-[#00008B]" />
+              Finansal oranlar ve değerleme çarpanları hesaplanıyor...
+            </div>
+          ) : ratiosData?.categories ? (
+            <div className="space-y-6">
+              {/* Category Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                {[
+                  { id: "profitability", label: "Kârlılık", count: ratiosData.categories.profitability?.ratios.length },
+                  { id: "leverage", label: "Borçluluk", count: ratiosData.categories.leverage?.ratios.length },
+                  { id: "liquidity", label: "Likidite", count: ratiosData.categories.liquidity?.ratios.length },
+                  { id: "valuation", label: "Değerleme (F/K, PD/DD)", count: ratiosData.categories.valuation?.ratios.length },
+                  { id: "perShare", label: "Hisse Başına", count: ratiosData.categories.perShare?.ratios.length },
+                  { id: "operational", label: "Operasyonel Verimlilik", count: ratiosData.categories.operational?.ratios.length }
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveRatioCategory(cat.id)}
+                    className={cn(
+                      "px-3.5 py-2 text-xs font-black rounded-xl transition-all border whitespace-nowrap flex items-center gap-1.5",
+                      activeRatioCategory === cat.id
+                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Ratios Cards Grid */}
+              {ratiosData.categories[activeRatioCategory] && (
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    {ratiosData.categories[activeRatioCategory].description}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {ratiosData.categories[activeRatioCategory].ratios.map((item: any) => (
+                      <div 
+                        key={item.key}
+                        className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-black text-slate-800 leading-tight">
+                              {item.name}
+                            </span>
+                            <button
+                              onClick={() => setSelectedRatioTooltip(item)}
+                              className="p-1 rounded-lg bg-blue-50 text-[#00008B] hover:bg-blue-100 transition-colors"
+                              title="FinAI Öğretici Analiz & Metodoloji"
+                            >
+                              <HelpCircle className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex items-baseline justify-between pt-1">
+                            <span className={cn(
+                              "text-2xl font-black tracking-tight",
+                              item.status === "available" ? "text-[#00008B]" : "text-slate-400"
+                            )}>
+                              {item.formattedValue}
+                            </span>
+                            
+                            <span className={cn(
+                              "text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider",
+                              item.status === "available"
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                : item.status === "not_applicable"
+                                ? "bg-slate-100 text-slate-600 border-slate-200"
+                                : item.status === "insufficient_history"
+                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                : "bg-rose-50 text-rose-800 border-rose-200"
+                            )}>
+                              {item.status === "available"
+                                ? "Doğrulandı"
+                                : item.status === "not_applicable"
+                                ? "Sektör Dışı"
+                                : item.status === "insufficient_history"
+                                ? "Yetersiz Geçmiş"
+                                : "Veri Yok"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-bold">
+                          <span className="truncate max-w-[170px]" title={item.methodology}>
+                            {item.methodology}
+                          </span>
+                          <span className="text-[#00008B] bg-blue-50 px-1.5 py-0.5 rounded">
+                            {item.periodLabel}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-slate-400 font-bold text-xs">
+              Finansal oranlar hesaplanamadı.
+            </div>
+          )}
+        </div>
+
         {/* 4. SEKSİYON: CANLI HABERLER */}
         <div ref={haberlerRef} className="scroll-mt-6 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
@@ -932,6 +1096,82 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
         </div>
 
       </main>
+
+      {/* STAGE 3: EDUCATIONAL RATIO TOOLTIP MODAL */}
+      <AnimatePresence>
+        {selectedRatioTooltip && (
+          <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 0 }}
+              className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-5 relative max-h-[90vh] overflow-y-auto"
+            >
+              <button 
+                onClick={() => setSelectedRatioTooltip(null)}
+                className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="space-y-2 border-b border-slate-100 pb-3 pr-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black px-2.5 py-0.5 rounded-md bg-blue-50 text-[#00008B] border border-blue-200 uppercase">
+                    FinAI Öğretici Analiz
+                  </span>
+                  <span className="text-xs font-bold text-slate-400">• {symbol}</span>
+                </div>
+
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                  {selectedRatioTooltip.name} ({selectedRatioTooltip.formattedValue})
+                </h2>
+              </div>
+
+              <div className="space-y-4 text-xs font-semibold leading-relaxed">
+                <div className="bg-blue-50/70 border border-blue-100 p-3.5 rounded-2xl space-y-1">
+                  <span className="font-black text-[#00008B] block uppercase tracking-wider text-[10px]">
+                    Bu Oran Neyi Ölçer?
+                  </span>
+                  <p className="text-slate-800">{selectedRatioTooltip.educationalTooltip.whatItMeasures}</p>
+                </div>
+
+                <div className="bg-emerald-50/70 border border-emerald-100 p-3.5 rounded-2xl space-y-1">
+                  <span className="font-black text-emerald-800 block uppercase tracking-wider text-[10px]">
+                    Nasıl Yorumlanır?
+                  </span>
+                  <p className="text-slate-800">{selectedRatioTooltip.educationalTooltip.howToInterpret}</p>
+                </div>
+
+                <div className="bg-amber-50/70 border border-amber-100 p-3.5 rounded-2xl space-y-1">
+                  <span className="font-black text-amber-800 block uppercase tracking-wider text-[10px]">
+                    Sektörel Dikkat Noktaları
+                  </span>
+                  <p className="text-slate-800">{selectedRatioTooltip.educationalTooltip.sectorCaution}</p>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200/80 p-3.5 rounded-2xl space-y-1">
+                  <span className="font-black text-slate-700 block uppercase tracking-wider text-[10px]">
+                    FinAI Formülü & Metodoloji
+                  </span>
+                  <p className="font-mono text-slate-900 text-[11px]">{selectedRatioTooltip.educationalTooltip.finaiFormula}</p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-400">
+                  * FinAI analizleri öğretici amaçlıdır; doğrudan yatırım tavsiyesi içermez.
+                </span>
+                <button 
+                  onClick={() => setSelectedRatioTooltip(null)}
+                  className="px-5 py-2 rounded-xl bg-[#00008B] hover:bg-blue-800 text-white text-xs font-black transition-all shadow-md"
+                >
+                  Anladım
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* SADE HABER OKUMA MODALI */}
       <AnimatePresence>

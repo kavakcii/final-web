@@ -1,0 +1,62 @@
+import { NextResponse } from 'next/server';
+import { fetchStockFundamentals } from '@/lib/fundamentals-service';
+import { calculateFinancialRatios } from '@/lib/financial-ratio-engine';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const symbolParam = searchParams.get('symbol');
+
+    if (!symbolParam) {
+      return NextResponse.json(
+        { error: 'Symbol parameter is required (e.g. ?symbol=THYAO)' },
+        { status: 400 }
+      );
+    }
+
+    const cleanSymbol = symbolParam.toUpperCase().replace(/\.IS$/, '').trim();
+
+    // 1. Fetch Fundamentals Data Layer
+    const fundamentals = await fetchStockFundamentals(cleanSymbol);
+
+    // 2. Fetch Live Price for Valuation Metrics
+    let livePrice: number | null = null;
+    try {
+      const priceRes = await fetch(`https://scanner.tradingview.com/turkey/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          columns: ['name', 'close'],
+          range: [0, 700]
+        }),
+        next: { revalidate: 30 }
+      });
+      if (priceRes.ok) {
+        const priceJson = await priceRes.json();
+        const found = (priceJson?.data || []).find((item: any) => {
+          const sym = String(item.d[0]).toUpperCase().replace('.IS', '').trim();
+          return sym === cleanSymbol;
+        });
+        if (found && found.d && found.d[1]) {
+          livePrice = Number(found.d[1]);
+        }
+      }
+    } catch (e) {
+      console.warn(`Live price lookup failed for ${cleanSymbol} in ratio route:`, e);
+    }
+
+    // 3. Calculate Financial Ratios via Engine
+    const ratioResults = calculateFinancialRatios(fundamentals, livePrice);
+
+    return NextResponse.json({
+      success: true,
+      data: ratioResults
+    });
+  } catch (error: any) {
+    console.error('Error in /api/finance/ratios:', error);
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Failed to calculate financial ratios' },
+      { status: 500 }
+    );
+  }
+}
