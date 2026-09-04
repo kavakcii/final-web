@@ -658,7 +658,7 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
                 </div>
               ) : (
                 <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">
-                  Canlı BIST verileri yükleniyor...
+                  {loading ? "Canlı BIST Verileri Çekiliyor..." : "Grafik Verisi Mevcut Değil"}
                 </div>
               )}
             </div>
