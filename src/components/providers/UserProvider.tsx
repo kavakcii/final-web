@@ -163,6 +163,16 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     }
                 ]);
 
+                // Sadece geçerli ve çekilmiş fiyatlar varsa istemci snapshot'ı kaydet (Gündüz koruması)
+                if (Object.keys(priceMap).length > 0 && totalVal > 0) {
+                    await PortfolioService.saveSnapshot(
+                        totalVal,
+                        profit,
+                        totalCost,
+                        Array.from(new Set(assets.map(a => a.symbol))).length
+                    );
+                }
+
                 const history = await PortfolioService.getHistory('1W');
                 setPortfolioHistory(history);
             } else {

@@ -30,7 +30,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import halkarzAboutDb from "@/data/halkarz_about_db.json";
-import { TradingViewStockChart } from "@/components/TradingViewStockChart";
 
 // REEL BIST FİYAT KATALOĞU (Investing 1. Görsel Birebir Eşleşme - ASELS = 363.25 ₺ / 433.09 ₺ Tepe / 320.00 ₺ Dip)
 const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: number; change: number; changePercent: number; prevClose: number }> = {
@@ -109,21 +108,37 @@ const STOCK_ANALYSIS_TEMPLATES = [
 ];
 
 export default function StockDetailClient({ symbol }: { symbol: string }) {
-  const [activeTimeframe, setActiveTimeframe] = useState("1G");
+  const [activeTimeframe, setActiveTimeframe] = useState("1D");
   const [activeAnalysisTf, setActiveAnalysisTf] = useState("1Y"); // 1H, 1A, 3A, 6A, 1Y
   const [activeNavTab, setActiveNavTab] = useState("genel");
   
   // Reel BIST Veri Durumu (Pürüzsüz Canlı Yükleme)
   const [stockData, setStockData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [chartError, setChartError] = useState<string | null>(null);
   const [hoveredPoint, setHoveredPoint] = useState<any>(null);
-  const [fundamentalsData, setFundamentalsData] = useState<any>(null);
 
   // HABERLERİ CANLI ÇEKME & OKUMA MODALI
   const [newsList, setNewsList] = useState<any[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<any>(null);
+
+  // STAGE 2.1 VERİ ALTYAPISI TAMLIK & DOĞRULAMA STATE
+  const [fundamentalsData, setFundamentalsData] = useState<any>(null);
+
+  useEffect(() => {
+    async function loadFundamentals() {
+      try {
+        const res = await fetch(`/api/finance/fundamentals?symbol=${symbol}`);
+        if (res.ok) {
+          const json = await res.json();
+          setFundamentalsData(json);
+        }
+      } catch (e) {
+        console.error('Fundamentals load error:', e);
+      }
+    }
+    loadFundamentals();
+  }, [symbol]);
 
   // SECTION REFS FOR SMOOTH SCROLLING
   const genelRef = useRef<HTMLDivElement>(null);
@@ -162,22 +177,15 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
   const fetchStockData = async (tf: string, isQuiet: boolean = false) => {
     if (!isQuiet) {
       setLoading(true);
-      setChartError(null);
     }
     try {
       const res = await fetch(`/api/bist/stock?symbol=${symbol}&timeframe=${tf}`);
-      const data = await res.json();
-      if (res.ok && data.success) {
+      if (res.ok) {
+        const data = await res.json();
         setStockData(data);
-        setChartError(null);
-      } else {
-        setChartError(data.error || "Grafik verisi şu anda alınamıyor.");
       }
     } catch (e) {
       console.error("Failed to fetch stock data:", e);
-      if (!isQuiet) {
-        setChartError("Sunucu bağlantısı kurulamadı.");
-      }
     } finally {
       setLoading(false);
     }
@@ -199,24 +207,10 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
     }
   };
 
-  // Fetch fundamental financial statement metadata
-  const fetchFundamentals = async () => {
-    try {
-      const res = await fetch(`/api/finance/fundamentals?symbol=${symbol}`);
-      if (res.ok) {
-        const data = await res.json();
-        setFundamentalsData(data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch fundamentals:", e);
-    }
-  };
-
   // 60 SANİYEDE BİR HER DAKİKA ARKA PLANDA CANLI GÜNCELLEME (POLLING)
   useEffect(() => {
     fetchStockData(activeTimeframe);
     fetchNews();
-    fetchFundamentals();
 
     const intervalId = setInterval(() => {
       fetchStockData(activeTimeframe, true); // Sessiz arka plan güncellemesi
@@ -436,10 +430,40 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
         <div ref={genelRef} className="scroll-mt-6">
           <div className="bg-[#00008B] text-white rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl border border-blue-900">
             
-            <div className="border-b border-blue-800/80 pb-4">
-              <h2 className="font-black text-xl text-white tracking-tight">
-                Şirket Hakkında & BIST Profili
-              </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-800/80 pb-4">
+              <div>
+                <h2 className="font-black text-xl text-white tracking-tight">
+                  Şirket Hakkında & BIST Profili
+                </h2>
+                {fundamentalsData?.sectorInfo && (
+                  <p className="text-[10px] font-bold text-blue-200/80 mt-0.5">
+                    FinAI Sektör Kategorisi: <span className="font-black text-white">{fundamentalsData.sectorInfo.displayName}</span>
+                    {fundamentalsData.sectorInfo.isFinancialInstitution && ' • (Banka / Finansal Kurum Modeli)'}
+                  </p>
+                )}
+              </div>
+
+              {/* VERİ ALTYAPISI TAMLIK & DOĞRULAMA ROZETİ (STAGE 2.1) */}
+              {fundamentalsData?.quality && (
+                <div className="px-3 py-1.5 rounded-2xl bg-white/10 border border-white/20 text-xs font-black flex items-center gap-2.5 shrink-0 self-start sm:self-auto">
+                  <ShieldCheck className={cn(
+                    "w-4 h-4",
+                    fundamentalsData.quality.status === 'verified' ? "text-emerald-400" : "text-amber-400"
+                  )} />
+                  <div>
+                    <div className="text-[9px] uppercase font-black text-blue-200/80 tracking-wider">Veri Altyapısı Tamlık & Doğrulama</div>
+                    <div className="text-white text-xs font-extrabold flex items-center gap-1.5">
+                      <span>%{fundamentalsData.quality.completenessScore} Tamlık</span>
+                      <span className="opacity-40">•</span>
+                      <span className={cn(
+                        fundamentalsData.quality.status === 'verified' ? "text-emerald-300" : "text-amber-300"
+                      )}>
+                        {fundamentalsData.quality.status === 'verified' ? 'FinAi Kalite Kontrolünden Geçti' : 'Kısmi Veri / Doğrulama Uyarısı'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4 pt-1">
@@ -461,35 +485,140 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
         <div ref={grafikRef} className="scroll-mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* SOL TARAFTAKİ GRAFİK WİDGET'I (%60 / col-span-7) */}
-          <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 pb-6 shadow-xl space-y-4 flex flex-col justify-between overflow-hidden">
+          <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 pb-8 shadow-xl space-y-6 flex flex-col justify-between overflow-hidden">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[#00008B]" />
                 {symbol} Canlı Grafik & Fiyat Hareketi
               </h2>
+
+              {/* 4 TEMEL ZAMAN DİLİMİ BUTONLARI (1 Saat, 1 Gün, 1 Hafta, 1 Ay) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+                {TIMEFRAMES.map((tf) => (
+                  <button
+                    key={tf.id}
+                    onClick={() => {
+                      setActiveTimeframe(tf.id);
+                      fetchStockData(tf.id, false);
+                    }}
+                    className={cn(
+                      "px-3 py-1.5 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
+                      activeTimeframe === tf.id
+                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-[1.02]"
+                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                    )}
+                  >
+                    {tf.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* TRADINGVIEW LIGHTWEIGHT CHARTS PROFESSIONAL ENGINE */}
-            <TradingViewStockChart
-              symbol={symbol}
-              chartPoints={stockData?.chartPoints || []}
-              activeTimeframe={activeTimeframe}
-              onTimeframeChange={(tf) => {
-                setActiveTimeframe(tf);
-                fetchStockData(tf, false);
-              }}
-              loading={loading}
-              error={chartError}
-              currency="₺"
-              isMarketOpen={stockData?.isMarketOpen ?? isBistMarketOpen}
-              marketStatusText={stockData?.marketStatusText || (isBistMarketOpen ? "Piyasa Açık" : "Piyasa Kapalı")}
-              lastUpdated={stockData?.lastUpdated}
-              currentPrice={stockData?.currentPrice}
-              priceChange={stockData?.priceChange}
-              priceChangePercent={stockData?.priceChangePercent}
-              onRetry={() => fetchStockData(activeTimeframe, false)}
-            />
+            {/* MAVİ ÇİZGİLİ VE Y-EKSENİ FİYAT YAZILARIYLA ASLA ÇAKIŞMAYAN SVG GRAFİK ALANI */}
+            <div className="relative min-h-[320px] w-full pt-2 pb-2">
+              {loading && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                  <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    Canlı BIST Verileri Çekiliyor...
+                  </div>
+                </div>
+              )}
+
+              {svgPathData.coords && svgPathData.coords.length > 1 ? (
+                <div className="w-full h-full relative flex flex-col justify-between space-y-4">
+                  <div className="h-64 w-full relative">
+                    <svg 
+                      viewBox="0 0 800 320" 
+                      preserveAspectRatio="none"
+                      className="w-full h-full overflow-visible preserve-3d"
+                      onMouseLeave={() => setHoveredPoint(null)}
+                    >
+                      <defs>
+                        <linearGradient id="blueChartGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
+                          <stop offset="100%" stopColor="#00008B" stopOpacity="0.05" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Y-Axis Grid Lines & Price Labels */}
+                      {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
+                        const y = 290 - ratio * 240;
+                        const priceVal = svgPathData.minPrice + ratio * (svgPathData.maxPrice - svgPathData.minPrice);
+                        return (
+                          <g key={i}>
+                            <line x1="0" y1={y} x2="710" y2={y} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" />
+                            <text x="795" y={y + 4} fill="#475569" fontSize="11" fontWeight="bold" textAnchor="end">
+                              ₺{priceVal.toFixed(2)}
+                            </text>
+                          </g>
+                        );
+                      })}
+
+                      {/* Area Blue Gradient Fill */}
+                      <path d={svgPathData.areaPath} fill="url(#blueChartGradient)" />
+
+                      {/* Main Royal Blue Chart Line */}
+                      <path 
+                        d={svgPathData.linePath} 
+                        fill="none" 
+                        stroke="#00008B" 
+                        strokeWidth="3" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                      />
+
+                      {/* Interactive Touch Areas */}
+                      {svgPathData.coords.map((pt: any, i: number) => (
+                        <rect
+                          key={i}
+                          x={pt.x - 8}
+                          y={0}
+                          width={16}
+                          height={320}
+                          fill="transparent"
+                          className="cursor-pointer"
+                          onMouseEnter={() => setHoveredPoint(pt)}
+                        />
+                      ))}
+
+                      {/* Hover Indicator Circle */}
+                      {hoveredPoint && (
+                        <circle
+                          cx={hoveredPoint.x}
+                          cy={hoveredPoint.y}
+                          r="6"
+                          className="fill-[#00008B] stroke-white stroke-2 shadow-lg"
+                        />
+                      )}
+                    </svg>
+
+                    {/* Hover Tooltip Box */}
+                    {hoveredPoint && (
+                      <div 
+                        className="absolute bg-[#00008B] text-white text-xs px-3 py-1.5 rounded-xl shadow-2xl z-20 pointer-events-none -translate-x-1/2 -translate-y-12 transition-all border border-blue-400/40"
+                        style={{ left: `${(hoveredPoint.x / 800) * 100}%`, top: `${(hoveredPoint.y / 320) * 100}%` }}
+                      >
+                        <span className="text-blue-200 font-medium block text-[10px]">{hoveredPoint.time}</span>
+                        <span className="font-black text-white text-sm">₺{hoveredPoint.price.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* X-Axis Time Labels */}
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-500 pt-3 border-t border-slate-200/80 px-2">
+                    <span>{svgPathData.coords[0]?.time}</span>
+                    <span>{svgPathData.coords[Math.floor(svgPathData.coords.length / 2)]?.time}</span>
+                    <span>{svgPathData.coords[svgPathData.coords.length - 1]?.time}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">
+                  Canlı BIST verileri yükleniyor...
+                </div>
+              )}
+            </div>
           </div>
 
           {/* SAĞ TARAFTAKİ HİSSE ÖZELLİKLERİ VE İSTATİSTİKLER PANELİ (%40 / col-span-5) */}
@@ -505,19 +634,6 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
                 Canlı BIST (60s)
               </span>
             </div>
-
-            {/* FİNANSAL VERİ KATMANI METADATA ROZETİ (AŞAMA 2 - DATA PIPELINE ROZETİ) */}
-            {fundamentalsData?.quality && (
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 px-3.5 flex items-center justify-between gap-2 text-[11px] font-bold text-slate-600 shadow-2xs">
-                <div className="flex items-center gap-1.5 truncate">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span className="truncate">Veri Altyapısı: <strong className="text-[#00008B]">{fundamentalsData.source || "KAP / BİST Doğrulandı"}</strong></span>
-                </div>
-                <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black whitespace-nowrap shrink-0">
-                  %{fundamentalsData.quality.completeness} Tamlık ({fundamentalsData.quality.status})
-                </span>
-              </div>
-            )}
 
             {/* İSTATİSTİK METRİK KARTLARI */}
             <div className="grid grid-cols-2 gap-3.5 flex-1">

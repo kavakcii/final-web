@@ -1,116 +1,198 @@
-import { FinancialPeriod, FinancialQuality, QualityStatus } from "@/types/financials";
+/**
+ * FinAI Financial Data Validator - Stage 2.1
+ * Financial Statement Math Checks, Balance Sheet Verification & Quality Scorer
+ */
 
-export interface ValidationResult {
-  quality: FinancialQuality;
-  validatedPeriods: FinancialPeriod[];
+import { 
+  FinancialPeriodData, 
+  QualityMetadata, 
+  QualityStatus, 
+  SectorInfo 
+} from '@/types/financials';
+
+/**
+ * Validates a balance sheet statement for accounting identity (Total Assets = Liabilities + Equity)
+ */
+export function validateBalanceSheet(
+  totalAssets: number | null,
+  totalLiabilities: number | null,
+  totalEquity: number | null
+): { isValid: boolean; diff: number | null } {
+  if (totalAssets == null || totalLiabilities == null || totalEquity == null) {
+    return { isValid: true, diff: null }; // Cannot disprove if fields are missing
+  }
+
+  const expectedAssets = totalLiabilities + totalEquity;
+  const diff = Math.abs(totalAssets - expectedAssets);
+
+  // Tolerance: 2% of total assets or 100,000 TRY (whichever is larger, to account for rounding)
+  const maxTolerance = Math.max(totalAssets * 0.02, 100000);
+  const isValid = diff <= maxTolerance;
+
+  return { isValid, diff };
 }
 
-export function validateFinancialData(periods: FinancialPeriod[]): ValidationResult {
-  const warnings: string[] = [];
+/**
+ * Calculates sector-aware Net Debt
+ * For Industrial: Financial Debt - Cash & Cash Equivalents
+ * For Banks / Insurance: MUST BE NULL (Not Applicable)
+ */
+export function calculateNetDebt(
+  financialDebt: number | null,
+  cashAndEquivalents: number | null,
+  sectorInfo: SectorInfo
+): number | null {
+  // CRITICAL BANK/INSURANCE RULE: Net Debt formula is NOT applicable to Financial Institutions!
+  if (sectorInfo.isFinancialInstitution) {
+    return null;
+  }
 
-  if (!periods || periods.length === 0) {
+  if (financialDebt == null || cashAndEquivalents == null) {
+    return null;
+  }
+
+  return financialDebt - cashAndEquivalents;
+}
+
+/**
+ * Calculates financial statement completeness score (0-100%)
+ */
+export function calculateCompletenessScore(periods: FinancialPeriodData[]): number {
+  if (!periods || periods.length === 0) return 0;
+
+  const latest = periods[0];
+  let score = 0;
+
+  // 1. Income Statement (25% weight)
+  const is = latest.incomeStatement;
+  let isCount = 0;
+  if (is.revenue != null) isCount++;
+  if (is.grossProfit != null) isCount++;
+  if (is.operatingIncome != null) isCount++;
+  if (is.netIncome != null) isCount++;
+  score += (isCount / 4) * 25;
+
+  // 2. Balance Sheet (30% weight)
+  const bs = latest.balanceSheet;
+  let bsCount = 0;
+  if (bs.totalAssets != null) bsCount++;
+  if (bs.totalLiabilities != null) bsCount++;
+  if (bs.totalEquity != null) bsCount++;
+  if (bs.cashAndEquivalents != null) bsCount++;
+  if (bs.financialDebt != null) bsCount++;
+  score += (bsCount / 5) * 30;
+
+  // 3. Cash Flow Statement (25% weight)
+  const cf = latest.cashFlowStatement;
+  let cfCount = 0;
+  if (cf.operatingCashFlow != null) cfCount++;
+  if (cf.freeCashFlow != null) cfCount++;
+  if (cf.capitalExpenditures != null) cfCount++;
+  score += (cfCount / 3) * 25;
+
+  // 4. Per Share Data (20% weight)
+  const ps = latest.perShare;
+  let psCount = 0;
+  if (ps.basicEPS != null) psCount++;
+  if (ps.bookValuePerShare != null) psCount++;
+  if (ps.paidInCapital != null) psCount++;
+  if (ps.totalShares != null) psCount++;
+  score += (psCount / 4) * 20;
+
+  return Math.min(100, Math.round(score));
+}
+
+/**
+ * Runs full validation pipeline across quarterly & annual financial statements
+ */
+export function validateFinancialData(
+  symbol: string,
+  sectorInfo: SectorInfo,
+  quarters: FinancialPeriodData[],
+  annuals: FinancialPeriodData[],
+  sourceName: string = 'FinAI Primary Data Provider'
+): QualityMetadata {
+  const warnings: string[] = [];
+  const errors: string[] = [];
+
+  if ((!quarters || quarters.length === 0) && (!annuals || annuals.length === 0)) {
     return {
-      quality: {
-        status: "unavailable",
-        completeness: 0,
-        warnings: ["Hiçbir döneme ait finansal veri bulunamadı."]
-      },
-      validatedPeriods: []
+      completenessScore: 0,
+      status: 'unavailable',
+      warnings: ['Finansal tablo verisi temin edilemedi.'],
+      errors: ['No financial periods found for symbol.'],
+      balanceSheetChecks: { isAssetsEqualLiabilitiesAndEquity: false, differenceAmount: null },
+      sourceMetadata: {
+        source: sourceName,
+        fetchedAt: new Date().toISOString(),
+        verifiedAt: new Date().toISOString()
+      }
     };
   }
 
-  let totalFieldsCount = 0;
-  let nonNullFieldsCount = 0;
+  const allPeriods = [...(quarters || []), ...(annuals || [])];
+  const latestPeriod = allPeriods[0];
 
-  const validatedPeriods = periods.map(p => {
-    const inc = { ...p.incomeStatement };
-    const bal = { ...p.balanceSheet };
-    const cf = { ...p.cashFlow };
-    const ps = { ...p.perShare };
+  // 1. Balance Sheet Accounting Check
+  const bs = latestPeriod.balanceSheet;
+  const bsCheck = validateBalanceSheet(bs.totalAssets, bs.totalLiabilities, bs.totalEquity);
 
-    // 1. DÖNEM MARJ HESAPLAMALARI (Hasılat varsa gerçek oranları türet)
-    if (inc.revenue && inc.revenue > 0) {
-      if (inc.grossProfit !== null && inc.grossMargin === null) {
-        inc.grossMargin = parseFloat(((inc.grossProfit / inc.revenue) * 100).toFixed(2));
-      }
-      if (inc.operatingIncome !== null && inc.operatingMargin === null) {
-        inc.operatingMargin = parseFloat(((inc.operatingIncome / inc.revenue) * 100).toFixed(2));
-      }
-      if (inc.ebitda !== null && inc.ebitdaMargin === null) {
-        inc.ebitdaMargin = parseFloat(((inc.ebitda / inc.revenue) * 100).toFixed(2));
-      }
-      if (inc.netIncome !== null && inc.netMargin === null) {
-        inc.netMargin = parseFloat(((inc.netIncome / inc.revenue) * 100).toFixed(2));
-      }
-    }
+  if (!bsCheck.isValid && bsCheck.diff !== null) {
+    errors.push(
+      `Bilanço denkliği uyuşmazlığı: Varlıklar (${bs.totalAssets?.toLocaleString('tr-TR')} TL) ≠ Yükümlülükler + Özkaynaklar farkı ${bsCheck.diff.toLocaleString('tr-TR')} TL.`
+    );
+  }
 
-    // 2. BİLANÇO EŞİTLİK KONTROLÜ (Aktif Toplamı ≈ Pasif Toplamı + Özsermaye)
-    if (bal.totalAssets !== null && bal.totalLiabilities !== null && bal.equity !== null) {
-      const sumLiabEquity = bal.totalLiabilities + bal.equity;
-      const diff = Math.abs(bal.totalAssets - sumLiabEquity);
-      const tolerance = Math.max(1000, bal.totalAssets * 0.03); // %3 tolerans
+  // 2. Bank / Sector Checks
+  if (sectorInfo.isFinancialInstitution) {
+    warnings.push(
+      `Finansal Kurum / Banka Modeli: Net Borç, Borç/FAVÖK ve Cari Oran formülleri sanayi sektörü mantığıyla uygulanmaz.`
+    );
+  }
 
-      if (diff > tolerance) {
-        warnings.push(`${p.period} dönemi bilançosunda tutarsızlık: Toplam Varlıklar (${bal.totalAssets.toLocaleString("tr-TR")}) ile Yükümlülükler + Özsermaye (${sumLiabEquity.toLocaleString("tr-TR")}) denk değil.`);
-      }
-    }
+  // 3. Currency Consistency Check
+  const currencies = new Set(allPeriods.map(p => p.period.currency).filter(Boolean));
+  if (currencies.size > 1) {
+    warnings.push(`Farklı para birimi tespit edildi (${Array.from(currencies).join(', ')}). Dönemler arası kur çevrimi yapılmamıştır.`);
+  } else if (currencies.size === 0) {
+    warnings.push('Finansal veride para birimi bilgisi belirtilmemiştir.');
+  }
 
-    // 3. NEGATİF VARLIK VEYA KASA KONTROLÜ
-    if (bal.cashAndEquivalents !== null && bal.cashAndEquivalents < 0) {
-      warnings.push(`${p.period} dönemi Nakit ve Nakit Benzerleri negatif olamaz.`);
-    }
+  // 4. Consolidated Scope Consistency Check
+  const consolidatedScopes = new Set(allPeriods.map(p => p.period.consolidated));
+  if (consolidatedScopes.size > 1) {
+    warnings.push('Farklı finansal dönemlerde konsolide ve solo raporlama kapsamları karışıktır.');
+  }
 
-    if (bal.inventory !== null && bal.inventory < 0) {
-      warnings.push(`${p.period} dönemi stoklar negatif olamaz.`);
-    }
+  // 5. Completeness Score
+  const completenessScore = calculateCompletenessScore(quarters.length > 0 ? quarters : annuals);
 
-    // 4. EPS DOĞRULAMA (Net Kâr / Ödenmiş Sermaye uydurma formülü engelleme)
-    if (ps.eps === null && inc.netIncome !== null && ps.totalShares !== null && ps.totalShares > 0) {
-      // EPS yalnızca weighted average shares biliniyorsa hesaplanabilir
-      warnings.push(`${p.period} dönemi için ağırlıklı ortalama hisse sayısı açıklanmadığından EPS türetilmedi.`);
-    }
+  // 6. Final Quality Status Determination
+  let status: QualityStatus = 'verified';
 
-    // 5. DOLUDURUM (COMPLETENESS) SAYIMI
-    const allFields = [
-      inc.revenue, inc.costOfRevenue, inc.grossProfit, inc.operatingIncome, inc.ebitda,
-      inc.pretaxIncome, inc.taxExpense, inc.netIncome, inc.netIncomeParent,
-      bal.currentAssets, bal.nonCurrentAssets, bal.totalAssets, bal.currentLiabilities,
-      bal.nonCurrentLiabilities, bal.totalLiabilities, bal.financialDebt, bal.cashAndEquivalents,
-      bal.netDebt, bal.equity, bal.tradeReceivables, bal.inventory, bal.propertyPlantEquipment,
-      cf.operatingCashFlow, cf.investingCashFlow, cf.financingCashFlow, cf.capex, cf.freeCashFlow, cf.netChangeInCash,
-      ps.eps, ps.bookValuePerShare, ps.paidInCapital, ps.totalShares, ps.circulatingShares, ps.freeFloatRatio
-    ];
-
-    totalFieldsCount += allFields.length;
-    nonNullFieldsCount += allFields.filter(f => f !== null && f !== undefined && !isNaN(Number(f))).length;
-
-    return {
-      ...p,
-      incomeStatement: inc,
-      balanceSheet: bal,
-      cashFlow: cf,
-      perShare: ps
-    };
-  });
-
-  const completeness = totalFieldsCount > 0 ? Math.round((nonNullFieldsCount / totalFieldsCount) * 100) : 0;
-
-  let status: QualityStatus = "verified";
-
-  if (completeness < 15) {
-    status = "unavailable";
-  } else if (completeness < 50) {
-    status = "partial";
-  } else if (warnings.length > 0) {
-    status = "warning";
+  if (!bsCheck.isValid && bsCheck.diff !== null) {
+    status = 'invalid';
+  } else if (errors.length > 0) {
+    status = 'invalid';
+  } else if (warnings.length > 2 || completenessScore < 50) {
+    status = 'warning';
+  } else if (completenessScore < 75) {
+    status = 'partial';
   }
 
   return {
-    quality: {
-      status,
-      completeness,
-      warnings: Array.from(new Set(warnings))
+    completenessScore,
+    status,
+    warnings,
+    errors,
+    balanceSheetChecks: {
+      isAssetsEqualLiabilitiesAndEquity: bsCheck.isValid,
+      differenceAmount: bsCheck.diff
     },
-    validatedPeriods
+    sourceMetadata: {
+      source: sourceName,
+      fetchedAt: new Date().toISOString(),
+      verifiedAt: new Date().toISOString()
+    }
   };
 }

@@ -1,23 +1,48 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { LineChart, Lock } from "lucide-react";
+import { TrendingUp, LineChart, Lock, Clock } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { PortfolioService, HistoryRange } from "@/lib/portfolio-service";
 import { useUser } from "@/components/providers/UserProvider";
+
+// Belirli bir aralık için kaç günlük veri geretiği
+const RANGE_DAYS: Record<HistoryRange, number> = {
+    '1W':  7,
+    '1M':  30,
+    '3M':  90,
+    'YTD': 180, // En fazla 180 gün YTD sayılır
+    '1Y':  365
+};
+
+const RANGE_LABELS: Record<HistoryRange, string> = {
+    '1W':  '7 Gün',
+    '1M':  '1 Ay',
+    '3M':  '3 Ay',
+    'YTD': 'Yıl Başından',
+    '1Y':  '1 Yıl'
+};
 
 function formatDate(dateStr: string): string {
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' });
 }
 
+function daysBetween(dateStr: string): number {
+    const first = new Date(dateStr + 'T00:00:00').getTime();
+    const now   = new Date().getTime();
+    return Math.floor((now - first) / (1000 * 60 * 60 * 24));
+}
+
 export function BalanceGrowthChartWidget() {
     const { myAssets = [], prices = {} } = useUser();
-    const [timeRange] = useState<HistoryRange>('1W');
-    const [historyPoints, setHistoryPoints] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [timeRange, setTimeRange] = useState<HistoryRange>('1W');
+    const [chartData, setChartData] = useState<{ date: string; balance: number }[]>([]);
+    const [firstDate, setFirstDate]   = useState<string | null>(null);
+    const [loading, setLoading]       = useState(true);
+    const [daysSinceFirst, setDaysSinceFirst] = useState<number>(0);
 
-    // Canlı portföy piyasa değeri
+    // Portföyüm sayfası ile %100 birebir canlı değer hesaplaması
     const liveTotalValue = useMemo(() => {
         if (!myAssets || myAssets.length === 0) return 0;
         let val = 0;
@@ -30,14 +55,47 @@ export function BalanceGrowthChartWidget() {
         return val;
     }, [myAssets, prices]);
 
-    // V2 portfolio_history snapshot verilerini çek
+    // İlk kayıt tarihini çek → kaç gün geçmiş?
+    useEffect(() => {
+        PortfolioService.getFirstSnapshotDate().then(date => {
+            setFirstDate(date);
+            if (date) setDaysSinceFirst(daysBetween(date));
+        });
+    }, []);
+
+    // Seçili range değiştikçe veri çek
     const fetchHistory = useCallback(async (range: HistoryRange) => {
         setLoading(true);
         try {
             const data = await PortfolioService.getHistory(range);
-            setHistoryPoints(data ?? []);
+            const mapped: { date: string; balance: number }[] = data.map((item: any) => ({
+                date:    formatDate(item.snapshot_date),
+                balance: Number(item.total_value ?? 0)
+            }));
+
+            // Seçili zaman diliminin sol ucuna sentetik başlangıç noktası ekle.
+            // Grafik her zaman soldan başlar; yeni veriler geldikçe çizgi sağa büyür.
+            if (mapped.length > 0) {
+                const firstValue = mapped[0].balance;
+                const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+                const startDate = new Date(now);
+                if (range === '1W')       startDate.setDate(now.getDate() - 7);
+                else if (range === '1M')  startDate.setDate(now.getDate() - 30);
+                else if (range === '3M')  startDate.setDate(now.getDate() - 90);
+                else if (range === 'YTD') startDate.setMonth(0, 1);
+                else                      startDate.setFullYear(now.getFullYear() - 1);
+
+                const startLabel = startDate.toLocaleDateString('tr-TR', {
+                    day: '2-digit', month: 'short', timeZone: 'Europe/Istanbul'
+                });
+                if (mapped[0].date !== startLabel) {
+                    mapped.unshift({ date: startLabel, balance: firstValue });
+                }
+            }
+
+            setChartData(mapped);
         } catch {
-            setHistoryPoints([]);
+            setChartData([]);
         } finally {
             setLoading(false);
         }
@@ -47,68 +105,43 @@ export function BalanceGrowthChartWidget() {
         fetchHistory(timeRange);
     }, [timeRange, fetchHistory]);
 
-    // Grafik noktalarını oluştur
-    const displayChartData = useMemo(() => {
-        if (historyPoints.length === 0) return [];
-        const mapped = historyPoints.map((item: any) => ({
-            date: formatDate(item.snapshot_date),
-            balance: Number(item.total_value ?? 0)
-        }));
+    // Bu range için yeterli veri var mı?
+    const isRangeUnlocked = (range: HistoryRange): boolean => {
+        if (!firstDate) return false;
+        return daysSinceFirst >= RANGE_DAYS[range];
+    };
 
-        // Canlı bugünün noktasını grafiğe ekle
+    // Canlı değeri bugünkü son noktaya senkronize et
+    const displayChartData = useMemo(() => {
+        if (chartData.length === 0) return [];
+        const copy = [...chartData];
         if (liveTotalValue > 0) {
             const todayLabel = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', timeZone: 'Europe/Istanbul' });
-            const lastIndex = mapped.length - 1;
-            if (mapped[lastIndex].date === todayLabel) {
-                mapped[lastIndex] = { ...mapped[lastIndex], balance: liveTotalValue };
+            const lastIndex = copy.length - 1;
+            if (copy[lastIndex].date === todayLabel) {
+                copy[lastIndex] = { ...copy[lastIndex], balance: liveTotalValue };
             } else {
-                mapped.push({ date: todayLabel, balance: liveTotalValue });
+                copy.push({ date: todayLabel, balance: liveTotalValue });
             }
         }
-        return mapped;
-    }, [historyPoints, liveTotalValue]);
+        return copy;
+    }, [chartData, liveTotalValue]);
 
-    // Sermayeden arındırılmış birikimli günlük net getiri (TWR) hesabı
-    const { periodReturnPct, isPositive } = useMemo(() => {
-        if (historyPoints.length < 2) {
-            return { periodReturnPct: 0, isPositive: true };
-        }
+    const latestBalance  = liveTotalValue > 0 ? liveTotalValue : (displayChartData[displayChartData.length - 1]?.balance ?? 0);
+    const initialBalance = displayChartData[0]?.balance ?? 1;
+    const growthPercent  = initialBalance > 0
+        ? (((latestBalance - initialBalance) / initialBalance) * 100).toFixed(2)
+        : '0.00';
+    const isPositive = parseFloat(growthPercent) >= 0;
 
-        let compound = 1.0;
-        let hasValidDaily = false;
+    const hasData = displayChartData.length > 0;
 
-        historyPoints.forEach((item: any) => {
-            if (item.daily_return_pct !== null && item.daily_return_pct !== undefined) {
-                compound *= (1 + Number(item.daily_return_pct) / 100);
-                hasValidDaily = true;
-            }
-        });
-
-        if (hasValidDaily) {
-            const pct = (compound - 1) * 100;
-            return { periodReturnPct: pct, isPositive: pct >= 0 };
-        }
-
-        // Eğer günlük net getiri henüz oluşmadıysa
-        const firstVal = Number(historyPoints[0]?.total_value || 0);
-        const lastVal = liveTotalValue > 0 ? liveTotalValue : Number(historyPoints[historyPoints.length - 1]?.total_value || 0);
-        if (firstVal > 0) {
-            const fallbackPct = ((lastVal - firstVal) / firstVal) * 100;
-            return { periodReturnPct: fallbackPct, isPositive: fallbackPct >= 0 };
-        }
-
-        return { periodReturnPct: 0, isPositive: true };
-    }, [historyPoints, liveTotalValue]);
-
-    const latestBalance = liveTotalValue > 0
-        ? liveTotalValue
-        : (displayChartData[displayChartData.length - 1]?.balance ?? 0);
-
-    // En az 2 tarihsel snapshot noktası yoksa "Grafik Başlıyor" mesajı ver
-    const hasEnoughSnapshots = historyPoints.length >= 2;
+    // Yeni kullanıcı durumu: hiç veri yok
+    const isNewUser = !firstDate && !loading;
 
     return (
         <div className="w-full bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 pb-2 sm:pb-3 shadow-sm flex flex-col justify-between h-full min-h-[230px] sm:min-h-[270px] min-w-0">
+            {/* Top Section: Header & Stat */}
             <div>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-2">
@@ -118,43 +151,52 @@ export function BalanceGrowthChartWidget() {
                         </div>
                         <div>
                             <h3 className="text-xs sm:text-base font-black text-[#00008B] tracking-tight truncate">Varlık Gelişimi</h3>
-                            <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Günlük Kapanış Snapshot</p>
+                            <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden sm:block">Günlük Kapanış</p>
                         </div>
                     </div>
 
+                    {/* Tüm Günler Etiketi */}
                     <div className="flex items-center gap-1 text-[8px] sm:text-[10px] font-extrabold text-[#00008B] bg-[#00008B]/5 px-2 py-0.5 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-2xl border border-[#00008B]/10">
                         <span>7 Gün</span>
                     </div>
                 </div>
 
+                {/* --- Yeni Kullanıcı Durumu --- */}
+                {isNewUser && (
+                    <div className="flex flex-col items-center justify-center py-6 gap-2">
+                        <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center">
+                            <TrendingUp className="w-5 h-5 text-[#00008B]/40" />
+                        </div>
+                        <div className="text-center max-w-xs">
+                            <p className="text-xs font-black text-slate-700">Grafik Başlıyor</p>
+                            <p className="text-[10px] text-slate-400">Veriler her gece 23:59'da kaydedilir.</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* --- Yüklenme Durumu --- */}
-                {loading && (
+                {!isNewUser && loading && (
                     <div className="flex items-center justify-center h-36 sm:h-48">
                         <div className="w-5 h-5 border-2 border-[#00008B] border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
 
-                {/* --- Yetersiz Snapshot / Yeni Kullanıcı Durumu --- */}
-                {!loading && !hasEnoughSnapshots && (
-                    <div className="flex flex-col items-center justify-center py-8 gap-2">
-                        <div className="w-10 h-10 rounded-2xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center">
-                            <Lock className="w-5 h-5 text-[#00008B]/40" />
-                        </div>
-                        <div className="text-center max-w-xs px-4">
-                            <p className="text-xs font-black text-slate-700">Grafik Başlıyor</p>
-                            <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                                Veriler her gün 23:59 TSİ'de otomatik kaydedilir. İlk performans grafiğiniz yarın oluşacaktır.
-                            </p>
-                        </div>
+                {/* --- Veri Yok / Kilitli Dönem --- */}
+                {!isNewUser && !loading && !hasData && (
+                    <div className="flex flex-col items-center justify-center py-6 gap-2">
+                        <Lock className="w-5 h-5 text-slate-300" />
+                        <p className="text-[10px] font-bold text-slate-400 text-center">
+                            Henüz yeterli veri yok.
+                        </p>
                     </div>
                 )}
 
-                {/* --- Yeterli Veri Var: Stat Bilgisi --- */}
-                {!loading && hasEnoughSnapshots && (
+                {/* İstatistik */}
+                {!isNewUser && !loading && hasData && (
                     <div className="flex items-center justify-between mb-1 px-0.5">
                         <div>
                             <span className="text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                Net Portföy Getirisi
+                                Değişim
                             </span>
                             <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
                                 <span className="text-sm sm:text-2xl font-black text-[#00008B] truncate">
@@ -165,7 +207,7 @@ export function BalanceGrowthChartWidget() {
                                         ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
                                         : 'text-red-500 bg-red-50 border-red-200'
                                 }`}>
-                                    {isPositive ? '+' : ''}{periodReturnPct.toFixed(2)}%
+                                    {isPositive ? '+' : ''}{growthPercent}%
                                 </span>
                             </div>
                         </div>
@@ -173,8 +215,8 @@ export function BalanceGrowthChartWidget() {
                 )}
             </div>
 
-            {/* --- Grafik --- */}
-            {!loading && hasEnoughSnapshots && (
+            {/* --- Grafik: Kartın Tabanına Kadar Uzanır --- */}
+            {!isNewUser && !loading && hasData && (
                 <div className="flex-1 w-full min-h-[140px] pt-1 -mb-1">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={displayChartData} margin={{ top: 5, right: 2, left: -22, bottom: 0 }}>
@@ -234,4 +276,3 @@ export function BalanceGrowthChartWidget() {
         </div>
     );
 }
-

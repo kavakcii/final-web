@@ -147,43 +147,15 @@ export async function generateFinAiReport(
         totalCost += asset.avgCost * asset.quantity;
     });
 
-    // V2 Snapshot Yeterlilik Kontrolü (En az 2 snapshot noktası gerekli)
-    if (history.length < 2) {
-        const emptyPayload: FinAiBackendPayload = {
-            timeframe,
-            startValue: currentTotal,
-            endValue: currentTotal,
-            diffTL: 0,
-            diffPct: 0,
-            twrPct: 0,
-            totalDeposits: 0,
-            totalWithdrawals: 0,
-            netCapitalFlow: 0,
-            periodCashChange: 0,
-            realizedProfitLoss: 0,
-            unrealizedProfitLoss: 0,
-            topPositiveAssets: [],
-            topNegativeAssets: [],
-            allAssetContributions: [],
-            newsAnalyses: [],
-            uncertainMovements: []
-        };
-
-        return {
-            timeframe,
-            currentTotal,
-            diffValue: 0,
-            diffPercent: 0,
-            twrPercent: 0,
-            isPositive: true,
-            narrativeText: "Henüz yeterli tarihsel veri bulunmuyor. FinAi portföy analiziniz her gün 23:59 TSİ'de kaydedilen otomatik snapshot'lar ile üretilir.",
-            generatedAt: new Date().toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' }),
-            payload: emptyPayload
-        };
+    // Başlangıç Değeri Belirleme
+    let startValue = currentTotal;
+    if (history.length >= 2) {
+        startValue = Number(history[0]?.total_value || currentTotal);
+    } else if (history.length === 1) {
+        startValue = Number(history[0]?.total_value || currentTotal);
     }
+    if (startValue <= 0) startValue = totalCost > 0 ? totalCost : currentTotal;
 
-    // Başlangıç Değeri ve Performans Belirleme
-    const startValue = Number(history[0]?.total_value || currentTotal);
     const diffValue = currentTotal - startValue;
     const diffPercent = startValue > 0 ? (diffValue / startValue) * 100 : 0;
     const isPositive = diffValue >= 0;
