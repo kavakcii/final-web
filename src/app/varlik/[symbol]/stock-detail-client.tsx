@@ -80,12 +80,15 @@ const STOCK_NAMES: Record<string, string> = {
     "TKFEN": "Tekfen Holding A.Ş."
 };
 
-// 4 TEMEL ZAMAN DİLİMLERİ (1 Saat, 1 Gün, 1 Hafta, 1 Ay)
+// 7 TEMEL ZAMAN DİLİMLERİ (1 Gün, 1 Saat, 1 Ay, 3 Ay, 6 Ay, 1 Yıl, 5 Yıl)
 const TIMEFRAMES = [
+  { id: "1G", label: "1 Gün" },
   { id: "1H", label: "1 Saat" },
-  { id: "1D", label: "1 Gün" },
-  { id: "1W", label: "1 Hafta" },
-  { id: "1M", label: "1 Ay" }
+  { id: "1A", label: "1 Ay" },
+  { id: "3A", label: "3 Ay" },
+  { id: "6A", label: "6 Ay" },
+  { id: "1Y", label: "1 Yıl" },
+  { id: "5Y", label: "5 Yıl" }
 ];
 
 // FİYAT ANALİZİ VE TREND BANDI 20 FARKLI HİSSE ÖZEL TÜRKÇE ANALİZ METİN ŞABLONU (MALİYET BİLGİSİ İÇERMEYEN)
@@ -97,7 +100,7 @@ const STOCK_ANALYSIS_TEMPLATES = [
   "{symbol} hisse senedinde {timeframe} süresince oluşan hareket bantları {low} ₺ taban seviyesinin sağlam bir destek olduğunu teyit ediyor. Anlık {current} ₺ fiyatı pozitif momentumun sürdüğüne işaret etmektedir.",
   "{symbol} için teknik indikatörler ve hareketli ortalamalar {timeframe} periyodunda pozitif sinyal üretmektedir. Varlık {low} ₺ dip bölgesinden uzaklaşarak {current} ₺ canlı fiyatıyla üst kanala yerleşmiştir.",
   "{timeframe} zaman aralığında {symbol} hisse senedi {high} ₺ direnç sınırına ivmeli bir şekilde yaklaşmaktadır. Anlık {current} ₺ seviyesi, yatırımcı iştahının korunduğunu göstermektedir.",
-  "{symbol} varlığı {low} ₺ - {high} ₺ fiyat bandının üst yarısında istikrarlı bir duruş sergiliyor. {current} ₺ canlı işlem fiyatı varlığın sektör genelinde güçlü kaldığını kanıtlıyor.",
+  "{symbol} varlığı {low} ₺ - {high} ₺ fiyat bandının üst yarısında istikrarlı bir duruş sergiliyor. {current} ₺ canlı işlem fiyatı varlığın sektor genelinde güçlü kaldığını kanıtlıyor.",
   "{symbol} hissesinde {timeframe} periyodunda kademeli alım dalgası gözlemleniyor. {low} ₺ seviyesinden başlayan yükseliş trendi {current} ₺ fiyatıyla yeni zirveleri hedeflemektedir.",
   "{timeframe} boyunca oluşan fiyat grafiklerinde {symbol}, {low} ₺ dip marjının oldukça üzerinde kalarak {current} ₺ seviyesinde güvenli alanda hareketini sürdürüyor.",
   "{symbol} piyasa verilerine göre {current} ₺ canlı fiyatıyla {high} ₺ periyot tepe noktasına yaklaşmaktadır. Teknik görünüm yükseliş trendinin devamını destekliyor.",
@@ -113,7 +116,7 @@ const STOCK_ANALYSIS_TEMPLATES = [
 ];
 
 export default function StockDetailClient({ symbol }: { symbol: string }) {
-  const [activeTimeframe, setActiveTimeframe] = useState("1D");
+  const [activeTimeframe, setActiveTimeframe] = useState("1G");
   const [activeAnalysisTf, setActiveAnalysisTf] = useState("1Y"); // 1H, 1A, 3A, 6A, 1Y
   const [activeNavTab, setActiveNavTab] = useState("genel");
   
@@ -204,21 +207,25 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
     }
   }, []);
 
-  // Fetch stock detail & chart data (DOĞRUDAN REEL BIST VERİLERİ)
-  const fetchStockData = async (tf: string, isQuiet: boolean = false) => {
+  // Fetch stock detail & chart data with AbortController for zero race condition
+  const fetchStockData = async (tf: string, isQuiet: boolean = false, signal?: AbortSignal) => {
     if (!isQuiet) {
       setLoading(true);
     }
     try {
-      const res = await fetch(`/api/bist/stock?symbol=${symbol}&timeframe=${tf}`);
+      const res = await fetch(`/api/bist/stock?symbol=${symbol}&timeframe=${tf}`, { signal });
       if (res.ok) {
         const data = await res.json();
         setStockData(data);
       }
-    } catch (e) {
-      console.error("Failed to fetch stock data:", e);
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        console.error("Failed to fetch stock data:", e);
+      }
     } finally {
-      setLoading(false);
+      if (!isQuiet && (!signal || !signal.aborted)) {
+        setLoading(false);
+      }
     }
   };
 
@@ -238,16 +245,22 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
     }
   };
 
-  // 60 SANİYEDE BİR HER DAKİKA ARKA PLANDA CANLI GÜNCELLEME (POLLING)
+  // 60 SANİYEDE BİR HER DAKİKA ARKA PLANDA CANLI GÜNCELLEME (POLLING + ABORT CONTROLLER)
   useEffect(() => {
-    fetchStockData(activeTimeframe);
+    const controller = new AbortController();
+    setHoveredPoint(null);
+    
+    fetchStockData(activeTimeframe, false, controller.signal);
     fetchNews();
 
     const intervalId = setInterval(() => {
-      fetchStockData(activeTimeframe, true); // Sessiz arka plan güncellemesi
-    }, 60000); // 60 saniyede bir
+      fetchStockData(activeTimeframe, true);
+    }, 60000);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      controller.abort();
+      clearInterval(intervalId);
+    };
   }, [symbol, activeTimeframe]);
 
   const scrollToSection = (tabId: string) => {
@@ -526,15 +539,12 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
                 {symbol} Canlı Grafik & Fiyat Hareketi
               </h2>
 
-              {/* 4 TEMEL ZAMAN DİLİMİ BUTONLARI (1 Saat, 1 Gün, 1 Hafta, 1 Ay) */}
+              {/* 7 TEMEL ZAMAN DİLİMİ BUTONLARI (1 Gün, 1 Saat, 1 Ay, 3 Ay, 6 Ay, 1 Yıl, 5 Yıl) */}
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
                 {TIMEFRAMES.map((tf) => (
                   <button
                     key={tf.id}
-                    onClick={() => {
-                      setActiveTimeframe(tf.id);
-                      fetchStockData(tf.id, false);
-                    }}
+                    onClick={() => setActiveTimeframe(tf.id)}
                     className={cn(
                       "px-3 py-1.5 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
                       activeTimeframe === tf.id
