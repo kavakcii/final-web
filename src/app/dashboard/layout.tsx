@@ -123,6 +123,7 @@ function DashboardShell({
             isExpanded: isPortfolioExpanded,
             toggleExpand: () => setIsPortfolioExpanded(prev => !prev)
         },
+        { icon: Calendar, label: "Takvim", href: "/dashboard/calendar" },
         { icon: BarChart3, label: "Analiz", href: "/dashboard/analysis" },
         { icon: LayoutGrid, label: "Varlıklar", href: "/dashboard/data" },
         { icon: Newspaper, label: "Haberler", href: "/dashboard/news" },

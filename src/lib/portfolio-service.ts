@@ -206,6 +206,21 @@ export const PortfolioService = {
         }
     },
 
+    /**
+     * Varlık Alışı (BUY) - Varlık ekler
+     */
+    buyAsset: async (asset: Omit<Asset, "id">, commissionFee: number = 0, transactionDate?: string) => {
+        try {
+            return await PortfolioService.addAsset({
+                ...asset,
+                dateAdded: transactionDate || asset.dateAdded || new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Varlık alışı hatası:', error);
+            throw error;
+        }
+    },
+
     saveSnapshot: async (totalValue: number, totalProfit: number, totalCost?: number, assetCount?: number) => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
