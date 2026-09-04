@@ -363,6 +363,20 @@ export default function PortfolioPage() {
     // Feedback message state
     const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
+    // Escape key listener for closing modals & dropdowns
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                if (isModalOpen) setIsModalOpen(false);
+                if (analysisModal.isOpen) setAnalysisModal(prev => ({ ...prev, isOpen: false }));
+                if (deleteConfirm.isOpen) setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+                if (showDropdown) setShowDropdown(false);
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isModalOpen, analysisModal.isOpen, deleteConfirm.isOpen, showDropdown]);
+
     // 0.65 Hızındaki Pürüzsüz Apple iOS Spring Fizik Motoru
     const iosSpring065Config: any = useMemo(() => ({
         type: "spring",
@@ -2741,10 +2755,18 @@ export default function PortfolioPage() {
                 {analysisModal.isOpen && (
                     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                         <div onClick={() => setAnalysisModal(prev => ({ ...prev, isOpen: false }))} className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]">
+                        <motion.div 
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={analysisModal.title || "Yapay Zeka Portföy Analizi"}
+                            initial={{ scale: 0.95, opacity: 0 }} 
+                            animate={{ scale: 1, opacity: 1 }} 
+                            exit={{ scale: 0.95, opacity: 0 }} 
+                            className="relative bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-2xl max-h-[85vh] overflow-y-auto shadow-2xl text-[#00008B]"
+                        >
                             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                 <h2 className="text-xl font-black flex items-center gap-3 text-[#00008B]"><Brain className="w-5 h-5 text-blue-600" />{analysisModal.title}</h2>
-                                <button onClick={() => setAnalysisModal(prev => ({ ...prev, isOpen: false }))} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                                <button onClick={() => setAnalysisModal(prev => ({ ...prev, isOpen: false }))} aria-label="Kapat" className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
                             </div>
                             {analysisModal.loading ? (
                                 <div className="py-20 text-center flex flex-col items-center gap-3">
@@ -2764,7 +2786,15 @@ export default function PortfolioPage() {
                 {isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white border border-blue-100 rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#00008B]/20 text-[#00008B]">
+                        <motion.div 
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Portföye Varlık Ekle"
+                            initial={{ scale: 0.95, opacity: 0 }} 
+                            animate={{ scale: 1, opacity: 1 }} 
+                            exit={{ scale: 0.95, opacity: 0 }} 
+                            className="relative bg-white border border-blue-100 rounded-[2rem] p-8 w-full max-w-md shadow-2xl shadow-[#00008B]/20 text-[#00008B]"
+                        >
                             <div className="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-2xl bg-[#00008B] text-white flex items-center justify-center shadow-md shadow-[#00008B]/20">
@@ -2772,7 +2802,7 @@ export default function PortfolioPage() {
                                     </div>
                                     <h2 className="text-xl font-black text-[#00008B] tracking-tight">Varlık Ekle</h2>
                                 </div>
-                                <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
+                                <button onClick={() => setIsModalOpen(false)} aria-label="Kapat" className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-[#00008B] transition-colors"><X className="w-5 h-5" /></button>
                             </div>
                             <form onSubmit={handleAddAsset} className="space-y-5">
                                 

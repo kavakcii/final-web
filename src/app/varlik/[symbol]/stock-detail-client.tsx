@@ -341,6 +341,18 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
     };
   }, [symbol, activeTimeframe]);
 
+  // Escape key listener for dismissing open modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (selectedRatioTooltip) setSelectedRatioTooltip(null);
+        if (selectedArticle) setSelectedArticle(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedRatioTooltip, selectedArticle]);
+
   const scrollToSection = (tabId: string) => {
     setActiveNavTab(tabId);
     let targetRef: React.RefObject<HTMLDivElement | null> | null = null;
@@ -1648,6 +1660,9 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
         {selectedRatioTooltip && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div 
+              role="dialog"
+              aria-modal="true"
+              aria-label={`${selectedRatioTooltip.name} Eğitici Analiz ve Metodoloji`}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 0 }}
@@ -1655,6 +1670,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
             >
               <button 
                 onClick={() => setSelectedRatioTooltip(null)}
+                aria-label="Kapat"
                 className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
               >
                 <X className="w-5 h-5" />
@@ -1734,6 +1750,9 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
         {selectedArticle && (
           <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div 
+              role="dialog"
+              aria-modal="true"
+              aria-label={selectedArticle.title || "KAP ve Piyasa Haberi"}
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 0 }}
@@ -1741,6 +1760,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
             >
               <button 
                 onClick={() => setSelectedArticle(null)}
+                aria-label="Kapat"
                 className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-all"
               >
                 <X className="w-5 h-5" />

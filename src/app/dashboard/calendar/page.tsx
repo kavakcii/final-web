@@ -70,7 +70,8 @@ function TablePagination({
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     disabled={currentPage === 1}
-                    className={`px-2 py-1.5 rounded-xl border bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 ${borderStyles}`}
+                    aria-label="Önceki sayfa"
+                    className={`min-h-[34px] px-2.5 py-1.5 rounded-xl border bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 ${borderStyles}`}
                 >
                     <ChevronLeft className="w-3.5 h-3.5" />
                     <span className="hidden sm:inline text-[11px]">Önceki</span>
@@ -89,7 +90,8 @@ function TablePagination({
                                         onPageChange(p);
                                         window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}
-                                    className={`w-7 h-7 rounded-xl text-xs font-black transition-all ${
+                                    aria-label={`Sayfa ${p}`}
+                                    className={`w-8 h-8 rounded-xl text-xs font-black transition-all ${
                                         p === currentPage
                                             ? activeStyles
                                             : `bg-white text-slate-700 border ${borderStyles}`
@@ -107,7 +109,8 @@ function TablePagination({
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                     disabled={currentPage === totalPages}
-                    className={`px-2 py-1.5 rounded-xl border bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 ${borderStyles}`}
+                    aria-label="Sonraki sayfa"
+                    className={`min-h-[34px] px-2.5 py-1.5 rounded-xl border bg-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-1 ${borderStyles}`}
                 >
                     <span className="hidden sm:inline text-[11px]">Sonraki</span>
                     <ChevronRight className="w-3.5 h-3.5" />

@@ -66,9 +66,17 @@ function DashboardShell({
                 setIsProfileOpen(false);
             }
         }
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                setIsMobileMenuOpen(false);
+                setIsProfileOpen(false);
+            }
+        }
         document.addEventListener("mousedown", handleClickOutside);
+        window.addEventListener("keydown", handleKeyDown);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
+            window.removeEventListener("keydown", handleKeyDown);
         };
     }, []);
 
@@ -279,6 +287,8 @@ function DashboardShell({
                                 <div className="relative" ref={profileRef}>
                                     <button
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                        aria-label="Kullanıcı Profili ve Ayarlar"
+                                        aria-expanded={isProfileOpen}
                                         className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#0a192f] font-bold hover:bg-slate-200 transition-all focus:outline-none overflow-hidden border border-[#0a192f]/5"
                                     >
                                         {avatarUrl ? (
