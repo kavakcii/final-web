@@ -1,157 +1,147 @@
 import { NextResponse } from 'next/server';
 import YahooFinance from 'yahoo-finance2';
-import { fetchTefasData } from '../../../lib/tefas';
+import { BIST_CATALOG, TEFAS_CATALOG } from '@/lib/asset-catalog';
+import { sectorMapping } from '@/data/sectorMapping';
 
 const yahooFinance = new YahooFinance();
-// yahooFinance.suppressNotices(['yahooSurvey']);
+
+function normalizeTr(text: string): string {
+    return (text || '')
+        .toLocaleLowerCase('tr-TR')
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c')
+        .trim();
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
 
-    if (!query) {
+    if (!query || query.trim().length === 0) {
         return NextResponse.json({ results: [] });
     }
 
+    const rawQuery = query.trim();
+    const qUpper = rawQuery.toUpperCase();
+    const qNorm = normalizeTr(rawQuery);
+
     try {
-        // We specifically want to prioritize TEFAS funds and BIST stocks
-        // TEFAS funds are often not well-indexed in standard Yahoo search unless exact code is known,
-        // but BIST stocks are.
-        // For TEFAS funds, we might need a local fallback or specific mapping if Yahoo misses them.
-        // However, Yahoo Finance DOES contain many Turkish funds (e.g. TCD.IS, MAC.IS).
+        const results: any[] = [];
+        const seenSymbols = new Set<string>();
 
-        const result = await yahooFinance.search(query, {
-            newsCount: 0,
-            quotesCount: 60 // Increased count to find Turkish assets among global results
-        });
+        // 1. FAST LOCAL BIST SEARCH (Case-Insensitive, Turkish Normalized, Sector Search)
+        for (const stock of BIST_CATALOG) {
+            const sym = stock.symbol.toUpperCase().replace(/\.IS$/, '');
+            const symNorm = normalizeTr(sym);
+            const nameNorm = normalizeTr(stock.name || '');
+            const sector = sectorMapping[sym] || 'Borsa İstanbul';
+            const sectorNorm = normalizeTr(sector);
 
-        // Filter function for reusability
-        const filterTurkishAssets = (q: any) => {
-            // Ensure the asset is valid and exists on Yahoo Finance
-            if (!q || !q.symbol) return false;
-            if (q.isYahooFinance === false) return false;
+            const isExactSymbol = sym === qUpper;
+            const isPrefixSymbol = symNorm.startsWith(qNorm);
+            const isSymbolMatch = symNorm.includes(qNorm);
+            const isNameMatch = nameNorm.includes(qNorm);
+            const isSectorMatch = sectorNorm.includes(qNorm);
 
-            // STRICT FILTER: Only allow Turkish assets (BIST Stocks & TEFAS Funds)
-            // Criteria:
-            // 1. Symbol ends with '.IS' (Standard for BIST and many Turkish funds on Yahoo)
-            // 2. Exchange is 'IST' (Istanbul Stock Exchange)
-            const symbol = q.symbol.toUpperCase();
-            const isTurkishAsset = symbol.endsWith('.IS') || q.exchange === 'IST';
+            if (isExactSymbol || isPrefixSymbol || isSymbolMatch || isNameMatch || isSectorMatch) {
+                seenSymbols.add(sym);
+                let score = 0;
+                if (isExactSymbol) score = 1000;
+                else if (isPrefixSymbol) score = 500;
+                else if (isSymbolMatch) score = 300;
+                else if (isNameMatch) score = 200;
+                else if (isSectorMatch) score = 100;
 
-            // Type Filter: Only EQUITY, MUTUALFUND, ETF (exclude CURRENCY, CRYPTO, etc. unless user wants them?)
-            // User said: "yabancı fon ve hisse senetleri çıkar sadece türkler olsun" -> Only Turkish Stocks and Funds.
-            const allowedTypes = ['EQUITY', 'MUTUALFUND', 'ETF', 'INDEX'];
-            const isAllowedType = allowedTypes.includes(q.quoteType);
-
-            return isTurkishAsset && isAllowedType;
-        };
-
-        let quotes = result.quotes.filter(filterTurkishAssets);
-
-        // Fallback: If no Turkish assets found and query is short (potential TEFAS code or Stock symbol),
-        // try searching explicitly with .IS suffix to find the Turkish equivalent.
-        // E.g. User types "MAC" -> Yahoo returns US stock "MAC". We want "MAC.IS".
-        if (quotes.length === 0 && query.length >= 3 && query.length <= 5) {
-            try {
-                const resultIS = await yahooFinance.search(`${query}.IS`, {
-                    newsCount: 0,
-                    quotesCount: 5 // We only need the top matches for the specific code
+                results.push({
+                    symbol: sym,
+                    shortname: stock.name,
+                    longname: stock.name,
+                    sector: sector,
+                    exchange: 'BIST',
+                    quoteType: 'EQUITY',
+                    typeDisp: 'Hisse Senedi',
+                    url: `/varlik/${sym}`,
+                    score
                 });
-                const quotesIS = resultIS.quotes.filter(filterTurkishAssets);
-                quotes = [...quotes, ...quotesIS];
-            } catch (e) {
-                // Ignore fallback error
             }
         }
 
-        // SYNTHETIC FALLBACK FOR TEFAS FUNDS (When Yahoo fails completely OR query is 3 letters)
-        // We now proactively check real TEFAS data for 3-letter codes to give accurate suggestions.
-        if (query.length === 3) {
-            const code = query.toUpperCase();
-            
-            // Check if we already have this code from Yahoo (and it's a Turkish asset)
-            const exists = quotes.some((q: any) => q.symbol === code || q.symbol === `${code}.IS`);
-            
-            // Even if it exists, Yahoo might have wrong name. Let's fetch TEFAS to be sure.
+        // 2. LOCAL TEFAS SEARCH (If query matches fund code or name)
+        if (rawQuery.length >= 2) {
+            for (const fund of TEFAS_CATALOG) {
+                const fCode = fund.symbol.toUpperCase();
+                const fCodeNorm = normalizeTr(fCode);
+                const fNameNorm = normalizeTr(fund.name || '');
+
+                const isExactCode = fCode === qUpper;
+                const isCodeMatch = fCodeNorm.startsWith(qNorm);
+                const isNameMatch = fNameNorm.includes(qNorm);
+
+                if ((isExactCode || isCodeMatch || isNameMatch) && !seenSymbols.has(fCode)) {
+                    seenSymbols.add(fCode);
+                    results.push({
+                        symbol: fCode,
+                        shortname: fund.name,
+                        longname: fund.name,
+                        sector: 'Yatırım Fonu',
+                        exchange: 'TEFAS',
+                        quoteType: 'MUTUALFUND',
+                        typeDisp: 'TEFAS Fonu',
+                        url: `/varlik/${fCode}`,
+                        score: isExactCode ? 900 : (isCodeMatch ? 400 : 150)
+                    });
+                }
+            }
+        }
+
+        // 3. YAHOO SEARCH FALLBACK IF FEW RESULTS
+        if (results.length < 5) {
             try {
-                // We use a recent date. TEFAS fetch is cached/optimized usually? 
-                // We should be careful not to slow down search too much.
-                // But fetchTefasData scrapes the whole list once.
-                const today = new Date();
-                const tefasFunds = await fetchTefasData(today);
-                const foundFund = tefasFunds.find(f => f.FONKODU === code);
+                const yahooRes = await yahooFinance.search(rawQuery, {
+                    newsCount: 0,
+                    quotesCount: 20
+                });
 
-                if (foundFund) {
-                    // Remove existing generic/Yahoo result if it's less accurate
-                    // quotes = quotes.filter(q => q.symbol !== code && q.symbol !== `${code}.IS`);
-                    
-                    // Add the official TEFAS result
-                    // We add it to the TOP
-                    quotes.unshift({
-                        symbol: code,
-                        shortname: foundFund.FONUNVAN,
-                        longname: foundFund.FONUNVAN, // Official Full Name
-                        exchange: 'TEFAS',
-                        quoteType: 'MUTUALFUND' as any,
-                        typeDisp: 'Yatırım Fonu',
-                        isSynthetic: true, // Marked as synthetic so we know it came from our custom logic
-                        score: 999 // High priority
-                    } as any);
-                } else if (!exists) {
-                    // If not found in TEFAS list and not in Yahoo, add generic fallback
-                    quotes.push({
-                        symbol: code,
-                        shortname: `${code} - TEFAS Yatırım Fonu`,
-                        longname: `TEFAS Yatırım Fonu (${code})`,
-                        exchange: 'TEFAS',
-                        quoteType: 'MUTUALFUND' as any,
-                        typeDisp: 'Fund',
-                        isSynthetic: true
-                    } as any);
+                if (yahooRes?.quotes) {
+                    for (const rawQuote of yahooRes.quotes) {
+                        const q = rawQuote as any;
+                        if (!q?.symbol || typeof q.symbol !== 'string') continue;
+                        const rawSym = q.symbol.toUpperCase();
+                        const cleanSym = rawSym.replace(/\.IS$/, '');
+                        if (seenSymbols.has(cleanSym)) continue;
+
+                        const isTurkish = rawSym.endsWith('.IS') || q.exchange === 'IST';
+                        if (isTurkish && ['EQUITY', 'MUTUALFUND', 'ETF'].includes(q.quoteType as string)) {
+                            seenSymbols.add(cleanSym);
+                            const sector = sectorMapping[cleanSym] || (q.quoteType === 'MUTUALFUND' ? 'Yatırım Fonu' : 'Borsa İstanbul');
+                            results.push({
+                                symbol: cleanSym,
+                                shortname: q.shortname || cleanSym,
+                                longname: q.longname || q.shortname || cleanSym,
+                                sector: sector,
+                                exchange: 'BIST',
+                                quoteType: q.quoteType,
+                                typeDisp: q.quoteType === 'MUTUALFUND' ? 'Yatırım Fonu' : 'Hisse Senedi',
+                                url: `/varlik/${cleanSym}`,
+                                score: cleanSym === qUpper ? 800 : 50
+                            });
+                        }
+                    }
                 }
-            } catch (err) {
-                console.warn("TEFAS Search Error:", err);
-                 if (!exists) {
-                    quotes.push({
-                        symbol: code,
-                        shortname: `${code} - TEFAS Yatırım Fonu`,
-                        longname: `TEFAS Yatırım Fonu (${code})`,
-                        exchange: 'TEFAS',
-                        quoteType: 'MUTUALFUND' as any,
-                        typeDisp: 'Fund',
-                        isSynthetic: true
-                    } as any);
-                }
+            } catch (e) {
+                // Ignore Yahoo search errors gracefully
             }
         }
 
-        quotes = quotes.sort((a: any, b: any) => {
-            // Priority Logic:
-            // 1. Exact match to query (case insensitive)
-            // 2. Contains '.IS' (Turkish market)
-            // 3. Exchange is IST
-
-            const qUpper = query.toUpperCase();
-            const aSym = a.symbol.toUpperCase();
-            const bSym = b.symbol.toUpperCase();
-
-            // Exact match priority
-            if (aSym === qUpper || aSym === `${qUpper}.IS`) return -1;
-            if (bSym === qUpper || bSym === `${qUpper}.IS`) return 1;
-
-            // Turkish assets priority
-            const aIsTR = a.symbol.endsWith('.IS') || a.exchange === 'IST';
-            const bIsTR = b.symbol.endsWith('.IS') || b.exchange === 'IST';
-
-            if (aIsTR && !bIsTR) return -1;
-            if (!aIsTR && bIsTR) return 1;
-
-            return 0;
-        });
-
-        return NextResponse.json({ results: quotes });
+        // Sort by priority score and limit
+        const sorted = results.sort((a, b) => b.score - a.score).slice(0, 10);
+        return NextResponse.json({ results: sorted });
     } catch (error: any) {
         console.error('Search API Error:', error);
-        return NextResponse.json({ error: 'Failed to fetch suggestions' }, { status: 500 });
+        return NextResponse.json({ results: [] });
     }
 }

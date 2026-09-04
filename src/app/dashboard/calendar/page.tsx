@@ -1282,7 +1282,17 @@ function CalendarContent() {
                                                                 {item.symbol?.substring(0, 3)}
                                                             </div>
                                                             <div>
-                                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                                {item.symbol && item.symbol.trim() !== '-' ? (
+                                                                    <Link 
+                                                                        href={`/varlik/${item.symbol.toUpperCase().replace(/\.IS$/, '').trim()}`}
+                                                                        className="hover:underline font-black text-xs text-[#00008B] hover:text-emerald-800 block"
+                                                                        title={`${item.symbol} Şirket Detayına Git`}
+                                                                    >
+                                                                        {item.symbol}
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="text-xs font-black text-[#00008B] block">{item.symbol || '-'}</span>
+                                                                )}
                                                                 <span className="text-[11px] font-bold text-slate-500 line-clamp-1 max-w-[220px]" title={item.companyName}>
                                                                     {item.companyName}
                                                                 </span>
@@ -1460,7 +1470,17 @@ function CalendarContent() {
                                                                 {item.symbol?.substring(0, 3)}
                                                             </div>
                                                             <div>
-                                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                                {item.symbol && item.symbol.trim() !== '-' ? (
+                                                                    <Link 
+                                                                        href={`/varlik/${item.symbol.toUpperCase().replace(/\.IS$/, '').trim()}`}
+                                                                        className="hover:underline font-black text-xs text-[#00008B] hover:text-blue-800 block"
+                                                                        title={`${item.symbol} Şirket Detayına Git`}
+                                                                    >
+                                                                        {item.symbol}
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="text-xs font-black text-[#00008B] block">{item.symbol || '-'}</span>
+                                                                )}
                                                                 <span className="text-[11px] font-bold text-slate-500 line-clamp-1 max-w-[220px]" title={item.companyName}>
                                                                     {item.companyName}
                                                                 </span>
@@ -1636,7 +1656,17 @@ function CalendarContent() {
                                                                 {item.symbol?.substring(0, 3)}
                                                             </div>
                                                             <div>
-                                                                <span className="text-xs font-black text-[#00008B] block">{item.symbol}</span>
+                                                                {item.symbol && item.symbol.trim() !== '-' && item.symbol.trim().length >= 2 ? (
+                                                                    <Link 
+                                                                        href={`/varlik/${item.symbol.toUpperCase().replace(/\.IS$/, '').trim()}`}
+                                                                        className="hover:underline font-black text-xs text-[#00008B] hover:text-purple-800 block"
+                                                                        title={`${item.symbol} Şirket Detayına Git`}
+                                                                    >
+                                                                        {item.symbol}
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span className="text-xs font-black text-[#00008B] block">{item.symbol || '-'}</span>
+                                                                )}
                                                                 <span className="text-[11px] font-bold text-slate-500 line-clamp-1 max-w-[220px]" title={item.companyName}>
                                                                     {item.companyName}
                                                                 </span>

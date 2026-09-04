@@ -1190,9 +1190,24 @@ export default function PortfolioPage() {
                                                             >
                                                                 <td className="py-4 px-6 font-bold text-[#00008B]">
                                                                      <div className="flex items-center gap-3">
-                                                                         <AssetLogo symbol={group.symbol} className="w-10 h-10" />
+                                                                         <Link
+                                                                             href={`/varlik/${group.symbol}`}
+                                                                             onClick={(e) => e.stopPropagation()}
+                                                                             className="hover:scale-105 transition-transform shrink-0"
+                                                                             title={`${group.symbol} Şirket & Finansal Detayına Git`}
+                                                                         >
+                                                                             <AssetLogo symbol={group.symbol} className="w-10 h-10" />
+                                                                         </Link>
                                                                          <div className="flex flex-col">
-                                                                             <span className="text-base font-black tracking-tight leading-none">{group.symbol}</span>
+                                                                             <Link
+                                                                                 href={`/varlik/${group.symbol}`}
+                                                                                 onClick={(e) => e.stopPropagation()}
+                                                                                 className="hover:underline inline-flex items-center gap-1 group/sym"
+                                                                                 title={`${group.symbol} Şirket & Finansal Detayına Git`}
+                                                                             >
+                                                                                 <span className="text-base font-black tracking-tight leading-none group-hover/sym:text-blue-700">{group.symbol}</span>
+                                                                                 <ArrowUpRight className="w-3 h-3 text-slate-400 group-hover/sym:text-blue-600 transition-colors" />
+                                                                             </Link>
                                                                              {getAssetName(group.symbol) && (
                                                                                  <span className="text-[11px] text-slate-400 font-medium leading-tight mt-1">
                                                                                      {getAssetName(group.symbol)}
@@ -1234,16 +1249,26 @@ export default function PortfolioPage() {
                                                             {isExpanded && (
                                                                 <tr>
                                                                     <td colSpan={6} className="bg-slate-50/80 p-4 border-t border-b border-slate-100">
-                                                                        <div className="space-y-2 max-w-2xl">
+                                                                        <div className="space-y-3 max-w-2xl">
                                                                             <div className="flex justify-between items-center mb-2">
                                                                                 <div className="text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest">İşlem Geçmişi</div>
-                                                                                <button 
-                                                                                    onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }}
-                                                                                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 hover:bg-rose-50 px-2 py-1 rounded-lg transition-all"
-                                                                                    title="Varlığa ait tüm işlemleri tek tıkla sil"
-                                                                                >
-                                                                                    <Trash2 className="w-3.5 h-3.5" /> Tüm Varlığı Sil ({group.transactions.length} işlem)
-                                                                                </button>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Link
+                                                                                        href={`/varlik/${group.symbol}`}
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100/80 hover:bg-blue-200 text-[#00008B] font-bold rounded-lg text-xs transition-all"
+                                                                                    >
+                                                                                        <span>Kapsamlı Şirket & Finansal Analiz</span>
+                                                                                        <ArrowUpRight className="w-3.5 h-3.5" />
+                                                                                    </Link>
+                                                                                    <button 
+                                                                                        onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }}
+                                                                                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 hover:bg-rose-50 px-2 py-1 rounded-lg transition-all"
+                                                                                        title="Varlığa ait tüm işlemleri tek tıkla sil"
+                                                                                    >
+                                                                                        <Trash2 className="w-3.5 h-3.5" /> Tüm Varlığı Sil ({group.transactions.length} işlem)
+                                                                                    </button>
+                                                                                </div>
                                                                             </div>
                                                                             {group.transactions.map(tx => (
                                                                                 <div key={tx.id} className="flex justify-between text-xs py-2 px-3 bg-white rounded-xl border border-slate-100 items-center shadow-sm">

@@ -33,6 +33,7 @@ import { UserProvider, useUser } from "@/components/providers/UserProvider";
 import { AuthComponent } from "@/components/ui/sign-up";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 import { FinAiLogo } from "@/components/ui/logo";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 function DashboardShell({
     children,
@@ -271,13 +272,8 @@ function DashboardShell({
                             </div>
                             
                             <div className="flex items-center space-x-2 md:space-x-4">
-                                <div className="relative hidden sm:block">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#00008B]/40" />
-                                    <input
-                                        type="text"
-                                        placeholder="Komut veya varlık ara..."
-                                        className="bg-slate-50 border border-slate-100 rounded-xl py-2 pl-10 pr-4 text-xs font-bold focus:outline-none focus:ring-1 focus:ring-[#00008B]/20 w-48 lg:w-72 text-[#00008B] placeholder:text-[#00008B]/30 transition-all hover:bg-slate-100/50"
-                                    />
+                                <div className="hidden sm:block">
+                                    <GlobalSearch className="w-56 lg:w-80" />
                                 </div>
 
                                 <div className="relative" ref={profileRef}>
@@ -355,6 +351,11 @@ function DashboardShell({
                                                 <p className="text-xs font-black text-white">FinAi Workspace</p>
                                                 <p className="text-[9px] text-blue-200">Canlı Piyasa & Portföy Analizi</p>
                                             </div>
+                                        </div>
+
+                                        {/* Mobil Arama */}
+                                        <div className="mb-3">
+                                            <GlobalSearch onSelect={() => setIsMobileMenuOpen(false)} />
                                         </div>
 
                                         {/* Menü Linkleri (Görsel 2'deki Liste Düzeni) */}
