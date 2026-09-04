@@ -170,7 +170,7 @@ export function calculateTTM(quarters: FinancialPeriodData[]): CalculatedTTM | n
         count++;
       }
     }
-    return count === 4 ? sum : (count > 0 ? sum : null);
+    return count === 4 ? sum : null;
   };
 
   const incomeStatementTTM: IncomeStatement = {

@@ -247,22 +247,22 @@ function parseYahooDate(d: any): string {
     else if (month >= 9 && month <= 11) quarter = 3;
     else quarter = 4;
 
-    const totalAssets = bs.totalAssets || (keyStats.bookValue != null && totalShares != null ? (keyStats.bookValue * totalShares) + (finData.totalDebt || 0) : null);
-    const totalLiabilities = bs.totalLiab || (totalAssets != null && bs.totalStockholderEquity != null ? totalAssets - bs.totalStockholderEquity : null);
-    const totalEquity = bs.totalStockholderEquity || (keyStats.bookValue != null && totalShares != null ? keyStats.bookValue * totalShares : (totalAssets != null && totalLiabilities != null ? totalAssets - totalLiabilities : null));
+    const totalAssets = bs.totalAssets ?? null;
+    const totalEquity = bs.totalStockholderEquity ?? null;
+    const totalLiabilities = bs.totalLiab ?? (totalAssets != null && totalEquity != null ? totalAssets - totalEquity : null);
 
-    const cashAndEquivalents = bs.cash || bs.cashAndCashEquivalents || finData.totalCash || null;
+    const cashAndEquivalents = bs.cash || bs.cashAndCashEquivalents || null;
     const shortTermDebt = bs.shortLongTermDebt ?? null;
     const longTermDebt = bs.longTermDebt ?? null;
     const financialDebt = (shortTermDebt != null || longTermDebt != null) 
       ? ((shortTermDebt || 0) + (longTermDebt || 0)) 
-      : (bs.totalDebt ?? finData.totalDebt ?? null);
+      : (bs.totalDebt ?? null);
 
     const netDebt = calculateNetDebt(financialDebt, cashAndEquivalents, sectorInfo);
 
-    const netInc = is.netIncome || keyStats.netIncomeToCommon || null;
-    const basicEPS = is.basicEPS != null ? is.basicEPS : (keyStats.trailingEps != null ? keyStats.trailingEps : (netInc != null && totalShares ? netInc / totalShares : null));
-    const bookValuePerShare = (totalEquity != null && totalShares) ? parseFloat((totalEquity / totalShares).toFixed(2)) : (keyStats.bookValue || null);
+    const netInc = is.netIncome ?? null;
+    const basicEPS = is.basicEPS != null ? is.basicEPS : (netInc != null && totalShares ? netInc / totalShares : null);
+    const bookValuePerShare = (totalEquity != null && totalShares) ? parseFloat((totalEquity / totalShares).toFixed(2)) : null;
 
     rawQuarterlyPeriods.push({
       period: {
@@ -275,10 +275,10 @@ function parseYahooDate(d: any): string {
         isDiscreteQuarter: quarter === 1
       },
       incomeStatement: {
-        revenue: is.totalRevenue || is.operatingRevenue || finData.totalRevenue || null,
-        grossProfit: is.grossProfit || finData.grossProfits || null,
-        operatingIncome: is.operatingIncome || is.ebit || (finData.operatingMargins != null && finData.totalRevenue != null ? finData.operatingMargins * finData.totalRevenue : null),
-        ebitda: is.ebitda || (finData.ebitdaMargins != null && finData.totalRevenue != null ? finData.ebitdaMargins * finData.totalRevenue : null),
+        revenue: is.totalRevenue || is.operatingRevenue || null,
+        grossProfit: is.grossProfit || null,
+        operatingIncome: is.operatingIncome || is.ebit || null,
+        ebitda: is.ebitda || null,
         netIncome: netInc,
         interestExpense: is.interestExpense || null,
         taxExpense: is.taxProvision || null,
@@ -292,16 +292,16 @@ function parseYahooDate(d: any): string {
         totalAssets,
         totalLiabilities,
         totalEquity,
-        currentAssets: bs.totalCurrentAssets || (finData.currentRatio != null && cashAndEquivalents != null ? finData.currentRatio * cashAndEquivalents : null),
-        currentLiabilities: bs.totalCurrentLiabilities || (finData.totalDebt != null ? finData.totalDebt * 0.4 : null),
+        currentAssets: bs.totalCurrentAssets || null,
+        currentLiabilities: bs.totalCurrentLiabilities || null,
         inventories: bs.inventory || null,
         receivables: bs.netReceivables || null,
         netDebt
       },
       cashFlowStatement: {
-        operatingCashFlow: cf.totalCashFromOperatingActivities || finData.operatingCashflow || null,
+        operatingCashFlow: cf.totalCashFromOperatingActivities || null,
         capitalExpenditures: cf.capitalExpenditures ? Math.abs(cf.capitalExpenditures) : null,
-        freeCashFlow: cf.freeCashFlow || finData.freeCashflow || null
+        freeCashFlow: cf.freeCashFlow || null
       },
       perShare: {
         basicEPS,
@@ -333,9 +333,9 @@ function parseYahooDate(d: any): string {
     shortTermDebt: ttm?.latestBalanceSheetSnapshot?.shortTermDebt ?? null,
     longTermDebt: ttm?.latestBalanceSheetSnapshot?.longTermDebt ?? null,
     totalAssets: ttm?.latestBalanceSheetSnapshot?.totalAssets ?? fallbackAssets,
-    totalLiabilities: ttm?.latestBalanceSheetSnapshot?.totalLiabilities ?? (finData.totalDebt != null ? finData.totalDebt * 1.2 : null),
+    totalLiabilities: ttm?.latestBalanceSheetSnapshot?.totalLiabilities ?? null,
     totalEquity: ttm?.latestBalanceSheetSnapshot?.totalEquity ?? fallbackEquity,
-    currentAssets: ttm?.latestBalanceSheetSnapshot?.currentAssets ?? (finData.currentRatio != null && finData.totalCash != null ? finData.currentRatio * finData.totalCash : null),
+    currentAssets: ttm?.latestBalanceSheetSnapshot?.currentAssets ?? null,
     currentLiabilities: ttm?.latestBalanceSheetSnapshot?.currentLiabilities ?? null,
     inventories: ttm?.latestBalanceSheetSnapshot?.inventories ?? null,
     receivables: ttm?.latestBalanceSheetSnapshot?.receivables ?? null,
@@ -348,10 +348,10 @@ function parseYahooDate(d: any): string {
 
   const fallbackIncomeTTM = {
     revenue: ttm?.incomeStatementTTM?.revenue ?? finData.totalRevenue ?? null,
-    grossProfit: ttm?.incomeStatementTTM?.grossProfit ?? finData.grossProfits ?? (finData.grossMargins != null && finData.totalRevenue != null ? finData.grossMargins * finData.totalRevenue : null),
-    operatingIncome: ttm?.incomeStatementTTM?.operatingIncome ?? (finData.operatingMargins != null && finData.totalRevenue != null ? finData.operatingMargins * finData.totalRevenue : null),
-    ebitda: ttm?.incomeStatementTTM?.ebitda ?? (finData.ebitdaMargins != null && finData.totalRevenue != null ? finData.ebitdaMargins * finData.totalRevenue : null),
-    netIncome: ttm?.incomeStatementTTM?.netIncome ?? keyStats.netIncomeToCommon ?? (finData.profitMargins != null && finData.totalRevenue != null ? finData.profitMargins * finData.totalRevenue : null),
+    grossProfit: ttm?.incomeStatementTTM?.grossProfit ?? finData.grossProfits ?? null,
+    operatingIncome: ttm?.incomeStatementTTM?.operatingIncome ?? null,
+    ebitda: ttm?.incomeStatementTTM?.ebitda ?? null,
+    netIncome: ttm?.incomeStatementTTM?.netIncome ?? keyStats.netIncomeToCommon ?? null,
     interestExpense: ttm?.incomeStatementTTM?.interestExpense ?? null,
     taxExpense: ttm?.incomeStatementTTM?.taxExpense ?? null
   };
@@ -362,14 +362,18 @@ function parseYahooDate(d: any): string {
     freeCashFlow: ttm?.cashFlowTTM?.freeCashFlow ?? finData.freeCashflow ?? null
   };
 
-  if (!ttm || !ttm.incomeStatementTTM.revenue || !ttm.latestBalanceSheetSnapshot.totalEquity) {
+  if (!ttm || !ttm.isVerified || !ttm.incomeStatementTTM.revenue || !ttm.latestBalanceSheetSnapshot.totalEquity) {
+    const isComplete = ttm?.isVerified && ttm?.incomeStatementTTM?.revenue != null && ttm?.latestBalanceSheetSnapshot?.totalEquity != null;
     ttm = {
-      isVerified: true,
+      isVerified: isComplete ? true : false,
       periodsUsed: ttm?.periodsUsed || discreteQuarters.map(q => q.period),
       incomeStatementTTM: fallbackIncomeTTM,
       cashFlowTTM: fallbackCashFlowTTM,
       latestBalanceSheetSnapshot: fallbackBsSnapshot,
-      warnings: ttm?.warnings || []
+      warnings: [
+        ...(ttm?.warnings || []),
+        ...(!isComplete ? ['4 çeyreklik bilanço geçmişi henüz tamamlanmadığı için TTM rasyoları kısıtlanmıştır.'] : [])
+      ]
     };
   }
 
