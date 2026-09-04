@@ -828,8 +828,10 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
                               {item.formattedValue}
                             </span>
                             
-                            <span className={cn(
-                              "text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider",
+                            <span 
+                              title={item.reason}
+                              className={cn(
+                              "text-[9px] font-black px-2 py-0.5 rounded-md border uppercase tracking-wider cursor-help",
                               item.status === "available"
                                 ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                                 : item.status === "not_applicable"

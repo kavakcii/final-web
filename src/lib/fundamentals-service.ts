@@ -181,9 +181,11 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
     const totalEquity = bs.totalStockholderEquity || (totalAssets != null && totalLiabilities != null ? totalAssets - totalLiabilities : null);
 
     const cashAndEquivalents = bs.cash || bs.cashAndCashEquivalents || null;
-    const shortTermDebt = bs.shortLongTermDebt || null;
-    const longTermDebt = bs.longTermDebt || null;
-    const financialDebt = (shortTermDebt || 0) + (longTermDebt || 0) > 0 ? (shortTermDebt || 0) + (longTermDebt || 0) : (bs.totalDebt || null);
+    const shortTermDebt = bs.shortLongTermDebt ?? null;
+    const longTermDebt = bs.longTermDebt ?? null;
+    const financialDebt = (shortTermDebt != null || longTermDebt != null) 
+      ? ((shortTermDebt || 0) + (longTermDebt || 0)) 
+      : (bs.totalDebt ?? null);
 
     // Calculate sector-aware Net Debt (for Banks, Net Debt is strictly NULL)
     const netDebt = calculateNetDebt(financialDebt, cashAndEquivalents, sectorInfo);

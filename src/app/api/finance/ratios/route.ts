@@ -45,6 +45,23 @@ export async function GET(request: Request) {
       console.warn(`Live price lookup failed for ${cleanSymbol} in ratio route:`, e);
     }
 
+    if (livePrice == null) {
+      try {
+        const yfRes = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=1d&interval=1d`, {
+          headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+        if (yfRes.ok) {
+          const yfJson = await yfRes.json();
+          const close = yfJson?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if (close != null && !isNaN(close) && close > 0) {
+            livePrice = Number(close);
+          }
+        }
+      } catch (e) {
+        console.warn(`Yahoo live price lookup fallback failed for ${cleanSymbol}:`, e);
+      }
+    }
+
     // 3. Calculate Financial Ratios via Engine
     const ratioResults = calculateFinancialRatios(fundamentals, livePrice);
 
