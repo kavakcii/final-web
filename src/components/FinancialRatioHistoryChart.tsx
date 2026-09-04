@@ -3,21 +3,25 @@
 import { useState, useMemo } from 'react';
 import { HistoricalTrendPoint } from '@/lib/sector-comparison-engine';
 import { cn } from '@/lib/utils';
-import { LineChart, BarChart2, Calendar, TrendingUp } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
 
 interface Props {
   historicalTrend: HistoricalTrendPoint[];
   symbol: string;
+  currency?: string;
 }
 
-export default function FinancialRatioHistoryChart({ historicalTrend, symbol }: Props) {
-  const [selectedMetric, setSelectedMetric] = useState<'roe' | 'roa' | 'netMargin' | 'income'>('roe');
+export default function FinancialRatioHistoryChart({ historicalTrend, symbol, currency = '₺' }: Props) {
+  const [selectedMetric, setSelectedMetric] = useState<'roe' | 'roa' | 'netMargin' | 'income' | 'revenue' | 'ebitda' | 'debtToAssets'>('roe');
 
   const metricConfigs = {
-    roe: { title: 'Özkaynak Kârlılığı Trendi (ROE)', unit: '%', key: 'roe' },
-    roa: { title: 'Aktif Kârlılık Trendi (ROA)', unit: '%', key: 'roa' },
-    netMargin: { title: 'Net Kâr Marjı Trendi', unit: '%', key: 'netMargin' },
-    income: { title: 'Net Kâr & Gelir Trendi', unit: '₺', key: 'netIncome' }
+    roe: { title: 'Özkaynak Kârlılığı (ROE)', unit: '%', key: 'roe', format: 'percent' },
+    roa: { title: 'Aktif Kârlılık (ROA)', unit: '%', key: 'roa', format: 'percent' },
+    netMargin: { title: 'Net Kâr Marjı', unit: '%', key: 'netMargin', format: 'percent' },
+    income: { title: 'Net Dönem Kârı', unit: currency, key: 'netIncome', format: 'money' },
+    revenue: { title: 'Satış Gelirleri', unit: currency, key: 'revenue', format: 'money' },
+    ebitda: { title: 'FAVÖK', unit: currency, key: 'ebitda', format: 'money' },
+    debtToAssets: { title: 'Borç / Toplam Varlıklar', unit: '%', key: 'debtToAssets', format: 'percent' }
   };
 
   const chartData = useMemo(() => {
@@ -27,21 +31,23 @@ export default function FinancialRatioHistoryChart({ historicalTrend, symbol }: 
       roe: pt.roe,
       roa: pt.roa,
       netMargin: pt.netMargin,
-      revenue: pt.revenue != null ? pt.revenue / 1000000 : null, // Convert to Million TRY for chart scale
-      netIncome: pt.netIncome != null ? pt.netIncome / 1000000 : null
+      debtToAssets: pt.debtToAssets,
+      revenue: pt.revenue != null ? pt.revenue / 1_000_000 : null, // Convert to Millions for chart scale
+      ebitda: pt.ebitda != null ? pt.ebitda / 1_000_000 : null,
+      netIncome: pt.netIncome != null ? pt.netIncome / 1_000_000 : null
     }));
   }, [historicalTrend]);
 
   if (!chartData || chartData.length === 0) {
     return (
       <div className="py-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl border border-slate-100">
-        Tarihsel finansal dönem verisi temin edilemedi.
+        Yeterli tarihsel veri bulunamadı.
       </div>
     );
   }
 
-  // Calculate Y min/max
-  const currentKey = selectedMetric === 'income' ? 'netIncome' : selectedMetric;
+  const currentCfg = metricConfigs[selectedMetric];
+  const currentKey = currentCfg.key;
   const validValues = chartData.map((d: any) => d[currentKey]).filter((v: any) => v != null && !isNaN(v));
   
   let minY = validValues.length > 0 ? Math.min(...validValues) : 0;
@@ -60,7 +66,7 @@ export default function FinancialRatioHistoryChart({ historicalTrend, symbol }: 
         <div className="flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-[#00008B]" />
           <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider">
-            {symbol} Tarihsel Finansal Trend ({metricConfigs[selectedMetric].title})
+            {symbol} Tarihsel Finansal Trend ({currentCfg.title})
           </h4>
         </div>
 
@@ -69,7 +75,10 @@ export default function FinancialRatioHistoryChart({ historicalTrend, symbol }: 
             { id: 'roe', label: 'ROE (%)' },
             { id: 'roa', label: 'ROA (%)' },
             { id: 'netMargin', label: 'Net Marj (%)' },
-            { id: 'income', label: 'Net Kâr (Milyon ₺)' }
+            { id: 'income', label: `Net Kâr (${currency})` },
+            { id: 'revenue', label: `Gelir (${currency})` },
+            { id: 'ebitda', label: `FAVÖK (${currency})` },
+            { id: 'debtToAssets', label: 'Borç/Varlık (%)' }
           ].map(btn => (
             <button
               key={btn.id}
@@ -91,7 +100,7 @@ export default function FinancialRatioHistoryChart({ historicalTrend, symbol }: 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5 pt-2">
         {chartData.map((pt: any, idx: number) => {
           const val = pt[currentKey];
-          const isIncome = selectedMetric === 'income';
+          const isMoney = currentCfg.format === 'money';
           const heightPercent = val != null ? Math.max(10, Math.min(100, ((val - minY) / rangeY) * 100)) : 0;
 
           return (
@@ -119,9 +128,11 @@ export default function FinancialRatioHistoryChart({ historicalTrend, symbol }: 
               <div className="text-right">
                 <span className={cn(
                   "text-xs font-black tracking-tight",
-                  val != null ? "text-[#00008B]" : "text-slate-400"
+                  val != null ? (val >= 0 ? "text-[#00008B]" : "text-rose-600") : "text-slate-400"
                 )}>
-                  {val != null ? (isIncome ? `${val.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} M ₺` : `%${val.toFixed(2)}`) : '—'}
+                  {val != null 
+                    ? (isMoney ? `${val.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} M ${currency}` : `%${val.toFixed(2)}`) 
+                    : 'Veri Yok'}
                 </span>
               </div>
             </div>
