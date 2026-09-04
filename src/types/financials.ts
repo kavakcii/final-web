@@ -133,6 +133,11 @@ export interface QualityMetadata {
     sourceUrl?: string;
     fetchedAt: string;
     verifiedAt: string;
+    fallbackUsed?: boolean;
+    fallbackReason?: string;
+    primarySourceFailed?: boolean;
+    quality?: 'high' | 'medium' | 'low' | 'unavailable';
+    errorCode?: string;
   };
 }
 

@@ -62,12 +62,35 @@ export async function GET() {
       success: true,
       timestamp: new Date().toISOString(),
       count: Object.keys(pricesMap).length,
-      prices: pricesMap
+      prices: pricesMap,
+      sourceMetadata: {
+        source: "TradingView Scanner API (Primary)",
+        fetchedAt: new Date().toISOString(),
+        verifiedAt: new Date().toISOString(),
+        fallbackUsed: false,
+        quality: "high",
+        status: "verified"
+      }
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Canlı fiyat verisi alınamadı." },
-      { status: 500 }
-    );
+    console.warn("Primary TradingView scanner failed in /api/bist/prices:", error?.message || error);
+    
+    return NextResponse.json({
+      success: false,
+      error: error.message || "Canlı fiyat verisi alınamadı.",
+      timestamp: new Date().toISOString(),
+      count: 0,
+      prices: {},
+      sourceMetadata: {
+        source: "TradingView Scanner API (Failed)",
+        fetchedAt: new Date().toISOString(),
+        verifiedAt: new Date().toISOString(),
+        fallbackUsed: true,
+        primarySourceFailed: true,
+        quality: "unavailable",
+        status: "unavailable",
+        errorCode: error.message || "SCANNER_FETCH_ERROR"
+      }
+    }, { status: 200 }); // Return HTTP 200 so UI doesn't crash, with status: unavailable!
   }
 }

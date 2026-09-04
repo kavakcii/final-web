@@ -110,7 +110,11 @@ export function validateFinancialData(
   sectorInfo: SectorInfo,
   quarters: FinancialPeriodData[],
   annuals: FinancialPeriodData[],
-  sourceName: string = 'FinAI Primary Data Provider'
+  sourceName: string = 'FinAI Primary Data Provider',
+  fallbackUsed: boolean = false,
+  fallbackReason?: string,
+  primarySourceFailed: boolean = false,
+  errorCode?: string
 ): QualityMetadata {
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -125,7 +129,12 @@ export function validateFinancialData(
       sourceMetadata: {
         source: sourceName,
         fetchedAt: new Date().toISOString(),
-        verifiedAt: new Date().toISOString()
+        verifiedAt: new Date().toISOString(),
+        fallbackUsed,
+        fallbackReason,
+        primarySourceFailed,
+        quality: 'unavailable',
+        errorCode: errorCode || (primarySourceFailed ? 'PRIMARY_FAILED' : 'NO_DATA')
       }
     };
   }
@@ -192,7 +201,12 @@ export function validateFinancialData(
     sourceMetadata: {
       source: sourceName,
       fetchedAt: new Date().toISOString(),
-      verifiedAt: new Date().toISOString()
+      verifiedAt: new Date().toISOString(),
+      fallbackUsed,
+      fallbackReason,
+      primarySourceFailed,
+      quality: status === 'verified' ? 'high' : status === 'partial' ? 'medium' : status === 'warning' ? 'low' : 'unavailable',
+      errorCode
     }
   };
 }

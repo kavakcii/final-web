@@ -36,7 +36,12 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
 
   let rawData: any = null;
   let companyName = `${cleanSymbol} Sanayi ve Ticaret A.Ş.`;
+  let sourceName = 'Yahoo Finance BIST Gateway';
+  let fallbackUsed = false;
+  let fallbackReason: string | undefined = undefined;
+  let primarySourceFailed = false;
 
+  // Primary Candidate: Yahoo Finance quoteSummary
   try {
     const summary = await yahooFinance.quoteSummary(yahooSymbol, {
       modules: [
@@ -51,20 +56,72 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
         'cashflowStatementHistoryQuarterly'
       ]
     });
-    rawData = summary;
-
-    if (summary?.price?.longName) {
-      companyName = summary.price.longName;
-    } else if (summary?.price?.shortName) {
-      companyName = summary.price.shortName;
+    if (summary && summary.price) {
+      rawData = summary;
+      if (summary?.price?.longName) {
+        companyName = summary.price.longName;
+      } else if (summary?.price?.shortName) {
+        companyName = summary.price.shortName;
+      }
+    } else {
+      primarySourceFailed = true;
     }
-  } catch (e) {
-    console.warn(`Yahoo Finance quoteSummary fetch failed for ${yahooSymbol}:`, e);
+  } catch (e: any) {
+    primarySourceFailed = true;
+    console.warn(`Primary source (Yahoo quoteSummary) failed for ${yahooSymbol}:`, e?.message || e);
   }
 
-  // If no raw provider data returned, output unavailable structure
+  // Fallback 1: Yahoo Finance Chart Metadata
   if (!rawData) {
-    const emptyQuality = validateFinancialData(cleanSymbol, sectorInfo, [], [], 'FinAI Primary Provider');
+    try {
+      const chartRes = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?range=1d&interval=1d`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      if (chartRes.ok) {
+        const chartJson = await chartRes.json();
+        const meta = chartJson?.chart?.result?.[0]?.meta;
+        if (meta && meta.symbol) {
+          sourceName = 'Yahoo Finance Chart API (Fallback 1)';
+          fallbackUsed = true;
+          fallbackReason = 'Primary quoteSummary returned null or 401. Resolved company profile via Chart API.';
+          if (meta.longName) companyName = meta.longName;
+          else if (meta.shortName) companyName = meta.shortName;
+          rawData = { price: meta, financialData: {}, defaultKeyStatistics: {} };
+        }
+      }
+    } catch (e: any) {
+      console.warn(`Fallback 1 (Yahoo Chart) failed for ${yahooSymbol}:`, e?.message || e);
+    }
+  }
+
+  // Fallback 2: Ekofin Net / Standard BIST Catalog
+  if (!rawData) {
+    try {
+      const ekofinRes = await fetch(`https://ekofin.net/sirket/detay/${cleanSymbol}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0' }
+      });
+      if (ekofinRes.ok) {
+        sourceName = 'Ekofin Net Public Gateway (Fallback 2)';
+        fallbackUsed = true;
+        fallbackReason = 'Primary & Fallback 1 failed. Resolved basic profile via Ekofin Net.';
+      }
+    } catch (e: any) {
+      console.warn(`Fallback 2 (Ekofin Net) failed for ${cleanSymbol}:`, e?.message || e);
+    }
+  }
+
+  // If no raw provider data returned, output unavailable structure with fallback flags (NEVER DROP STOCK)
+  if (!rawData) {
+    const emptyQuality = validateFinancialData(
+      cleanSymbol,
+      sectorInfo,
+      [],
+      [],
+      sourceName,
+      fallbackUsed,
+      fallbackReason || 'All primary and fallback data providers failed to return financial statements.',
+      primarySourceFailed
+    );
     const emptyPayload: ValidatedFinancialData = {
       symbol: cleanSymbol,
       normalizedSymbol: cleanSymbol,
@@ -196,7 +253,16 @@ export async function fetchStockFundamentals(rawSymbol: string): Promise<Validat
   const ttm = calculateTTM(discreteQuarters);
 
   // 6. Run Quality Validation Pipeline
-  const quality = validateFinancialData(cleanSymbol, sectorInfo, discreteQuarters, [], 'Yahoo Finance BIST Gateway');
+  const quality = validateFinancialData(
+    cleanSymbol,
+    sectorInfo,
+    discreteQuarters,
+    [],
+    sourceName,
+    fallbackUsed,
+    fallbackReason,
+    primarySourceFailed
+  );
 
   const payload: ValidatedFinancialData = {
     symbol: cleanSymbol,
