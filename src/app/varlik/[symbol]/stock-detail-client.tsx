@@ -35,6 +35,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import halkarzAboutDb from "@/data/halkarz_about_db.json";
+import TradingViewAdvancedChart from "@/components/TradingViewAdvancedChart";
 
 // REEL BIST FİYAT KATALOĞU (Investing 1. Görsel Birebir Eşleşme - ASELS = 363.25 ₺ / 433.09 ₺ Tepe / 320.00 ₺ Dip)
 const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: number; change: number; changePercent: number; prevClose: number }> = {
@@ -531,136 +532,23 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
         <div ref={grafikRef} className="scroll-mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           
           {/* SOL TARAFTAKİ GRAFİK WİDGET'I (%60 / col-span-7) */}
-          <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 pb-8 shadow-xl space-y-6 flex flex-col justify-between overflow-hidden">
+          <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xl space-y-4 flex flex-col justify-between overflow-hidden">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[#00008B]" />
-                {symbol} Canlı Grafik & Fiyat Hareketi
+                {symbol} Canlı TradingView Grafiği
               </h2>
 
-              {/* 7 TEMEL ZAMAN DİLİMİ BUTONLARI (1 Gün, 1 Saat, 1 Ay, 3 Ay, 6 Ay, 1 Yıl, 5 Yıl) */}
-              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-                {TIMEFRAMES.map((tf) => (
-                  <button
-                    key={tf.id}
-                    onClick={() => setActiveTimeframe(tf.id)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-xs font-black transition-all border whitespace-nowrap",
-                      activeTimeframe === tf.id
-                        ? "bg-[#00008B] text-white border-[#00008B] shadow-md scale-[1.02]"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-                    )}
-                  >
-                    {tf.label}
-                  </button>
-                ))}
-              </div>
+              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                TradingView Canlı Veri Motoru
+              </span>
             </div>
 
-            {/* MAVİ ÇİZGİLİ VE Y-EKSENİ FİYAT YAZILARIYLA ASLA ÇAKIŞMAYAN SVG GRAFİK ALANI */}
-            <div className="relative min-h-[320px] w-full pt-2 pb-2">
-              {loading && (
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                  <div className="flex items-center gap-2 text-[#00008B] font-black text-xs">
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    Canlı BIST Verileri Çekiliyor...
-                  </div>
-                </div>
-              )}
-
-              {svgPathData.coords && svgPathData.coords.length > 1 ? (
-                <div className="w-full h-full relative flex flex-col justify-between space-y-4">
-                  <div className="h-64 w-full relative">
-                    <svg 
-                      viewBox="0 0 800 320" 
-                      preserveAspectRatio="none"
-                      className="w-full h-full overflow-visible preserve-3d"
-                      onMouseLeave={() => setHoveredPoint(null)}
-                    >
-                      <defs>
-                        <linearGradient id="blueChartGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#2563EB" stopOpacity="0.35" />
-                          <stop offset="100%" stopColor="#00008B" stopOpacity="0.05" />
-                        </linearGradient>
-                      </defs>
-
-                      {/* Y-Axis Grid Lines & Price Labels */}
-                      {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-                        const y = 290 - ratio * 240;
-                        const priceVal = svgPathData.minPrice + ratio * (svgPathData.maxPrice - svgPathData.minPrice);
-                        return (
-                          <g key={i}>
-                            <line x1="0" y1={y} x2="710" y2={y} stroke="#e2e8f0" strokeDasharray="4 4" strokeWidth="1" />
-                            <text x="795" y={y + 4} fill="#475569" fontSize="11" fontWeight="bold" textAnchor="end">
-                              ₺{priceVal.toFixed(2)}
-                            </text>
-                          </g>
-                        );
-                      })}
-
-                      {/* Area Blue Gradient Fill */}
-                      <path d={svgPathData.areaPath} fill="url(#blueChartGradient)" />
-
-                      {/* Main Royal Blue Chart Line */}
-                      <path 
-                        d={svgPathData.linePath} 
-                        fill="none" 
-                        stroke="#00008B" 
-                        strokeWidth="3" 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                      />
-
-                      {/* Interactive Touch Areas */}
-                      {svgPathData.coords.map((pt: any, i: number) => (
-                        <rect
-                          key={i}
-                          x={pt.x - 8}
-                          y={0}
-                          width={16}
-                          height={320}
-                          fill="transparent"
-                          className="cursor-pointer"
-                          onMouseEnter={() => setHoveredPoint(pt)}
-                        />
-                      ))}
-
-                      {/* Hover Indicator Circle */}
-                      {hoveredPoint && (
-                        <circle
-                          cx={hoveredPoint.x}
-                          cy={hoveredPoint.y}
-                          r="6"
-                          className="fill-[#00008B] stroke-white stroke-2 shadow-lg"
-                        />
-                      )}
-                    </svg>
-
-                    {/* Hover Tooltip Box */}
-                    {hoveredPoint && (
-                      <div 
-                        className="absolute bg-[#00008B] text-white text-xs px-3 py-1.5 rounded-xl shadow-2xl z-20 pointer-events-none -translate-x-1/2 -translate-y-12 transition-all border border-blue-400/40"
-                        style={{ left: `${(hoveredPoint.x / 800) * 100}%`, top: `${(hoveredPoint.y / 320) * 100}%` }}
-                      >
-                        <span className="text-blue-200 font-medium block text-[10px]">{hoveredPoint.time}</span>
-                        <span className="font-black text-white text-sm">₺{hoveredPoint.price.toFixed(2)}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* X-Axis Time Labels */}
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-500 pt-3 border-t border-slate-200/80 px-2">
-                    <span>{svgPathData.coords[0]?.time}</span>
-                    <span>{svgPathData.coords[Math.floor(svgPathData.coords.length / 2)]?.time}</span>
-                    <span>{svgPathData.coords[svgPathData.coords.length - 1]?.time}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs font-bold">
-                  {loading ? "Canlı BIST Verileri Çekiliyor..." : "Grafik Verisi Mevcut Değil"}
-                </div>
-              )}
+            {/* RESMİ TRADINGVIEW ADVANCED CHART WIDGET */}
+            <div className="w-full relative min-h-[380px] md:min-h-[480px]">
+              <TradingViewAdvancedChart symbol={symbol} height={480} />
             </div>
           </div>
 
