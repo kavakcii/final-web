@@ -35,7 +35,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import halkarzAboutDb from "@/data/halkarz_about_db.json";
-import TradingViewAdvancedChart from "@/components/TradingViewAdvancedChart";
+import TradingViewStockChart from "@/components/TradingViewStockChart";
 import FinancialRatioHistoryChart from "@/components/FinancialRatioHistoryChart";
 
 // REEL BIST FİYAT KATALOĞU (Investing 1. Görsel Birebir Eşleşme - ASELS = 363.25 ₺ / 433.09 ₺ Tepe / 320.00 ₺ Dip)
@@ -571,9 +571,24 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
               </span>
             </div>
 
-            {/* RESMİ TRADINGVIEW ADVANCED CHART WIDGET */}
-            <div className="w-full relative min-h-[380px] md:min-h-[480px]">
-              <TradingViewAdvancedChart symbol={symbol} height={480} />
+            {/* TRADINGVIEW LIGHTWEIGHT CHARTS CANLI BİST MOTORU */}
+            <div className="w-full relative min-h-[380px]">
+              <TradingViewStockChart
+                symbol={symbol}
+                chartPoints={stockData?.chartPoints || []}
+                activeTimeframe={activeTimeframe}
+                onTimeframeChange={(tf) => setActiveTimeframe(tf)}
+                loading={loading}
+                error={stockData?.error || null}
+                currency="₺"
+                isMarketOpen={isBistMarketOpen}
+                marketStatusText={isBistMarketOpen ? "Piyasa Açık (Canlı)" : "Piyasa Kapalı"}
+                lastUpdated={stockData?.lastUpdated}
+                currentPrice={stockData?.currentPrice}
+                priceChange={stockData?.change}
+                priceChangePercent={stockData?.changePercent}
+                onRetry={() => fetchStockData(activeTimeframe)}
+              />
             </div>
           </div>
 
