@@ -12,13 +12,10 @@ interface TimeframeConfig {
 function normalizeTimeframe(tf: string): TimeframeConfig {
   const clean = tf.trim().toLowerCase();
   
-  if (clean === '1h' || clean === '1saat' || clean === 'hour') {
-    return { yahooRange: '1d', interval: '2m', label: '1 Saat', normalized: '1H', isIntraday: true };
-  }
   if (clean === '1d' || clean === '1g' || clean === '1gun' || clean === 'day' || clean === 'today') {
     return { yahooRange: '1d', interval: '5m', label: '1 Gün', normalized: '1D', isIntraday: true };
   }
-  if (clean === '1w' || clean === '1h' || clean === '1hafta' || clean === 'week') {
+  if (clean === '1h' || clean === '1w' || clean === '1hafta' || clean === 'week') {
     return { yahooRange: '5d', interval: '15m', label: '1 Hafta', normalized: '1W', isIntraday: false };
   }
   if (clean === '1m' || clean === '1a' || clean === '1ay' || clean === '1mo' || clean === 'month') {
@@ -206,13 +203,14 @@ export async function GET(request: Request) {
         const h = Math.max(rawHighs[i] ?? c, o, c);
         const l = Math.min(rawLows[i] ?? c, o, c);
         const v = Math.max(0, rawVolumes[i] ?? 0);
-        const tsMs = rawTimestamps[i] * 1000;
+        const tsSec = rawTimestamps[i];
+        const tsMs = tsSec * 1000;
 
         // Ensure strict OHLC sanity rules: high >= max(open, close, low), low <= min(open, close, high)
         if (h >= Math.max(o, c, l) - 0.001 && l <= Math.min(o, c, h) + 0.001) {
           const { date, time, displayLabel } = formatTimestampLabel(tsMs, config.normalized);
           parsedCandles.push({
-            timestamp: tsMs,
+            timestamp: tsSec, // Unix seconds
             date,
             time,
             displayLabel,
@@ -344,7 +342,7 @@ export async function GET(request: Request) {
           const realLow = Number(found.d[6] || realPrice);
           const prevClose = realPrice - realChange;
           const changePercent = prevClose ? (realChange / prevClose) * 100 : 0;
-          const nowMs = Date.now();
+          const nowSec = Math.floor(Date.now() / 1000);
 
           return NextResponse.json({
             success: true,
@@ -364,8 +362,8 @@ export async function GET(request: Request) {
             circuitBreakerCount: 0,
             sharesOutstanding: "---",
             currency: "₺",
-            chartPoints: [{ time: "Canlı", price: realPrice, timestamp: nowMs, open: realPrice, high: realHigh, low: realLow, close: realPrice, volume: realVolume }],
-            candles: [{ timestamp: nowMs, date: new Date().toISOString().split('T')[0], time: "Canlı", displayLabel: "Canlı", open: realPrice, high: realHigh, low: realLow, close: realPrice, price: realPrice, volume: realVolume }],
+            chartPoints: [{ time: "Canlı", price: realPrice, timestamp: nowSec, open: realPrice, high: realHigh, low: realLow, close: realPrice, volume: realVolume }],
+            candles: [{ timestamp: nowSec, date: new Date().toISOString().split('T')[0], time: "Canlı", displayLabel: "Canlı", open: realPrice, high: realHigh, low: realLow, close: realPrice, price: realPrice, volume: realVolume }],
             hasChartData: false,
             sourceMetadata: {
               source: "TradingView Scanner API (Fallback 1 - Real-Time Price Only)",

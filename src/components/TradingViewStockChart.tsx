@@ -53,6 +53,20 @@ const TIMEFRAMES = [
   { id: "5Y", label: "5Y", title: "5 Yıl" }
 ];
 
+export function formatTurkishVolume(vol?: number): string {
+  if (!vol || isNaN(vol) || vol <= 0) return "—";
+  if (vol >= 1e9) {
+    return (vol / 1e9).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Milyar";
+  }
+  if (vol >= 1e6) {
+    return (vol / 1e6).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Milyon";
+  }
+  if (vol >= 1e3) {
+    return (vol / 1e3).toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " Bin";
+  }
+  return vol.toLocaleString("tr-TR");
+}
+
 export function TradingViewStockChart({
   symbol,
   chartPoints,
@@ -82,16 +96,22 @@ export function TradingViewStockChart({
     volume?: number;
   } | null>(null);
 
-  // Clean data sorting & deduplication
+  // Clean data sorting, timestamp normalization (seconds) & deduplication
   const validData = useMemo(() => {
     if (!chartPoints || chartPoints.length === 0) return [];
     
+    // Normalize timestamps strictly to Unix seconds (10 digits)
+    const normalized = chartPoints.map(pt => {
+      const tsSec = pt.timestamp > 1e11 ? Math.floor(pt.timestamp / 1000) : pt.timestamp;
+      return { ...pt, timestamp: tsSec };
+    });
+
     // Sort chronologically
-    const sorted = [...chartPoints].sort((a, b) => a.timestamp - b.timestamp);
+    normalized.sort((a, b) => a.timestamp - b.timestamp);
     
     // Deduplicate by timestamp (seconds)
-    const uniqueMap = new Map<number, ChartPoint>();
-    sorted.forEach(pt => {
+    const uniqueMap = new Map<number, typeof normalized[0]>();
+    normalized.forEach(pt => {
       if (pt.timestamp && pt.close && !isNaN(pt.close) && pt.close > 0) {
         uniqueMap.set(pt.timestamp, pt);
       }
@@ -99,6 +119,10 @@ export function TradingViewStockChart({
 
     return Array.from(uniqueMap.values());
   }, [chartPoints]);
+
+  useEffect(() => {
+    setHoveredData(null);
+  }, [symbol, activeTimeframe, validData]);
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -112,7 +136,7 @@ export function TradingViewStockChart({
       chartInstanceRef.current = null;
     }
 
-    const isIntraday = activeTimeframe === "1G" || activeTimeframe === "1D" || activeTimeframe === "1H";
+    const isIntraday = activeTimeframe === "1G" || activeTimeframe === "1D";
 
     // Initialize TradingView Lightweight Chart
     const chart = createChart(container, {
@@ -123,6 +147,16 @@ export function TradingViewStockChart({
         textColor: "#64748B",
         fontSize: 11,
         fontFamily: "Inter, system-ui, -apple-system, sans-serif"
+      },
+      localization: {
+        locale: "tr-TR",
+        dateFormat: "dd MMMM yyyy",
+        timeFormatter: (time: number) => {
+          const dateObj = new Date(time * 1000);
+          return isIntraday
+            ? dateObj.toLocaleTimeString("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit" })
+            : dateObj.toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "short" });
+        }
       },
       grid: {
         vertLines: { color: "rgba(226, 232, 240, 0.6)", style: LineStyle.Dotted },
@@ -229,7 +263,9 @@ export function TradingViewStockChart({
     }));
     volumeSeries.setData(volumeData);
 
-    // Crosshair move handler
+    chart.timeScale().fitContent();
+
+    // Crosshair move handler (Strict Europe/Istanbul Instant Matching)
     chart.subscribeCrosshairMove((param: any) => {
       if (!param || !param.time || param.point === undefined || param.point.x < 0 || param.point.y < 0) {
         setHoveredData(null);
@@ -243,7 +279,7 @@ export function TradingViewStockChart({
         const dateObj = new Date(tsSec * 1000);
         const formattedDateStr = isIntraday
           ? dateObj.toLocaleString("tr-TR", { timeZone: "Europe/Istanbul", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "long" })
-          : dateObj.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+          : dateObj.toLocaleDateString("tr-TR", { timeZone: "Europe/Istanbul", day: "2-digit", month: "long", year: "numeric" });
 
         setHoveredData({
           time: formattedDateStr,
@@ -278,7 +314,7 @@ export function TradingViewStockChart({
   const displayPrice = hoveredData?.close !== undefined ? hoveredData.close : (currentPrice || (validData.length > 0 ? validData[validData.length - 1].close : 0));
 
   return (
-    <div className="w-[#100%] space-y-4">
+    <div className="w-full space-y-4">
       {/* GRAFİK ÜSTÜ KONTROL VE SEÇENEKLER BARI */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
         
@@ -368,7 +404,7 @@ export function TradingViewStockChart({
               )}
               <span>Kapanış: <strong className="text-[#00008B] font-black">{hoveredData.close?.toFixed(2)} {currency}</strong></span>
               {hoveredData.volume !== undefined && hoveredData.volume > 0 && (
-                <span className="text-slate-400">Hacim: <strong className="text-slate-600">{hoveredData.volume.toLocaleString("tr-TR")}</strong></span>
+                <span className="text-slate-400">Hacim: <strong className="text-slate-600">{formatTurkishVolume(hoveredData.volume)}</strong></span>
               )}
             </div>
           </div>

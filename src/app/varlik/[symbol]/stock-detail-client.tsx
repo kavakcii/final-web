@@ -274,6 +274,7 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
   useEffect(() => {
     const controller = new AbortController();
     setHoveredPoint(null);
+    setStockData(null);
     
     fetchStockData(activeTimeframe, false, controller.signal);
     fetchNews();
@@ -562,12 +563,12 @@ export default function StockDetailClient({ symbol }: { symbol: string }) {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-[#00008B]" />
-                {symbol} Canlı TradingView Grafiği
+                {symbol} Canlı Fiyat Grafiği
               </h2>
 
               <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-[#00008B] border border-blue-200 flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                TradingView Canlı Veri Motoru
+                FinAi BİST Veri Motoru
               </span>
             </div>
 
