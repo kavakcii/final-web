@@ -333,7 +333,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
   };
 
   // Currency of financial statements (TRY vs USD)
-  const finCurrency = fundamentalsData?.incomeStatements?.[0]?.period?.currency || fundamentalsData?.currency || 'TRY';
+  const finCurrency = fundamentalsData?.quarters?.[0]?.period?.currency || fundamentalsData?.ttm?.periodsUsed?.[0]?.currency || fundamentalsData?.currency || 'TRY';
   const isUsdFinancials = finCurrency === 'USD';
 
   // Derived Financial Summary Values from Fundamentals Data
