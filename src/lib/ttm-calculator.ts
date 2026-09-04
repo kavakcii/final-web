@@ -46,6 +46,18 @@ export function calculateTTM(quarters: FinancialPeriodData[]): CalculatedTTM | n
     warnings.push('TTM hesaplanan çeyreklerde konsolide/solo raporlama türü karışımı tespit edildi.');
   }
 
+  // Verification Check 4: Check that the 4 quarters are strictly consecutive (unbroken chronological chain)
+  for (let i = 0; i < 3; i++) {
+    const curr = ttmQuarters[i].period;
+    const prev = ttmQuarters[i + 1].period;
+    const isConsecutive = (curr.year === prev.year && curr.quarter === prev.quarter + 1) ||
+                          (curr.year === prev.year + 1 && curr.quarter === 1 && prev.quarter === 4);
+    if (!isConsecutive) {
+      isVerified = false;
+      warnings.push(`Dönem sürekliliği kesintili: ${curr.year} Q${curr.quarter} ile ${prev.year} Q${prev.quarter} arasında eksik çeyrek var.`);
+    }
+  }
+
   // Helper to sum nullable numbers across the 4 quarters
   const sumNullable = (getter: (q: FinancialPeriodData) => number | null | undefined): number | null => {
     let sum = 0;

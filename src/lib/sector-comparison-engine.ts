@@ -193,12 +193,40 @@ async function getOrComputeSectorMedians(sectorCat: SectorCategory): Promise<Cac
 
   let validCount = 0;
 
+  // Batch fetch peer prices for accurate valuation metrics (PE, PB, EV/EBITDA, EV/Sales)
+  const peerPriceMap = new Map<string, number>();
+  try {
+    const priceRes = await fetch(`https://scanner.tradingview.com/turkey/scan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        symbols: { tickers: peers.map(p => `BIST:${p}`) },
+        columns: ['name', 'close']
+      }),
+      next: { revalidate: 60 }
+    });
+    if (priceRes.ok) {
+      const priceJson = await priceRes.json();
+      for (const item of (priceJson?.data || [])) {
+        const raw = String(item.d?.[0] || '').toUpperCase().trim();
+        const sym = raw.replace(/^BIST:/, '').replace(/\.IS$/, '').trim();
+        const price = item.d?.[1];
+        if (sym && price != null && !isNaN(price) && price > 0) {
+          peerPriceMap.set(sym, Number(price));
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`[SectorComparisonEngine] Batch peer price fetch failed:`, e);
+  }
+
   // Process peer fundamentals in parallel batch
   await Promise.all(peers.map(async (peerSymbol) => {
     try {
       const peerData = await fetchStockFundamentals(peerSymbol);
       if (peerData && peerData.quality.status !== 'unavailable' && peerData.quality.status !== 'invalid') {
-        const peerRatios = calculateFinancialRatios(peerData, null);
+        const peerPrice = peerPriceMap.get(peerSymbol) ?? null;
+        const peerRatios = calculateFinancialRatios(peerData, peerPrice);
         validCount++;
 
         // Helper to extract clean numeric value (only if status === 'available')

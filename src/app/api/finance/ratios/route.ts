@@ -34,10 +34,11 @@ export async function GET(request: Request) {
       if (priceRes.ok) {
         const priceJson = await priceRes.json();
         const found = (priceJson?.data || []).find((item: any) => {
-          const sym = String(item.d[0]).toUpperCase().replace('.IS', '').trim();
-          return sym === cleanSymbol;
+          const raw = String(item.d[0] || '').toUpperCase().trim();
+          const sym = raw.replace(/^BIST:/, '').replace(/\.IS$/, '').trim();
+          return sym === cleanSymbol || raw === cleanSymbol;
         });
-        if (found && found.d && found.d[1]) {
+        if (found && found.d && found.d[1] != null && !isNaN(found.d[1])) {
           livePrice = Number(found.d[1]);
         }
       }
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
     if (livePrice == null) {
       try {
         const yfRes = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${cleanSymbol}.IS?range=1d&interval=1d`, {
-          headers: { 'User-Agent': 'Mozilla/5.0' }
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
         });
         if (yfRes.ok) {
           const yfJson = await yfRes.json();
