@@ -42,3 +42,6 @@ next-env.d.ts
 
 .vercel
 scripts/.backfill_progress.json
+
+.finai_archive/
+scratch/
