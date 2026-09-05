@@ -1,0 +1,130 @@
+{
+  "timestamp": "2026-09-05T20:35:29.047Z",
+  "archiveRoot": "D:\\Salih KAVAKCI\\Yeni klasör\\FinAl\\final-web\\.finai_archive",
+  "totalFiles": 5307,
+  "totalSizeBytes": 689544183,
+  "totalSizeMB": 657.6,
+  "directories": {
+    "mappings": {
+      "fileCount": 0,
+      "totalSizeBytes": 0,
+      "totalSizeMB": 0,
+      "sampleFiles": []
+    },
+    "profiles": {
+      "fileCount": 627,
+      "totalSizeBytes": 1117453,
+      "totalSizeMB": 1.07,
+      "sampleFiles": [
+        "A1CAP_profile.json",
+        "A1YEN_profile.json",
+        "AAGYO_profile.json"
+      ]
+    },
+    "ownership": {
+      "fileCount": 613,
+      "totalSizeBytes": 102471,
+      "totalSizeMB": 0.1,
+      "sampleFiles": [
+        "A1CAP_ownership.json",
+        "A1YEN_ownership.json",
+        "AAGYO_ownership.json"
+      ]
+    },
+    "estimates": {
+      "fileCount": 112,
+      "totalSizeBytes": 54998,
+      "totalSizeMB": 0.05,
+      "sampleFiles": [
+        "AEFES_estimates.json",
+        "AGESA_estimates.json",
+        "AGHOL_estimates.json"
+      ]
+    },
+    "dividends": {
+      "fileCount": 401,
+      "totalSizeBytes": 353282,
+      "totalSizeMB": 0.34,
+      "sampleFiles": [
+        "AAGYO_dividends.json",
+        "ACSEL_dividends.json",
+        "ADEL_dividends.json"
+      ]
+    },
+    "splits": {
+      "fileCount": 454,
+      "totalSizeBytes": 194233,
+      "totalSizeMB": 0.19,
+      "sampleFiles": [
+        "A1CAP_splits.json",
+        "A1YEN_splits.json",
+        "ACSEL_splits.json"
+      ]
+    },
+    "statements": {
+      "fileCount": 1140,
+      "totalSizeBytes": 36000719,
+      "totalSizeMB": 34.33,
+      "sampleFiles": [
+        "A1CAP_annual.json",
+        "A1CAP_quarterly.json",
+        "A1YEN_annual.json"
+      ]
+    },
+    "prices": {
+      "fileCount": 648,
+      "totalSizeBytes": 613278564,
+      "totalSizeMB": 584.87,
+      "sampleFiles": [
+        "A1CAP_daily.json",
+        "A1YEN_daily.json",
+        "AAGYO_daily.json"
+      ]
+    },
+    "raw_payloads": {
+      "fileCount": 1305,
+      "totalSizeBytes": 37062821,
+      "totalSizeMB": 35.35,
+      "sampleFiles": [
+        "A1CAP_quoteSummary_d03dfcf5.json",
+        "A1CAP_timeSeries_9388cdda.json",
+        "A1YEN_quoteSummary_e4c397be.json"
+      ]
+    },
+    "reports": {
+      "fileCount": 6,
+      "totalSizeBytes": 817337,
+      "totalSizeMB": 0.78,
+      "sampleFiles": [
+        "faz5_validation_audit_results.json",
+        "faz6_analysis_engine_summary.json",
+        "faz7_api_coverage_summary.json"
+      ]
+    },
+    "checkpoints": {
+      "fileCount": 1,
+      "totalSizeBytes": 562305,
+      "totalSizeMB": 0.54,
+      "sampleFiles": [
+        "ingestion_state.json"
+      ]
+    }
+  },
+  "entityCounts": {
+    "totalSymbolsWithPrices": 648,
+    "totalPriceBars": 2246782,
+    "totalQuarterlyStatements": 549,
+    "totalQuarterlyPeriods": 3177,
+    "totalAnnualStatements": 591,
+    "totalAnnualPeriods": 2784,
+    "totalStatementPeriods": 5961,
+    "totalDividendFiles": 401,
+    "totalDividends": 3211,
+    "totalSplitFiles": 454,
+    "totalSplits": 1297,
+    "totalProfiles": 627,
+    "totalOwnership": 613,
+    "totalEstimates": 112,
+    "totalRawPayloads": 1305
+  }
+}

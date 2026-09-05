@@ -12,12 +12,12 @@ export async function GET(
   const symbol = normalizeSymbol(rawSymbol);
   if (!symbol) return apiError('INVALID_SYMBOL', 'Geçersiz sembol formatı');
 
-  const profile = FinAiArchiveReader.getProfile(symbol);
-  const rawQuote = FinAiArchiveReader.getQuoteSummary(symbol);
+  const profile = await FinAiArchiveReader.getProfile(symbol);
+  const rawQuote = await FinAiArchiveReader.getQuoteSummary(symbol);
   const sector = sectorMapping[symbol] || 'Diğer';
 
   if (!profile && !rawQuote) {
-    return apiError('NOT_FOUND', `${symbol} için şirket profil verisi arşivde bulunamadı`, symbol, 404);
+    return apiError('NOT_FOUND', `${symbol} için şirket profil verisi bulunamadı`, symbol, 404);
   }
 
   const finCurrency = rawQuote?.financialData?.financialCurrency || 'TRY';

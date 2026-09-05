@@ -1,0 +1,196 @@
+{
+  "timestamp": "2026-09-05T20:58:54.554Z",
+  "overallStatus": "PASS",
+  "tableReconciliation": [
+    {
+      "table": "symbol_mappings",
+      "localCount": 651,
+      "supabaseCount": 651,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "company_profiles",
+      "localCount": 627,
+      "supabaseCount": 627,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "ownership_snapshots",
+      "localCount": 613,
+      "supabaseCount": 613,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "analyst_estimates",
+      "localCount": 112,
+      "supabaseCount": 112,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "historical_dividends",
+      "localCount": 3211,
+      "supabaseCount": 3211,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "split_events",
+      "localCount": 1297,
+      "supabaseCount": 1297,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "financial_statement_periods",
+      "localCount": 5961,
+      "supabaseCount": 5961,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    },
+    {
+      "table": "historical_prices",
+      "localCount": 2246782,
+      "supabaseCount": 2246782,
+      "diff": 0,
+      "dataLoss": 0,
+      "duplicateCount": 0,
+      "status": "PASS",
+      "error": null
+    }
+  ],
+  "pilotSymbolReconciliation": [
+    {
+      "symbol": "THYAO",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "EREGL",
+      "localPriceCount": 6769,
+      "supabasePriceCount": 6769,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "ASELS",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "TUPRS",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "GARAN",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "KARSN",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "AKBNK",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "SAHOL",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "KCHOL",
+      "localPriceCount": 6768,
+      "supabasePriceCount": 6768,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "UFUK",
+      "localPriceCount": 6765,
+      "supabasePriceCount": 6765,
+      "priceDiff": 0,
+      "earliestDate": "2000-05-10",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "EBEBK",
+      "localPriceCount": 614,
+      "supabasePriceCount": 614,
+      "priceDiff": 0,
+      "earliestDate": "2024-03-21",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    },
+    {
+      "symbol": "OBAMS",
+      "localPriceCount": 629,
+      "supabasePriceCount": 629,
+      "priceDiff": 0,
+      "earliestDate": "2024-03-01",
+      "latestDate": "2026-09-04",
+      "status": "PASS"
+    }
+  ]
+}

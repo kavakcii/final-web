@@ -11,7 +11,7 @@ export async function GET(
   const symbol = normalizeSymbol(rawSymbol);
   if (!symbol) return apiError('INVALID_SYMBOL', 'Geçersiz sembol formatı');
 
-  const splits = FinAiArchiveReader.getSplits(symbol) || [];
+  const splits = (await FinAiArchiveReader.getSplits(symbol)) || [];
 
   return apiSuccess({
     symbol,

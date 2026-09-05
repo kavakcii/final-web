@@ -302,26 +302,102 @@ ALTER TABLE public.analyst_estimates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.historical_valuations ENABLE ROW LEVEL SECURITY;
 
 -- Read policies for public/app
-CREATE POLICY "Public read symbol_mappings" ON public.symbol_mappings FOR SELECT USING (true);
-CREATE POLICY "Public read verified statements" ON public.financial_statement_periods FOR SELECT USING (is_current = true AND validation_status != 'INVALID');
-CREATE POLICY "Public read historical_prices" ON public.historical_prices FOR SELECT USING (true);
-CREATE POLICY "Public read historical_dividends" ON public.historical_dividends FOR SELECT USING (is_current = true AND validation_status != 'INVALID');
-CREATE POLICY "Public read split_events" ON public.split_events FOR SELECT USING (true);
-CREATE POLICY "Public read company_profiles" ON public.company_profiles FOR SELECT USING (true);
-CREATE POLICY "Public read ownership_snapshots" ON public.ownership_snapshots FOR SELECT USING (true);
-CREATE POLICY "Public read analyst_estimates" ON public.analyst_estimates FOR SELECT USING (true);
-CREATE POLICY "Public read historical_valuations" ON public.historical_valuations FOR SELECT USING (true);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'symbol_mappings' AND policyname = 'Public read symbol_mappings') THEN
+        CREATE POLICY "Public read symbol_mappings" ON public.symbol_mappings FOR SELECT USING (true);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'financial_statement_periods' AND policyname = 'Public read verified statements') THEN
+        CREATE POLICY "Public read verified statements" ON public.financial_statement_periods FOR SELECT USING (is_current = true AND validation_status != 'INVALID');
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'historical_prices' AND policyname = 'Public read historical_prices') THEN
+        CREATE POLICY "Public read historical_prices" ON public.historical_prices FOR SELECT USING (true);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'historical_dividends' AND policyname = 'Public read historical_dividends') THEN
+        CREATE POLICY "Public read historical_dividends" ON public.historical_dividends FOR SELECT USING (is_current = true AND validation_status != 'INVALID');
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'split_events' AND policyname = 'Public read split_events') THEN
+        CREATE POLICY "Public read split_events" ON public.split_events FOR SELECT USING (true);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'company_profiles' AND policyname = 'Public read company_profiles') THEN
+        CREATE POLICY "Public read company_profiles" ON public.company_profiles FOR SELECT USING (true);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ownership_snapshots' AND policyname = 'Public read ownership_snapshots') THEN
+        CREATE POLICY "Public read ownership_snapshots" ON public.ownership_snapshots FOR SELECT USING (true);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'analyst_estimates' AND policyname = 'Public read analyst_estimates') THEN
+        CREATE POLICY "Public read analyst_estimates" ON public.analyst_estimates FOR SELECT USING (true);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'historical_valuations' AND policyname = 'Public read historical_valuations') THEN
+        CREATE POLICY "Public read historical_valuations" ON public.historical_valuations FOR SELECT USING (true);
+    END IF;
+END $$;
 
 -- Backend service role full access policies
-CREATE POLICY "Service full access symbol_mappings" ON public.symbol_mappings FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access raw_source_payloads" ON public.raw_source_payloads FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access financial_statement_periods" ON public.financial_statement_periods FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access historical_prices" ON public.historical_prices FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access historical_dividends" ON public.historical_dividends FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access split_events" ON public.split_events FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access company_profiles" ON public.company_profiles FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access ownership_snapshots" ON public.ownership_snapshots FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access analyst_estimates" ON public.analyst_estimates FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
-CREATE POLICY "Service full access historical_valuations" ON public.historical_valuations FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'symbol_mappings' AND policyname = 'Service full access symbol_mappings') THEN
+        CREATE POLICY "Service full access symbol_mappings" ON public.symbol_mappings FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'raw_source_payloads' AND policyname = 'Service full access raw_source_payloads') THEN
+        CREATE POLICY "Service full access raw_source_payloads" ON public.raw_source_payloads FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'financial_statement_periods' AND policyname = 'Service full access financial_statement_periods') THEN
+        CREATE POLICY "Service full access financial_statement_periods" ON public.financial_statement_periods FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'historical_prices' AND policyname = 'Service full access historical_prices') THEN
+        CREATE POLICY "Service full access historical_prices" ON public.historical_prices FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'historical_dividends' AND policyname = 'Service full access historical_dividends') THEN
+        CREATE POLICY "Service full access historical_dividends" ON public.historical_dividends FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'split_events' AND policyname = 'Service full access split_events') THEN
+        CREATE POLICY "Service full access split_events" ON public.split_events FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'company_profiles' AND policyname = 'Service full access company_profiles') THEN
+        CREATE POLICY "Service full access company_profiles" ON public.company_profiles FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'ownership_snapshots' AND policyname = 'Service full access ownership_snapshots') THEN
+        CREATE POLICY "Service full access ownership_snapshots" ON public.ownership_snapshots FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'analyst_estimates' AND policyname = 'Service full access analyst_estimates') THEN
+        CREATE POLICY "Service full access analyst_estimates" ON public.analyst_estimates FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'historical_valuations' AND policyname = 'Service full access historical_valuations') THEN
+        CREATE POLICY "Service full access historical_valuations" ON public.historical_valuations FOR ALL USING (auth.role() = 'service_role' OR auth.role() IS NULL);
+    END IF;
+END $$;
 
 COMMIT;

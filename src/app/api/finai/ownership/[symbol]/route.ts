@@ -11,7 +11,7 @@ export async function GET(
   const symbol = normalizeSymbol(rawSymbol);
   if (!symbol) return apiError('INVALID_SYMBOL', 'Geçersiz sembol formatı');
 
-  const own = FinAiArchiveReader.getOwnership(symbol);
+  const own = await FinAiArchiveReader.getOwnership(symbol);
   if (!own) {
     return apiSuccess({
       symbol,

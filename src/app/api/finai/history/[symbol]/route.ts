@@ -14,12 +14,7 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const range = searchParams.get('range') || '1y';
 
-  const prices = FinAiArchiveReader.getPrices(symbol);
-  if (!prices || prices.length === 0) {
-    return apiError('NOT_FOUND', `${symbol} için fiyat tarihçesi bulunamadı`, symbol, 404);
-  }
-
-  let limit = prices.length;
+  let limit: number | undefined = undefined;
   if (range === '1m') limit = 22;
   else if (range === '3m') limit = 65;
   else if (range === '6m') limit = 130;
@@ -28,7 +23,13 @@ export async function GET(
   else if (range === '5y') limit = 1260;
   else if (range === '10y') limit = 2520;
 
-  const sliced = prices.slice(Math.max(0, prices.length - limit));
+  const prices = await FinAiArchiveReader.getPrices(symbol, limit);
+  if (!prices || prices.length === 0) {
+    return apiError('NOT_FOUND', `${symbol} için fiyat tarihçesi bulunamadı`, symbol, 404);
+  }
+
+  const effectiveLimit = limit ?? prices.length;
+  const sliced = prices.slice(Math.max(0, prices.length - effectiveLimit));
 
   const result = {
     symbol,

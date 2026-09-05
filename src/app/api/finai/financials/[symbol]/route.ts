@@ -14,10 +14,15 @@ export async function GET(
   const { searchParams } = new URL(request.url);
   const periodParam = searchParams.get('period') || 'all';
 
-  const quarterly = FinAiArchiveReader.getQuarterlyStatements(symbol) || [];
-  const annual = FinAiArchiveReader.getAnnualStatements(symbol) || [];
+  const [quarterly, annual] = await Promise.all([
+    FinAiArchiveReader.getQuarterlyStatements(symbol),
+    FinAiArchiveReader.getAnnualStatements(symbol)
+  ]);
 
-  if (quarterly.length === 0 && annual.length === 0) {
+  const qList = quarterly || [];
+  const aList = annual || [];
+
+  if (qList.length === 0 && aList.length === 0) {
     return apiError('NOT_FOUND', `${symbol} için mali tablo verisi bulunamadı`, symbol, 404);
   }
 
@@ -55,14 +60,14 @@ export async function GET(
 
   const responseData: Record<string, any> = {};
   if (periodParam === 'all' || periodParam === 'annual') {
-    responseData.annual = annual.map(cleanPeriod);
+    responseData.annual = aList.map(cleanPeriod);
   }
   if (periodParam === 'all' || periodParam === 'quarterly') {
-    responseData.quarterly = quarterly.map(cleanPeriod);
+    responseData.quarterly = qList.map(cleanPeriod);
   }
 
   return apiSuccess(responseData, {
-    annualCount: annual.length,
-    quarterlyCount: quarterly.length
+    annualCount: aList.length,
+    quarterlyCount: qList.length
   }, symbol);
 }

@@ -14,11 +14,13 @@ export async function GET(
   const report = FinAiArchiveReader.getQualityReport();
   const item = report?.symbolQualityScores?.find((s: any) => s.symbol === symbol);
 
-  const prices = FinAiArchiveReader.getPrices(symbol);
-  const qStmts = FinAiArchiveReader.getQuarterlyStatements(symbol);
-  const aStmts = FinAiArchiveReader.getAnnualStatements(symbol);
-  const divs = FinAiArchiveReader.getDividends(symbol);
-  const splits = FinAiArchiveReader.getSplits(symbol);
+  const [prices, qStmts, aStmts, divs, splits] = await Promise.all([
+    FinAiArchiveReader.getPrices(symbol, 1),
+    FinAiArchiveReader.getQuarterlyStatements(symbol),
+    FinAiArchiveReader.getAnnualStatements(symbol),
+    FinAiArchiveReader.getDividends(symbol),
+    FinAiArchiveReader.getSplits(symbol)
+  ]);
 
   const qualityData = {
     symbol,

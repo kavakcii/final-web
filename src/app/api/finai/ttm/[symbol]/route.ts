@@ -11,7 +11,7 @@ export async function GET(
   const symbol = normalizeSymbol(rawSymbol);
   if (!symbol) return apiError('INVALID_SYMBOL', 'Geçersiz sembol formatı');
 
-  const quarterly = FinAiArchiveReader.getQuarterlyStatements(symbol) || [];
+  const quarterly = (await FinAiArchiveReader.getQuarterlyStatements(symbol)) || [];
 
   if (quarterly.length < 4) {
     return apiSuccess({

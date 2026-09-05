@@ -1,0 +1,49 @@
+{
+  "testA_normal_pilot": {
+    "total": 168,
+    "passed": 168,
+    "failed": 0,
+    "failures": []
+  },
+  "testB_archive_masked": {
+    "total": 168,
+    "passed": 168,
+    "failed": 0,
+    "failures": []
+  },
+  "testC_negative_fake": {
+    "status": 404,
+    "success": false,
+    "pass": true
+  },
+  "testD_max_history": [
+    {
+      "symbol": "THYAO",
+      "count": 6768,
+      "earliest": "2000-05-10",
+      "latest": "2026-09-04",
+      "pass": true
+    },
+    {
+      "symbol": "EREGL",
+      "count": 6769,
+      "earliest": "2000-05-10",
+      "latest": "2026-09-04",
+      "pass": true
+    },
+    {
+      "symbol": "UFUK",
+      "count": 6765,
+      "earliest": "2000-05-10",
+      "latest": "2026-09-04",
+      "pass": true
+    },
+    {
+      "symbol": "EBEBK",
+      "count": 614,
+      "earliest": "2024-03-21",
+      "latest": "2026-09-04",
+      "pass": true
+    }
+  ]
+}

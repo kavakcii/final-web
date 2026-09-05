@@ -11,11 +11,11 @@ export async function GET(
   const symbol = normalizeSymbol(rawSymbol);
   if (!symbol) return apiError('INVALID_SYMBOL', 'Geçersiz sembol formatı');
 
-  const prices = FinAiArchiveReader.getPrices(symbol);
-  const rawQuote = FinAiArchiveReader.getQuoteSummary(symbol);
+  const prices = await FinAiArchiveReader.getPrices(symbol, 2);
+  const rawQuote = await FinAiArchiveReader.getQuoteSummary(symbol);
 
   if (!prices || prices.length === 0) {
-    return apiError('NOT_FOUND', `${symbol} için piyasa verisi arşivde bulunamadı`, symbol, 404);
+    return apiError('NOT_FOUND', `${symbol} için piyasa verisi bulunamadı`, symbol, 404);
   }
 
   const latestBar = prices[prices.length - 1];
