@@ -66,12 +66,8 @@ export async function GET(
         ? 'Bugün'
         : dateObj.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-      let bodyText = '';
-      if (descClean && descClean.length > 30 && !descClean.includes(titleClean)) {
-        bodyText = descClean;
-      } else {
-        bodyText = `${titleClean}. ${symbol} şirketinin açıkladığı son finansal veriler, yeni iş anlaşmaları ve Kamuyu Aydınlatma Platformu (KAP) duyuruları doğrultusunda BIST piyasasındaki işlem hacmi ve yatırımcı ilgisi artış gösteriyor. Analistler şirketin büyüme ivmesini ve sektördeki stratejik konumunu yakından takip ediyor.`;
-      }
+      // Zero fake text: Use only real RSS description or title. Never synthesize quotes or claims!
+      const bodyText = descClean && descClean.length > 20 ? descClean : titleClean;
 
       articles.push({
         id: `${symbol}-news-${index++}`,
@@ -85,31 +81,13 @@ export async function GET(
     }
 
     if (articles.length === 0) {
-      articles.push({
-        id: `${symbol}-news-default-1`,
-        symbol,
-        title: `${symbol} Hisselerinde Güncel Piyasa Beklentileri ve Finansal Değerlendirme`,
-        category: 'Finansal Analiz',
-        pubDate: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }),
-        summary: `${symbol} hisse senetlerine ilişkin bilanço ve piyasa değerlendirmesi.`,
-        content: `${symbol} şirketinin açıkladığı son finansal sonuçlar ve operasyonel veriler analist beklentilerini karşıladı. Şirket rasyolarının sektör ortalamalarına kıyasla güçlü duruş sergilediği bildirildi.`
-      });
+      return apiSuccess([], { total: 0, status: 'DATA_UNAVAILABLE', message: 'Doğrulanmış güncel haber veya duyuru bulunamadı.' }, symbol);
     }
 
     return apiSuccess(articles, { total: articles.length, sector }, symbol);
 
   } catch (error: any) {
-    const fallbackArticles = [
-      {
-        id: `${symbol}-news-fallback-1`,
-        symbol,
-        title: `${symbol} Şirketinden Borsa İstanbul ve KAP Duyurusu`,
-        category: 'KAP Bildirimi',
-        pubDate: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' }),
-        summary: `${symbol} şirketinin duyurduğu yeni bildirim.`,
-        content: `${symbol} şirketi yönetimi tarafından Kamuyu Aydınlatma Platformu (KAP) üzerinden yapılan resmi açıklamada, yeni yatırım projeleri ve şirket operasyonlarının planlanan takvime uygun şekilde sürdürüldüğü bildirildi.`
-      }
-    ];
-    return apiSuccess(fallbackArticles, { total: fallbackArticles.length, sector }, symbol);
+    // Strictly return empty list. Never generate fake fallback articles!
+    return apiSuccess([], { total: 0, status: 'DATA_UNAVAILABLE', message: 'Haber akışına erişilemedi.' }, symbol);
   }
 }

@@ -352,14 +352,20 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
     }
   };
 
-  // Fetch live news feeds for symbol
+  // Fetch live news feeds for symbol from FinAi News API
   const fetchNews = async () => {
     setNewsLoading(true);
     try {
-      const res = await fetch(`/api/bist/news?symbol=${symbol}`);
+      const res = await fetch(`/api/finai/news/${symbol}`);
       if (res.ok) {
-        const data = await res.json();
-        setNewsList(data.articles || []);
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setNewsList(json.data);
+        } else if (json.articles) {
+          setNewsList(json.articles);
+        } else {
+          setNewsList([]);
+        }
       }
     } catch (e) {
       console.error("Failed to fetch stock news:", e);
@@ -480,9 +486,10 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
       return historyDivs.map((d: any) => ({
         paymentDate: d.exDate || d.paymentDate,
         grossAmount: d.grossAmount,
-        netAmount: d.netAmount ?? parseFloat((d.grossAmount * 0.90).toFixed(4)),
-        netAmountFormatted: `${(d.netAmount ?? (d.grossAmount * 0.90)).toFixed(4)} ₺`,
-        yieldPercent: livePrice && livePrice > 0 ? ((d.grossAmount / livePrice) * 100) : 0,
+        grossAmountFormatted: d.grossAmount != null ? `${d.grossAmount.toFixed(4)} ₺` : '—',
+        netAmount: d.netAmount ?? null,
+        netAmountFormatted: d.netAmount != null ? `${d.netAmount.toFixed(4)} ₺` : (d.grossAmount != null ? `${d.grossAmount.toFixed(4)} ₺ (Brüt)` : '—'),
+        yieldPercent: livePrice && livePrice > 0 && d.grossAmount != null ? ((d.grossAmount / livePrice) * 100) : null,
         source: d.source || 'Yahoo Finance Temettü Arşivi'
       }));
     }
@@ -1624,9 +1631,9 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                     </div>
 
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-1">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Son Net Dağıtım Tutarı</span>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Son Dağıtım Tutarı (Brüt)</span>
                       <p className="text-base font-black text-emerald-700">{combinedDividends[0]?.netAmountFormatted || "—"}</p>
-                      <span className="text-[9px] text-slate-400 font-medium block">Hisse Başına Net Tutar</span>
+                      <span className="text-[9px] text-slate-400 font-medium block">Hisse Başına Resmi Brüt Tutar</span>
                     </div>
 
                     <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-1">
@@ -1644,7 +1651,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-wider">
                           <th className="py-3 px-4">Hak Kullanım / Ödeme Tarihi</th>
-                          <th className="py-3 px-4">Pay Başına Net Temettü</th>
+                          <th className="py-3 px-4">Pay Başına Temettü (Brüt)</th>
                           <th className="py-3 px-4">Temettü Verimi</th>
                           <th className="py-3 px-4">Kaynak</th>
                           <th className="py-3 px-4 text-right">Durum</th>
