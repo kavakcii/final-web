@@ -78,14 +78,29 @@ export interface FinAiBackendPayload {
  * gerçek yatırım performansını hesaplar.
  */
 export function calculateTWR(
-    snapshots: PortfolioSnapshotPoint[],
-    transactions: UserTransaction[]
+    snapshots: PortfolioSnapshotPoint[] | any[],
+    transactions: UserTransaction[] = []
 ): number {
-    if (snapshots.length < 2) return 0;
+    if (!snapshots || snapshots.length < 2) return 0;
 
-    // Günlük alt dönem getirilerini hesapla (R_i = (End - NetFlow - Start) / Start)
+    // 1. V2 Snapshot Check: Eğer daily_return_pct mevcutsa bileşik çarp
     let cumulativeProduct = 1.0;
+    let hasDailyReturn = false;
 
+    for (let i = 0; i < snapshots.length; i++) {
+        const item = snapshots[i];
+        if (item.daily_return_pct !== null && item.daily_return_pct !== undefined) {
+            cumulativeProduct *= (1 + Number(item.daily_return_pct) / 100);
+            hasDailyReturn = true;
+        }
+    }
+
+    if (hasDailyReturn) {
+        const twrPct = (cumulativeProduct - 1) * 100;
+        return isNaN(twrPct) ? 0 : Number(twrPct.toFixed(2));
+    }
+
+    // 2. Fallback: Manuel alt dönem getirileri hesabı (R_i = (End - NetFlow - Start) / Start)
     for (let i = 1; i < snapshots.length; i++) {
         const prevSnap = snapshots[i - 1];
         const currSnap = snapshots[i];
@@ -100,11 +115,11 @@ export function calculateTWR(
                 return sum;
             }, 0);
 
-        const startVal = prevSnap.total_value;
+        const startVal = Number(prevSnap.total_value || 0);
         if (startVal <= 0) continue;
 
         // Günlük net yatırım getirisi
-        const dayReturn = (currSnap.total_value - dayFlows - startVal) / startVal;
+        const dayReturn = (Number(currSnap.total_value) - dayFlows - startVal) / startVal;
         cumulativeProduct *= (1 + dayReturn);
     }
 

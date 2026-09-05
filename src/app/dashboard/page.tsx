@@ -114,14 +114,14 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* 3. ÜÇÜNCÜ BÖLÜM: GÜNDEM (PİYASA GÜNDEMİ) */}
-                    <div className="w-full">
-                        <GundemMarketAgendaWidget news={news} />
-                    </div>
-
-                    {/* 4. DÖRDÜNCÜ BÖLÜM: EKONOMİK TAKVİM */}
-                    <div className="w-full">
-                        <EconomicCalendarWidget />
+                    {/* 3. ÜÇÜNCÜ BÖLÜM: PİYASA GÜNDEMİ & EKONOMİK TAKVİM (YAN YANA %50-%50) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch w-full">
+                        <div className="flex flex-col min-w-0">
+                            <GundemMarketAgendaWidget news={news} />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <EconomicCalendarWidget />
+                        </div>
                     </div>
                 </div>
 
