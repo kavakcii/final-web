@@ -29,6 +29,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import halkarzAboutDb from "@/data/halkarz_about_db.json";
 import TradingViewStockChart from "@/components/TradingViewStockChart";
 import FinancialRatioHistoryChart from "@/components/FinancialRatioHistoryChart";
+import { DataStatusBadge } from "@/components/finai/DataStatusBadge";
+import { DataQualityPanel } from "@/components/finai/DataQualityPanel";
 
 // REEL BIST FİYAT KATALOĞU (Yedek Referans)
 const BIST_REAL_PRICES: Record<string, { current: number; high: number; low: number; change: number; changePercent: number; prevClose: number }> = {
@@ -167,6 +169,8 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
   // Historical Multi-Period Analysis State
   const [historicalAnalysisData, setHistoricalAnalysisData] = useState<any>(null);
   const [historicalAnalysisLoading, setHistoricalAnalysisLoading] = useState<boolean>(true);
+  const [qualityData, setQualityData] = useState<any>(null);
+  const [qualityLoading, setQualityLoading] = useState<boolean>(true);
 
   // Sync tab with URL hash if present
   useEffect(() => {
@@ -282,11 +286,29 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
       }
     }
 
+    async function loadQuality() {
+      try {
+        setQualityLoading(true);
+        const res = await fetch(`/api/finai/quality/${symbol}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setQualityData(json.data);
+          }
+        }
+      } catch (e) {
+        console.error('Quality load error:', e);
+      } finally {
+        setQualityLoading(false);
+      }
+    }
+
     loadFundamentals();
     loadRatios();
     loadComparison();
     loadHistoricalAnalysis();
     loadDividends();
+    loadQuality();
   }, [symbol, statementPeriodType]);
 
   const fullName = STOCK_NAMES[symbol] || fundamentalsData?.companyName || `${symbol} Sanayi ve Ticaret A.Ş.`;
@@ -655,6 +677,7 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                     <span className="text-xs font-black px-3 py-1 rounded-xl bg-blue-900/80 border border-blue-700 text-blue-200">
                       {fundamentalsData?.sectorInfo?.displayName || "BIST Şirketi"}
                     </span>
+                    <DataStatusBadge status={qualityData?.status || 'SUCCESS'} />
                   </div>
                   <h2 className="text-sm font-bold text-blue-100 mt-1">{fullName}</h2>
                 </div>
@@ -869,6 +892,13 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
                 </div>
               )}
             </div>
+
+            {/* FINAI VERİ KALİTESİ VE DOĞRULAMA KARNESİ */}
+            <DataQualityPanel
+              qualityData={qualityData}
+              symbol={symbol}
+              reportingCurrency={finCurrency}
+            />
 
           </div>
         )}
@@ -1197,62 +1227,12 @@ export default function StockDetailClient({ symbol: rawSymbol }: { symbol: strin
               )}
             </div>
 
-            {/* VERİ KAYNAĞI VE GÜVENİLİRLİK PANELİ */}
-            <div className="bg-slate-900 text-white rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl border border-slate-800">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-800 pb-4 gap-2">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="w-6 h-6 text-emerald-400" />
-                  <div>
-                    <h3 className="text-base font-black text-white tracking-tight">FinAi Veri Altyapısı & Güvenilirlik Beyanı</h3>
-                    <p className="text-xs text-slate-400 font-medium">BIST Finansal Tablo Doğrulama ve Matematiksel Bütünlük Güvencesi</p>
-                  </div>
-                </div>
-
-                <span className="text-[10px] font-black px-3 py-1 rounded-xl bg-emerald-950 text-emerald-300 border border-emerald-800 self-start sm:self-auto">
-                  {fundamentalsData?.quality?.status === 'verified' ? 'Doğrulanmış Finansal Katman' : 'Kısmi / Doğrulama Aşamasında'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-1">
-                <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Veri Kaynağı</span>
-                  <p className="text-xs font-black text-white">{fundamentalsData?.quality?.sourceMetadata?.source || "Doğrulanmış BIST Finansal Tablo Katmanı"}</p>
-                  <span className="text-[9px] text-slate-400 font-medium block">
-                    {fundamentalsData?.quality?.sourceMetadata?.verifiedAt ? `Son Doğrulama: ${new Date(fundamentalsData.quality.sourceMetadata.verifiedAt).toLocaleDateString('tr-TR')}` : "Resmi Raporlama"}
-                  </span>
-                </div>
-
-                <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Kayıtlı Dönemler</span>
-                  <p className="text-xs font-black text-emerald-300">
-                    {fundamentalsData?.quarters?.length || 0} Çeyrek • {fundamentalsData?.annuals?.length || 0} Yıl
-                  </p>
-                  <span className="text-[9px] text-slate-400 font-medium block">Ayrık Finansal Tablolar</span>
-                </div>
-
-                <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">TTM Bütünlüğü</span>
-                  <p className="text-xs font-black text-white">
-                    {fundamentalsData?.ttm?.isVerified ? "4 Çeyrek Tam (Doğrulandı)" : "Kısıtlı Geçmiş"}
-                  </p>
-                  <span className="text-[9px] text-slate-400 font-medium block">Sentetik Veri Kullanılmaz</span>
-                </div>
-
-                <div className="bg-slate-800/80 border border-slate-700/80 p-4 rounded-2xl space-y-1">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider block">Para Birimi & Konsolidasyon</span>
-                  <p className="text-xs font-black text-white">
-                    {finCurrency} • Konsolide
-                  </p>
-                  <span className="text-[9px] text-slate-400 font-medium block">
-                    {isUsdFinancials ? "USD Orijinal Bilanço Raporu" : "BIST Standart TRY"}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-slate-400 leading-relaxed font-medium pt-2 border-t border-slate-800/80">
-                * FinAi üzerindeki tüm finansal tablolar ve veriler, şirketlerin resmi finansal raporlamalarından derlenen doğrulanmış verilerle sunulmaktadır. Eksik çeyreklerde tahmin veya uydurma veri kullanılmaz. Tüm analizler finansal okuryazarlık amaçlıdır; doğrudan yatırım tavsiyesi içermez.
-              </p>
-            </div>
+            {/* FINAI VERİ KALİTESİ VE DOĞRULAMA KARNESİ */}
+            <DataQualityPanel
+              qualityData={qualityData}
+              symbol={symbol}
+              reportingCurrency={finCurrency}
+            />
 
           </div>
         )}
