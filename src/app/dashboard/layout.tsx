@@ -390,8 +390,8 @@ function DashboardShell({
                             <SidebarMarketWidgets />
                         </div>
 
-                        <div className="p-3 md:p-4 border-t border-slate-100 shrink-0 relative z-10 bg-white">
-                            <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3.5 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
+                        <div className="p-3 md:px-4 md:py-3 border-t border-slate-200/80 shrink-0 relative z-10 bg-white">
+                            <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
                                 <LogOut className="w-5 h-5 flex-shrink-0 transition-colors duration-150" />
                                 <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block motion-reduce:transition-none">
                                     Çıkış Yap
