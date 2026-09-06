@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FinancialTicker } from "@/components/FinancialTicker";
-import { TradingViewMarketPulse } from "@/components/TradingViewMarketPulse";
 
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -279,14 +278,10 @@ function DashboardShell({
                     {/* Desktop Sidebar Layout Placeholder: fixed w-24 (96px) footprint so main content never shifts */}
                     <div className="hidden md:block w-24 shrink-0 sticky top-0 h-screen z-50 pointer-events-none">
                         {/* Expanding Overlay Sidebar: absolute positioning, floats over content on hover/focus without moving layout */}
-                        <aside className="pointer-events-auto absolute top-0 left-0 h-screen w-24 hover:w-80 focus-within:w-80 border-r border-white/60 bg-white/80 hover:bg-white/95 backdrop-blur-2xl shadow-[0_8px_32px_0_rgba(31,38,135,0.12)] hover:shadow-[0_20px_50px_rgba(0,0,139,0.22)] flex flex-col transition-[width,background-color,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden">
-                            {/* Glass Reflection & Ambient Glow */}
-                            <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/10 to-white/40 pointer-events-none" />
-                            <div className="absolute -left-16 top-1/4 w-36 h-36 bg-blue-400/20 rounded-full blur-2xl pointer-events-none" />
-
-                            <div className="p-3 md:p-6 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-white/40 relative z-10 bg-white/10 backdrop-blur-md">
+                        <aside className="pointer-events-auto absolute top-0 left-0 h-screen w-24 hover:w-80 focus-within:w-80 border-r border-slate-200/80 bg-white shadow-sm md:shadow-md hover:shadow-xl flex flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden">
+                            <div className="p-3 md:p-6 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-slate-100 relative z-10 bg-white">
                                 <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 rounded-xl">
-                                    <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 drop-shadow-[0_0_15px_rgba(0,0,139,0.15)] motion-reduce:transition-none" />
+                                    <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none" />
                                     <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1.5 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 whitespace-nowrap hidden md:inline-block motion-reduce:transition-none">
                                         FinAi<span className="text-blue-600">.</span>
                                     </span>
@@ -302,8 +297,8 @@ function DashboardShell({
                                             <div key={idx} className="space-y-1">
                                                 <div className={`flex items-center justify-between px-3 md:px-3.5 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-[background-color,color,box-shadow] duration-180 ease-out overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav motion-reduce:transition-none ${
                                                     isActive 
-                                                        ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
-                                                        : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
+                                                        ? 'text-white bg-[#00008B] shadow-[0_4px_14px_rgba(0,0,139,0.25)]' 
+                                                        : 'text-slate-700 hover:text-[#00008B] hover:bg-[#00008B]/10'
                                                 }`}>
                                                     {/* Direct Link to Portfolio/Calendar Page */}
                                                     <Link 
@@ -316,7 +311,7 @@ function DashboardShell({
                                                         }}
                                                         className="flex items-center justify-start flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-lg"
                                                     >
-                                                        <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B]'}`} />
+                                                        <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-slate-600 group-hover/nav:text-[#00008B]'}`} />
                                                         <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block motion-reduce:transition-none">
                                                             {item.label}
                                                         </span>
@@ -337,7 +332,7 @@ function DashboardShell({
                                                         className={`hidden md:group-hover:flex md:group-focus-within:flex transition-colors duration-150 p-1.5 rounded-xl items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 ${
                                                             isActive 
                                                                 ? 'hover:bg-white/20 text-white focus-visible:ring-white/60' 
-                                                                : 'hover:bg-[#00008B]/15 text-[#00008B]'
+                                                                : 'hover:bg-[#00008B]/15 text-slate-600 hover:text-[#00008B]'
                                                         }`}
                                                     >
                                                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ease-out motion-reduce:transition-none ${item.isExpanded ? 'rotate-180' : ''}`} />
@@ -366,10 +361,10 @@ function DashboardShell({
                                                                         className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 ${
                                                                             sub.isSubActive 
                                                                                 ? 'bg-[#00008B] text-white shadow-sm font-bold' 
-                                                                                : 'text-[#00008B]/80 hover:text-[#00008B] hover:bg-[#00008B]/10'
+                                                                                : 'text-slate-600 hover:text-[#00008B] hover:bg-[#00008B]/10'
                                                                         }`}
                                                                     >
-                                                                        <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150 ${sub.isSubActive ? 'text-white' : 'text-[#00008B]/70'}`} />
+                                                                        <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150 ${sub.isSubActive ? 'text-white' : 'text-slate-500 group-hover:text-[#00008B]'}`} />
                                                                         <span className="truncate">{sub.label}</span>
                                                                     </Link>
                                                                 );
@@ -384,10 +379,10 @@ function DashboardShell({
                                     return (
                                         <Link key={idx} href={item.href} className={`flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-[background-color,color,box-shadow] duration-180 ease-out overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 motion-reduce:transition-none ${
                                             isActive 
-                                                ? 'text-white bg-[#00008B] shadow-[0_10px_25px_-5px_rgba(0,0,139,0.35)]' 
-                                                : 'text-[#00008B] hover:text-[#00008B] hover:bg-[#00008B]/10'
+                                                ? 'text-white bg-[#00008B] shadow-[0_4px_14px_rgba(0,0,139,0.25)]' 
+                                                : 'text-slate-700 hover:text-[#00008B] hover:bg-[#00008B]/10'
                                         }`}>
-                                            <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-[#00008B]/80 group-hover/nav:text-[#00008B]'}`} />
+                                            <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-slate-600 group-hover/nav:text-[#00008B]'}`} />
                                             <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block motion-reduce:transition-none">
                                                 {item.label}
                                             </span>
@@ -396,15 +391,8 @@ function DashboardShell({
                                 })}
                             </nav>
 
-                            {/* Desktop TradingView Market Pulse (Kompakt Piyasa Alanı) */}
-                            {/* Dar durumda (96px) gizli; Geniş durumda (320px hover/focus) görünür */}
-                            {/* CSS opacity & visibility sayesinde DOM unmount olmaz, her hover'da widget yeniden initialize edilmez */}
-                            <div className="shrink-0 relative z-10 border-t border-white/40 opacity-0 pointer-events-none invisible md:group-hover:opacity-100 md:group-hover:pointer-events-auto md:group-hover:visible md:group-focus-within:opacity-100 md:group-focus-within:pointer-events-auto md:group-focus-within:visible transition-[opacity,visibility] duration-200 ease-out delay-75 md:group-hover:delay-100 motion-reduce:transition-none">
-                                <TradingViewMarketPulse />
-                            </div>
-
-                            <div className="p-3 md:p-4 border-t border-white/10 shrink-0 relative z-10">
-                                <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-4 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
+                            <div className="p-3 md:p-4 border-t border-slate-100 shrink-0 relative z-10 bg-white">
+                                <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3.5 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
                                     <LogOut className="w-5 h-5 flex-shrink-0 transition-colors duration-150" />
                                     <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block motion-reduce:transition-none">
                                         Çıkış Yap
