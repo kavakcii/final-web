@@ -708,6 +708,205 @@ export class HistoricalAnalysisEngine {
       warnings.push('TTM için gereken kesintisiz 4 çeyrek bulunmamaktadır.');
     }
 
+    // 9. Price Volatility and Risk Metrics (Annualized Volatility, Max Drawdown)
+    let priceRiskMetrics: any = undefined;
+    if (prices.length >= 20) {
+      const returns: number[] = [];
+      const downsideReturns: number[] = [];
+      for (let i = 1; i < prices.length; i++) {
+        const p1 = prices[i].adjustedClose || prices[i].close;
+        const p0 = prices[i - 1].adjustedClose || prices[i - 1].close;
+        if (p0 > 0 && p1 > 0) {
+          const ret = p1 / p0 - 1;
+          returns.push(ret);
+          if (ret < 0) downsideReturns.push(ret);
+        }
+      }
+
+      const calcAnnualizedVol = (windowReturns: number[]): number | null => {
+        if (windowReturns.length < 20) return null;
+        const mean = windowReturns.reduce((a, b) => a + b, 0) / windowReturns.length;
+        const variance = windowReturns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (windowReturns.length - 1);
+        const annVol = Math.sqrt(variance) * Math.sqrt(252) * 100;
+        return isFinite(annVol) ? parseFloat(annVol.toFixed(2)) : null;
+      };
+
+      const vol1Y = returns.length >= 252 ? calcAnnualizedVol(returns.slice(-252)) : (returns.length >= 50 ? calcAnnualizedVol(returns) : null);
+      const vol3Y = returns.length >= 252 * 3 ? calcAnnualizedVol(returns.slice(-252 * 3)) : null;
+      const vol5Y = returns.length >= 252 * 5 ? calcAnnualizedVol(returns.slice(-252 * 5)) : null;
+
+      // Downside volatility (1Y)
+      let downsideVol1Y: number | null = null;
+      if (downsideReturns.length >= 10) {
+        const r1YDown = returns.slice(-Math.min(returns.length, 252)).filter(r => r < 0);
+        if (r1YDown.length >= 5) {
+          const varDown = r1YDown.reduce((a, b) => a + Math.pow(b, 2), 0) / r1YDown.length;
+          const dVol = Math.sqrt(varDown) * Math.sqrt(252) * 100;
+          downsideVol1Y = isFinite(dVol) ? parseFloat(dVol.toFixed(2)) : null;
+        }
+      }
+
+      // Max Drawdown
+      let peak = -Infinity;
+      let maxDd = 0;
+      for (const p of prices) {
+        const pr = p.adjustedClose || p.close;
+        if (pr > peak) peak = pr;
+        if (peak > 0) {
+          const dd = (pr - peak) / peak;
+          if (dd < maxDd) maxDd = dd;
+        }
+      }
+
+      // Annualized Returns
+      const calcAnnualizedReturn = (barsCount: number): number | null => {
+        if (prices.length < barsCount) return null;
+        const endP = prices[prices.length - 1].adjustedClose || prices[prices.length - 1].close;
+        const startP = prices[prices.length - barsCount].adjustedClose || prices[prices.length - barsCount].close;
+        const yrs = barsCount / 252;
+        if (startP > 0 && endP > 0 && yrs > 0) {
+          const ret = (Math.pow(endP / startP, 1 / yrs) - 1) * 100;
+          return isFinite(ret) ? parseFloat(ret.toFixed(2)) : null;
+        }
+        return null;
+      };
+
+      const posDays = returns.filter(r => r > 0).length;
+      const posRatio = returns.length > 0 ? parseFloat(((posDays / returns.length) * 100).toFixed(2)) : null;
+
+      priceRiskMetrics = {
+        volatility1Y: vol1Y,
+        volatility3Y: vol3Y,
+        volatility5Y: vol5Y,
+        maxDrawdown: parseFloat((maxDd * 100).toFixed(2)),
+        annualizedReturn1Y: calcAnnualizedReturn(Math.min(prices.length, 252)),
+        annualizedReturn3Y: calcAnnualizedReturn(252 * 3),
+        positiveReturnDaysRatio: posRatio,
+        downsideVolatility1Y: downsideVol1Y,
+        tradingDaysEvaluated: prices.length,
+        status: 'AVAILABLE'
+      };
+    } else {
+      priceRiskMetrics = {
+        volatility1Y: null,
+        volatility3Y: null,
+        volatility5Y: null,
+        maxDrawdown: null,
+        annualizedReturn1Y: null,
+        annualizedReturn3Y: null,
+        positiveReturnDaysRatio: null,
+        downsideVolatility1Y: null,
+        tradingDaysEvaluated: prices.length,
+        status: 'INSUFFICIENT_HISTORY',
+        reason: 'Risk metrikleri için en az 20 işlem günü fiyat barı gereklidir'
+      };
+    }
+
+    // 10. Quarterly Comparison Engine (Latest vs Previous Quarter vs Same Quarter Last Year)
+    const quarterlyComparisons: any[] = [];
+    if (quarterly.length >= 2) {
+      const qLatest = quarterly[quarterly.length - 1];
+      const qPrev = quarterly[quarterly.length - 2];
+      const qPrevYear = quarterly.length >= 5 ? quarterly[quarterly.length - 5] : null;
+
+      const qMetricDefs = [
+        { key: 'revenue', name: 'Satış Gelirleri' },
+        { key: 'grossProfit', name: 'Brüt Kâr' },
+        { key: 'operatingIncome', name: 'Faaliyet Kârı' },
+        { key: 'ebitda', name: 'FAVÖK' },
+        { key: 'netIncome', name: 'Net Kâr' },
+        { key: 'operatingCashFlow', name: 'İşletme Nakit Akışı' },
+        { key: 'freeCashFlow', name: 'Serbest Nakit Akışı (FCF)' }
+      ];
+
+      for (const qDef of qMetricDefs) {
+        const valLatest = (qLatest as any)[qDef.key] ?? null;
+        const valPrev = (qPrev as any)[qDef.key] ?? null;
+        const valPrevYear = qPrevYear ? ((qPrevYear as any)[qDef.key] ?? null) : null;
+
+        let qoq: number | null = null;
+        if (valLatest != null && valPrev != null && valPrev !== 0) {
+          qoq = parseFloat((((valLatest - valPrev) / Math.abs(valPrev)) * 100).toFixed(2));
+        }
+
+        let yoy: number | null = null;
+        if (valLatest != null && valPrevYear != null && valPrevYear !== 0) {
+          yoy = parseFloat((((valLatest - valPrevYear) / Math.abs(valPrevYear)) * 100).toFixed(2));
+        }
+
+        quarterlyComparisons.push({
+          metric: qDef.key,
+          metricName: qDef.name,
+          latestQuarterPeriod: qLatest.periodEnd,
+          latestQuarterValue: valLatest,
+          previousQuarterPeriod: qPrev.periodEnd,
+          previousQuarterValue: valPrev,
+          sameQuarterLastYearPeriod: qPrevYear?.periodEnd ?? null,
+          sameQuarterLastYearValue: valPrevYear,
+          qoqGrowth: qoq,
+          yoyGrowth: yoy,
+          status: valLatest != null ? 'AVAILABLE' : 'DATA_UNAVAILABLE'
+        });
+      }
+    }
+
+    // 11. Historical Valuation Distribution (PE / PB Median, Min, Max)
+    let valuationDistribution: any = undefined;
+    const validPEs = valuationHistory.map(v => v.peRatio).filter((p): p is number => p != null && p > 0);
+    const validPBs = valuationHistory.map(v => v.pbRatio).filter((p): p is number => p != null && p > 0);
+
+    const calcMedian = (arr: number[]): number | null => {
+      if (arr.length === 0) return null;
+      const sorted = arr.slice().sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : parseFloat(((sorted[mid - 1] + sorted[mid]) / 2).toFixed(2));
+    };
+
+    const calcPercentileRank = (arr: number[], val: number): number | null => {
+      if (arr.length === 0) return null;
+      const count = arr.filter(x => x <= val).length;
+      return parseFloat(((count / arr.length) * 100).toFixed(1));
+    };
+
+    if (validPEs.length >= 2 || validPBs.length >= 2) {
+      const peMedian = calcMedian(validPEs);
+      const pbMedian = calcMedian(validPBs);
+      const latestValuation = valuationHistory[valuationHistory.length - 1];
+
+      valuationDistribution = {
+        peMedian,
+        peMin: validPEs.length > 0 ? Math.min(...validPEs) : null,
+        peMax: validPEs.length > 0 ? Math.max(...validPEs) : null,
+        peCurrent: latestValuation?.peRatio ?? null,
+        pePercentile: (latestValuation?.peRatio != null && validPEs.length > 0) ? calcPercentileRank(validPEs, latestValuation.peRatio) : null,
+        pbMedian,
+        pbMin: validPBs.length > 0 ? Math.min(...validPBs) : null,
+        pbMax: validPBs.length > 0 ? Math.max(...validPBs) : null,
+        pbCurrent: latestValuation?.pbRatio ?? null,
+        pbPercentile: (latestValuation?.pbRatio != null && validPBs.length > 0) ? calcPercentileRank(validPBs, latestValuation.pbRatio) : null,
+        sampleSize: Math.max(validPEs.length, validPBs.length),
+        status: 'AVAILABLE',
+        neutralCommentary: (latestValuation?.peRatio != null && peMedian != null)
+          ? `Mevcut F/K (${latestValuation.peRatio}), şirketin hesaplanan tarihsel medyanının (${peMedian}) ${latestValuation.peRatio > peMedian ? 'üzerindedir' : 'altındadır'}.`
+          : undefined
+      };
+    } else {
+      valuationDistribution = {
+        peMedian: null,
+        peMin: null,
+        peMax: null,
+        peCurrent: null,
+        pePercentile: null,
+        pbMedian: null,
+        pbMin: null,
+        pbMax: null,
+        pbCurrent: null,
+        pbPercentile: null,
+        sampleSize: 0,
+        status: 'INSUFFICIENT_HISTORY'
+      };
+    }
+
     return {
       symbol,
       yahooSymbol: `${symbol}.IS`,
@@ -733,8 +932,11 @@ export class HistoricalAnalysisEngine {
       cashFlowTrends,
       perShareTrends,
       valuationHistory,
+      valuationDistribution,
       dividendAnalysis,
       corporateActions,
+      priceRiskMetrics,
+      quarterlyComparisons,
       multiYearSummary,
       metricDirections,
       volatilities,

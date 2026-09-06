@@ -203,6 +203,50 @@ export interface CorporateActionsAnalysis {
   timelineAnomalies: string[];
 }
 
+export interface PriceRiskMetrics {
+  volatility1Y: number | null; // Annualized stdDev * sqrt(252)
+  volatility3Y: number | null;
+  volatility5Y: number | null;
+  maxDrawdown: number | null; // Peak-to-trough max drawdown percentage (negative)
+  annualizedReturn1Y: number | null;
+  annualizedReturn3Y: number | null;
+  positiveReturnDaysRatio: number | null;
+  downsideVolatility1Y: number | null;
+  tradingDaysEvaluated: number;
+  status: MetricDataStatus;
+  reason?: string;
+}
+
+export interface QuarterlyComparisonMetric {
+  metric: string;
+  metricName: string;
+  latestQuarterPeriod: string;
+  latestQuarterValue: number | null;
+  previousQuarterPeriod: string | null;
+  previousQuarterValue: number | null;
+  sameQuarterLastYearPeriod: string | null;
+  sameQuarterLastYearValue: number | null;
+  qoqGrowth: number | null;
+  yoyGrowth: number | null;
+  status: MetricDataStatus;
+}
+
+export interface ValuationDistribution {
+  peMedian: number | null;
+  peMin: number | null;
+  peMax: number | null;
+  peCurrent: number | null;
+  pePercentile: number | null;
+  pbMedian: number | null;
+  pbMin: number | null;
+  pbMax: number | null;
+  pbCurrent: number | null;
+  pbPercentile: number | null;
+  sampleSize: number;
+  status: MetricDataStatus;
+  neutralCommentary?: string;
+}
+
 export interface HistoricalEngineResult {
   symbol: string;
   yahooSymbol: string;
@@ -228,8 +272,11 @@ export interface HistoricalEngineResult {
   cashFlowTrends: CashFlowTrendPeriod[];
   perShareTrends: PerShareTrendPeriod[];
   valuationHistory: HistoricalValuationPoint[];
+  valuationDistribution?: ValuationDistribution;
   dividendAnalysis: DividendHistoryAnalysis;
   corporateActions: CorporateActionsAnalysis;
+  priceRiskMetrics?: PriceRiskMetrics;
+  quarterlyComparisons?: QuarterlyComparisonMetric[];
   multiYearSummary: {
     revenue5YGrowth: number | null;
     netIncome5YGrowth: number | null;
@@ -245,3 +292,4 @@ export interface HistoricalEngineResult {
     warnings: string[];
   };
 }
+
