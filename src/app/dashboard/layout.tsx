@@ -3,16 +3,13 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import {
-    TrendingUp,
     Home,
     PieChart,
     Settings,
     LogOut,
     Bell,
-    Search,
     BarChart3,
     User,
-    Database,
     FileText,
     Newspaper,
     LayoutGrid,
@@ -20,8 +17,6 @@ import {
     Calendar,
     Coins,
     Activity,
-    Shield,
-    Menu,
     X,
     History,
     Globe,
@@ -267,10 +262,6 @@ function DashboardShell({
 
     return (
         <div className="min-h-screen flex relative selection:bg-blue-500/30 font-sans bg-slate-50/50 overflow-x-hidden">
-            {/* Luminous Light Leaks & Glowing Spheres Behind Sidebar */}
-            <div className="fixed left-[-5%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-300/30 blur-[150px] pointer-events-none animate-pulse" />
-            <div className="fixed left-[15%] bottom-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-indigo-300/20 blur-[130px] pointer-events-none" />
-
             {/* MAIN WRAPPER (EDGE-TO-EDGE DASHBOARD) */}
             <div className="relative z-10 w-full flex mx-auto max-w-[1920px] overflow-x-hidden min-h-screen">
                 <div className="flex-1 flex bg-transparent min-w-0">
