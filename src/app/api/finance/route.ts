@@ -34,8 +34,9 @@ export async function GET(request: Request) {
     const results: any[] = [];
 
     // 0. Fetch Live Commodities & Crypto (ALTIN, BTC, ETH, USDTRY)
+    let liveMap: Record<string, any> = {};
     try {
-        const liveMap = await fetchLiveCommoditiesAndCrypto();
+        liveMap = await fetchLiveCommoditiesAndCrypto();
         rawSymbols.forEach(sym => {
             const baseSym = sym.replace('.IS', '');
             if (liveMap[baseSym]) {
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
 
     rawSymbols.forEach(s => {
         const baseSymbol = s.replace('.IS', '');
-        if (COMMODITY_SYMBOLS.has(baseSymbol) || COMMODITY_SYMBOLS.has(s)) {
+        if ((COMMODITY_SYMBOLS.has(baseSymbol) || COMMODITY_SYMBOLS.has(s)) && (liveMap[baseSymbol] || liveMap[s])) {
             // Live commodity/crypto, already fetched from Binance/Truncgil
             return;
         }

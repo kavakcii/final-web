@@ -1,6 +1,7 @@
 export interface LivePriceData {
   symbol: string;
   regularMarketPrice: number;
+  regularMarketChangePercent?: number;
   shortName: string;
   currency: string;
 }
@@ -140,11 +141,13 @@ export async function fetchLiveCommoditiesAndCrypto(): Promise<Record<string, Li
         const data = await res.json();
         if (data && data['gram-altin']) {
           const goldStr = data['gram-altin']['Satış']?.replace(/\./g, '').replace(',', '.');
+          const changeStr = data['gram-altin']['Değişim']?.replace('%', '').replace(/\s+/g, '').replace(',', '.');
+          const changePercent = changeStr ? parseFloat(changeStr) : undefined;
           if (goldStr) {
             const goldPrice = parseFloat(goldStr);
             if (!isNaN(goldPrice) && goldPrice > 0) {
-              newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
-              newPrices['GA'] = { symbol: 'GA', regularMarketPrice: goldPrice, shortName: 'Gram Altın', currency: 'TRY' };
+              newPrices['ALTIN'] = { symbol: 'ALTIN', regularMarketPrice: goldPrice, regularMarketChangePercent: changePercent, shortName: 'Gram Altın', currency: 'TRY' };
+              newPrices['GA'] = { symbol: 'GA', regularMarketPrice: goldPrice, regularMarketChangePercent: changePercent, shortName: 'Gram Altın', currency: 'TRY' };
             }
           }
         }

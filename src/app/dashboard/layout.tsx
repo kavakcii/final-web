@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FinancialTicker } from "@/components/FinancialTicker";
+import { SidebarMarketWidgets } from "@/components/SidebarMarketWidgets";
 
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -267,131 +268,137 @@ function DashboardShell({
                 <div className="flex-1 flex bg-transparent min-w-0">
                     
                     {/* Desktop Sidebar Layout Placeholder: fixed w-24 (96px) footprint so main content never shifts */}
-                    <div className="hidden md:block w-24 shrink-0 sticky top-0 h-screen z-50 pointer-events-none">
-                        {/* Expanding Overlay Sidebar: absolute positioning, floats over content on hover/focus without moving layout */}
-                        <aside className="pointer-events-auto absolute top-0 left-0 h-screen w-24 hover:w-80 focus-within:w-80 border-r border-slate-200/80 bg-white shadow-sm md:shadow-md hover:shadow-xl flex flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden">
-                            <div className="p-3 md:p-6 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-slate-100 relative z-10 bg-white">
-                                <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 rounded-xl">
-                                    <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none" />
-                                    <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1.5 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 whitespace-nowrap hidden md:inline-block motion-reduce:transition-none">
-                                        FinAi<span className="text-blue-600">.</span>
-                                    </span>
-                                </Link>
-                            </div>
+                    <div className="hidden md:block w-24 shrink-0 pointer-events-none" aria-hidden="true" />
 
-                            <nav className="flex-1 min-h-0 px-2 md:px-3 py-4 md:py-6 space-y-2.5 overflow-y-auto scrollbar-none relative z-10">
-                                {menuItems.map((item, idx) => {
-                                    const isActive = item.isActive;
-                                    
-                                    if (item.subItems) {
-                                        return (
-                                            <div key={idx} className="space-y-1">
-                                                <div className={`flex items-center justify-between px-3 md:px-3.5 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-[background-color,color,box-shadow] duration-180 ease-out overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav motion-reduce:transition-none ${
-                                                    isActive 
-                                                        ? 'text-white bg-[#00008B] shadow-[0_4px_14px_rgba(0,0,139,0.25)]' 
-                                                        : 'text-slate-700 hover:text-[#00008B] hover:bg-[#00008B]/10'
-                                                }`}>
-                                                    {/* Direct Link to Portfolio/Calendar Page */}
-                                                    <Link 
-                                                        href={item.href} 
-                                                        onClick={(e) => {
-                                                            if (pathname === item.href && item.toggleExpand) {
-                                                                e.preventDefault();
-                                                                item.toggleExpand();
-                                                            }
-                                                        }}
-                                                        className="flex items-center justify-start flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-lg"
-                                                    >
-                                                        <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-slate-600 group-hover/nav:text-[#00008B]'}`} />
-                                                        <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block motion-reduce:transition-none">
-                                                            {item.label}
-                                                        </span>
-                                                    </Link>
+                    {/* Fixed Viewport Sidebar: anchored to viewport (top-0 left-0 h-[100dvh]) so scrolling the page never moves the sidebar */}
+                    <aside className="hidden md:flex fixed top-0 left-0 2xl:left-[max(0px,calc((100vw-1920px)/2))] h-[100dvh] w-24 hover:w-80 focus-within:w-80 z-50 border-r border-slate-200/80 bg-white shadow-sm md:shadow-md hover:shadow-xl flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden pointer-events-auto">
+                        <div className="p-3 md:p-6 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-slate-100 relative z-10 bg-white">
+                            <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 rounded-xl">
+                                <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none" />
+                                <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1.5 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 whitespace-nowrap hidden md:inline-block motion-reduce:transition-none">
+                                    FinAi<span className="text-blue-600">.</span>
+                                </span>
+                            </Link>
+                        </div>
 
-                                                    {/* Chevron Dropdown Toggle Button (Desktop hover only) */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            if (item.toggleExpand) item.toggleExpand();
-                                                        }}
-                                                        aria-expanded={item.isExpanded}
-                                                        aria-controls={`submenu-${item.label.toLowerCase()}`}
-                                                        aria-label={`${item.label} alt menüsünü ${item.isExpanded ? "kapat" : "aç"}`}
-                                                        title={`${item.label} alt menüsünü ${item.isExpanded ? "kapat" : "aç"}`}
-                                                        className={`hidden md:group-hover:flex md:group-focus-within:flex transition-colors duration-150 p-1.5 rounded-xl items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 ${
-                                                            isActive 
-                                                                ? 'hover:bg-white/20 text-white focus-visible:ring-white/60' 
-                                                                : 'hover:bg-[#00008B]/15 text-slate-600 hover:text-[#00008B]'
-                                                        }`}
-                                                    >
-                                                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ease-out motion-reduce:transition-none ${item.isExpanded ? 'rotate-180' : ''}`} />
-                                                    </button>
-                                                </div>
-
-                                                {/* Sub Menu Items - Clean Nested Tree List */}
-                                                <AnimatePresence initial={false}>
-                                                    {item.isExpanded && (
-                                                        <motion.div
-                                                            id={`submenu-${item.label.toLowerCase()}`}
-                                                            role="region"
-                                                            aria-label={`${item.label} alt menüsü`}
-                                                            initial={{ opacity: 0, height: 0 }}
-                                                            animate={{ opacity: 1, height: "auto" }}
-                                                            exit={{ opacity: 0, height: 0 }}
-                                                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                                                            className="ml-6 pl-3 border-l-2 border-[#00008B]/20 space-y-1 py-1 overflow-hidden hidden group-hover:block group-focus-within:block"
-                                                        >
-                                                            {item.subItems.map((sub, sIdx) => {
-                                                                const SubIcon = sub.icon;
-                                                                return (
-                                                                    <Link
-                                                                        key={sIdx}
-                                                                        href={sub.href}
-                                                                        className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 ${
-                                                                            sub.isSubActive 
-                                                                                ? 'bg-[#00008B] text-white shadow-sm font-bold' 
-                                                                                : 'text-slate-600 hover:text-[#00008B] hover:bg-[#00008B]/10'
-                                                                        }`}
-                                                                    >
-                                                                        <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150 ${sub.isSubActive ? 'text-white' : 'text-slate-500 group-hover:text-[#00008B]'}`} />
-                                                                        <span className="truncate">{sub.label}</span>
-                                                                    </Link>
-                                                                );
-                                                            })}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        );
-                                    }
-
+                        <nav className="flex-1 min-h-0 px-2 md:px-3 py-3 md:py-4 space-y-2 overflow-y-auto scrollbar-none relative z-10">
+                            {menuItems.map((item, idx) => {
+                                const isActive = item.isActive;
+                                
+                                if (item.subItems) {
                                     return (
-                                        <Link key={idx} href={item.href} className={`flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-[background-color,color,box-shadow] duration-180 ease-out overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 motion-reduce:transition-none ${
-                                            isActive 
-                                                ? 'text-white bg-[#00008B] shadow-[0_4px_14px_rgba(0,0,139,0.25)]' 
-                                                : 'text-slate-700 hover:text-[#00008B] hover:bg-[#00008B]/10'
-                                        }`}>
-                                            <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-slate-600 group-hover/nav:text-[#00008B]'}`} />
-                                            <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block motion-reduce:transition-none">
-                                                {item.label}
-                                            </span>
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
+                                        <div key={idx} className="space-y-1">
+                                            <div className={`flex items-center justify-between px-3 md:px-3.5 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-[background-color,color,box-shadow] duration-180 ease-out overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav motion-reduce:transition-none ${
+                                                isActive 
+                                                    ? 'text-white bg-[#00008B] shadow-[0_4px_14px_rgba(0,0,139,0.25)]' 
+                                                    : 'text-slate-700 hover:text-[#00008B] hover:bg-[#00008B]/10'
+                                            }`}>
+                                                {/* Direct Link to Portfolio/Calendar Page */}
+                                                <Link 
+                                                    href={item.href} 
+                                                    onClick={(e) => {
+                                                        if (pathname === item.href && item.toggleExpand) {
+                                                            e.preventDefault();
+                                                            item.toggleExpand();
+                                                        }
+                                                    }}
+                                                    className="flex items-center justify-start flex-1 min-w-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-lg"
+                                                >
+                                                    <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-slate-600 group-hover/nav:text-[#00008B]'}`} />
+                                                    <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block motion-reduce:transition-none">
+                                                        {item.label}
+                                                    </span>
+                                                </Link>
 
-                            <div className="p-3 md:p-4 border-t border-slate-100 shrink-0 relative z-10 bg-white">
-                                <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3.5 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
-                                    <LogOut className="w-5 h-5 flex-shrink-0 transition-colors duration-150" />
-                                    <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block motion-reduce:transition-none">
-                                        Çıkış Yap
-                                    </span>
-                                </button>
-                            </div>
-                        </aside>
-                    </div>
+                                                {/* Chevron Dropdown Toggle Button (Desktop hover only) */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        if (item.toggleExpand) item.toggleExpand();
+                                                    }}
+                                                    aria-expanded={item.isExpanded}
+                                                    aria-controls={`submenu-${item.label.toLowerCase()}`}
+                                                    aria-label={`${item.label} alt menüsünü ${item.isExpanded ? "kapat" : "aç"}`}
+                                                    title={`${item.label} alt menüsünü ${item.isExpanded ? "kapat" : "aç"}`}
+                                                    className={`hidden md:group-hover:flex md:group-focus-within:flex transition-colors duration-150 p-1.5 rounded-xl items-center justify-center shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 ${
+                                                        isActive 
+                                                            ? 'hover:bg-white/20 text-white focus-visible:ring-white/60' 
+                                                            : 'hover:bg-[#00008B]/15 text-slate-600 hover:text-[#00008B]'
+                                                    }`}
+                                                >
+                                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ease-out motion-reduce:transition-none ${item.isExpanded ? 'rotate-180' : ''}`} />
+                                                </button>
+                                            </div>
+
+                                            {/* Sub Menu Items - Clean Nested Tree List */}
+                                            <AnimatePresence initial={false}>
+                                                {item.isExpanded && (
+                                                    <motion.div
+                                                        id={`submenu-${item.label.toLowerCase()}`}
+                                                        role="region"
+                                                        aria-label={`${item.label} alt menüsü`}
+                                                        initial={{ opacity: 0, height: 0 }}
+                                                        animate={{ opacity: 1, height: "auto" }}
+                                                        exit={{ opacity: 0, height: 0 }}
+                                                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                                                        className="ml-6 pl-3 border-l-2 border-[#00008B]/20 space-y-1 py-1 overflow-hidden hidden group-hover:block group-focus-within:block"
+                                                    >
+                                                        {item.subItems.map((sub, sIdx) => {
+                                                            const SubIcon = sub.icon;
+                                                            return (
+                                                                <Link
+                                                                    key={sIdx}
+                                                                    href={sub.href}
+                                                                    className={`flex items-center gap-2 px-3 py-1.5 text-[11px] font-semibold rounded-lg transition-colors duration-150 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 ${
+                                                                        sub.isSubActive 
+                                                                            ? 'bg-[#00008B] text-white shadow-sm font-bold' 
+                                                                            : 'text-slate-600 hover:text-[#00008B] hover:bg-[#00008B]/10'
+                                                                    }`}
+                                                                >
+                                                                    <SubIcon className={`w-3.5 h-3.5 flex-shrink-0 transition-colors duration-150 ${sub.isSubActive ? 'text-white' : 'text-slate-500 group-hover:text-[#00008B]'}`} />
+                                                                    <span className="truncate">{sub.label}</span>
+                                                                </Link>
+                                                            );
+                                                        })}
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </div>
+                                    );
+                                }
+
+                                return (
+                                    <Link key={idx} href={item.href} className={`flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3 text-sm font-semibold rounded-xl md:rounded-2xl transition-[background-color,color,box-shadow] duration-180 ease-out overflow-hidden whitespace-nowrap h-11 md:h-12 relative group/nav focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 motion-reduce:transition-none ${
+                                        isActive 
+                                            ? 'text-white bg-[#00008B] shadow-[0_4px_14px_rgba(0,0,139,0.25)]' 
+                                            : 'text-slate-700 hover:text-[#00008B] hover:bg-[#00008B]/10'
+                                    }`}>
+                                        <item.icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-150 ${isActive ? 'text-white' : 'text-slate-600 group-hover/nav:text-[#00008B]'}`} />
+                                        <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-widest text-[9px] md:text-[10px] truncate font-extrabold hidden md:inline-block motion-reduce:transition-none">
+                                            {item.label}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+
+                        {/* Native FinAi Market Mini Widgets */}
+                        {/* Collapsed (96px): hidden; Expanded (320px hover/focus): visible */}
+                        <div className="shrink-0 relative z-10 opacity-0 pointer-events-none invisible md:group-hover:opacity-100 md:group-hover:pointer-events-auto md:group-hover:visible md:group-focus-within:opacity-100 md:group-focus-within:pointer-events-auto md:group-focus-within:visible transition-[opacity,visibility] duration-200 ease-out delay-75 md:group-hover:delay-100 motion-reduce:transition-none">
+                            <SidebarMarketWidgets />
+                        </div>
+
+                        <div className="p-3 md:p-4 border-t border-slate-100 shrink-0 relative z-10 bg-white">
+                            <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3.5 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
+                                <LogOut className="w-5 h-5 flex-shrink-0 transition-colors duration-150" />
+                                <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block motion-reduce:transition-none">
+                                    Çıkış Yap
+                                </span>
+                            </button>
+                        </div>
+                    </aside>
 
                     {/* Main Content */}
                     <main className="flex-1 relative flex flex-col min-w-0 bg-transparent overflow-x-hidden">
