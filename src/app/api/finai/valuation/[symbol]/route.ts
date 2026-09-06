@@ -31,6 +31,7 @@ export async function GET(
     hasCurrencyMismatch: analysis.currency.hasCurrencyMismatch,
     reportingCurrency: analysis.currency.financialReportingCurrency,
     priceCurrency: analysis.currency.priceTradingCurrency,
-    history: analysis.valuationHistory
+    history: analysis.valuationHistory,
+    distribution: analysis.valuationDistribution || null
   }, { count: analysis.valuationHistory.length }, symbol);
 }

@@ -45,3 +45,4 @@ scripts/.backfill_progress.json
 
 .finai_archive/
 scratch/
+supabase/.temp/

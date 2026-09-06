@@ -9,12 +9,26 @@ interface DataQualityPanelProps {
     overallQualityScore: number;
     status: string;
     historicalPricesCount: number;
+    historicalPricesEarliest?: string | null;
+    historicalPricesLatest?: string | null;
     quarterlyStatementsCount: number;
+    quarterlyStatementsEarliest?: string | null;
+    quarterlyStatementsLatest?: string | null;
     annualStatementsCount: number;
+    annualStatementsEarliest?: string | null;
+    annualStatementsLatest?: string | null;
+    statementsEarliest?: string | null;
+    statementsLatest?: string | null;
     dividendsCount: number;
+    dividendsEarliest?: string | null;
+    dividendsLatest?: string | null;
     splitsCount: number;
+    splitsEarliest?: string | null;
+    splitsLatest?: string | null;
     ttmEligible: boolean;
     hasCurrencyMismatch: boolean;
+    currency?: string;
+    lastUpdated?: string | null;
   } | null;
   symbol: string;
   reportingCurrency?: string;
@@ -101,7 +115,7 @@ export const DataQualityPanel: React.FC<DataQualityPanelProps> = ({
           </div>
           <p className="text-lg font-black text-slate-900">{qualityData.dividendsCount} Dağıtım</p>
           <span className="text-[10px] text-purple-700 font-bold bg-purple-50 px-2 py-0.5 rounded border border-purple-200 inline-block">
-            Brüt Korunmuş
+            Brüt Korunmuş (Net Stopajsız)
           </span>
         </div>
 
@@ -123,6 +137,64 @@ export const DataQualityPanel: React.FC<DataQualityPanelProps> = ({
         </div>
       </div>
 
+      {/* Tarihsel Veri Derinliği (FAZ 13 Madde 21) */}
+      <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-100 space-y-3">
+        <h4 className="text-xs font-black text-[#00008B] uppercase tracking-wider flex items-center gap-1.5">
+          <Database className="w-4 h-4 text-[#00008B]" />
+          Tarihsel Veri Derinliği (Veritabanı Başlangıç / Bitiş Kapsamı)
+        </h4>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-semibold">
+          <div className="p-3 bg-white rounded-xl border border-blue-100 space-y-1">
+            <span className="text-slate-400 text-[10px] uppercase font-black block">Fiyat Geçmişi</span>
+            <p className="text-slate-900 font-black text-sm">
+              {qualityData.historicalPricesEarliest && qualityData.historicalPricesLatest
+                ? `${qualityData.historicalPricesEarliest.slice(0, 4)} → ${qualityData.historicalPricesLatest.slice(0, 4)}`
+                : (qualityData.historicalPricesCount > 0 ? `${qualityData.historicalPricesCount} Bar` : 'Veri Yok')}
+            </p>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              {qualityData.historicalPricesCount.toLocaleString('tr-TR')} Günlük Fiyat Barı
+            </span>
+          </div>
+
+          <div className="p-3 bg-white rounded-xl border border-blue-100 space-y-1">
+            <span className="text-slate-400 text-[10px] uppercase font-black block">Mali Tablolar</span>
+            <p className="text-slate-900 font-black text-sm">
+              {qualityData.statementsEarliest && qualityData.statementsLatest
+                ? `${qualityData.statementsEarliest.slice(0, 4)} → ${qualityData.statementsLatest.slice(0, 4)}`
+                : (qualityData.quarterlyStatementsCount > 0 ? `${qualityData.quarterlyStatementsCount} Çeyrek` : 'Veri Yok')}
+            </p>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              {qualityData.quarterlyStatementsCount} Çeyreklik / {qualityData.annualStatementsCount} Yıllık
+            </span>
+          </div>
+
+          <div className="p-3 bg-white rounded-xl border border-blue-100 space-y-1">
+            <span className="text-slate-400 text-[10px] uppercase font-black block">Temettü Olayları</span>
+            <p className="text-slate-900 font-black text-sm">
+              {qualityData.dividendsCount > 0 && qualityData.dividendsEarliest && qualityData.dividendsLatest
+                ? `${qualityData.dividendsEarliest.slice(0, 4)} → ${qualityData.dividendsLatest.slice(0, 4)}`
+                : (qualityData.dividendsCount > 0 ? `${qualityData.dividendsCount} Olay` : 'Temettü Yok')}
+            </p>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              {qualityData.dividendsCount} Kayıtlı Dağıtım
+            </span>
+          </div>
+
+          <div className="p-3 bg-white rounded-xl border border-blue-100 space-y-1">
+            <span className="text-slate-400 text-[10px] uppercase font-black block">Kurumsal Hareketler</span>
+            <p className="text-slate-900 font-black text-sm">
+              {qualityData.splitsCount > 0 && qualityData.splitsEarliest && qualityData.splitsLatest
+                ? `${qualityData.splitsEarliest.slice(0, 4)} → ${qualityData.splitsLatest.slice(0, 4)}`
+                : (qualityData.splitsCount > 0 ? `${qualityData.splitsCount} Olay` : 'Bölünme Yok')}
+            </p>
+            <span className="text-[10px] text-slate-500 font-medium block">
+              {qualityData.splitsCount} Hisse Bölünmesi / Bedelsiz
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Uyarılar ve Provenance Bilgileri */}
       <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-3">
         <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
@@ -132,8 +204,8 @@ export const DataQualityPanel: React.FC<DataQualityPanelProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-semibold text-slate-600">
           <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-100">
-            <span className="text-slate-400">Veri Kaynağı:</span>
-            <span className="font-bold text-slate-800">FinAi Historical Data Archive</span>
+            <span className="text-slate-400">Birincil Veri Katmanı:</span>
+            <span className="font-bold text-slate-800">Supabase PostgreSQL (Production Cluster)</span>
           </div>
           <div className="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-100">
             <span className="text-slate-400">Raporlama Para Birimi:</span>
@@ -149,6 +221,11 @@ export const DataQualityPanel: React.FC<DataQualityPanelProps> = ({
             <span className="text-slate-400">Mükerrerlik (Duplicate) Oranı:</span>
             <span className="font-bold text-emerald-700">0 Mükerrer Kayıt (%100 Bütünlük)</span>
           </div>
+        </div>
+
+        {/* ÖNEMLİ EKSİK VERİ BİLGİLENDİRMESİ (FAZ 13 Madde 20) */}
+        <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-3 text-xs text-amber-900 font-medium">
+          <strong>Önemli İlke:</strong> Veri bulunmaması veya raporlanmamış olması, o finansal kalemin 0 (sıfır) olduğu anlamına gelmez. FinAi hiçbir eksik veriyi sentetik türetmez, interpolasyonla uydurmaz veya varsayılan 0 ile doldurmaz.
         </div>
 
         <p className="text-[11px] text-slate-400 font-bold pt-1 border-t border-slate-200/60">

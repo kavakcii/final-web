@@ -157,6 +157,48 @@ export class FinAiArchiveReader {
   }
 
   /**
+   * 2b. Price Stats & Date Range (FAZ 13)
+   */
+  public static async getPriceStats(symbol: string): Promise<{ count: number; earliestDate: string | null; latestDate: string | null }> {
+    const sb = getSupabaseClient();
+    if (sb) {
+      try {
+        const { count, error: countErr } = await sb
+          .from('historical_prices')
+          .select('*', { count: 'exact', head: true })
+          .eq('symbol', symbol);
+
+        if (!countErr && count != null && count > 0) {
+          const [{ data: firstRow }, { data: lastRow }] = await Promise.all([
+            sb.from('historical_prices').select('date_istanbul').eq('symbol', symbol).order('date_istanbul', { ascending: true }).limit(1),
+            sb.from('historical_prices').select('date_istanbul').eq('symbol', symbol).order('date_istanbul', { ascending: false }).limit(1)
+          ]);
+
+          return {
+            count,
+            earliestDate: firstRow?.[0]?.date_istanbul ?? null,
+            latestDate: lastRow?.[0]?.date_istanbul ?? null
+          };
+        }
+      } catch (err: any) {
+        console.warn(`[FinAiArchiveReader] Supabase error in getPriceStats(${symbol}):`, err.message);
+      }
+    }
+
+    // Fallback to local archive
+    const localPrices = this.readJsonSafe<any[]>('prices', `${symbol}_daily.json`);
+    if (localPrices && localPrices.length > 0) {
+      return {
+        count: localPrices.length,
+        earliestDate: localPrices[0]?.dateIstanbul || localPrices[0]?.date || null,
+        latestDate: localPrices[localPrices.length - 1]?.dateIstanbul || localPrices[localPrices.length - 1]?.date || null
+      };
+    }
+
+    return { count: 0, earliestDate: null, latestDate: null };
+  }
+
+  /**
    * Helper to map DB statement rows to canonical FinAi statement format
    */
   private static mapStatementRows(rows: any[]): any[] {
