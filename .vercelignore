@@ -1,0 +1,5 @@
+.finai_archive
+.finai_archive/**
+scratch
+node_modules
+.git
