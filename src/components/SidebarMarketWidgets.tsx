@@ -79,7 +79,7 @@ function SidebarMarketWidgetsComponent() {
     }, []);
 
     return (
-        <div className="pt-3.5 pb-2.5 px-3 md:px-4 border-t border-slate-200/80 bg-white select-none">
+        <div className="py-3 px-3 md:px-4 border-y border-slate-200/80 bg-white select-none">
             {/* Başlık & Canlı Rozeti */}
             <div className="flex items-center justify-between px-1 mb-2">
                 <span className="text-[10px] font-black tracking-widest uppercase text-slate-400">
