@@ -23,8 +23,17 @@ const yahooFinance = new YahooFinance({
   validation: { logErrors: false }
 });
 
-const SUPABASE_URL = 'https://xbffacqaumgearqhajmg.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhiZmZhY3FhdW1nZWFycWhham1nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDQ5Mzc1OSwiZXhwIjoyMDg2MDY5NzU5fQ.Xa_czw4WUNrMi6jkWF510any7Ves0VmvS5UjMJ34vhc';
+// Load env from .env.local if not set
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY && fs.existsSync('.env.local')) {
+  const envContent = fs.readFileSync('.env.local', 'utf8');
+  envContent.split('\n').forEach(line => {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) process.env[match[1].trim()] = match[2].trim().replace(/^['"]|['"]$/g, '');
+  });
+}
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xbffacqaumgearqhajmg.supabase.co';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ARCHIVE_ROOT = path.join('d:/Salih KAVAKCI/Yeni klasör/FinAl/final-web', '.finai_archive');
