@@ -84,9 +84,10 @@ function DashboardShell({
         }
     }, [isMobileMenuOpen]);
 
-    // Rota değiştiğinde mobil menüyü otomatik kapat
+    // Rota değiştiğinde mobil menüyü ve profil açılır menüsünü otomatik kapat
     useEffect(() => {
         setIsMobileMenuOpen(false);
+        setIsProfileOpen(false);
     }, [pathname, searchParams]);
 
     // Aktif sayfaya göre ilgili alt menüyü otomatik açık tut ve diğerlerini kapat
@@ -266,7 +267,7 @@ function DashboardShell({
     ];
 
     return (
-        <div className="min-h-screen flex relative selection:bg-blue-500/30 font-sans bg-slate-50/50">
+        <div className="min-h-screen flex relative selection:bg-blue-500/30 font-sans bg-slate-50/50 overflow-x-hidden">
             {/* Luminous Light Leaks & Glowing Spheres Behind Sidebar */}
             <div className="fixed left-[-5%] top-[-10%] -z-10 h-[600px] w-[600px] rounded-full bg-blue-300/30 blur-[150px] pointer-events-none animate-pulse" />
             <div className="fixed left-[15%] bottom-[-10%] -z-10 h-[500px] w-[500px] rounded-full bg-indigo-300/20 blur-[130px] pointer-events-none" />
@@ -415,8 +416,8 @@ function DashboardShell({
 
                     {/* Main Content */}
                     <main className="flex-1 relative flex flex-col min-w-0 bg-transparent overflow-x-hidden">
-                        {/* Header (Glassified) */}
-                        <header className="h-12 md:h-16 border-b border-slate-100 flex items-center justify-between px-3 md:px-6 sticky top-0 z-40 bg-white/60 backdrop-blur-xl flex-shrink-0 relative">
+                        {/* Header (Glassified & Safe-Area Aware) */}
+                        <header className={`h-12 md:h-16 border-b border-slate-100 flex items-center justify-between px-3 md:px-6 sticky top-0 ${isProfileOpen ? "z-[60]" : "z-40"} bg-white/60 backdrop-blur-xl flex-shrink-0 relative pt-[env(safe-area-inset-top,0px)] transition-none`}>
                             <div className="flex items-center gap-2.5">
                                 {/* Hamburger Butonu (Dokunmatik Hedef >= 44x44px) */}
                                 <button
@@ -431,7 +432,7 @@ function DashboardShell({
                                     <span className="w-5 h-0.5 bg-white rounded-full block" />
                                     <span className="w-5 h-0.5 bg-white rounded-full block" />
                                 </button>
-                                <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40">FinAi Workspace</h1>
+                                <h1 className="text-[9px] md:text-[10px] font-bold text-[#00008B] tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-40 select-none">FinAi Workspace</h1>
                             </div>
                             
                             <div className="flex items-center space-x-2 md:space-x-4">
@@ -444,7 +445,9 @@ function DashboardShell({
                                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                                         aria-label="Kullanıcı Profili ve Ayarlar"
                                         aria-expanded={isProfileOpen}
-                                        className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#0a192f] font-bold hover:bg-slate-200 transition-all focus:outline-none overflow-hidden border border-[#0a192f]/5"
+                                        aria-controls="profile-dropdown-menu"
+                                        aria-haspopup="true"
+                                        className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-100 flex items-center justify-center text-[#0a192f] font-bold hover:bg-slate-200 transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 focus-visible:ring-offset-2 overflow-hidden border border-[#0a192f]/5"
                                     >
                                         {avatarUrl ? (
                                             <img src={avatarUrl} alt="Profil" className="w-full h-full object-cover" />
@@ -454,18 +457,35 @@ function DashboardShell({
                                     </button>
 
                                     {isProfileOpen && (
-                                        <div className="absolute right-0 mt-3 w-56 bg-white border border-[#0a192f]/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                        <div 
+                                            id="profile-dropdown-menu"
+                                            role="menu"
+                                            aria-label="Kullanıcı Menüsü"
+                                            className="absolute right-0 mt-3 w-56 bg-white border border-[#0a192f]/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150 origin-top-right focus:outline-none"
+                                        >
                                             <div className="px-4 py-2 border-b border-slate-100 mb-1">
                                                 <p className="text-xs font-bold text-[#0a192f]">{userName || "Kullanıcı"}</p>
                                             </div>
                                             <div className="py-1">
-                                                <Link href="/dashboard/settings" className="w-full text-left px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-[#0a192f] flex items-center gap-2 transition-colors">
+                                                <Link 
+                                                    href="/dashboard/settings" 
+                                                    onClick={() => setIsProfileOpen(false)}
+                                                    role="menuitem"
+                                                    className="w-full text-left px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-[#0a192f] flex items-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/30"
+                                                >
                                                     <Settings className="w-4 h-4" />
                                                     Kullanıcı Ayarları
                                                 </Link>
                                             </div>
                                             <div className="border-t border-slate-100 mt-1 py-1">
-                                                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors">
+                                                <button 
+                                                    onClick={() => {
+                                                        setIsProfileOpen(false);
+                                                        handleLogout();
+                                                    }} 
+                                                    role="menuitem"
+                                                    className="w-full text-left px-4 py-2 text-sm font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+                                                >
                                                     <LogOut className="w-4 h-4" />
                                                     Çıkış Yap
                                                 </button>
