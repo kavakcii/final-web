@@ -2777,11 +2777,8 @@ export default function PortfolioPage() {
             className="p-4 md:p-10 space-y-6 md:space-y-8 min-h-full bg-white text-slate-800 rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-[#00008B]/5 pb-20 md:pb-24 relative isolate m-1 md:m-2 xl:m-4 border border-slate-100 font-sans max-w-full"
         >
             
-            {/* Ambient Soft Blue Light Leaks */}
-            <div className="absolute inset-0 overflow-hidden rounded-[2.5rem] pointer-events-none -z-10">
-                <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-blue-50/70 blur-[130px] rounded-full" />
-                <div className="absolute bottom-[-10%] left-[-5%] w-[450px] h-[450px] bg-slate-50/90 blur-[120px] rounded-full" />
-            </div>
+
+
 
             {/* Notification Feedback Toast */}
             <AnimatePresence>
@@ -2833,13 +2830,6 @@ export default function PortfolioPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Link
-                        href="/dashboard/portfolio/transactions"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-[#00008B] font-extrabold rounded-2xl border border-blue-200/60 text-xs transition-all active:scale-95 shadow-sm"
-                    >
-                        <FileSpreadsheet className="w-4 h-4 text-blue-600" />
-                        İşlem Geçmişi
-                    </Link>
                     {focusedWidget && (
                         <button
                             onClick={() => setFocusedWidget(null)}
@@ -2849,14 +2839,6 @@ export default function PortfolioPage() {
                             Odak Modundan Çık
                         </button>
                     )}
-                    <button
-                        onClick={fetchPortfolioData}
-                        disabled={loading}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-[#00008B] font-bold rounded-2xl border border-slate-200 text-xs transition-all active:scale-95 shadow-sm"
-                    >
-                        <RefreshCw className={cn("w-4 h-4 text-[#00008B]", loading && "animate-spin")} />
-                        Yenile
-                    </button>
                 </div>
             </div>
 
@@ -2871,27 +2853,27 @@ export default function PortfolioPage() {
                 {/* 2. Günlük K/Z */}
                 <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
                     <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Günlük K/Z</span>
-                    <span className={cn("text-2xl font-black", dailyProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    <span className={cn("text-2xl font-black", dailyProfit >= 0 ? "text-blue-600" : "text-rose-600")}>
                         {dailyProfit >= 0 ? "+" : ""}{formatCurrency(dailyProfit)}
                     </span>
-                    <span className={cn("text-[11px] font-bold block mt-1", dailyProfitRatio >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    <span className={cn("text-[11px] font-bold block mt-1", dailyProfitRatio >= 0 ? "text-blue-600" : "text-rose-600")}>
                         %{dailyProfitRatio.toFixed(2)} bugün
                     </span>
                 </div>
                 {/* 3. Toplam K/Z */}
                 <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
                     <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Toplam K/Z</span>
-                    <span className={cn("text-2xl font-black", totalProfit >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    <span className={cn("text-2xl font-black", totalProfit >= 0 ? "text-blue-600" : "text-rose-600")}>
                         {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
                     </span>
-                    <span className={cn("text-[11px] font-bold block mt-1", profitRatio >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    <span className={cn("text-[11px] font-bold block mt-1", profitRatio >= 0 ? "text-blue-600" : "text-rose-600")}>
                         %{profitRatio.toFixed(2)} genel
                     </span>
                 </div>
                 {/* 4. Gerçekleşmiş K/Z */}
                 <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
                     <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Gerçekleşmiş K/Z</span>
-                    <span className={cn("text-2xl font-black", realizedPnlTotal >= 0 ? "text-emerald-600" : "text-rose-600")}>
+                    <span className={cn("text-2xl font-black", realizedPnlTotal >= 0 ? "text-blue-600" : "text-rose-600")}>
                         {realizedPnlTotal >= 0 ? "+" : ""}{formatCurrency(realizedPnlTotal)}
                     </span>
                     <span className="text-[11px] text-slate-400 font-medium block mt-1">Kapanan satış kârları</span>
