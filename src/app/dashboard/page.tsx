@@ -13,7 +13,6 @@ import { FinAiYesterdayReportWidget } from "@/components/FinAiYesterdayReportWid
 import { MarketOverviewWidget } from "@/components/dashboard/MarketOverviewWidget";
 import { DailyAgendaWidget } from "@/components/dashboard/DailyAgendaWidget";
 import { LatestNewsWidget } from "@/components/dashboard/LatestNewsWidget";
-import { FeaturedNewsWidget } from "@/components/dashboard/FeaturedNewsWidget";
 import { FinancialTicker } from "@/components/FinancialTicker";
 import Link from "next/link";
 
@@ -128,8 +127,8 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* 2. İKİNCİ BÖLÜM: PİYASA GENEL GÖRÜNÜMÜ (%58) & GÜNLÜK AJANDA (%42) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.38fr_1fr] gap-4 xl:gap-5 items-stretch w-full">
+                    {/* 2. İKİNCİ BÖLÜM: PİYASA GENEL GÖRÜNÜMÜ (%50) & GÜNLÜK AJANDA (%50) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xl:gap-5 items-stretch w-full">
                         <div className="flex flex-col min-w-0">
                             <MarketOverviewWidget />
                         </div>
@@ -138,14 +137,9 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* 3. ÜÇÜNCÜ BÖLÜM: SON HABERLER (~%70) & ÖNE ÇIKANLAR (~%30) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[2.4fr_1fr] gap-4 xl:gap-5 items-stretch w-full">
-                        <div className="flex flex-col min-w-0">
-                            <LatestNewsWidget news={news} />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <FeaturedNewsWidget news={news} />
-                        </div>
+                    {/* 3. ÜÇÜNCÜ BÖLÜM: SON HABERLER (%100) */}
+                    <div className="w-full">
+                        <LatestNewsWidget news={news} />
                     </div>
                 </div>
 
@@ -184,11 +178,6 @@ export default function DashboardPage() {
                     {/* 7. SON HABERLER */}
                     <div className="w-full">
                         <LatestNewsWidget news={news} />
-                    </div>
-
-                    {/* 8. ÖNE ÇIKANLAR */}
-                    <div className="w-full">
-                        <FeaturedNewsWidget news={news} />
                     </div>
                 </div>
             </div>

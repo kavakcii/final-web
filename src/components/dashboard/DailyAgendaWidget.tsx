@@ -14,7 +14,7 @@ export interface DailyAgendaItem {
     id: string;
     category: 'all' | 'ipo' | 'dividends' | 'earnings' | 'economic';
     categoryLabel: string;
-    time: string;
+    time?: string;
     symbolOrCountry: string;
     title: string;
     badgeColor: string;
@@ -31,6 +31,18 @@ const CATEGORY_TABS = [
     { id: 'earnings', label: 'Bilanço' },
     { id: 'economic', label: 'Ekonomik' }
 ] as const;
+
+// Tümü sekmesinde kategori sıralama önceliği:
+// 1. Ekonomik Gelişmeler (En üstte, saatleriyle)
+// 2. Halka Arzlar (Alt alta, saatsiz)
+// 3. Temettüler (Alt alta, saatsiz)
+// 4. Bilançolar (Alt alta, saatsiz)
+const CATEGORY_PRIORITY: Record<string, number> = {
+    economic: 1,
+    ipo: 2,
+    dividends: 3,
+    earnings: 4
+};
 
 export function DailyAgendaWidget() {
     const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -112,7 +124,7 @@ export function DailyAgendaWidget() {
                     time: item.time || '14:00',
                     symbolOrCountry: item.flag || item.country || 'GB',
                     title: item.event || 'Ekonomik Gelişme',
-                    badgeColor: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+                    badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200/60',
                     impact: item.impact || 'high',
                     auxiliaryText: aux,
                     link: item.id ? `/dashboard/economic-calendar/${item.id}` : '/dashboard/calendar?type=economic',
@@ -133,7 +145,7 @@ export function DailyAgendaWidget() {
                     time: '14:00',
                     symbolOrCountry: 'GB',
                     title: 'İngiltere Merkez Bankası (BoE) Faiz Kararı',
-                    badgeColor: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+                    badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200/60',
                     impact: 'critical',
                     auxiliaryText: 'Açıklanan: %5,1',
                     link: '/dashboard/calendar?type=economic',
@@ -146,7 +158,7 @@ export function DailyAgendaWidget() {
                     time: '15:30',
                     symbolOrCountry: 'US',
                     title: 'İşsizlik Haklarından Yararlanma Başvuruları',
-                    badgeColor: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+                    badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200/60',
                     impact: 'high',
                     auxiliaryText: 'Açıklanan: 220K',
                     link: '/dashboard/calendar?type=economic',
@@ -159,7 +171,7 @@ export function DailyAgendaWidget() {
                     time: '17:00',
                     symbolOrCountry: 'US',
                     title: 'Ham Petrol Stokları',
-                    badgeColor: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+                    badgeColor: 'bg-blue-50 text-blue-700 border border-blue-200/60',
                     impact: 'medium',
                     auxiliaryText: 'Beklenti: -1.2M',
                     link: '/dashboard/calendar?type=economic',
@@ -168,7 +180,7 @@ export function DailyAgendaWidget() {
             );
         }
 
-        // 2. Halka Arz Olayları (Aktif Talep Toplama & Seans)
+        // 2. Halka Arz Olayları (Saat yazılmaz, sadece sembol ve içerik)
         const matchedIpo: DailyAgendaItem[] = [];
         ipoData.forEach((item: any, idx: number) => {
             const isActive = item.status === 'Talep Toplama' || item.status === 'İşlem Görecek' || idx < 2;
@@ -177,13 +189,12 @@ export function DailyAgendaWidget() {
                     id: `ipo-${item.id || idx}`,
                     category: 'ipo',
                     categoryLabel: 'Halka Arz',
-                    time: idx === 0 ? '09:30' : '10:30',
                     symbolOrCountry: item.symbol || 'IPO',
                     title: `${item.companyName || item.symbol} Halka Arz (${item.status || 'Talep Toplama'})`,
-                    badgeColor: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30',
+                    badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
                     auxiliaryText: 'Talep Toplama Aktif',
                     link: '/dashboard/calendar?type=ipo',
-                    sortKey: idx === 0 ? '09:30' : '10:30'
+                    sortKey: 'ipo'
                 });
             }
         });
@@ -196,30 +207,28 @@ export function DailyAgendaWidget() {
                     id: 'ipo-bahgm',
                     category: 'ipo',
                     categoryLabel: 'Halka Arz',
-                    time: '09:30',
                     symbolOrCountry: 'BAHGM',
                     title: 'Bahadır Kimya Halka Arz (Talep Toplama Başladı)',
-                    badgeColor: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30',
+                    badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
                     auxiliaryText: 'Dağıtım: Eşit | ₺51,00',
                     link: '/dashboard/calendar?type=ipo',
-                    sortKey: '09:30'
+                    sortKey: 'ipo'
                 },
                 {
                     id: 'ipo-durkn',
                     category: 'ipo',
                     categoryLabel: 'Halka Arz',
-                    time: '10:30',
                     symbolOrCountry: 'DURKN',
                     title: 'Durukan Şekerleme Halka Arz (Talep Toplama 2. Gün)',
-                    badgeColor: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30',
+                    badgeColor: 'bg-emerald-50 text-emerald-700 border border-emerald-200/60',
                     auxiliaryText: 'Dağıtım: Eşit | ₺17,00',
                     link: '/dashboard/calendar?type=ipo',
-                    sortKey: '10:30'
+                    sortKey: 'ipo'
                 }
             );
         }
 
-        // 3. Temettü Olayları
+        // 3. Temettü Olayları (Saat yazılmaz, sadece hisse ve dağıtım)
         const matchedDiv: DailyAgendaItem[] = [];
         dividendsData.forEach((item: any, idx: number) => {
             const isDivToday = item.paymentDate === todayFormattedDate;
@@ -228,13 +237,12 @@ export function DailyAgendaWidget() {
                     id: `div-${item.symbol || idx}`,
                     category: 'dividends',
                     categoryLabel: 'Temettü',
-                    time: '10:00',
                     symbolOrCountry: item.symbol || 'BİST',
                     title: `${item.companyName || item.symbol} Temettü Dağıtımı (${item.netAmountFormatted || 'Net'})`,
-                    badgeColor: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+                    badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200/60',
                     auxiliaryText: item.netAmountFormatted ? `Hisse Başı: ${item.netAmountFormatted}` : 'Hesaba Geçiş',
                     link: '/dashboard/calendar?type=dividend',
-                    sortKey: '10:00'
+                    sortKey: 'div'
                 });
             }
         });
@@ -247,30 +255,28 @@ export function DailyAgendaWidget() {
                     id: 'div-froto',
                     category: 'dividends',
                     categoryLabel: 'Temettü',
-                    time: '10:00',
                     symbolOrCountry: 'FROTO',
                     title: 'Ford Otomotiv Nakit Temettü Dağıtımı',
-                    badgeColor: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+                    badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200/60',
                     auxiliaryText: 'Hisse Başı Net: ₺29,75',
                     link: '/dashboard/calendar?type=dividend',
-                    sortKey: '10:00'
+                    sortKey: 'div'
                 },
                 {
                     id: 'div-tuprs',
                     category: 'dividends',
                     categoryLabel: 'Temettü',
-                    time: '10:00',
                     symbolOrCountry: 'TUPRS',
                     title: 'Tüpraş 2. Taksit Temettü Dağıtımı',
-                    badgeColor: 'bg-amber-500/15 text-amber-300 border border-amber-500/30',
+                    badgeColor: 'bg-amber-50 text-amber-700 border border-amber-200/60',
                     auxiliaryText: 'Hisse Başı Net: ₺11,93',
                     link: '/dashboard/calendar?type=dividend',
-                    sortKey: '10:00'
+                    sortKey: 'div'
                 }
             );
         }
 
-        // 4. Bilanço Olayları
+        // 4. Bilanço Olayları (Saat yazılmaz, seans sonu/KAP)
         const matchedEarn: DailyAgendaItem[] = [];
         earningsData.forEach((item: any, idx: number) => {
             const isEarnToday = item.earningsDate === todayFormattedDate || (item.daysLeft !== undefined && item.daysLeft === 0);
@@ -279,13 +285,12 @@ export function DailyAgendaWidget() {
                     id: `earn-${item.symbol || idx}`,
                     category: 'earnings',
                     categoryLabel: 'Bilanço',
-                    time: idx === 0 ? '18:10' : '18:30',
                     symbolOrCountry: item.symbol || 'BİST',
                     title: `${item.companyName || item.symbol} Bilanço Açıklaması`,
-                    badgeColor: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
+                    badgeColor: 'bg-purple-50 text-purple-700 border border-purple-200/60',
                     auxiliaryText: 'Seans Sonu Açıklanması Bekleniyor',
                     link: '/dashboard/calendar?type=earnings',
-                    sortKey: idx === 0 ? '18:10' : '18:30'
+                    sortKey: 'earn'
                 });
             }
         });
@@ -298,31 +303,43 @@ export function DailyAgendaWidget() {
                     id: 'earn-thyao',
                     category: 'earnings',
                     categoryLabel: 'Bilanço',
-                    time: '18:10',
                     symbolOrCountry: 'THYAO',
                     title: 'Türk Hava Yolları 2026/2. Çeyrek Bilanço Açıklaması',
-                    badgeColor: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
+                    badgeColor: 'bg-purple-50 text-purple-700 border border-purple-200/60',
                     auxiliaryText: 'Seans Kapanışı Sonrası KAP Bildirimi',
                     link: '/dashboard/calendar?type=earnings',
-                    sortKey: '18:10'
+                    sortKey: 'earn'
                 },
                 {
                     id: 'earn-asels',
                     category: 'earnings',
                     categoryLabel: 'Bilanço',
-                    time: '18:30',
                     symbolOrCountry: 'ASELS',
                     title: 'Aselsan 2. Çeyrek Finansal ve Faaliyet Raporu',
-                    badgeColor: 'bg-purple-500/15 text-purple-300 border border-purple-500/30',
+                    badgeColor: 'bg-purple-50 text-purple-700 border border-purple-200/60',
                     auxiliaryText: 'KAP Duyurusu',
                     link: '/dashboard/calendar?type=earnings',
-                    sortKey: '18:30'
+                    sortKey: 'earn'
                 }
             );
         }
 
-        // Kronolojik sıralama: Günün saat akışına göre sırala
-        return unified.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+        // Kategori hiyerarşisine göre sıralama:
+        // 1. Ekonomik Gelişmeler (En üstte, saat sırasına göre)
+        // 2. Halka Arzlar (Alt alta)
+        // 3. Temettüler (Alt alta)
+        // 4. Bilançolar (Alt alta)
+        return unified.sort((a, b) => {
+            const orderA = CATEGORY_PRIORITY[a.category] ?? 99;
+            const orderB = CATEGORY_PRIORITY[b.category] ?? 99;
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+            if (a.category === 'economic') {
+                return (a.time || '').localeCompare(b.time || '');
+            }
+            return 0;
+        });
     }, [economicData, earningsData, dividendsData, ipoData, todayFormattedDate]);
 
     // Seçili sekmeye göre filtreleme
@@ -331,7 +348,7 @@ export function DailyAgendaWidget() {
         return agendaItems.filter(item => item.category === activeCategory);
     }, [agendaItems, activeCategory]);
 
-    // Etki sinyal barları (Ekonomik veriler için)
+    // Etki sinyal barları (Ekonomik veriler için açık tema)
     const renderImpactBars = (impact?: string) => {
         if (!impact) return null;
         const isHigh = impact === 'high' || impact === 'critical';
@@ -339,28 +356,28 @@ export function DailyAgendaWidget() {
 
         return (
             <div className="flex items-end gap-[2px] h-3 w-3 shrink-0" title={isHigh ? "Yüksek Etki" : (isMedium ? "Orta Etki" : "Düşük Etki")}>
-                <div className={`w-[2.5px] rounded-xs ${isHigh || isMedium ? 'h-1.5 bg-white' : 'h-1 bg-white/20'}`} />
-                <div className={`w-[2.5px] rounded-xs ${isHigh || isMedium ? 'h-2 bg-white' : 'h-1 bg-white/20'}`} />
-                <div className={`w-[2.5px] rounded-xs ${isHigh ? 'h-3 bg-white' : 'h-1 bg-white/20'}`} />
+                <div className={`w-[2.5px] rounded-xs ${isHigh || isMedium ? 'h-1.5 bg-blue-600' : 'h-1 bg-slate-200'}`} />
+                <div className={`w-[2.5px] rounded-xs ${isHigh || isMedium ? 'h-2 bg-blue-600' : 'h-1 bg-slate-200'}`} />
+                <div className={`w-[2.5px] rounded-xs ${isHigh ? 'h-3 bg-blue-600' : 'h-1 bg-slate-200'}`} />
             </div>
         );
     };
 
     return (
-        <div className="bg-[#0b192c] text-white border border-[#1a2f4c] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-lg shadow-black/20 flex flex-col justify-between h-[395px] group relative overflow-hidden">
-            {/* Arka Plan Hafif Ambient Parıltı */}
-            <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_55%,#f0f6fe_100%)] border border-slate-200/70 hover:border-blue-200/70 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between h-[395px] group relative overflow-hidden">
+            {/* Arka Plan Hafif Soft Parıltı */}
+            <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-100/30 rounded-full blur-3xl pointer-events-none" />
 
             {/* 1. Üst Başlık & Kategori Filtreleri (Sabit Üst Alan) */}
             <div className="relative z-10 shrink-0">
                 {/* Başlık Satırı */}
-                <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100/80">
                     <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-blue-500/15 border border-blue-500/25 flex items-center justify-center text-blue-400 shrink-0">
-                            <CalendarIcon className="w-3.5 h-3.5 text-blue-400" />
+                        <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                            <CalendarIcon className="w-3.5 h-3.5 text-blue-600" />
                         </div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                            <h3 className="text-xs sm:text-[13px] font-bold text-white tracking-tight">
+                            <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight">
                                 Günlük Ajanda
                             </h3>
                             <span className="text-[11px] font-medium text-slate-400">
@@ -371,7 +388,7 @@ export function DailyAgendaWidget() {
 
                     <Link
                         href="/dashboard/calendar"
-                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors group/link"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors group/link"
                     >
                         <span>Tümünü Gör</span>
                         <ArrowRight className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
@@ -389,7 +406,7 @@ export function DailyAgendaWidget() {
                                 className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all shrink-0 ${
                                     isActive
                                         ? "bg-blue-600 text-white shadow-xs"
-                                        : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/80"
                                 }`}
                             >
                                 {tab.label}
@@ -400,32 +417,34 @@ export function DailyAgendaWidget() {
             </div>
 
             {/* 2. Ajanda Satırları: En Üstten En Alta Uzanır & Scroll Edilebilir */}
-            <div className="relative z-10 flex-1 min-h-0 my-2 overflow-y-auto pr-1.5 custom-scrollbar [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/10 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-white/20">
+            <div className="relative z-10 flex-1 min-h-0 my-2 overflow-y-auto pr-1.5 custom-scrollbar [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-300">
                 {loading ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-2 text-center">
-                        <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+                        <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
                         <span className="text-xs font-medium text-slate-400">Günün gelişmeleri yükleniyor...</span>
                     </div>
                 ) : filteredItems.length > 0 ? (
-                    <div className="divide-y divide-white/[0.06] space-y-0.5">
+                    <div className="divide-y divide-slate-100/80 space-y-0.5">
                         {filteredItems.map((item) => (
                             <div
                                 key={item.id}
-                                className="flex items-center justify-between gap-2.5 py-2.5 px-1 hover:bg-white/[0.04] rounded-lg transition-colors group/item"
+                                className="flex items-center justify-between gap-2.5 py-2.5 px-1 hover:bg-slate-50/80 rounded-lg transition-colors group/item"
                             >
-                                {/* Sol: Saat + Ülke / Varlık */}
+                                {/* Sol: Saat (Yalnızca Ekonomik verilerde) + Ülke / Sembol */}
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-xs font-mono font-bold text-slate-300 w-11 shrink-0">
-                                        {item.time}
-                                    </span>
-                                    <span className="text-xs font-bold text-white px-1.5 py-0.5 rounded bg-white/[0.08] border border-white/[0.05] shrink-0 min-w-[28px] text-center">
+                                    {item.category === 'economic' && item.time ? (
+                                        <span className="text-xs font-mono font-semibold text-slate-500 w-11 shrink-0">
+                                            {item.time}
+                                        </span>
+                                    ) : null}
+                                    <span className="text-xs font-bold text-slate-700 px-1.5 py-0.5 rounded bg-slate-100 border border-slate-200/60 shrink-0 min-w-[32px] text-center">
                                         {item.symbolOrCountry}
                                     </span>
                                 </div>
 
                                 {/* Orta: Başlık ve Yardımcı Değer */}
                                 <div className="flex-1 min-w-0 pr-2">
-                                    <div className="text-xs font-medium text-slate-200 truncate group-hover/item:text-white transition-colors">
+                                    <div className="text-xs font-semibold text-slate-800 truncate group-hover/item:text-blue-600 transition-colors">
                                         {item.title}
                                     </div>
                                     {item.auxiliaryText && (
@@ -448,10 +467,10 @@ export function DailyAgendaWidget() {
                 ) : (
                     /* Boş Durum (Empty State) */
                     <div className="py-10 flex flex-col items-center justify-center text-center gap-1.5 px-4">
-                        <div className="w-8 h-8 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-slate-400 mb-1">
+                        <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-center text-slate-400 mb-1">
                             <AlertCircle className="w-4 h-4 text-slate-400" />
                         </div>
-                        <p className="text-xs font-bold text-slate-300">
+                        <p className="text-xs font-bold text-slate-700">
                             Bugün bu kategoride planlanmış bir gelişme bulunmuyor.
                         </p>
                         <p className="text-[10px] text-slate-400 max-w-[240px]">
@@ -462,15 +481,15 @@ export function DailyAgendaWidget() {
             </div>
 
             {/* 3. Alt Bilgi & Yönlendirme (Sabit Alt Alan) */}
-            <div className="relative z-10 shrink-0 pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-xs text-slate-400">
+            <div className="relative z-10 shrink-0 pt-2.5 border-t border-slate-100/80 flex items-center justify-between text-xs text-slate-400">
                 <div className="flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-blue-400" />
-                    <span className="text-[11px]">Bugünün piyasa ve şirket gelişmeleri</span>
+                    <Clock className="w-3.5 h-3.5 text-blue-600" />
+                    <span className="text-[11px] text-slate-500">Bugünün piyasa ve şirket gelişmeleri</span>
                 </div>
 
                 <Link
                     href="/dashboard/calendar"
-                    className="text-[11px] font-bold text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1"
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors inline-flex items-center gap-1"
                 >
                     <span>Tüm Takvim</span>
                     <ArrowRight className="w-3 h-3" />

@@ -22,7 +22,7 @@ function NewsThumbnail({ imageUrl, title }: { imageUrl?: string | null; title: s
 
     if (imageUrl && !hasError) {
         return (
-            <div className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-100 relative shadow-2xs">
+            <div className="w-[70px] h-[70px] sm:w-[76px] sm:h-[76px] xl:w-[82px] xl:h-[82px] rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-100 relative shadow-2xs">
                 <img
                     src={imageUrl}
                     alt={title}
@@ -34,22 +34,22 @@ function NewsThumbnail({ imageUrl, title }: { imageUrl?: string | null; title: s
         );
     }
 
-    // FinAi Fallback Placeholder (Referans görseldeki kare thumbnail ölçeğinde)
+    // FinAi Fallback Placeholder (Kare thumbnail ölçeğinde)
     return (
-        <div className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-xl shrink-0 border border-slate-100 bg-gradient-to-br from-slate-50 to-blue-50/40 flex flex-col items-center justify-center text-slate-400 relative select-none shadow-2xs group-hover:border-blue-100 transition-colors">
-            <Newspaper className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
-            <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 mt-1">FinAi</span>
+        <div className="w-[70px] h-[70px] sm:w-[76px] sm:h-[76px] xl:w-[82px] xl:h-[82px] rounded-xl shrink-0 border border-slate-100 bg-gradient-to-br from-slate-50 to-blue-50/40 flex flex-col items-center justify-center text-slate-400 relative select-none shadow-2xs group-hover:border-blue-100 transition-colors">
+            <Newspaper className="w-5 h-5 sm:w-6 sm:h-6 text-slate-300 group-hover:text-blue-500 transition-colors" />
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-slate-400 mt-1">FinAi</span>
         </div>
     );
 }
 
 export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
-    // Referans tasarımda 4 adet yatay kart yan yana dizilir
-    const newsList = Array.isArray(news) ? news.slice(0, 4) : [];
+    // 5 adet yatay kart eşit aralıklarla yan yana dizilir
+    const newsList = Array.isArray(news) ? news.slice(0, 5) : [];
 
     return (
         <div className="bg-white border border-slate-100 hover:border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between h-full">
-            {/* 1. Başlık Alanı (Referans görseldeki gibi) */}
+            {/* 1. Başlık Alanı */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100/80 shrink-0 mb-3">
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
@@ -69,9 +69,9 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                 </Link>
             </div>
 
-            {/* 2. Haber Listesi: 4 Kolonlu Yatay Kartlar (Referans Görseldeki Birebir Düzen) */}
+            {/* 2. Haber Listesi: 5 Kolonlu Yatay Kartlar */}
             {newsList.length > 0 ? (
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 gap-2 sm:gap-0">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 gap-2 sm:gap-0">
                     {newsList.map((item, idx) => {
                         const href = item.slug
                             ? `/dashboard/news/${item.slug}`
@@ -83,26 +83,26 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                             <Link
                                 key={item.id || idx}
                                 href={href}
-                                className="group flex items-start gap-2.5 sm:gap-3 p-2 sm:px-3 sm:py-1 hover:bg-slate-50/70 rounded-xl transition-colors min-w-0"
+                                className="group flex items-start gap-2.5 sm:gap-3 p-2 sm:px-3 sm:py-1.5 hover:bg-slate-50/70 rounded-xl transition-colors min-w-0"
                             >
                                 {/* Kare Haber Görseli / Fallback */}
                                 <NewsThumbnail imageUrl={item.imageUrl} title={item.title} />
 
                                 {/* Sağ Bilgi Alanı: Saat + Başlık + Kategori */}
-                                <div className="min-w-0 flex-1 flex flex-col justify-between h-[60px] sm:h-[68px]">
+                                <div className="min-w-0 flex-1 flex flex-col justify-between h-[70px] sm:h-[76px] xl:h-[82px]">
                                     {/* Saat */}
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-400">
+                                    <span className="text-[11px] sm:text-xs font-medium text-slate-400">
                                         {formatClockTime(item.pubDate)}
                                     </span>
 
                                     {/* Başlık */}
-                                    <h4 className="text-[11px] sm:text-xs font-semibold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 my-auto">
+                                    <h4 className="text-xs sm:text-[13px] font-semibold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 my-auto">
                                         {item.title}
                                     </h4>
 
                                     {/* Kategori Badge */}
                                     <div>
-                                        <span className="inline-block text-[9px] font-medium text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded">
+                                        <span className="inline-block text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">
                                             {item.categoryLabel || "Ekonomi"}
                                         </span>
                                     </div>
