@@ -122,7 +122,7 @@ export function MarketOverviewWidget() {
     }, [activeTab, items, livePrices, currentTabMeta]);
 
     return (
-        <div className="bg-white border border-slate-100 hover:border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-sm transition-all duration-300 min-h-[380px] h-full flex flex-col justify-between group">
+        <div className="bg-white border border-slate-100 hover:border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-sm transition-all duration-300 h-[395px] flex flex-col justify-between group">
             {/* 1. Üst Başlık & Kategori Sekmeleri */}
             <div>
                 {/* Başlık Satırı */}
