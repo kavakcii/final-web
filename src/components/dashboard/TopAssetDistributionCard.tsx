@@ -101,9 +101,9 @@ export function TopAssetDistributionCard() {
         };
     }, [myAssets, prices]);
 
-    // Donut SVG ölçüleri
-    const RADIUS = 36;
-    const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~226.19
+    // Donut SVG ölçüleri (Büyütülmüş & Daha Okunaklı)
+    const RADIUS = 38;
+    const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~238.76
 
     if (!isDataLoaded) {
         return (
@@ -113,7 +113,7 @@ export function TopAssetDistributionCard() {
                     <div className="h-4 w-4 bg-slate-100 rounded-md" />
                 </div>
                 <div className="flex items-center justify-center my-auto">
-                    <div className="w-24 h-24 rounded-full border-6 border-slate-100" />
+                    <div className="w-28 h-28 rounded-full border-8 border-slate-100" />
                 </div>
             </div>
         );
@@ -144,11 +144,11 @@ export function TopAssetDistributionCard() {
                 </Link>
             </div>
 
-            {/* 2. Orta İçerik: Referans Görsel Formatında Donut + Sağ Liste */}
+            {/* 2. Orta İçerik: Bir Tık Büyütülmüş Donut Grafik + Okunaklı Liste */}
             {hasData ? (
-                <div className="flex items-center gap-3 my-auto py-2">
-                    {/* Donut Grafik (Sol) */}
-                    <div className="relative w-24 h-24 sm:w-26 sm:h-26 xl:w-28 xl:h-28 shrink-0 flex items-center justify-center">
+                <div className="flex items-center gap-3.5 my-auto py-2">
+                    {/* Büyütülmüş Donut Grafik (Sol) */}
+                    <div className="relative w-28 h-28 sm:w-30 sm:h-30 xl:w-32 xl:h-32 shrink-0 flex items-center justify-center">
                         <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-2xs">
                             {distributionItems.map((item) => {
                                 const strokeLength = (item.percentage / 100) * CIRCUMFERENCE;
@@ -166,7 +166,7 @@ export function TopAssetDistributionCard() {
                                         r={RADIUS}
                                         fill="transparent"
                                         stroke={item.color}
-                                        strokeWidth={isHovered ? 12 : 9.5}
+                                        strokeWidth={isHovered ? 13 : 10.5}
                                         strokeDasharray={strokeDasharray}
                                         strokeDashoffset={strokeDashoffset}
                                         strokeLinecap="round"
@@ -178,19 +178,19 @@ export function TopAssetDistributionCard() {
                             })}
                         </svg>
 
-                        {/* Donut İçi Toplam Bilgisi (Referanstaki gibi Toplam + Bakiye) */}
+                        {/* Donut İçi Toplam Bilgisi (Büyütülmüş ve Belirgin) */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none px-1">
-                            <span className="text-[10px] font-normal text-slate-400 leading-tight">
+                            <span className="text-[11px] font-normal text-slate-400 leading-tight">
                                 Toplam
                             </span>
-                            <span className="text-xs sm:text-[13px] font-extrabold text-slate-900 tracking-tight mt-0.5 truncate max-w-[76px]">
+                            <span className="text-sm sm:text-[15px] font-black text-slate-900 tracking-tight mt-0.5 truncate max-w-[86px]">
                                 {formatCurrency(totalValue)}
                             </span>
                         </div>
                     </div>
 
-                    {/* Dağılım Listesi (Sağ - Referanstaki Minimalist Liste Formatı) */}
-                    <div className="flex-1 min-w-0 space-y-1.5">
+                    {/* Dağılım Listesi (Sağ - Büyütülmüş Yazılar ve Ferah Satırlar) */}
+                    <div className="flex-1 min-w-0 space-y-2">
                         {distributionItems.map((item) => {
                             const isHovered = hoveredSymbol === item.name;
                             return (
@@ -202,17 +202,17 @@ export function TopAssetDistributionCard() {
                                         isHovered ? "bg-slate-50" : ""
                                     }`}
                                 >
-                                    <div className="flex items-center gap-1.5 min-w-0">
+                                    <div className="flex items-center gap-2 min-w-0">
                                         <div
-                                            className="w-2 h-2 rounded-full shrink-0"
+                                            className="w-2.5 h-2.5 rounded-full shrink-0"
                                             style={{ backgroundColor: item.color }}
                                         />
-                                        <span className="text-xs font-medium text-slate-700 truncate max-w-[80px] sm:max-w-[100px]">
+                                        <span className="text-xs sm:text-[13px] font-semibold text-slate-800 truncate max-w-[85px] sm:max-w-[110px]">
                                             {item.name}
                                         </span>
                                     </div>
 
-                                    <span className="text-xs font-bold text-slate-900 tabular-nums ml-auto shrink-0">
+                                    <span className="text-xs sm:text-[13px] font-bold text-slate-900 tabular-nums ml-auto shrink-0">
                                         %{item.percentage.toFixed(1).replace('.', ',')}
                                     </span>
                                 </div>
