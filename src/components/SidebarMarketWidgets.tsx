@@ -79,20 +79,24 @@ function SidebarMarketWidgetsComponent() {
     }, []);
 
     return (
-        <div className="py-3 px-3 md:px-4 border-y border-slate-200/80 bg-white select-none">
+        <div className="py-3 px-3 md:px-4 border-y border-[#1a2f4c] bg-[#0b192c] text-white select-none relative overflow-hidden">
+            {/* Ambient Glow */}
+            <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-blue-400/10 rounded-full blur-xl pointer-events-none" />
+
             {/* Başlık & Canlı Rozeti */}
-            <div className="flex items-center justify-between px-1 mb-2">
-                <span className="text-[10px] font-black tracking-widest uppercase text-slate-400">
+            <div className="flex items-center justify-between px-1 mb-2 relative z-10">
+                <span className="text-[10px] font-black tracking-widest uppercase text-blue-200/80">
                     PİYASA
                 </span>
                 <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[9px] font-bold text-slate-400 tracking-tight">Canlı</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[9px] font-bold text-blue-200/70 tracking-tight">Canlı</span>
                 </div>
             </div>
 
             {/* 5 Adet Mini Gösterge Satırı */}
-            <div className="space-y-1">
+            <div className="space-y-1 relative z-10">
                 {items.map((item) => {
                     const Icon = item.icon;
                     const isPositive = item.changePercent >= 0;
@@ -101,26 +105,26 @@ function SidebarMarketWidgetsComponent() {
                     return (
                         <div
                             key={item.id}
-                            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-50/70 hover:bg-slate-100/80 transition-colors duration-150 border border-slate-100/60"
+                            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] transition-colors duration-150 border border-white/10"
                         >
                             {/* Sol: İkon & Varlık Adı */}
                             <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-4 h-4 rounded-md bg-white flex items-center justify-center text-[#00008B] shadow-2xs shrink-0 border border-slate-200/50">
+                                <div className="w-4 h-4 rounded-md bg-white/15 flex items-center justify-center text-white shrink-0 border border-white/20">
                                     <Icon className="w-2.5 h-2.5" />
                                 </div>
-                                <span className="text-[11px] font-bold text-slate-700 truncate tracking-tight">
+                                <span className="text-[11px] font-bold text-white/90 truncate tracking-tight">
                                     {item.label}
                                 </span>
                             </div>
 
                             {/* Sağ: Değer & Yüzde Değişimi */}
                             <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-[11px] font-extrabold text-[#00008B] tabular-nums">
+                                <span className="text-[11px] font-extrabold text-white tabular-nums">
                                     {formatPrice(item.price, decimals)}{item.currencySuffix}
                                 </span>
                                 <span
                                     className={`text-[10px] font-bold tabular-nums flex items-center ${
-                                        isPositive ? "text-emerald-600" : "text-rose-600"
+                                        isPositive ? "text-emerald-400" : "text-rose-400"
                                     }`}
                                 >
                                     {isPositive ? "+" : ""}
