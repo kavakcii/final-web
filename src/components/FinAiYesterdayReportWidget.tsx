@@ -169,7 +169,7 @@ export function FinAiYesterdayReportWidget() {
                 )}
             </div>
 
-            {/* 3. Ana Açıklama Alanı (Referans Görseldeki Vurgulu Panel) */}
+            {/* 3. Ana Açıklama Alanı (Mavi Vurgulu Yazar / Rapor Paneli) */}
             <div className="my-auto py-1.5">
                 {loading ? (
                     <div className="py-6 flex flex-col items-center justify-center gap-1.5 text-center">
@@ -177,15 +177,20 @@ export function FinAiYesterdayReportWidget() {
                         <span className="text-[10px] font-medium text-slate-400">Finansal rapor analiz ediliyor...</span>
                     </div>
                 ) : (
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
-                        <div className="flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                            <h4 className="text-xs font-bold text-slate-800 truncate">
+                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-[#00008B] via-[#0a286a] to-[#103784] text-white border border-blue-900/40 shadow-xs space-y-2 relative overflow-hidden">
+                        {/* İç mavi panel için hafif ambient parıltı */}
+                        <div className="absolute -top-6 -right-6 w-20 h-20 bg-cyan-400/10 rounded-full blur-xl pointer-events-none" />
+
+                        <div className="flex items-center gap-2 relative z-10">
+                            <div className="w-5 h-5 rounded-md bg-white/10 flex items-center justify-center shrink-0">
+                                <Sparkles className="w-3 h-3 text-cyan-300" />
+                            </div>
+                            <h4 className="text-xs font-bold text-white tracking-tight truncate">
                                 {isPositive ? "Portföy Gelişim ve Değerlendirme Analizi" : "Piyasa Dinamikleri ve Portföy Dengesi"}
                             </h4>
                         </div>
 
-                        <p className="text-[11px] sm:text-xs font-normal leading-relaxed text-slate-600 line-clamp-3">
+                        <p className="text-[11px] sm:text-xs font-normal leading-relaxed text-blue-100/90 line-clamp-3 relative z-10">
                             {narrativeToDisplay}
                         </p>
                     </div>
@@ -199,7 +204,7 @@ export function FinAiYesterdayReportWidget() {
                 </span>
                 <Link
                     href="/dashboard/reports"
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-blue-600 text-[11px] font-semibold rounded-lg shadow-2xs transition-all"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50/70 hover:bg-blue-100/80 border border-blue-100 text-blue-700 text-[11px] font-bold rounded-lg shadow-2xs transition-all"
                 >
                     Raporu Oku <ArrowRight className="w-3 h-3" />
                 </Link>

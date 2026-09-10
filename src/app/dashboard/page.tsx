@@ -108,7 +108,7 @@ export default function DashboardPage() {
                 {/* DESKTOP LAYOUT (≥1024px) */}
                 <div className="hidden lg:flex flex-col gap-6 w-full relative z-10">
                     {/* 1. ÜST BÖLÜM: TOPLAM VARLIK (Hero), VARLIK DAĞILIMI, FİNANSAL RAPOR (Referans Orantılı 3'lü Grid) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.9fr_1.1fr] gap-4 lg:gap-5 items-stretch w-full">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.22fr_1.05fr_1.13fr] gap-4 lg:gap-5 items-stretch w-full">
                         <div className="flex flex-col min-w-0">
                             <DashboardSummaryCards />
                         </div>

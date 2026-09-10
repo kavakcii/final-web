@@ -86,9 +86,9 @@ export function TopAssetDistributionCard() {
         };
     }, [myAssets, prices]);
 
-    // Donut SVG ölçüleri (Daha belirgin ve dolgun)
-    const RADIUS = 36;
-    const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~226.19
+    // Donut SVG ölçüleri (Büyütülmüş & Belirgin)
+    const RADIUS = 38;
+    const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~238.76
 
     if (!isDataLoaded) {
         return (
@@ -98,7 +98,7 @@ export function TopAssetDistributionCard() {
                     <div className="h-4 w-16 bg-slate-100 rounded-md" />
                 </div>
                 <div className="flex items-center justify-center my-auto">
-                    <div className="w-24 h-24 rounded-full border-8 border-slate-100" />
+                    <div className="w-32 h-32 rounded-full border-8 border-slate-100" />
                 </div>
                 <div className="h-3.5 w-full bg-slate-100 rounded-md" />
             </div>
@@ -136,12 +136,12 @@ export function TopAssetDistributionCard() {
                 </Link>
             </div>
 
-            {/* 2. Orta İçerik: Donut Grafik + Dağılım Listesi */}
+            {/* 2. Orta İçerik: Büyütülmüş Donut Grafik + Dağılım Listesi */}
             {hasData ? (
-                <div className="flex items-center gap-3 my-auto py-1.5">
-                    {/* Donut Grafik */}
-                    <div className="relative w-24 h-24 sm:w-26 sm:h-26 shrink-0 flex items-center justify-center mx-auto sm:mx-0">
-                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
+                <div className="flex items-center gap-3 sm:gap-4 my-auto py-1">
+                    {/* Büyütülmüş Donut Grafik */}
+                    <div className="relative w-28 h-28 sm:w-32 sm:h-32 xl:w-34 xl:h-34 shrink-0 flex items-center justify-center mx-auto sm:mx-0">
+                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-xs">
                             {distributionItems.map((item) => {
                                 const strokeLength = (item.percentage / 100) * CIRCUMFERENCE;
                                 const strokeDasharray = `${strokeLength} ${CIRCUMFERENCE - strokeLength}`;
@@ -158,7 +158,7 @@ export function TopAssetDistributionCard() {
                                         r={RADIUS}
                                         fill="transparent"
                                         stroke={item.color}
-                                        strokeWidth={isHovered ? 12 : 9}
+                                        strokeWidth={isHovered ? 13 : 10}
                                         strokeDasharray={strokeDasharray}
                                         strokeDashoffset={strokeDashoffset}
                                         strokeLinecap="round"
@@ -171,25 +171,25 @@ export function TopAssetDistributionCard() {
                         </svg>
 
                         {/* Donut İçi Bilgi */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-0.5">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-1">
                             {activeItem ? (
                                 <>
-                                    <span className="text-[10px] font-bold text-blue-600 truncate max-w-[65px]">
+                                    <span className="text-[10px] font-bold text-blue-600 truncate max-w-[75px]">
                                         {activeItem.name}
                                     </span>
-                                    <span className="text-xs font-bold text-slate-800">
+                                    <span className="text-sm font-extrabold text-slate-800">
                                         %{activeItem.percentage.toFixed(1)}
                                     </span>
                                 </>
                             ) : (
                                 <>
-                                    <span className="text-[8.5px] font-medium text-slate-400 uppercase tracking-wider">
+                                    <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider">
                                         Toplam
                                     </span>
-                                    <span className="text-[11px] sm:text-xs font-bold text-slate-800 truncate max-w-[70px]">
+                                    <span className="text-xs sm:text-[13px] font-black text-slate-900 truncate max-w-[80px]">
                                         {formatCurrency(totalValue)}
                                     </span>
-                                    <span className="text-[8.5px] font-semibold text-blue-600">
+                                    <span className="text-[9.5px] font-bold text-blue-600">
                                         {activeCount} Varlık
                                     </span>
                                 </>
