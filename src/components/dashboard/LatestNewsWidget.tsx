@@ -2,24 +2,18 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Newspaper, ArrowRight, Clock, TrendingUp, TrendingDown } from "lucide-react";
+import { Newspaper, ArrowRight } from "lucide-react";
 
 export interface LatestNewsWidgetProps {
     news: any[];
 }
 
-function formatTimeAgo(dateStr: string): string {
+function formatClockTime(dateStr: string): string {
     try {
         const date = new Date(dateStr);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMin = Math.floor(diffMs / 60000);
-        if (diffMin < 60) return `${Math.max(1, diffMin)} dk önce`;
-        const diffHours = Math.floor(diffMin / 60);
-        if (diffHours < 24) return `${diffHours} saat önce`;
-        return date.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
+        return date.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
     } catch {
-        return "Bugün";
+        return "--:--";
     }
 }
 
@@ -28,7 +22,7 @@ function NewsThumbnail({ imageUrl, title }: { imageUrl?: string | null; title: s
 
     if (imageUrl && !hasError) {
         return (
-            <div className="w-[88px] h-[64px] sm:w-[98px] sm:h-[68px] rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-100 relative shadow-2xs">
+            <div className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-100 relative shadow-2xs">
                 <img
                     src={imageUrl}
                     alt={title}
@@ -40,9 +34,9 @@ function NewsThumbnail({ imageUrl, title }: { imageUrl?: string | null; title: s
         );
     }
 
-    // FinAi Fallback Placeholder (Kırık ikon veya rastgele stok görsel yerine zarif, nötr FinAi marka placeholder'ı)
+    // FinAi Fallback Placeholder (Referans görseldeki kare thumbnail ölçeğinde)
     return (
-        <div className="w-[88px] h-[64px] sm:w-[98px] sm:h-[68px] rounded-xl shrink-0 border border-slate-100/90 bg-gradient-to-br from-slate-50 to-blue-50/40 flex flex-col items-center justify-center text-slate-400 relative select-none shadow-2xs group-hover:border-blue-100 transition-colors">
+        <div className="w-[60px] h-[60px] sm:w-[68px] sm:h-[68px] rounded-xl shrink-0 border border-slate-100 bg-gradient-to-br from-slate-50 to-blue-50/40 flex flex-col items-center justify-center text-slate-400 relative select-none shadow-2xs group-hover:border-blue-100 transition-colors">
             <Newspaper className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
             <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 mt-1">FinAi</span>
         </div>
@@ -50,12 +44,13 @@ function NewsThumbnail({ imageUrl, title }: { imageUrl?: string | null; title: s
 }
 
 export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
-    const newsList = Array.isArray(news) ? news.slice(0, 5) : [];
+    // Referans tasarımda 4 adet yatay kart yan yana dizilir
+    const newsList = Array.isArray(news) ? news.slice(0, 4) : [];
 
     return (
-        <div className="bg-white border border-slate-100 hover:border-slate-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between h-full">
-            {/* 1. Başlık Alanı */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100/80 shrink-0 mb-2">
+        <div className="bg-white border border-slate-100 hover:border-slate-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-col justify-between h-full">
+            {/* 1. Başlık Alanı (Referans görseldeki gibi) */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100/80 shrink-0 mb-3">
                 <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                         <Newspaper className="w-3.5 h-3.5 text-blue-600" />
@@ -70,13 +65,13 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                     href="/dashboard/news"
                     className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-blue-600 transition-colors"
                 >
-                    Tümünü Gör <ArrowRight className="w-3.5 h-3.5" />
+                    Tümü <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
             </div>
 
-            {/* 2. Haber Listesi */}
+            {/* 2. Haber Listesi: 4 Kolonlu Yatay Kartlar (Referans Görseldeki Birebir Düzen) */}
             {newsList.length > 0 ? (
-                <div className="flex-1 divide-y divide-slate-100/80">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 gap-2 sm:gap-0">
                     {newsList.map((item, idx) => {
                         const href = item.slug
                             ? `/dashboard/news/${item.slug}`
@@ -84,75 +79,32 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                             ? `/dashboard/news?url=${encodeURIComponent(item.link)}`
                             : "/dashboard/news";
 
-                        const specificAssets = (item.affectedAssets && item.affectedAssets.length > 0
-                            ? item.affectedAssets
-                            : item.tickers || []
-                        ).filter(
-                            (a: string) =>
-                                a &&
-                                item.categoryLabel &&
-                                a.toLowerCase() !== item.categoryLabel.toLowerCase()
-                        );
-
                         return (
                             <Link
                                 key={item.id || idx}
                                 href={href}
-                                className="group flex items-start gap-3.5 -mx-2 px-2 py-2.5 rounded-xl hover:bg-slate-50/70 transition-colors"
+                                className="group flex items-start gap-2.5 sm:gap-3 p-2 sm:px-3 sm:py-1 hover:bg-slate-50/70 rounded-xl transition-colors min-w-0"
                             >
-                                {/* Görsel / Fallback */}
+                                {/* Kare Haber Görseli / Fallback */}
                                 <NewsThumbnail imageUrl={item.imageUrl} title={item.title} />
 
-                                {/* İçerik */}
-                                <div className="min-w-0 flex-1 flex flex-col justify-between self-stretch">
+                                {/* Sağ Bilgi Alanı: Saat + Başlık + Kategori */}
+                                <div className="min-w-0 flex-1 flex flex-col justify-between h-[60px] sm:h-[68px]">
+                                    {/* Saat */}
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-400">
+                                        {formatClockTime(item.pubDate)}
+                                    </span>
+
+                                    {/* Başlık */}
+                                    <h4 className="text-[11px] sm:text-xs font-semibold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 my-auto">
+                                        {item.title}
+                                    </h4>
+
+                                    {/* Kategori Badge */}
                                     <div>
-                                        {/* Meta Bilgileri: Kaynak · Zaman */}
-                                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mb-1">
-                                            <span className="font-semibold text-slate-600">
-                                                {item.source || "FinAi"}
-                                            </span>
-                                            <span>·</span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-2.5 h-2.5 text-slate-400" />
-                                                {formatTimeAgo(item.pubDate)}
-                                            </span>
-                                        </div>
-
-                                        {/* Haber Başlığı */}
-                                        <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-1.5">
-                                            {item.title}
-                                        </h4>
-                                    </div>
-
-                                    {/* Rozetler: Kategori · Ticker · Sentiment */}
-                                    <div className="flex flex-wrap items-center gap-1 text-[10px]">
-                                        {item.categoryLabel && (
-                                            <span className="font-medium text-slate-500 bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded">
-                                                {item.categoryLabel}
-                                            </span>
-                                        )}
-
-                                        {specificAssets.slice(0, 2).map((asset: string, aIdx: number) => (
-                                            <span
-                                                key={aIdx}
-                                                className="font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50"
-                                            >
-                                                {asset}
-                                            </span>
-                                        ))}
-
-                                        {item.sentiment === "bullish" && (
-                                            <span className="inline-flex items-center gap-0.5 font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded">
-                                                <TrendingUp className="w-2.5 h-2.5" />
-                                                Pozitif
-                                            </span>
-                                        )}
-                                        {item.sentiment === "bearish" && (
-                                            <span className="inline-flex items-center gap-0.5 font-semibold text-red-600 bg-red-50 border border-red-200/60 px-1.5 py-0.5 rounded">
-                                                <TrendingDown className="w-2.5 h-2.5" />
-                                                Negatif
-                                            </span>
-                                        )}
+                                        <span className="inline-block text-[9px] font-medium text-slate-500 bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded">
+                                            {item.categoryLabel || "Ekonomi"}
+                                        </span>
                                     </div>
                                 </div>
                             </Link>
@@ -160,7 +112,7 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                     })}
                 </div>
             ) : (
-                <div className="py-12 text-center text-xs font-semibold text-slate-400">
+                <div className="py-10 text-center text-xs font-semibold text-slate-400">
                     Henüz gösterilecek haber bulunmuyor.
                 </div>
             )}

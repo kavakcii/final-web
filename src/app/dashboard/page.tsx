@@ -138,8 +138,8 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* 3. ÜÇÜNCÜ BÖLÜM: SON HABERLER (~%60) & ÖNE ÇIKANLAR (~%40) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.48fr_1fr] gap-4 xl:gap-5 items-stretch w-full">
+                    {/* 3. ÜÇÜNCÜ BÖLÜM: SON HABERLER (~%70) & ÖNE ÇIKANLAR (~%30) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[2.4fr_1fr] gap-4 xl:gap-5 items-stretch w-full">
                         <div className="flex flex-col min-w-0">
                             <LatestNewsWidget news={news} />
                         </div>
