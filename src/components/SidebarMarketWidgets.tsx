@@ -105,13 +105,11 @@ function SidebarMarketWidgetsComponent() {
                     return (
                         <div
                             key={item.id}
-                            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white/[0.07] hover:bg-white/[0.12] transition-colors duration-150 border border-white/10"
+                            className="flex items-center justify-between px-1 py-1.5 transition-colors duration-150"
                         >
                             {/* Sol: İkon & Varlık Adı */}
                             <div className="flex items-center gap-2 min-w-0">
-                                <div className="w-4 h-4 rounded-md bg-white/15 flex items-center justify-center text-white shrink-0 border border-white/20">
-                                    <Icon className="w-2.5 h-2.5" />
-                                </div>
+                                <Icon className="w-3.5 h-3.5 text-blue-200/70 shrink-0" />
                                 <span className="text-[11px] font-bold text-white/90 truncate tracking-tight">
                                     {item.label}
                                 </span>
