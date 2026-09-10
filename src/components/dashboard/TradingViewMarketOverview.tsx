@@ -18,8 +18,9 @@ export function TradingViewMarketOverview({ className = "" }: TradingViewMarketO
 
         const widgetWrapper = document.createElement("div");
         widgetWrapper.className = "tradingview-widget-container";
-        widgetWrapper.style.width = "100%";
-        widgetWrapper.style.height = "100%";
+        widgetWrapper.style.width = "133.33%";
+        widgetWrapper.style.height = "133.33%";
+        (widgetWrapper.style as any).zoom = "0.75";
 
         const widgetElement = document.createElement("div");
         widgetElement.className = "tradingview-widget-container__widget";
