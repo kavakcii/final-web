@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Sparkles, Clock, Loader2, TrendingUp, TrendingDown, Percent } from "lucide-react";
+import { FileText, Loader2, TrendingUp, TrendingDown, Percent, ArrowRight } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
+import Link from "next/link";
 
 export function FinAiYesterdayReportWidget() {
     const { user, myAssets = [], prices = {}, isDataLoaded } = useUser();
@@ -10,6 +11,7 @@ export function FinAiYesterdayReportWidget() {
     const [report, setReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
+    // Mevcut veri çekme fonksiyonu (KESİNLİKLE DOKUNULMADI)
     const fetchReport = async (tf: 'weekly' | 'monthly' | 'all-time') => {
         setLoading(true);
         try {
@@ -32,7 +34,7 @@ export function FinAiYesterdayReportWidget() {
         fetchReport(timeframe);
     }, [user?.id, myAssets.length, timeframe]);
 
-    // Client-side fallback narrative generator
+    // Mevcut istemci fallback anlatı üreticisi (KESİNLİKLE DOKUNULMADI)
     const clientFallbackNarrative = useMemo(() => {
         if (!myAssets || myAssets.length === 0) {
             return "Portföyünüzde henüz kaydedilmiş aktif bir varlık bulunmuyor. Varlık ekledikten sonra FinAi analiz raporunuz otomatik olarak üretilecektir.";
@@ -86,91 +88,102 @@ export function FinAiYesterdayReportWidget() {
     const isPositive = displayDiffValue >= 0;
 
     return (
-        <div className="w-full bg-[#f4f7fc] border border-slate-200/80 text-[#00008B] rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-sm flex flex-col justify-between h-full min-h-[260px] sm:min-h-[290px] min-w-0 relative overflow-hidden">
-            {/* Subtle background ambient lights */}
-            <div className="absolute -top-16 -right-16 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-indigo-100/50 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 flex flex-col justify-between h-full space-y-3 min-w-0">
-                {/* Header with Title & 3 Timeframe Tabs */}
-                <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap pb-2 border-b border-slate-200/60">
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center shadow-inner shrink-0">
-                            <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#00008B] animate-pulse" />
-                        </div>
-                        <div>
-                            <h3 className="text-xs sm:text-base font-black text-[#00008B] tracking-tight truncate">FinAi Raporu</h3>
-                            <p className="text-[8px] sm:text-[10px] font-bold text-[#00008B]/60 uppercase tracking-widest hidden sm:block">Akıllı Portföy Hikâyesi</p>
-                        </div>
+        <div className="bg-white border border-slate-200/80 hover:border-[#00008B]/20 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-300 min-h-[290px] sm:min-h-[310px] flex flex-col justify-between group">
+            {/* Header: Kullanıcı Başlığı FİNANSAL RAPOR ve Zaman Filtreleri */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center text-[#00008B] shrink-0">
+                        <FileText className="w-4 h-4 text-[#00008B]" />
                     </div>
-
-                    {/* 3 Timeframe Selector Tabs */}
-                    <div className="flex items-center gap-1 bg-white/80 p-1 rounded-xl border border-slate-200/80 shadow-xs">
-                        <button
-                            onClick={() => setTimeframe('weekly')}
-                            className={`px-2 py-1 text-[9px] sm:text-[10px] font-extrabold rounded-lg transition-all ${
-                                timeframe === 'weekly'
-                                    ? 'bg-[#00008B] text-white shadow-xs'
-                                    : 'text-[#00008B]/60 hover:text-[#00008B]'
-                            }`}
-                        >
-                            Haftalık (7G)
-                        </button>
-                        <button
-                            onClick={() => setTimeframe('monthly')}
-                            className={`px-2 py-1 text-[9px] sm:text-[10px] font-extrabold rounded-lg transition-all ${
-                                timeframe === 'monthly'
-                                    ? 'bg-[#00008B] text-white shadow-xs'
-                                    : 'text-[#00008B]/60 hover:text-[#00008B]'
-                            }`}
-                        >
-                            Aylık (30G)
-                        </button>
-                        <button
-                            onClick={() => setTimeframe('all-time')}
-                            className={`px-2 py-1 text-[9px] sm:text-[10px] font-extrabold rounded-lg transition-all ${
-                                timeframe === 'all-time'
-                                    ? 'bg-[#00008B] text-white shadow-xs'
-                                    : 'text-[#00008B]/60 hover:text-[#00008B]'
-                            }`}
-                        >
-                            Tüm Zamanlar
-                        </button>
+                    <div>
+                        <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#00008B]">
+                            Finansal Rapor
+                        </h3>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                            Portföy Değerlendirmesi
+                        </p>
                     </div>
                 </div>
 
-                {/* Sub-header Metric Pills */}
-                {myAssets.length > 0 && !loading && (
-                    <div className="flex items-center gap-2">
-                        <span className={`text-[9px] sm:text-xs font-black px-2.5 py-1 rounded-xl border flex items-center gap-1 shadow-xs ${
-                            isPositive
-                                ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                                : 'text-red-700 bg-red-50 border-red-200'
-                        }`}>
-                            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                            {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(2)})
-                        </span>
+                {/* Zaman Dilimi Seçici Haplar */}
+                <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-xl border border-slate-100">
+                    <button
+                        onClick={() => setTimeframe('weekly')}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                            timeframe === 'weekly'
+                                ? 'bg-white text-[#00008B] shadow-2xs font-black'
+                                : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                    >
+                        Haftalık
+                    </button>
+                    <button
+                        onClick={() => setTimeframe('monthly')}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                            timeframe === 'monthly'
+                                ? 'bg-white text-[#00008B] shadow-2xs font-black'
+                                : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                    >
+                        Aylık
+                    </button>
+                    <button
+                        onClick={() => setTimeframe('all-time')}
+                        className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all ${
+                            timeframe === 'all-time'
+                                ? 'bg-white text-[#00008B] shadow-2xs font-black'
+                                : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                    >
+                        Tümü
+                    </button>
+                </div>
+            </div>
 
-                        <span className="text-[9px] sm:text-xs font-black text-[#00008B] bg-blue-50/80 px-2.5 py-1 rounded-xl border border-blue-200/80 flex items-center gap-1 shadow-xs" title="Time-Weighted Return (Gerçek Yatırım Getirisi)">
-                            <Percent className="w-3 h-3 text-[#00008B]" />
-                            TWR: %{twrPercent.toFixed(2)}
-                        </span>
-                    </div>
-                )}
+            {/* Metrik Rozetleri (Varsa) */}
+            {myAssets.length > 0 && !loading && (
+                <div className="flex items-center gap-2 pt-2.5 pb-1 flex-wrap">
+                    <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-lg border flex items-center gap-1 ${
+                        isPositive
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200/80'
+                            : 'text-rose-700 bg-rose-50 border-rose-200/80'
+                    }`}>
+                        {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        {isPositive ? '+' : ''}₺{Math.abs(displayDiffValue).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ({isPositive ? '+' : ''}%{displayDiffPercent.toFixed(1)})
+                    </span>
 
-                {/* Direct Narrative Body */}
+                    <span className="text-[10px] font-black text-[#00008B] bg-blue-50/80 px-2.5 py-0.5 rounded-lg border border-blue-200/70 flex items-center gap-1" title="Time-Weighted Return">
+                        <Percent className="w-2.5 h-2.5 text-[#00008B]" />
+                        TWR: %{twrPercent.toFixed(1)}
+                    </span>
+                </div>
+            )}
+
+            {/* Rapor Metin Gövdesi */}
+            <div className="my-auto py-1">
                 {loading ? (
-                    <div className="flex-1 py-8 flex flex-col items-center justify-center gap-2">
+                    <div className="py-8 flex flex-col items-center justify-center gap-2 text-center">
                         <Loader2 className="w-5 h-5 text-[#00008B] animate-spin" />
-                        <span className="text-[10px] font-bold text-[#00008B]/70">FinAi Portföy Analizini Hazırlıyor...</span>
+                        <span className="text-[11px] font-bold text-slate-400">Rapor yükleniyor...</span>
                     </div>
                 ) : (
-                    <div className="flex-1 flex flex-col justify-start pt-1">
-                        <p className="text-[11px] sm:text-xs md:text-sm font-semibold leading-relaxed text-[#00008B] tracking-wide">
-                            {narrativeToDisplay}
-                        </p>
-                    </div>
+                    <p className="text-xs sm:text-[13px] font-medium leading-relaxed text-slate-700 line-clamp-4">
+                        {narrativeToDisplay}
+                    </p>
                 )}
+            </div>
+
+            {/* Alt Kısım / Detaylı Rapor Linki */}
+            <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-400">
+                    Otomatik portföy analizi
+                </span>
+                <Link
+                    href="/dashboard/reports"
+                    className="inline-flex items-center gap-1 text-[10px] font-black text-[#00008B] hover:text-blue-600 transition-colors uppercase tracking-wider"
+                >
+                    Raporu Oku <ArrowRight className="w-3 h-3" />
+                </Link>
             </div>
         </div>
     );

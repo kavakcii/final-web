@@ -1,6 +1,6 @@
 "use client";
 
-// Dashboard v1.2.1 - Cleaned Main Page Layout with Economic Calendar & yesterday report
+// Dashboard v1.3.0 - Redesigned Top Section with Toplam Varlık, Varlık Dağılımı & Finansal Rapor
 import { AuthComponent } from "@/components/ui/sign-up";
 import { TrendingUp, Activity, Newspaper, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -8,9 +8,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useUser } from "@/components/providers/UserProvider";
 
 import { DashboardSummaryCards } from "@/components/DashboardSummaryCards";
-import { EconomicCalendarWidget } from "@/components/EconomicCalendarWidget";
-import { BalanceGrowthChartWidget } from "@/components/BalanceGrowthChartWidget";
+import { TopAssetDistributionCard } from "@/components/dashboard/TopAssetDistributionCard";
 import { FinAiYesterdayReportWidget } from "@/components/FinAiYesterdayReportWidget";
+import { BalanceGrowthChartWidget } from "@/components/BalanceGrowthChartWidget";
+import { EconomicCalendarWidget } from "@/components/EconomicCalendarWidget";
 import { GundemMarketAgendaWidget } from "@/components/GundemMarketAgendaWidget";
 import { FinancialTicker } from "@/components/FinancialTicker";
 import Link from "next/link";
@@ -65,7 +66,7 @@ export default function DashboardPage() {
         <div className="flex flex-col min-h-[calc(100vh-3.5rem)] bg-white text-[#00008B] w-full mx-auto relative overflow-x-hidden">
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-50/50 blur-[120px] pointer-events-none" />
 
-            <div className="w-full max-w-[1600px] mx-auto px-2.5 py-3 sm:px-6 md:px-10 lg:py-6 flex flex-col justify-between gap-3 sm:gap-4 md:gap-6 relative z-10 flex-1 min-h-[calc(100vh-3.5rem)] pb-4 md:pb-8">
+            <div className="w-full max-w-[1600px] mx-auto px-2.5 py-3 sm:px-6 md:px-10 lg:py-6 flex flex-col justify-between gap-4 sm:gap-6 relative z-10 flex-1 min-h-[calc(100vh-3.5rem)] pb-6 md:pb-10">
                 <AnimatePresence>
                     {!isDataLoaded && (
                         <motion.div
@@ -99,19 +100,22 @@ export default function DashboardPage() {
 
                 {/* DESKTOP LAYOUT (≥1024px) */}
                 <div className="hidden lg:flex flex-col gap-6 w-full relative z-10">
-                    {/* 1. ÜST BÖLÜM: TOPLAM VARLIK & KÂR/ZARAR (2 Yan Yana Kart) */}
-                    <div className="w-full">
-                        <DashboardSummaryCards layout="grid" />
-                    </div>
-
-                    {/* 2. İKİNCİ BÖLÜM: VARLIK GELİŞİMİ (%60) & FİNAİ RAPORU (%40) */}
-                    <div className="grid grid-cols-12 gap-6 items-stretch w-full">
-                        <div className="col-span-7 flex flex-col min-w-0">
-                            <BalanceGrowthChartWidget />
+                    {/* 1. ÜST BÖLÜM: TOPLAM VARLIK, VARLIK DAĞILIMI, FİNANSAL RAPOR (3'lü Grid) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-stretch w-full">
+                        <div className="col-span-12 lg:col-span-4 flex flex-col min-w-0">
+                            <DashboardSummaryCards />
                         </div>
-                        <div className="col-span-5 flex flex-col min-w-0">
+                        <div className="col-span-12 lg:col-span-4 flex flex-col min-w-0">
+                            <TopAssetDistributionCard />
+                        </div>
+                        <div className="col-span-12 lg:col-span-4 flex flex-col min-w-0">
                             <FinAiYesterdayReportWidget />
                         </div>
+                    </div>
+
+                    {/* 2. İKİNCİ BÖLÜM: VARLIK GELİŞİMİ */}
+                    <div className="w-full">
+                        <BalanceGrowthChartWidget />
                     </div>
 
                     {/* 3. ÜÇÜNCÜ BÖLÜM: PİYASA GÜNDEMİ & EKONOMİK TAKVİM (YAN YANA %50-%50) */}
@@ -127,32 +131,37 @@ export default function DashboardPage() {
 
                 {/* TABLET & MOBILE LAYOUT (<1024px) */}
                 <div className="flex lg:hidden flex-col gap-3.5 sm:gap-4 w-full relative z-10">
-                    {/* 1. TOPLAM VARLIK & KÂR/ZARAR */}
+                    {/* 1. TOPLAM VARLIK */}
                     <div className="w-full">
                         <DashboardSummaryCards layout="stacked" />
                     </div>
 
-                    {/* 2. MEVCUT PİYASA ÖZETİ */}
-                    <div className="w-full rounded-2xl overflow-hidden border border-slate-100 shadow-2xs">
-                        <FinancialTicker />
-                    </div>
-
-                    {/* 3. GÜNDEM */}
+                    {/* 2. VARLIK DAĞILIMI */}
                     <div className="w-full">
-                        <GundemMarketAgendaWidget news={news} />
+                        <TopAssetDistributionCard />
                     </div>
 
-                    {/* 4. VARLIK GELİŞİMİ */}
-                    <div className="w-full">
-                        <BalanceGrowthChartWidget />
-                    </div>
-
-                    {/* 5. FİNAİ RAPORU */}
+                    {/* 3. FİNANSAL RAPOR */}
                     <div className="w-full">
                         <FinAiYesterdayReportWidget />
                     </div>
 
-                    {/* 6. EKONOMİK TAKVİM */}
+                    {/* 4. MEVCUT PİYASA ÖZETİ */}
+                    <div className="w-full rounded-2xl overflow-hidden border border-slate-100 shadow-2xs">
+                        <FinancialTicker />
+                    </div>
+
+                    {/* 5. GÜNDEM */}
+                    <div className="w-full">
+                        <GundemMarketAgendaWidget news={news} />
+                    </div>
+
+                    {/* 6. VARLIK GELİŞİMİ */}
+                    <div className="w-full">
+                        <BalanceGrowthChartWidget />
+                    </div>
+
+                    {/* 7. EKONOMİK TAKVİM */}
                     <div className="w-full">
                         <EconomicCalendarWidget />
                     </div>

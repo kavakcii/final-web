@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { Wallet, TrendingUp, TrendingDown } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Wallet, TrendingUp, TrendingDown, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("tr-TR", {
@@ -16,8 +16,9 @@ const formatCurrency = (val: number) => {
 
 export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "stacked" }) {
     const { myAssets = [], prices = {}, isDataLoaded } = useUser();
+    const [isBalanceHidden, setIsBalanceHidden] = useState(false);
 
-    // Portföyüm sayfasıyla %100 aynı hesaplama mantığı
+    // Portföyüm sayfasıyla %100 aynı hesaplama mantığı (KESİNLİKLE DOKUNULMADI)
     const { totalValue, totalCost, totalProfit, profitRatio } = useMemo(() => {
         let val = 0;
         let cost = 0;
@@ -44,116 +45,114 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
 
     if (!isDataLoaded) {
         return (
-            <div className={layout === "stacked" ? "flex flex-col gap-2.5 w-full animate-pulse" : "grid grid-cols-1 md:grid-cols-2 gap-4 w-full animate-pulse"}>
-                <div className="bg-slate-100 rounded-2xl sm:rounded-3xl h-28 sm:h-36" />
-                <div className="bg-slate-100 rounded-2xl sm:rounded-3xl h-28 sm:h-36" />
-            </div>
-        );
-    }
-
-    if (layout === "stacked") {
-        return (
-            <div className="flex flex-col gap-2.5 sm:gap-3 w-full h-full justify-between">
-                {/* TOPLAM VARLIK DEĞERİ KARTI - LACİVERT BG */}
-                <div className="bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 shadow-md shadow-[#00008B]/15 relative overflow-hidden group flex-1 min-h-[100px] flex flex-col justify-between">
-                    <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-                    <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
-                                <Wallet className="w-3.5 h-3.5 text-white" />
-                            </div>
-                            <span className="text-white/80 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Toplam Varlık</span>
-                        </div>
-                    </div>
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter my-0.5 truncate">
-                        {formatCurrency(totalValue)}
-                    </h2>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <p className="text-white/70 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Canlı Değerleme</p>
-                    </div>
+            <div className="bg-white border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-xs min-h-[290px] sm:min-h-[310px] flex flex-col justify-between animate-pulse">
+                <div className="flex items-center justify-between">
+                    <div className="h-5 w-36 bg-slate-100 rounded-lg" />
+                    <div className="h-5 w-16 bg-slate-100 rounded-lg" />
                 </div>
-
-                {/* NET KÂR / ZARAR KARTI - KARDA YEŞİL, ZARARDA KIRMIZI BG */}
-                <div className={cn(
-                    "rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 md:p-5 shadow-md text-white border transition-all relative overflow-hidden group flex-1 min-h-[100px] flex flex-col justify-between",
-                    totalProfit >= 0
-                        ? "bg-emerald-600 border-emerald-500 shadow-emerald-900/10"
-                        : "bg-rose-600 border-rose-500 shadow-rose-900/10"
-                )}>
-                    <div className="absolute -right-6 -bottom-6 w-28 h-28 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-white/15 flex items-center justify-center border border-white/20">
-                                {totalProfit >= 0 ? <TrendingUp className="w-3.5 h-3.5 text-white" /> : <TrendingDown className="w-3.5 h-3.5 text-white" />}
-                            </div>
-                            <span className="text-white/90 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Kâr / Zarar</span>
-                        </div>
-                        <div className="px-2 py-0.5 rounded-lg text-[10px] sm:text-xs font-black bg-white/20 text-white border border-white/30 backdrop-blur-md">
-                            {totalProfit >= 0 ? "+" : ""}{profitRatio.toFixed(1)}% Toplam Getiri
-                        </div>
-                    </div>
-                    <div className="my-0.5">
-                        <span className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight block text-white truncate">
-                            {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-white/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate">Maliyet: {formatCurrency(totalCost)}</span>
-                    </div>
+                <div className="h-10 w-52 bg-slate-100 rounded-xl my-auto" />
+                <div className="space-y-2 pt-3 border-t border-slate-100">
+                    <div className="h-4 w-32 bg-slate-100 rounded-md" />
+                    <div className="h-3 w-48 bg-slate-100 rounded-md" />
                 </div>
             </div>
         );
     }
+
+    const isPositive = totalProfit >= 0;
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-            {/* TOPLAM VARLIK DEĞERİ KARTI - LACİVERT BG */}
-            <div className="bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 shadow-md shadow-[#00008B]/15 relative overflow-hidden group flex flex-col justify-between">
-                <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-                            <Wallet className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-white/80 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Toplam Varlık</span>
+        <div className="bg-white border border-slate-200/80 hover:border-[#00008B]/20 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-300 min-h-[290px] sm:min-h-[310px] flex flex-col justify-between group">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center text-[#00008B] shrink-0">
+                        <Wallet className="w-4 h-4 text-[#00008B]" />
+                    </div>
+                    <div>
+                        <h3 className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-[#00008B]">
+                            Toplam Varlık Değeri
+                        </h3>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                            Anlık Bakiye
+                        </p>
                     </div>
                 </div>
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tighter my-1 truncate">
-                    {formatCurrency(totalValue)}
-                </h2>
-                <div className="flex items-center gap-2 mt-2 sm:mt-3">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <p className="text-white/70 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Canlı Değerleme</p>
+
+                <div className="flex items-center gap-2">
+                    {/* Bakiye Gizle / Göster Butonu */}
+                    <button
+                        onClick={() => setIsBalanceHidden(prev => !prev)}
+                        title={isBalanceHidden ? "Bakiyeyi Göster" : "Bakiyeyi Gizle"}
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-[#00008B] hover:bg-slate-50 transition-all"
+                        aria-label="Bakiyeyi Gizle / Göster"
+                    >
+                        {isBalanceHidden ? (
+                            <EyeOff className="w-4 h-4 text-slate-400" />
+                        ) : (
+                            <Eye className="w-4 h-4 text-slate-400" />
+                        )}
+                    </button>
+
+                    {/* Canlı Değerleme Göstergesi */}
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-emerald-50/80 border border-emerald-200/60">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[9px] font-black text-emerald-700 uppercase tracking-wider">
+                            Canlı
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* NET KÂR / ZARAR KARTI - KARDA YEŞİL, ZARARDA KIRMIZI BG */}
-            <div className={cn(
-                "rounded-2xl sm:rounded-3xl p-4 sm:p-5 md:p-6 shadow-md text-white border transition-all relative overflow-hidden group flex flex-col justify-between",
-                totalProfit >= 0
-                    ? "bg-emerald-600 border-emerald-500 shadow-emerald-900/10"
-                    : "bg-rose-600 border-rose-500 shadow-rose-900/10"
-            )}>
-                <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
-                            {totalProfit >= 0 ? <TrendingUp className="w-4 h-4 text-white" /> : <TrendingDown className="w-4 h-4 text-white" />}
-                        </div>
-                        <span className="text-white/90 text-[9px] sm:text-[10px] font-black uppercase tracking-widest">Kâr / Zarar</span>
+            {/* Büyük Rakam (Hero Section) */}
+            <div className="my-auto py-2">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 block mb-1">
+                    Portföy Değeri
+                </span>
+                <h2 className="text-2xl sm:text-3xl lg:text-[34px] font-black text-[#00008B] tracking-tight truncate">
+                    {isBalanceHidden ? "₺ ••••••••" : formatCurrency(totalValue)}
+                </h2>
+            </div>
+
+            {/* Kâr / Zarar ve Maliyet Bilgisi */}
+            <div className="space-y-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                    {/* Kâr / Zarar Rozeti */}
+                    <div
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black border transition-all ${
+                            isPositive
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                                : "bg-rose-50 text-rose-700 border-rose-200/80"
+                        }`}
+                    >
+                        {isPositive ? (
+                            <TrendingUp className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        ) : (
+                            <TrendingDown className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                        )}
+                        <span>
+                            {isBalanceHidden
+                                ? (isPositive ? "+%" : "-%") + Math.abs(profitRatio).toFixed(2)
+                                : `${isPositive ? "+" : ""}${formatCurrency(totalProfit)} (${isPositive ? "+" : ""}%${profitRatio.toFixed(2)})`}
+                        </span>
                     </div>
-                    <div className="px-2.5 py-1 rounded-xl text-[10px] sm:text-xs font-black bg-white/20 text-white border border-white/30 backdrop-blur-md">
-                        {totalProfit >= 0 ? "+" : ""}{profitRatio.toFixed(1)}% Toplam Getiri
-                    </div>
-                </div>
-                <div className="my-1">
-                    <span className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight block text-white truncate">
-                        {totalProfit >= 0 ? "+" : ""}{formatCurrency(totalProfit)}
+
+                    <span className="text-[10px] font-extrabold text-[#00008B] bg-blue-50/60 border border-blue-100 px-2.5 py-1 rounded-xl">
+                        {myAssets.length} Pozisyon
                     </span>
                 </div>
-                <div className="flex items-center gap-2 mt-2 sm:mt-3">
-                    <span className="text-white/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider truncate">Maliyet: {formatCurrency(totalCost)}</span>
+
+                {/* Alt Detay Satırı */}
+                <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 pt-0.5">
+                    <span className="truncate">
+                        Maliyet: {isBalanceHidden ? "₺ ••••••" : formatCurrency(totalCost)}
+                    </span>
+                    <Link
+                        href="/dashboard/portfolio"
+                        className="inline-flex items-center gap-1 text-[10px] font-black text-[#00008B] hover:text-blue-600 transition-colors uppercase tracking-wider shrink-0"
+                    >
+                        Portföyüm <ArrowRight className="w-3 h-3" />
+                    </Link>
                 </div>
             </div>
         </div>
