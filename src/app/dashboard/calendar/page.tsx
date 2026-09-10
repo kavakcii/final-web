@@ -1991,52 +1991,6 @@ function CalendarContent() {
                 </div>
             </div>
 
-            {/* PORTFÖY İLE ENTEGRASYON: Portföyümdeki Şirketlerin Yaklaşan Olayları */}
-            {myAssets.length > 0 && (
-                <div className="bg-gradient-to-r from-[#00008B]/[0.03] via-white to-blue-50/30 border border-[#00008B]/10 rounded-3xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700">
-                                <Briefcase className="w-4 h-4" />
-                            </div>
-                            <div>
-                                <h3 className="text-sm font-black text-[#00008B]">Portföyümdeki Şirketlerin Yaklaşan Olayları</h3>
-                                <p className="text-[10px] font-bold text-slate-400">Sadece sizin sahip olduğunuz hisse senetleri için filtrelenmiş ajanda</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {portfolioEvents.length === 0 ? (
-                        <p className="text-xs font-bold text-slate-400 py-4 text-center">
-                            Portföyünüzdeki şirketler için yakın tarihte açıklanmış bilanço veya temettü tarihi bulunmuyor.
-                        </p>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {portfolioEvents.slice(0, 6).map((item, idx) => (
-                                <div key={idx} className="p-3.5 rounded-2xl bg-white/80 border border-slate-100 flex items-center justify-between shadow-2xs">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-xl bg-[#00008B]/10 border border-[#00008B]/20 flex items-center justify-center text-[#00008B] font-black text-xs">
-                                            {item.symbol?.substring(0, 3)}
-                                        </div>
-                                        <div>
-                                            <p className="text-xs font-black text-[#00008B]">{item.symbol}</p>
-                                            <p className="text-[10px] font-bold text-slate-500">{item.companyName}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
-                                            item.eventType === 'earnings' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                        }`}>
-                                            {item.typeLabel}
-                                        </span>
-                                        <p className="text-[10px] font-black text-slate-600 mt-1">{item.date || 'Yakında'}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
 
             {/* ÜÇLÜ KART IZGARASI: Bilanço, Temettü, Halka Arz */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
