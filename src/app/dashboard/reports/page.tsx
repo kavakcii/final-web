@@ -5,6 +5,7 @@ import { FileText, Sparkles, Loader2, Mail, Send, Clock, CheckCircle, AlertCircl
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/components/providers/UserProvider';
+import Link from 'next/link';
 
 type EmailFrequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'semiannually' | 'annually' | 'none';
 
@@ -308,7 +309,15 @@ export default function ReportsPage() {
                     </p>
                 </div>
 
-                <div className="flex gap-3 relative">
+                <div className="flex flex-wrap items-center gap-3 relative">
+                    <Link
+                        href="/dashboard/report"
+                        className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md"
+                    >
+                        <Sparkles className="w-4 h-4 text-emerald-200" />
+                        Canlı Raporu Oku
+                    </Link>
+
                     <button
                         onClick={triggerPreviewChoice}
                         disabled={isLoading}
