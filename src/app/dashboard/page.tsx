@@ -87,21 +87,28 @@ export default function DashboardPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Header Welcome Area */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-1 md:gap-4 relative z-10 mb-1">
+                {/* Header Welcome Area (Referans Görsel Hiyerarşisi) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 relative z-10 mb-1">
                     <div>
-                        <h1 className="text-lg sm:text-2xl md:text-4xl font-bold text-[#00008B] flex items-center gap-1.5 sm:gap-3 tracking-tight">
-                            Hoşgeldiniz, {userName || userEmail?.split('@')[0]}
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 flex items-center gap-2 tracking-tight">
+                            Hoş Geldiniz, {userName || userEmail?.split('@')[0]}
                             <motion.span animate={{ rotate: [0, 14, -8, 14, -4, 10, 0, 0] }} transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1 }}>👋</motion.span>
                         </h1>
-                        <p className="text-[#00008B] mt-0.5 text-[8px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase opacity-40">Borsa ve fon verilerin canlı senkronizasyonda.</p>
+                        <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5">
+                            Piyasaları, verileri ve gelişmeleri tek bir yerden takip edin.
+                        </p>
+                    </div>
+
+                    <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 font-medium self-end sm:self-center">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>Son veri güncellemesi: {new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                 </div>
 
                 {/* DESKTOP LAYOUT (≥1024px) */}
                 <div className="hidden lg:flex flex-col gap-6 w-full relative z-10">
-                    {/* 1. ÜST BÖLÜM: TOPLAM VARLIK (Hero), VARLIK DAĞILIMI, FİNANSAL RAPOR (Orantılı 3'lü Grid) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.95fr_1.15fr] gap-5 xl:gap-6 items-stretch w-full">
+                    {/* 1. ÜST BÖLÜM: TOPLAM VARLIK (Hero), VARLIK DAĞILIMI, FİNANSAL RAPOR (Referans Orantılı 3'lü Grid) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.9fr_1.1fr] gap-4 lg:gap-5 items-stretch w-full">
                         <div className="flex flex-col min-w-0">
                             <DashboardSummaryCards />
                         </div>

@@ -87,20 +87,20 @@ export function TopAssetDistributionCard() {
     }, [myAssets, prices]);
 
     // Donut SVG ölçüleri (Daha belirgin ve dolgun)
-    const RADIUS = 40;
-    const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~251.32
+    const RADIUS = 36;
+    const CIRCUMFERENCE = 2 * Math.PI * RADIUS; // ~226.19
 
     if (!isDataLoaded) {
         return (
-            <div className="bg-white border border-slate-200/90 rounded-3xl p-6 min-h-[310px] flex flex-col justify-between animate-pulse">
+            <div className="bg-white border border-slate-200/90 rounded-2xl sm:rounded-3xl p-5 min-h-[250px] flex flex-col justify-between animate-pulse">
                 <div className="flex items-center justify-between">
-                    <div className="h-6 w-36 bg-slate-100 rounded-xl" />
-                    <div className="h-5 w-20 bg-slate-100 rounded-lg" />
+                    <div className="h-5 w-32 bg-slate-100 rounded-lg" />
+                    <div className="h-4 w-16 bg-slate-100 rounded-md" />
                 </div>
                 <div className="flex items-center justify-center my-auto">
-                    <div className="w-36 h-36 rounded-full border-8 border-slate-100" />
+                    <div className="w-24 h-24 rounded-full border-8 border-slate-100" />
                 </div>
-                <div className="h-4 w-full bg-slate-100 rounded-md" />
+                <div className="h-3.5 w-full bg-slate-100 rounded-md" />
             </div>
         );
     }
@@ -111,18 +111,18 @@ export function TopAssetDistributionCard() {
     let cumulativeOffset = 0;
 
     return (
-        <div className="bg-white border border-slate-200/90 hover:border-[#00008B]/25 rounded-3xl p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-300 min-h-[310px] flex flex-col justify-between group">
+        <div className="bg-white border border-slate-200/90 hover:border-blue-500/20 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-300 min-h-[250px] h-full flex flex-col justify-between group">
             {/* 1. Üst Başlık (Referans Görsel Hiyerarşisi) */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-[#00008B]/5 border border-[#00008B]/10 flex items-center justify-center text-[#00008B] shrink-0">
-                        <PieChart className="w-4 h-4 text-[#00008B]" />
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                        <PieChart className="w-3.5 h-3.5 text-blue-600" />
                     </div>
                     <div>
-                        <h3 className="text-xs sm:text-[13px] font-bold text-[#00008B] tracking-tight">
+                        <h3 className="text-xs sm:text-[13px] font-bold text-slate-900 tracking-tight">
                             Varlık Dağılımı
                         </h3>
-                        <p className="text-[10px] font-semibold text-slate-400">
+                        <p className="text-[10px] text-slate-400 font-medium">
                             Portföy ağırlıkları ve paylar
                         </p>
                     </div>
@@ -130,18 +130,18 @@ export function TopAssetDistributionCard() {
 
                 <Link
                     href="/dashboard/portfolio?focus=distribution"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-[#00008B] hover:text-blue-700 transition-colors"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors"
                 >
                     Tümünü Gör <ArrowRight className="w-3 h-3" />
                 </Link>
             </div>
 
-            {/* 2. Orta İçerik: Belirgin Donut + Zengin Dağılım Listesi */}
+            {/* 2. Orta İçerik: Donut Grafik + Dağılım Listesi */}
             {hasData ? (
-                <div className="flex items-center gap-4 lg:gap-5 my-auto py-2">
-                    {/* Donut Grafik (Büyütülmüş & İnce Çizgili) */}
-                    <div className="relative w-32 h-32 sm:w-36 sm:h-36 shrink-0 flex items-center justify-center mx-auto sm:mx-0">
-                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-xs">
+                <div className="flex items-center gap-3 my-auto py-1.5">
+                    {/* Donut Grafik */}
+                    <div className="relative w-24 h-24 sm:w-26 sm:h-26 shrink-0 flex items-center justify-center mx-auto sm:mx-0">
+                        <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                             {distributionItems.map((item) => {
                                 const strokeLength = (item.percentage / 100) * CIRCUMFERENCE;
                                 const strokeDasharray = `${strokeLength} ${CIRCUMFERENCE - strokeLength}`;
@@ -158,7 +158,7 @@ export function TopAssetDistributionCard() {
                                         r={RADIUS}
                                         fill="transparent"
                                         stroke={item.color}
-                                        strokeWidth={isHovered ? 14 : 10}
+                                        strokeWidth={isHovered ? 12 : 9}
                                         strokeDasharray={strokeDasharray}
                                         strokeDashoffset={strokeDashoffset}
                                         strokeLinecap="round"
@@ -171,23 +171,26 @@ export function TopAssetDistributionCard() {
                         </svg>
 
                         {/* Donut İçi Bilgi */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-1">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none p-0.5">
                             {activeItem ? (
                                 <>
-                                    <span className="text-[11px] font-black text-[#00008B] truncate max-w-[80px]">
+                                    <span className="text-[10px] font-bold text-blue-600 truncate max-w-[65px]">
                                         {activeItem.name}
                                     </span>
-                                    <span className="text-sm font-black text-slate-800">
+                                    <span className="text-xs font-bold text-slate-800">
                                         %{activeItem.percentage.toFixed(1)}
                                     </span>
                                 </>
                             ) : (
                                 <>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                                        Toplam Portföy
+                                    <span className="text-[8.5px] font-medium text-slate-400 uppercase tracking-wider">
+                                        Toplam
                                     </span>
-                                    <span className="text-xs font-black text-[#00008B] truncate max-w-[84px]">
+                                    <span className="text-[11px] sm:text-xs font-bold text-slate-800 truncate max-w-[70px]">
                                         {formatCurrency(totalValue)}
+                                    </span>
+                                    <span className="text-[8.5px] font-semibold text-blue-600">
+                                        {activeCount} Varlık
                                     </span>
                                 </>
                             )}
@@ -195,7 +198,7 @@ export function TopAssetDistributionCard() {
                     </div>
 
                     {/* Varlık Listesi */}
-                    <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex-1 min-w-0 space-y-1.5">
                         {distributionItems.map((item) => {
                             const isHovered = hoveredSymbol === item.name;
                             return (
@@ -203,25 +206,25 @@ export function TopAssetDistributionCard() {
                                     key={item.name}
                                     onMouseEnter={() => setHoveredSymbol(item.name)}
                                     onMouseLeave={() => setHoveredSymbol(null)}
-                                    className={`flex items-center justify-between gap-2 px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                                        isHovered ? "bg-slate-50 shadow-2xs scale-[1.01]" : "hover:bg-slate-50/60"
+                                    className={`flex items-center justify-between gap-1 px-2 py-1 rounded-lg transition-all cursor-pointer ${
+                                        isHovered ? "bg-slate-50 shadow-2xs scale-[1.01]" : "hover:bg-slate-50/70"
                                     }`}
                                 >
-                                    <div className="flex items-center gap-2 min-w-0">
+                                    <div className="flex items-center gap-1.5 min-w-0">
                                         <div
-                                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                                            className="w-2 h-2 rounded-full shrink-0"
                                             style={{ backgroundColor: item.color }}
                                         />
-                                        <span className="text-xs font-bold text-slate-800 truncate">
+                                        <span className="text-xs font-bold text-slate-800 shrink-0">
                                             {item.name}
                                         </span>
                                     </div>
 
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        <span className="text-[11px] font-semibold text-slate-400 hidden xl:inline">
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        <span className="text-[10.5px] font-medium text-slate-400 hidden 2xl:inline">
                                             {formatCurrency(item.value)}
                                         </span>
-                                        <span className="text-[11px] font-black text-[#00008B] bg-slate-100/90 px-2 py-0.5 rounded-md">
+                                        <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded-md">
                                             %{item.percentage.toFixed(1)}
                                         </span>
                                     </div>
@@ -232,21 +235,21 @@ export function TopAssetDistributionCard() {
                 </div>
             ) : (
                 /* Boş Varlık Durumu */
-                <div className="flex flex-col items-center justify-center py-6 gap-2 text-center my-auto">
-                    <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                        <Layers className="w-5 h-5 text-slate-300" />
+                <div className="flex flex-col items-center justify-center py-4 gap-1.5 text-center my-auto">
+                    <div className="w-8 h-8 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+                        <Layers className="w-4 h-4 text-slate-300" />
                     </div>
                     <p className="text-xs font-bold text-slate-600">Henüz kayıtlı varlık yok</p>
-                    <p className="text-[10px] text-slate-400 max-w-[220px]">
+                    <p className="text-[10px] text-slate-400 max-w-[200px]">
                         Portföyünüze varlık eklediğinizde dağılım otomatik olarak burada şekillenecektir.
                     </p>
                 </div>
             )}
 
             {/* 3. Alt Durum Çubuğu */}
-            <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400">
-                <span>{activeCount} farklı varlık pozisyonu</span>
-                <span className="text-[#00008B] font-extrabold uppercase tracking-wider">Otomatik Dengeli</span>
+            <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                <span>{activeCount} Aktif Pozisyon</span>
+                <span className="text-blue-600 font-semibold uppercase tracking-wider">Dengeli Portföy</span>
             </div>
         </div>
     );
