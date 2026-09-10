@@ -2905,52 +2905,64 @@ export default function PortfolioPage() {
                     </div>
                 </div>
 
-                {/* Nakit Bakiyesi (Koyu Lacivert Premium Widget) */}
+                {/* Nakit Bakiyesi (Teal Gradient Premium Widget) */}
                 <div className="lg:col-span-3">
-                    <div className="bg-[#0b192c] text-white border border-[#1a2f4c] rounded-3xl p-5 shadow-xl shadow-black/30 flex flex-col justify-between h-full min-h-[120px] relative overflow-hidden">
-                        {/* Ambient glow */}
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-                        {/* Cüzdan SVG */}
-                        <div className="absolute bottom-3 right-3 opacity-10 pointer-events-none">
-                            <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
-                                <rect x="4" y="20" width="64" height="44" rx="8" fill="white"/>
-                                <path d="M4 32h64" stroke="#0b192c" strokeWidth="2"/>
-                                <rect x="46" y="38" width="16" height="12" rx="4" fill="#0b192c"/>
-                                <path d="M12 12h36a8 8 0 0 1 8 8H4a8 8 0 0 1 8-8z" fill="white" opacity="0.6"/>
-                                <circle cx="53" cy="44" r="2.5" fill="white"/>
-                            </svg>
-                        </div>
-                        {/* İnce dalga çizgisi */}
-                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                            <svg viewBox="0 0 300 120" className="w-full h-full opacity-20" preserveAspectRatio="none">
-                                <path d="M 0,90 C 40,100 60,85 100,78 C 140,70 160,85 200,75 C 240,65 265,48 300,32"
-                                    fill="none" stroke="white" strokeWidth="1" strokeLinecap="round"/>
-                            </svg>
-                        </div>
-                        {/* Başlık ve buton */}
-                        <div className="flex justify-between items-center mb-3 relative z-10">
-                            <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
-                                    <Coins className="w-3.5 h-3.5 text-white" />
+                    <div className="bg-[linear-gradient(135deg,#0d9f6e_0%,#10b981_35%,#34d399_70%,#6ee7c7_100%)] text-white rounded-3xl p-5 shadow-xl shadow-emerald-900/30 flex flex-col justify-between h-full min-h-[160px] relative overflow-hidden">
+                        {/* Arka plan soft glow */}
+                        <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-xl pointer-events-none" />
+
+                        {/* Üst satır: İkon + Başlık | Cüzdan illüstrasyonu */}
+                        <div className="flex items-start justify-between relative z-10">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-2xl bg-white/25 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-sm">
+                                    <Coins className="w-4.5 h-4.5 text-white" />
                                 </div>
-                                <span className="text-white/80 text-[11px] font-extrabold uppercase tracking-widest">Nakit Bakiyesi</span>
+                                <span className="text-white text-[13px] font-bold tracking-tight">Nakit Bakiyesi</span>
+                            </div>
+                            {/* Altın Cüzdan & Para SVG */}
+                            <div className="pointer-events-none select-none -mt-1 -mr-1">
+                                <svg width="80" height="70" viewBox="0 0 80 70" fill="none">
+                                    {/* Altın para 1 */}
+                                    <ellipse cx="58" cy="14" rx="14" ry="6" fill="#F59E0B" opacity="0.9"/>
+                                    <rect x="44" y="10" width="28" height="14" rx="2" fill="#F59E0B" opacity="0.85"/>
+                                    <ellipse cx="58" cy="24" rx="14" ry="6" fill="#FBBF24"/>
+                                    <ellipse cx="58" cy="24" rx="11" ry="4" fill="#FCD34D" opacity="0.6"/>
+                                    {/* Altın para 2 */}
+                                    <ellipse cx="46" cy="32" rx="12" ry="5" fill="#F59E0B" opacity="0.9"/>
+                                    <rect x="34" y="28" width="24" height="12" rx="2" fill="#F59E0B" opacity="0.8"/>
+                                    <ellipse cx="46" cy="40" rx="12" ry="5" fill="#FBBF24"/>
+                                    <ellipse cx="46" cy="40" rx="9" ry="3.5" fill="#FCD34D" opacity="0.55"/>
+                                    {/* Cüzdan gövdesi */}
+                                    <rect x="6" y="28" width="42" height="32" rx="7" fill="white" opacity="0.25"/>
+                                    <rect x="8" y="30" width="38" height="28" rx="6" fill="white" opacity="0.15"/>
+                                    {/* Cüzdan kapağı */}
+                                    <rect x="6" y="28" width="42" height="10" rx="4" fill="white" opacity="0.30"/>
+                                    {/* Para yuvası */}
+                                    <rect x="32" y="39" width="14" height="8" rx="3" fill="white" opacity="0.20"/>
+                                    <circle cx="38" cy="43" r="2" fill="white" opacity="0.40"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Alt satır: Bakiye + Buton */}
+                        <div className="flex items-end justify-between relative z-10 mt-3">
+                            <div>
+                                <span className="text-3xl font-black text-white block leading-tight">{formatCurrency(Math.max(0, cashBalance))}</span>
+                                <span className="text-[12px] text-white/75 font-medium block mt-1">Kullanılabilir nakit</span>
                             </div>
                             <button
                                 onClick={() => setIsCashModalOpen(true)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] rounded-xl border border-white/20 transition-all active:scale-95"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#065f46] hover:bg-[#047857] text-white font-bold text-[11px] rounded-xl shadow-md transition-all active:scale-95 shrink-0 border border-emerald-900/40"
                                 title="Nakit Yatır/Çek"
                             >
-                                Nakit İşlemleri
+                                Nakit İşlemleri →
                             </button>
-                        </div>
-                        {/* Bakiye */}
-                        <div className="relative z-10">
-                            <span className="text-3xl font-black text-white block">{formatCurrency(Math.max(0, cashBalance))}</span>
-                            <span className="text-[11px] text-blue-300/70 font-medium block mt-1.5">Kullanılabilir nakit</span>
                         </div>
                     </div>
                 </div>
             </div>
+
 
             {/* UNIFIED DIRECT CLICK FOCUS MODE LAYOUT */}
             <div
