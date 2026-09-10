@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter, Lock, Newspaper, Zap, FileSpreadsheet } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Info, Brain, X, Loader2, AlertTriangle, CheckCircle2, ChevronDown, ChevronRight, History as HistoryIcon, Calendar, RefreshCw, Activity, ExternalLink, BarChart3, FileText, Search, ArrowUpRight, Coins, Layers, Eye, ArrowUpDown, Filter, Lock, Newspaper, Zap, FileSpreadsheet, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PortfolioService, Asset } from "@/lib/portfolio-service";
@@ -1469,7 +1469,7 @@ export default function PortfolioPage() {
                     if (!isFocused) setFocusedWidget(id);
                 }}
                 className={cn(
-                    "w-full transition-all duration-300 rounded-3xl overflow-hidden h-full flex flex-col justify-between",
+                    "w-full transition-all duration-300 rounded-3xl flex flex-col",
                     !isFocused && "cursor-pointer hover:border-blue-300 hover:shadow-2xl active:scale-[0.99]",
                     isFocused && "ring-2 ring-[#00008B]/20 shadow-2xl"
                 )}
@@ -2127,57 +2127,90 @@ export default function PortfolioPage() {
                         const C = 2 * Math.PI * 36;
                         
                         return (
-                            <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
-                                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-md">
+                            <div className="flex flex-col sm:flex-row items-center gap-5 justify-between">
+                                {/* Sol: Donut Grafik */}
+                                <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
+                                    <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
+                                        {sortedAssets.map((group) => {
+                                            const weight = (group.marketVal / totalValue);
+                                            const strokeLength = weight * C;
+                                            const color = symbolColorMap[group.symbol];
+                                            const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
+                                            const strokeDashoffset = -currentOffset;
+                                            currentOffset += strokeLength;
+
+                                            return (
+                                                <circle
+                                                    key={group.symbol}
+                                                    cx="50"
+                                                    cy="50"
+                                                    r="36"
+                                                    fill="transparent"
+                                                    stroke={color}
+                                                    strokeWidth={hoveredSlice === group.symbol ? "18" : "14"}
+                                                    strokeDasharray={strokeDasharray}
+                                                    strokeDashoffset={strokeDashoffset}
+                                                    className="transition-all duration-300 cursor-pointer"
+                                                    onMouseEnter={() => setHoveredSlice(group.symbol)}
+                                                    onMouseLeave={() => setHoveredSlice(null)}
+                                                />
+                                            );
+                                        })}
+                                    </svg>
+                                    
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all duration-300">
+                                        {hoveredSlice ? (() => {
+                                            const activeAsset = sortedAssets.find(a => a.symbol === hoveredSlice);
+                                            return activeAsset ? (
+                                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{activeAsset.symbol}</span>
+                                                    <span className="block text-xs font-black text-[#00008B] tracking-tight">{formatCurrency(activeAsset.marketVal)}</span>
+                                                </motion.div>
+                                            ) : null;
+                                        })() : (
+                                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
+                                                <span className="block text-xs font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Sağ: Hisseler Listesi (Referanstaki Sade Liste) */}
+                                <div className="flex-1 w-full space-y-1.5 max-h-52 overflow-y-auto pr-1">
                                     {sortedAssets.map((group) => {
-                                        const weight = (group.marketVal / totalValue);
-                                        const strokeLength = weight * C;
+                                        const weight = (group.marketVal / totalValue) * 100;
                                         const color = symbolColorMap[group.symbol];
-                                        const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
-                                        const strokeDashoffset = -currentOffset;
-                                        currentOffset += strokeLength;
+                                        const isHovered = hoveredSlice === group.symbol;
 
                                         return (
-                                            <circle
+                                            <div
                                                 key={group.symbol}
-                                                cx="50"
-                                                cy="50"
-                                                r="36"
-                                                fill="transparent"
-                                                stroke={color}
-                                                strokeWidth={hoveredSlice === group.symbol ? "20" : "16"}
-                                                strokeDasharray={strokeDasharray}
-                                                strokeDashoffset={strokeDashoffset}
-                                                className="transition-all duration-300 cursor-pointer"
                                                 onMouseEnter={() => setHoveredSlice(group.symbol)}
                                                 onMouseLeave={() => setHoveredSlice(null)}
-                                            />
+                                                className={cn(
+                                                    "flex items-center justify-between py-1 px-2 rounded-lg transition-all text-xs cursor-pointer",
+                                                    isHovered ? "bg-slate-100 font-bold" : "hover:bg-slate-50"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: color }} />
+                                                    <span className="font-bold text-slate-800 truncate">{group.symbol}</span>
+                                                </div>
+                                                <div className="flex items-center gap-3 shrink-0">
+                                                    <span className="text-slate-500 font-medium">%{weight.toFixed(1)}</span>
+                                                    <span className="font-bold text-slate-700 min-w-[65px] text-right">{formatCurrency(group.marketVal)}</span>
+                                                </div>
+                                            </div>
                                         );
                                     })}
-                                </svg>
-                                
-                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all duration-300">
-                                    {hoveredSlice ? (() => {
-                                        const activeAsset = sortedAssets.find(a => a.symbol === hoveredSlice);
-                                        return activeAsset ? (
-                                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeAsset.symbol}</span>
-                                                <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(activeAsset.marketVal)}</span>
-                                            </motion.div>
-                                        ) : null;
-                                    })() : (
-                                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
-                                            <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
-                                        </motion.div>
-                                    )}
                                 </div>
                             </div>
                         );
                     };
 
                     return (
-                        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-xl shadow-[#00008B]/5">
+                        <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xl shadow-[#00008B]/5">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <PieChart className="w-4 h-4 text-[#00008B]" />
@@ -2191,7 +2224,7 @@ export default function PortfolioPage() {
                             </div>
 
                             {assets.length > 0 && totalValue > 0 ? (
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                     {distributionView === 'donut' && renderDonut()}
                                     {distributionView === 'heatmap' && renderTreemap()}
                                     {distributionView === 'sector' && renderSectorMap()}
@@ -2225,17 +2258,17 @@ export default function PortfolioPage() {
                                                 <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
                                                     {distributionView === 'donut' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Sepetinizdeki yumurtaların nerede olduğunu gösterir. Olası bir dalgalanmada en büyük dilime sahip (örneğin %35 ağırlığındaki) hissenizin düşüşü, tüm portföyünüzü ciddi şekilde sarsabilir. Bu yüzden devasa tek bir dilim yerine, dengeli boyutlarda dilimlere sahip olmak riski azaltır.
+                                                            Sepetinizdeki yumurtaların nerede olduğunu gösterir. Olası bir dalgalanmada en büyük dilime sahip hissenizin düşüşü tüm portföyünüzü ciddi şekilde sarsabilir.
                                                         </p>
                                                     )}
                                                     {distributionView === 'heatmap' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Kutuların büyüklüğü paranın miktarını, renklerin koyuluğu ise kâr/zarar şiddetini temsil eder. Örneğin çok büyük ve koyu kırmızı bir kutu görüyorsanız, portföyünüzün ana damarlarından biri ciddi kan kaybediyor demektir. Koyu yeşil ise güçlü kârlılık anlamına gelir.
+                                                            Kutuların büyüklüğü paranın miktarını, renklerin koyuluğu ise kâr/zarar şiddetini temsil eder.
                                                         </p>
                                                     )}
                                                     {distributionView === 'sector' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir. Örneğin portföyünüzdeki 10 hissenin 4 tanesi (%40'ı) ulaştırma sektöründeyse, bu oran sektör dilimlerinde temsil edilir.
+                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir.
                                                         </p>
                                                     )}
                                                 </div>
@@ -2243,49 +2276,50 @@ export default function PortfolioPage() {
                                         </>
                                     )}
 
-                                    {/* LEJANT KARTLARI (VARLIKLAR - SEKTÖRE GÖRE GRUPLU VE SEKTÖR RENGİNDE) */}
-                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                                        {[...sortedAssets]
-                                            .sort((a, b) => {
-                                                const sA = getAssetSector(a.symbol);
-                                                const sB = getAssetSector(b.symbol);
-                                                if (sA < sB) return -1;
-                                                if (sA > sB) return 1;
-                                                return b.marketVal - a.marketVal;
-                                            })
-                                            .map((group, idx) => {
-                                                const weight = (group.marketVal / totalValue) * 100;
-                                                const assetSector = getAssetSector(group.symbol);
-                                                
-                                                // Sektör modunda sektörün canlı rengi, Donut modunda varlığın kendi renk kimliği
-                                                const hexColor = distributionView === 'sector'
-                                                    ? (SECTOR_COLORS_HEX[assetSector] || fallbackHex[idx % fallbackHex.length])
-                                                    : symbolColorMap[group.symbol];
-                                                
-                                                const isHovered = distributionView === 'sector'
-                                                    ? (hoveredSlice === group.symbol || hoveredSlice === `sector_${assetSector}`)
-                                                    : (hoveredSlice === group.symbol);
-                                                
-                                                return (
-                                                    <div 
-                                                        key={group.symbol} 
-                                                        onMouseEnter={() => setHoveredSlice(group.symbol)}
-                                                        onMouseLeave={() => setHoveredSlice(null)}
-                                                        style={{ backgroundColor: isHovered ? hexColor : '', borderColor: isHovered ? hexColor : '' }}
-                                                        className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.05] z-10 text-white" : "bg-slate-50/70 border-slate-100 shadow-sm")}
-                                                    >
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <div className={cn("w-2.5 h-2.5 rounded-full shrink-0 shadow-sm transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : hexColor, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
-                                                                <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
+                                    {/* Sektör veya Kazanç Modundayken ya da Odak Modundayken Lejant Kartları */}
+                                    {(distributionView !== 'donut' || isFocused) && (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs max-h-56 overflow-y-auto pr-1">
+                                            {[...sortedAssets]
+                                                .sort((a, b) => {
+                                                    const sA = getAssetSector(a.symbol);
+                                                    const sB = getAssetSector(b.symbol);
+                                                    if (sA < sB) return -1;
+                                                    if (sA > sB) return 1;
+                                                    return b.marketVal - a.marketVal;
+                                                })
+                                                .map((group, idx) => {
+                                                    const weight = (group.marketVal / totalValue) * 100;
+                                                    const assetSector = getAssetSector(group.symbol);
+                                                    
+                                                    const hexColor = distributionView === 'sector'
+                                                        ? (SECTOR_COLORS_HEX[assetSector] || fallbackHex[idx % fallbackHex.length])
+                                                        : symbolColorMap[group.symbol];
+                                                    
+                                                    const isHovered = distributionView === 'sector'
+                                                        ? (hoveredSlice === group.symbol || hoveredSlice === `sector_${assetSector}`)
+                                                        : (hoveredSlice === group.symbol);
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={group.symbol} 
+                                                            onMouseEnter={() => setHoveredSlice(group.symbol)}
+                                                            onMouseLeave={() => setHoveredSlice(null)}
+                                                            style={{ backgroundColor: isHovered ? hexColor : '', borderColor: isHovered ? hexColor : '' }}
+                                                            className={cn("flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.03] z-10 text-white" : "bg-slate-50/70 border-slate-100 shadow-sm")}
+                                                        >
+                                                            <div className="flex flex-col gap-0.5">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <div className={cn("w-2 h-2 rounded-full shrink-0 shadow-sm", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : hexColor }} />
+                                                                    <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
+                                                                </div>
+                                                                <span className={cn("text-[9px] font-medium transition-colors ml-3.5", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
                                                             </div>
-                                                            <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
+                                                            <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
                                                         </div>
-                                                        <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
+                                                    );
+                                                })}
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
@@ -2848,73 +2882,57 @@ export default function PortfolioPage() {
                     <DashboardSummaryCards layout="stacked" compact={true} />
                 </div>
 
-                {/* K/Z Kartları (3 adet dikey kompakt) */}
-                <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2">
-                    {/* Günlük K/Z */}
-                    <div className="relative overflow-hidden bg-[linear-gradient(135deg,#f0f6ff_0%,#e8f0fe_40%,#f8faff_100%)] border border-blue-100/60 px-4 py-2 rounded-2xl shadow-sm flex flex-col justify-between">
-                        {/* Dekoratif arka plan bar chart SVG */}
-                        <svg className="absolute right-2.5 bottom-1 w-14 h-7 opacity-[0.07]" viewBox="0 0 80 48" fill="none">
-                            <rect x="0" y="24" width="10" height="24" rx="2" fill="#00008B"/>
-                            <rect x="14" y="16" width="10" height="32" rx="2" fill="#00008B"/>
-                            <rect x="28" y="8" width="10" height="40" rx="2" fill="#00008B"/>
-                            <rect x="42" y="18" width="10" height="30" rx="2" fill="#00008B"/>
-                            <rect x="56" y="4" width="10" height="44" rx="2" fill="#00008B"/>
-                            <rect x="70" y="10" width="10" height="38" rx="2" fill="#00008B"/>
-                        </svg>
-                        <div className="flex items-center justify-between">
-                            <span className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest">Günlük K/Z</span>
-                            <span className={cn("text-[10px] font-bold", dailyProfitRatio > 0 ? "text-[#10B981]" : dailyProfitRatio < 0 ? "text-[#EF4444]" : "text-slate-400")}>
-                                %{dailyProfitRatio.toFixed(2)} bugün
-                            </span>
-                        </div>
-                        <div className="mt-0.5">
-                            <span className={cn("text-lg sm:text-xl font-black leading-tight", dailyProfit > 0 ? "text-[#10B981]" : dailyProfit < 0 ? "text-[#EF4444]" : "text-slate-500")}>
-                                {dailyProfit > 0 ? "+" : ""}{formatCurrency(dailyProfit)}
-                            </span>
-                        </div>
-                    </div>
+                {/* K/Z Kartları (İlk Fotoğraftaki Gibi Yatay 3 Sütunlu Panel) */}
+                <div className="lg:col-span-5">
+                    <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-sm flex flex-col justify-center h-full min-h-0">
+                        <div className="grid grid-cols-3 divide-x divide-slate-100 h-full items-center">
+                            {/* 1. Sütun: Günlük K/Z */}
+                            <div className="px-2 sm:px-3 flex flex-col justify-center">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-100/60 text-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+                                        <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                                    </div>
+                                    <span className="text-slate-600 font-bold text-[11px] truncate">Günlük K/Z</span>
+                                </div>
+                                <span className={cn("text-lg sm:text-xl font-black block tracking-tight leading-tight", dailyProfit > 0 ? "text-[#10B981]" : dailyProfit < 0 ? "text-[#EF4444]" : "text-slate-500")}>
+                                    {dailyProfit > 0 ? "+" : ""}{formatCurrency(dailyProfit)}
+                                </span>
+                                <span className={cn("text-[10px] font-bold block mt-1 truncate", dailyProfitRatio > 0 ? "text-[#10B981]" : dailyProfitRatio < 0 ? "text-[#EF4444]" : "text-slate-400")}>
+                                    %{dailyProfitRatio.toFixed(2)} bugünün
+                                </span>
+                            </div>
 
-                    {/* Toplam K/Z */}
-                    <div className="relative overflow-hidden bg-[linear-gradient(135deg,#f0f6ff_0%,#e8f0fe_40%,#f8faff_100%)] border border-blue-100/60 px-4 py-2 rounded-2xl shadow-sm flex flex-col justify-between">
-                        <svg className="absolute right-2.5 bottom-1 w-14 h-7 opacity-[0.07]" viewBox="0 0 80 48" fill="none">
-                            <rect x="0" y="30" width="10" height="18" rx="2" fill="#00008B"/>
-                            <rect x="14" y="20" width="10" height="28" rx="2" fill="#00008B"/>
-                            <rect x="28" y="12" width="10" height="36" rx="2" fill="#00008B"/>
-                            <rect x="42" y="6" width="10" height="42" rx="2" fill="#00008B"/>
-                            <rect x="56" y="14" width="10" height="34" rx="2" fill="#00008B"/>
-                            <rect x="70" y="2" width="10" height="46" rx="2" fill="#00008B"/>
-                        </svg>
-                        <div className="flex items-center justify-between">
-                            <span className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest">Toplam K/Z</span>
-                            <span className={cn("text-[10px] font-bold", profitRatio > 0 ? "text-[#10B981]" : profitRatio < 0 ? "text-[#EF4444]" : "text-slate-400")}>
-                                %{profitRatio.toFixed(2)} genel
-                            </span>
-                        </div>
-                        <div className="mt-0.5">
-                            <span className={cn("text-lg sm:text-xl font-black leading-tight", totalProfit > 0 ? "text-[#10B981]" : totalProfit < 0 ? "text-[#EF4444]" : "text-slate-500")}>
-                                {totalProfit > 0 ? "+" : ""}{formatCurrency(totalProfit)}
-                            </span>
-                        </div>
-                    </div>
+                            {/* 2. Sütun: Toplam K/Z */}
+                            <div className="px-2 sm:px-3 flex flex-col justify-center">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-100/60 text-blue-600 flex items-center justify-center shrink-0 shadow-sm">
+                                        <Wallet className="w-3.5 h-3.5 text-blue-600" />
+                                    </div>
+                                    <span className="text-slate-600 font-bold text-[11px] truncate">Toplam K/Z</span>
+                                </div>
+                                <span className={cn("text-lg sm:text-xl font-black block tracking-tight leading-tight", totalProfit > 0 ? "text-[#10B981]" : totalProfit < 0 ? "text-[#EF4444]" : "text-slate-500")}>
+                                    {totalProfit > 0 ? "+" : ""}{formatCurrency(totalProfit)}
+                                </span>
+                                <span className={cn("text-[10px] font-bold block mt-1 truncate", profitRatio > 0 ? "text-[#10B981]" : profitRatio < 0 ? "text-[#EF4444]" : "text-slate-400")}>
+                                    %{profitRatio.toFixed(2)} genel
+                                </span>
+                            </div>
 
-                    {/* Gerçekleşmiş K/Z */}
-                    <div className="relative overflow-hidden bg-[linear-gradient(135deg,#f0f6ff_0%,#e8f0fe_40%,#f8faff_100%)] border border-blue-100/60 px-4 py-2 rounded-2xl shadow-sm flex flex-col justify-between">
-                        <svg className="absolute right-2.5 bottom-1 w-14 h-7 opacity-[0.07]" viewBox="0 0 80 48" fill="none">
-                            <rect x="0" y="28" width="10" height="20" rx="2" fill="#00008B"/>
-                            <rect x="14" y="22" width="10" height="26" rx="2" fill="#00008B"/>
-                            <rect x="28" y="16" width="10" height="32" rx="2" fill="#00008B"/>
-                            <rect x="42" y="10" width="10" height="38" rx="2" fill="#00008B"/>
-                            <rect x="56" y="20" width="10" height="28" rx="2" fill="#00008B"/>
-                            <rect x="70" y="8" width="10" height="40" rx="2" fill="#00008B"/>
-                        </svg>
-                        <div className="flex items-center justify-between">
-                            <span className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest">Gerçekleşmiş K/Z</span>
-                            <span className="text-[10px] text-slate-400 font-medium">Kapanan kârlar</span>
-                        </div>
-                        <div className="mt-0.5">
-                            <span className={cn("text-lg sm:text-xl font-black leading-tight", realizedPnlTotal > 0 ? "text-[#10B981]" : realizedPnlTotal < 0 ? "text-[#EF4444]" : "text-slate-500")}>
-                                {realizedPnlTotal > 0 ? "+" : ""}{formatCurrency(realizedPnlTotal)}
-                            </span>
+                            {/* 3. Sütun: Gerçekleşmiş K/Z */}
+                            <div className="px-2 sm:px-3 flex flex-col justify-center">
+                                <div className="flex items-center gap-2 mb-1.5">
+                                    <div className="w-7 h-7 rounded-xl bg-purple-50 border border-purple-100/60 text-purple-600 flex items-center justify-center shrink-0 shadow-sm">
+                                        <Clock className="w-3.5 h-3.5 text-purple-600" />
+                                    </div>
+                                    <span className="text-slate-600 font-bold text-[11px] truncate">Gerçekleşmiş K/Z</span>
+                                </div>
+                                <span className={cn("text-lg sm:text-xl font-black block tracking-tight leading-tight", realizedPnlTotal > 0 ? "text-[#10B981]" : realizedPnlTotal < 0 ? "text-[#EF4444]" : "text-slate-500")}>
+                                    {realizedPnlTotal > 0 ? "+" : ""}{formatCurrency(realizedPnlTotal)}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium block mt-1 truncate">
+                                    Kapanan Satış Karları
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2985,18 +3003,18 @@ export default function PortfolioPage() {
                         setFocusedWidget(null);
                     }
                 }}
-                className="flex flex-col xl:grid xl:grid-cols-12 gap-8 xl:items-stretch"
+                className="flex flex-col xl:grid xl:grid-cols-12 gap-8 xl:items-start"
             >
                 {focusedWidget === null ? (
                     /* 1. BAŞLANGIÇ DURUMU (DEFAULT 70/30 GRID LAYOUT) */
                     <>
                         {/* SOL SÜTUN (~%70 - 8/12 Cols) */}
-                        <div className="w-full xl:col-span-8 flex flex-col justify-between space-y-8 order-2 xl:order-1">
+                        <div className="w-full xl:col-span-8 space-y-8 order-2 xl:order-1">
                             {renderWidgetCard('table')}
                         </div>
 
                         {/* SAĞ SÜTUN (~%30 - 4/12 Cols) - Varlık Dağılımı üstte, Gündem altta */}
-                        <div className="w-full xl:col-span-4 flex flex-col justify-between space-y-6 order-1 xl:order-2">
+                        <div className="w-full xl:col-span-4 space-y-6 order-1 xl:order-2">
                             {renderWidgetCard('distribution')}
                             {renderWidgetCard('agenda')}
                         </div>
