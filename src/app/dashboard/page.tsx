@@ -10,8 +10,8 @@ import { useUser } from "@/components/providers/UserProvider";
 import { DashboardSummaryCards } from "@/components/DashboardSummaryCards";
 import { TopAssetDistributionCard } from "@/components/dashboard/TopAssetDistributionCard";
 import { FinAiYesterdayReportWidget } from "@/components/FinAiYesterdayReportWidget";
-import { BalanceGrowthChartWidget } from "@/components/BalanceGrowthChartWidget";
-import { EconomicCalendarWidget } from "@/components/EconomicCalendarWidget";
+import { MarketOverviewWidget } from "@/components/dashboard/MarketOverviewWidget";
+import { DailyAgendaWidget } from "@/components/dashboard/DailyAgendaWidget";
 import { GundemMarketAgendaWidget } from "@/components/GundemMarketAgendaWidget";
 import { FinancialTicker } from "@/components/FinancialTicker";
 import Link from "next/link";
@@ -120,19 +120,19 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* 2. İKİNCİ BÖLÜM: VARLIK GELİŞİMİ */}
-                    <div className="w-full">
-                        <BalanceGrowthChartWidget />
+                    {/* 2. İKİNCİ BÖLÜM: PİYASA GENEL GÖRÜNÜMÜ (%58) & GÜNLÜK AJANDA (%42) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.38fr_1fr] gap-4 xl:gap-5 items-stretch w-full">
+                        <div className="flex flex-col min-w-0">
+                            <MarketOverviewWidget />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <DailyAgendaWidget />
+                        </div>
                     </div>
 
-                    {/* 3. ÜÇÜNCÜ BÖLÜM: PİYASA GÜNDEMİ & EKONOMİK TAKVİM (YAN YANA %50-%50) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch w-full">
-                        <div className="flex flex-col min-w-0">
-                            <GundemMarketAgendaWidget news={news} />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <EconomicCalendarWidget />
-                        </div>
+                    {/* 3. ÜÇÜNCÜ BÖLÜM: PİYASA GÜNDEMİ / HABERLER */}
+                    <div className="w-full">
+                        <GundemMarketAgendaWidget news={news} />
                     </div>
                 </div>
 
@@ -153,24 +153,24 @@ export default function DashboardPage() {
                         <FinAiYesterdayReportWidget />
                     </div>
 
-                    {/* 4. MEVCUT PİYASA ÖZETİ */}
+                    {/* 4. PİYASA GENEL GÖRÜNÜMÜ */}
+                    <div className="w-full">
+                        <MarketOverviewWidget />
+                    </div>
+
+                    {/* 5. GÜNLÜK AJANDA */}
+                    <div className="w-full">
+                        <DailyAgendaWidget />
+                    </div>
+
+                    {/* 6. MEVCUT PİYASA ÖZETİ */}
                     <div className="w-full rounded-2xl overflow-hidden border border-slate-100 shadow-2xs">
                         <FinancialTicker />
                     </div>
 
-                    {/* 5. GÜNDEM */}
+                    {/* 7. GÜNDEM */}
                     <div className="w-full">
                         <GundemMarketAgendaWidget news={news} />
-                    </div>
-
-                    {/* 6. VARLIK GELİŞİMİ */}
-                    <div className="w-full">
-                        <BalanceGrowthChartWidget />
-                    </div>
-
-                    {/* 7. EKONOMİK TAKVİM */}
-                    <div className="w-full">
-                        <EconomicCalendarWidget />
                     </div>
                 </div>
             </div>
