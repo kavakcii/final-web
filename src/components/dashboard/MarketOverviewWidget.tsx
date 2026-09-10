@@ -1,7 +1,6 @@
 "use client";
 
-import { TrendingUp, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { TrendingUp } from "lucide-react";
 import TradingViewMarketOverview from "@/components/dashboard/TradingViewMarketOverview";
 
 export function MarketOverviewWidget() {
@@ -19,14 +18,6 @@ export function MarketOverviewWidget() {
                         </h3>
                     </div>
                 </div>
-
-                <Link
-                    href="/dashboard/market"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition-colors group/link"
-                >
-                    <span>Tümü</span>
-                    <ArrowRight className="w-3 h-3 transform group-hover/link:translate-x-0.5 transition-transform" />
-                </Link>
             </div>
 
             {/* 2. TradingView Symbol Overview Entegrasyonu */}

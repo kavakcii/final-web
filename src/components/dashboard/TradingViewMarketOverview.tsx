@@ -13,7 +13,7 @@ export function TradingViewMarketOverview({ className = "" }: TradingViewMarketO
         const container = containerRef.current;
         if (!container) return;
 
-        // Herhangi bir önceki widget'ı temizle
+        // Önceki widget içeriğini temizle
         container.innerHTML = "";
 
         const widgetWrapper = document.createElement("div");
@@ -24,12 +24,17 @@ export function TradingViewMarketOverview({ className = "" }: TradingViewMarketO
         const widgetElement = document.createElement("div");
         widgetElement.className = "tradingview-widget-container__widget";
         widgetElement.style.width = "100%";
-        widgetElement.style.height = "calc(100% - 20px)";
+        widgetElement.style.height = "100%";
 
+        // TradingView telif alanı DOM'da var ancak görünmez (kullanıcı talebi: 'tradingview yazan yerleri kaldır')
         const copyrightContainer = document.createElement("div");
-        copyrightContainer.className = "tradingview-widget-copyright text-[10px] text-slate-400 text-right pr-2 py-0.5 leading-none";
+        copyrightContainer.className = "tradingview-widget-copyright";
+        copyrightContainer.style.opacity = "0";
+        copyrightContainer.style.height = "1px";
+        copyrightContainer.style.overflow = "hidden";
+        copyrightContainer.style.pointerEvents = "none";
         copyrightContainer.innerHTML = `
-            <a href="https://tr.tradingview.com/" rel="noopener nofollow" target="_blank" class="text-slate-400 hover:text-blue-600 transition-colors">
+            <a href="https://tr.tradingview.com/" rel="noopener nofollow" target="_blank">
                 <span class="blue-text">Track all markets on TradingView</span>
             </a>
         `;
@@ -77,7 +82,7 @@ export function TradingViewMarketOverview({ className = "" }: TradingViewMarketO
                 "all|1M"
             ],
             fontSize: "10",
-            headerFontSize: "medium",
+            headerFontSize: "small",
             autosize: true,
             width: "100%",
             height: "100%",

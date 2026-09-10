@@ -12,7 +12,7 @@ import Link from "next/link";
 
 export interface DailyAgendaItem {
     id: string;
-    category: 'all' | 'ipo' | 'dividends' | 'earnings' | 'news' | 'economic';
+    category: 'all' | 'ipo' | 'dividends' | 'earnings' | 'economic';
     categoryLabel: string;
     time: string;
     symbolOrCountry: string;
@@ -29,7 +29,6 @@ const CATEGORY_TABS = [
     { id: 'ipo', label: 'Halka Arz' },
     { id: 'dividends', label: 'Temettü' },
     { id: 'earnings', label: 'Bilanço' },
-    { id: 'news', label: 'Haber' },
     { id: 'economic', label: 'Ekonomik' }
 ] as const;
 
@@ -37,12 +36,11 @@ export function DailyAgendaWidget() {
     const [activeCategory, setActiveCategory] = useState<string>('all');
     const [loading, setLoading] = useState(false);
 
-    // Raw datasets from existing endpoints
+    // Ham veri setleri (Haberler tamamen kaldırıldı)
     const [economicData, setEconomicData] = useState<any[]>([]);
     const [earningsData, setEarningsData] = useState<any[]>([]);
     const [dividendsData, setDividendsData] = useState<any[]>([]);
     const [ipoData, setIpoData] = useState<any[]>([]);
-    const [newsData, setNewsData] = useState<any[]>([]);
 
     useEffect(() => {
         let isMounted = true;
@@ -58,12 +56,11 @@ export function DailyAgendaWidget() {
                         .finally(() => clearTimeout(timeoutId));
                 };
 
-                const [ecoRes, earnRes, divRes, ipoRes, newsRes] = await Promise.all([
+                const [ecoRes, earnRes, divRes, ipoRes] = await Promise.all([
                     fetchWithTimeout('/api/calendar'),
                     fetchWithTimeout('/api/halkarz-earnings'),
                     fetchWithTimeout('/api/halkarz-dividends'),
-                    fetchWithTimeout('/api/halkarz-ipo'),
-                    fetchWithTimeout('/api/news')
+                    fetchWithTimeout('/api/halkarz-ipo')
                 ]);
 
                 if (isMounted) {
@@ -71,7 +68,6 @@ export function DailyAgendaWidget() {
                     setEarningsData(Array.isArray(earnRes.data) ? earnRes.data : []);
                     setDividendsData(Array.isArray(divRes.data) ? divRes.data : []);
                     setIpoData(Array.isArray(ipoRes.data) ? ipoRes.data : []);
-                    setNewsData(Array.isArray(newsRes.data || newsRes.news) ? (newsRes.data || newsRes.news) : []);
                 }
             } catch (err) {
                 // Sessiz hata yönetimi
@@ -155,6 +151,19 @@ export function DailyAgendaWidget() {
                     auxiliaryText: 'Açıklanan: 220K',
                     link: '/dashboard/calendar?type=economic',
                     sortKey: '15:30'
+                },
+                {
+                    id: 'eco-us-oil',
+                    category: 'economic',
+                    categoryLabel: 'Ekonomik',
+                    time: '17:00',
+                    symbolOrCountry: 'US',
+                    title: 'Ham Petrol Stokları',
+                    badgeColor: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
+                    impact: 'medium',
+                    auxiliaryText: 'Beklenti: -1.2M',
+                    link: '/dashboard/calendar?type=economic',
+                    sortKey: '17:00'
                 }
             );
         }
@@ -312,75 +321,9 @@ export function DailyAgendaWidget() {
             );
         }
 
-        // 5. Günün Önemli Haberleri / KAP
-        const matchedNews: DailyAgendaItem[] = [];
-        newsData.slice(0, 3).forEach((item: any, idx: number) => {
-            let newsTime = '—';
-            if (item.pubDate) {
-                const dateObj = new Date(item.pubDate);
-                if (!isNaN(dateObj.getTime())) {
-                    newsTime = dateObj.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
-                }
-            }
-
-            const symbol = (item.tickers && item.tickers[0]) ? item.tickers[0] : (item.symbol || 'KAP');
-
-            matchedNews.push({
-                id: `news-${item.id || idx}`,
-                category: 'news',
-                categoryLabel: 'Haber',
-                time: newsTime !== '—' ? newsTime : (idx === 0 ? '15:49' : idx === 1 ? '16:02' : '16:10'),
-                symbolOrCountry: symbol,
-                title: item.title || 'Piyasa Gelişmesi',
-                badgeColor: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
-                link: '/dashboard/news',
-                sortKey: newsTime !== '—' ? newsTime : (idx === 0 ? '15:49' : idx === 1 ? '16:02' : '16:10')
-            });
-        });
-
-        if (matchedNews.length > 0) {
-            unified.push(...matchedNews);
-        } else {
-            unified.push(
-                {
-                    id: 'news-1',
-                    category: 'news',
-                    categoryLabel: 'Haber',
-                    time: '15:49',
-                    symbolOrCountry: 'KAP',
-                    title: "Hindistan'ın doğusunda 4 milyondan fazla insan sellerden etkilendi",
-                    badgeColor: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
-                    link: '/dashboard/news',
-                    sortKey: '15:49'
-                },
-                {
-                    id: 'news-2',
-                    category: 'news',
-                    categoryLabel: 'Haber',
-                    time: '16:02',
-                    symbolOrCountry: 'Dolar/TL',
-                    title: 'Nasdaq, Kripto Borsasının Ana Şirketine 100 Milyon Dolarlık Yatırım Yapacak',
-                    badgeColor: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
-                    link: '/dashboard/news',
-                    sortKey: '16:02'
-                },
-                {
-                    id: 'news-3',
-                    category: 'news',
-                    categoryLabel: 'Haber',
-                    time: '16:10',
-                    symbolOrCountry: 'TCMB / Faiz',
-                    title: "Uzmanlar TCMB'nin faiz kararını değerlendirdi",
-                    badgeColor: 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/30',
-                    link: '/dashboard/news',
-                    sortKey: '16:10'
-                }
-            );
-        }
-
         // Kronolojik sıralama: Günün saat akışına göre sırala
         return unified.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-    }, [economicData, earningsData, dividendsData, ipoData, newsData, todayFormattedDate]);
+    }, [economicData, earningsData, dividendsData, ipoData, todayFormattedDate]);
 
     // Seçili sekmeye göre filtreleme
     const filteredItems = useMemo(() => {
