@@ -271,9 +271,9 @@ function DashboardShell({
                     <div className="hidden md:block w-24 shrink-0 pointer-events-none" aria-hidden="true" />
 
                     {/* Fixed Viewport Sidebar: anchored to viewport (top-0 left-0 h-[100dvh]) so scrolling the page never moves the sidebar */}
-                    <aside className="hidden md:flex fixed top-0 left-0 2xl:left-[max(0px,calc((100vw-1920px)/2))] h-[100dvh] w-24 hover:w-80 focus-within:w-80 z-50 border-r border-slate-200/80 bg-[linear-gradient(90deg,rgba(11,25,44,0.06)_0%,rgba(11,25,44,0.02)_60%,#ffffff_100%)] shadow-sm md:shadow-md hover:shadow-xl flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden pointer-events-auto">
-                        {/* Soldan Sağa #0b192c Arka Plan Efekti Overlay */}
-                        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0b192c]/[0.08] via-[#0b192c]/[0.03] to-transparent pointer-events-none z-0" />
+                    <aside className="hidden md:flex fixed top-0 left-0 2xl:left-[max(0px,calc((100vw-1920px)/2))] h-[100dvh] w-24 hover:w-80 focus-within:w-80 z-50 border-r border-slate-200/80 bg-white shadow-sm md:shadow-md hover:shadow-xl flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden pointer-events-auto">
+                        {/* Soldan Sağa #0b192c Arka Plan Efekti Overlay (Opak Beyaz Zemin Üzerinde) */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-[#0b192c]/[0.05] via-[#0b192c]/[0.015] to-transparent pointer-events-none z-0" />
 
                         {/* FinAi Workspace Üst Başlık Alanı (#0b192c ile dolduruldu) */}
                         <div className="p-3 md:px-5 md:py-4 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-[#1a2f4c] relative z-10 bg-[#0b192c] overflow-hidden">
@@ -516,10 +516,10 @@ function DashboardShell({
                                         animate={{ x: 0 }}
                                         exit={{ x: "-100%" }}
                                         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                                        className="fixed inset-y-0 left-0 w-[min(320px,86vw)] h-[100dvh] max-h-[100dvh] bg-[linear-gradient(90deg,rgba(11,25,44,0.06)_0%,rgba(11,25,44,0.02)_60%,#ffffff_100%)] text-slate-900 shadow-2xl z-[80] flex flex-col md:hidden border-r border-slate-200/80 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] relative overflow-hidden"
+                                        className="fixed inset-y-0 left-0 w-[min(320px,86vw)] h-[100dvh] max-h-[100dvh] bg-white text-slate-900 shadow-2xl z-[80] flex flex-col md:hidden border-r border-slate-200/80 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] relative overflow-hidden"
                                     >
-                                        {/* Soldan Sağa #0b192c Efekti Overlay */}
-                                        <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#0b192c]/[0.08] to-transparent pointer-events-none z-0" />
+                                        {/* Soldan Sağa #0b192c Efekti Overlay (Opak Beyaz Zemin Üzerinde) */}
+                                        <div className="absolute inset-0 bg-gradient-to-r from-[#0b192c]/[0.05] via-[#0b192c]/[0.015] to-transparent pointer-events-none z-0" />
 
                                         {/* Drawer Başlık (#0b192c ile dolduruldu) & Kapatma Butonu */}
                                         <div className="flex items-center justify-between p-4 border-b border-[#1a2f4c] bg-[#0b192c] relative overflow-hidden flex-shrink-0 text-white z-10">
