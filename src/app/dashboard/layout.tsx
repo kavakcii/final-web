@@ -271,12 +271,20 @@ function DashboardShell({
                     <div className="hidden md:block w-24 shrink-0 pointer-events-none" aria-hidden="true" />
 
                     {/* Fixed Viewport Sidebar: anchored to viewport (top-0 left-0 h-[100dvh]) so scrolling the page never moves the sidebar */}
-                    <aside className="hidden md:flex fixed top-0 left-0 2xl:left-[max(0px,calc((100vw-1920px)/2))] h-[100dvh] w-24 hover:w-80 focus-within:w-80 z-50 border-r border-slate-200/80 bg-white shadow-sm md:shadow-md hover:shadow-xl flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden pointer-events-auto">
-                        <div className="p-3 md:p-6 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-slate-100 relative z-10 bg-white">
-                            <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 rounded-xl">
-                                <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none" />
-                                <span className="text-xl md:text-2xl font-black tracking-tighter text-[#00008B] opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1.5 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 whitespace-nowrap hidden md:inline-block motion-reduce:transition-none">
-                                    FinAi<span className="text-blue-600">.</span>
+                    <aside className="hidden md:flex fixed top-0 left-0 2xl:left-[max(0px,calc((100vw-1920px)/2))] h-[100dvh] w-24 hover:w-80 focus-within:w-80 z-50 border-r border-slate-200/80 bg-[linear-gradient(90deg,rgba(11,25,44,0.06)_0%,rgba(11,25,44,0.02)_60%,#ffffff_100%)] shadow-sm md:shadow-md hover:shadow-xl flex-col transition-[width,box-shadow] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none group overflow-hidden pointer-events-auto">
+                        {/* Soldan Sağa #0b192c Arka Plan Efekti Overlay */}
+                        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0b192c]/[0.08] via-[#0b192c]/[0.03] to-transparent pointer-events-none z-0" />
+
+                        {/* FinAi Workspace Üst Başlık Alanı (#0b192c ile dolduruldu) */}
+                        <div className="p-3 md:px-5 md:py-4 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-[#1a2f4c] relative z-10 bg-[#0b192c] overflow-hidden">
+                            {/* Subtle Ambient Glow */}
+                            <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                            <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-blue-400/15 rounded-full blur-2xl pointer-events-none" />
+
+                            <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-xl relative z-10">
+                                <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none drop-shadow-sm brightness-110" />
+                                <span className="text-lg md:text-xl font-black tracking-tight text-white opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1.5 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 whitespace-nowrap hidden md:inline-block motion-reduce:transition-none">
+                                    FinAi Workspace
                                 </span>
                             </Link>
                         </div>
@@ -392,7 +400,7 @@ function DashboardShell({
                             </div>
                         </div>
 
-                        <div className="p-3 md:px-4 md:py-3 border-t border-slate-200/80 shrink-0 relative z-10 bg-white mt-auto">
+                        <div className="p-3 md:px-4 md:py-3 border-t border-slate-200/80 shrink-0 relative z-10 bg-transparent mt-auto">
                             <button onClick={handleLogout} className="flex items-center justify-start px-3 md:px-4 py-2.5 md:py-3 text-sm font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors duration-180 overflow-hidden whitespace-nowrap h-11 md:h-12 w-full text-left group/out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 motion-reduce:transition-none">
                                 <LogOut className="w-5 h-5 flex-shrink-0 transition-colors duration-150" />
                                 <span className="opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 ml-2 md:ml-3 uppercase tracking-tight md:tracking-wider text-[9px] md:text-[11px] truncate hidden md:inline-block motion-reduce:transition-none">
@@ -508,25 +516,35 @@ function DashboardShell({
                                         animate={{ x: 0 }}
                                         exit={{ x: "-100%" }}
                                         transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                                        className="fixed inset-y-0 left-0 w-[min(320px,86vw)] h-[100dvh] max-h-[100dvh] bg-white/95 backdrop-blur-2xl text-slate-900 shadow-2xl z-[80] flex flex-col p-4 md:hidden border-r border-slate-200/80 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
+                                        className="fixed inset-y-0 left-0 w-[min(320px,86vw)] h-[100dvh] max-h-[100dvh] bg-[linear-gradient(90deg,rgba(11,25,44,0.06)_0%,rgba(11,25,44,0.02)_60%,#ffffff_100%)] text-slate-900 shadow-2xl z-[80] flex flex-col md:hidden border-r border-slate-200/80 pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)] relative overflow-hidden"
                                     >
-                                        {/* Drawer Başlık & Kapatma Butonu */}
-                                        <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 flex-shrink-0">
-                                            <FinAiLogo showText={true} className="h-7" />
+                                        {/* Soldan Sağa #0b192c Efekti Overlay */}
+                                        <div className="absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-[#0b192c]/[0.08] to-transparent pointer-events-none z-0" />
+
+                                        {/* Drawer Başlık (#0b192c ile dolduruldu) & Kapatma Butonu */}
+                                        <div className="flex items-center justify-between p-4 border-b border-[#1a2f4c] bg-[#0b192c] relative overflow-hidden flex-shrink-0 text-white z-10">
+                                            {/* Ambient Glow */}
+                                            <div className="absolute -top-8 -right-8 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none" />
+
+                                            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2.5 relative z-10">
+                                                <FinAiLogo showText={false} className="h-7 w-7 shrink-0 brightness-110" />
+                                                <span className="text-base font-black text-white tracking-tight">FinAi Workspace</span>
+                                            </Link>
                                             <button
                                                 ref={closeButtonRef}
                                                 onClick={handleCloseMobileMenu}
-                                                className="w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-colors duration-150 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/30 motion-reduce:transition-none motion-reduce:active:scale-100"
+                                                className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-colors duration-150 active:scale-95 relative z-10"
                                                 aria-label="Menüyü kapat"
                                             >
-                                                <X className="w-5 h-5" />
+                                                <X className="w-5 h-5 text-white" />
                                             </button>
                                         </div>
 
-                                        {/* Mobil Arama */}
-                                        <div className="my-3 flex-shrink-0">
-                                            <GlobalSearch onSelect={() => setIsMobileMenuOpen(false)} />
-                                        </div>
+                                        <div className="flex-1 flex flex-col p-4 overflow-hidden relative z-10">
+                                            {/* Mobil Arama */}
+                                            <div className="mb-3 flex-shrink-0">
+                                                <GlobalSearch onSelect={() => setIsMobileMenuOpen(false)} />
+                                            </div>
 
                                         {/* Menü Linkleri */}
                                         <nav className="flex-1 py-1 space-y-1 overflow-y-auto scrollbar-none" aria-label="Mobil Ana Menü">
@@ -638,6 +656,7 @@ function DashboardShell({
                                                 <LogOut className="w-4.5 h-4.5 flex-shrink-0 transition-colors duration-150" />
                                                 <span className="text-xs uppercase tracking-wider">Çıkış Yap</span>
                                             </button>
+                                        </div>
                                         </div>
                                     </motion.div>
                                 </>
