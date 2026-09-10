@@ -44,7 +44,7 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
 
     if (!isDataLoaded) {
         return (
-            <div className="bg-[#00008B] border border-blue-900 rounded-2xl sm:rounded-3xl p-5 min-h-[250px] flex flex-col justify-between animate-pulse">
+            <div className="bg-[#0b192c] border border-[#1a2f4c] rounded-2xl sm:rounded-3xl p-5 min-h-[250px] flex flex-col justify-between animate-pulse">
                 <div className="flex items-center justify-between">
                     <div className="h-5 w-36 bg-white/10 rounded-lg" />
                     <div className="h-5 w-16 bg-white/10 rounded-lg" />
@@ -58,40 +58,41 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
     const isPositive = totalProfit >= 0;
 
     return (
-        <div className="bg-[#00008B] text-white border border-[#00008B] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl shadow-[#00008B]/25 relative overflow-hidden flex flex-col justify-between min-h-[250px] h-full group">
+        <div className="bg-[#0b192c] text-white border border-[#1a2f4c] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl shadow-black/40 relative overflow-hidden flex flex-col justify-between min-h-[250px] h-full group">
             {/* Subtle Ambient Glow */}
             <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
 
-            {/* Arka Plan Beyaz Dalga Çizgisi (Widget Arka Planı Ambient Backdrop) */}
+            {/* Arka Plan Beyaz Dalga Çizgisi */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-                <svg viewBox="0 0 500 160" className="w-full h-full opacity-70 sm:opacity-85" preserveAspectRatio="none">
+                <svg viewBox="0 0 500 160" className="w-full h-full opacity-60 sm:opacity-75" preserveAspectRatio="none">
                     <defs>
                         <linearGradient id="heroBackdropGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.16" />
-                            <stop offset="65%" stopColor="#ffffff" stopOpacity="0.04" />
+                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.10" />
+                            <stop offset="65%" stopColor="#ffffff" stopOpacity="0.02" />
                             <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
                         </linearGradient>
                         <linearGradient id="heroLineGlow" x1="0" y1="0" x2="1" y2="0">
-                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-                            <stop offset="45%" stopColor="#ffffff" stopOpacity="0.75" />
-                            <stop offset="100%" stopColor="#ffffff" stopOpacity="1" />
+                            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+                            <stop offset="45%" stopColor="#ffffff" stopOpacity="0.60" />
+                            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.90" />
                         </linearGradient>
                     </defs>
                     {/* Alan Dolgusu */}
                     <path
-                        d="M 0,115 Q 100,130 200,105 T 350,90 T 440,55 T 500,28 L 500,160 L 0,160 Z"
+                        d="M 0,118 C 60,130 90,125 140,112 C 190,99 220,118 270,103 C 320,88 360,95 400,72 C 430,55 465,38 500,24 L 500,160 L 0,160 Z"
                         fill="url(#heroBackdropGrad)"
                     />
-                    {/* Parlayan Çizgi */}
+                    {/* İnce Kıvrımlı Beyaz Çizgi */}
                     <path
-                        d="M 0,115 Q 100,130 200,105 T 350,90 T 440,55 T 500,28"
+                        d="M 0,118 C 60,130 90,125 140,112 C 190,99 220,118 270,103 C 320,88 360,95 400,72 C 430,55 465,38 500,24"
                         fill="none"
                         stroke="url(#heroLineGlow)"
-                        strokeWidth="2.4"
+                        strokeWidth="1.2"
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                     />
-                    <circle cx="498" cy="28" r="3.5" fill="#ffffff" className="animate-pulse" />
+                    <circle cx="499" cy="24" r="2.5" fill="#ffffff" opacity="0.85" className="animate-pulse" />
                 </svg>
             </div>
 
