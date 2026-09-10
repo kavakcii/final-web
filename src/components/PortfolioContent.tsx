@@ -2127,90 +2127,57 @@ export default function PortfolioPage() {
                         const C = 2 * Math.PI * 36;
                         
                         return (
-                            <div className="flex flex-col sm:flex-row items-center gap-5 justify-between">
-                                {/* Sol: Donut Grafik */}
-                                <div className="relative w-36 h-36 shrink-0 flex items-center justify-center">
-                                    <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-sm">
-                                        {sortedAssets.map((group) => {
-                                            const weight = (group.marketVal / totalValue);
-                                            const strokeLength = weight * C;
-                                            const color = symbolColorMap[group.symbol];
-                                            const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
-                                            const strokeDashoffset = -currentOffset;
-                                            currentOffset += strokeLength;
-
-                                            return (
-                                                <circle
-                                                    key={group.symbol}
-                                                    cx="50"
-                                                    cy="50"
-                                                    r="36"
-                                                    fill="transparent"
-                                                    stroke={color}
-                                                    strokeWidth={hoveredSlice === group.symbol ? "18" : "14"}
-                                                    strokeDasharray={strokeDasharray}
-                                                    strokeDashoffset={strokeDashoffset}
-                                                    className="transition-all duration-300 cursor-pointer"
-                                                    onMouseEnter={() => setHoveredSlice(group.symbol)}
-                                                    onMouseLeave={() => setHoveredSlice(null)}
-                                                />
-                                            );
-                                        })}
-                                    </svg>
-                                    
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all duration-300">
-                                        {hoveredSlice ? (() => {
-                                            const activeAsset = sortedAssets.find(a => a.symbol === hoveredSlice);
-                                            return activeAsset ? (
-                                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{activeAsset.symbol}</span>
-                                                    <span className="block text-xs font-black text-[#00008B] tracking-tight">{formatCurrency(activeAsset.marketVal)}</span>
-                                                </motion.div>
-                                            ) : null;
-                                        })() : (
-                                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
-                                                <span className="block text-xs font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
-                                            </motion.div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Sağ: Hisseler Listesi (Referanstaki Sade Liste) */}
-                                <div className="flex-1 w-full space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                            <div className="relative w-48 h-48 mx-auto flex items-center justify-center">
+                                <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90 filter drop-shadow-md">
                                     {sortedAssets.map((group) => {
-                                        const weight = (group.marketVal / totalValue) * 100;
+                                        const weight = (group.marketVal / totalValue);
+                                        const strokeLength = weight * C;
                                         const color = symbolColorMap[group.symbol];
-                                        const isHovered = hoveredSlice === group.symbol;
+                                        const strokeDasharray = `${strokeLength} ${C - strokeLength}`;
+                                        const strokeDashoffset = -currentOffset;
+                                        currentOffset += strokeLength;
 
                                         return (
-                                            <div
+                                            <circle
                                                 key={group.symbol}
+                                                cx="50"
+                                                cy="50"
+                                                r="36"
+                                                fill="transparent"
+                                                stroke={color}
+                                                strokeWidth={hoveredSlice === group.symbol ? "20" : "16"}
+                                                strokeDasharray={strokeDasharray}
+                                                strokeDashoffset={strokeDashoffset}
+                                                className="transition-all duration-300 cursor-pointer"
                                                 onMouseEnter={() => setHoveredSlice(group.symbol)}
                                                 onMouseLeave={() => setHoveredSlice(null)}
-                                                className={cn(
-                                                    "flex items-center justify-between py-1 px-2 rounded-lg transition-all text-xs cursor-pointer",
-                                                    isHovered ? "bg-slate-100 font-bold" : "hover:bg-slate-50"
-                                                )}
-                                            >
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: color }} />
-                                                    <span className="font-bold text-slate-800 truncate">{group.symbol}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3 shrink-0">
-                                                    <span className="text-slate-500 font-medium">%{weight.toFixed(1)}</span>
-                                                    <span className="font-bold text-slate-700 min-w-[65px] text-right">{formatCurrency(group.marketVal)}</span>
-                                                </div>
-                                            </div>
+                                            />
                                         );
                                     })}
+                                </svg>
+                                
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none transition-all duration-300">
+                                    {hoveredSlice ? (() => {
+                                        const activeAsset = sortedAssets.find(a => a.symbol === hoveredSlice);
+                                        return activeAsset ? (
+                                            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{activeAsset.symbol}</span>
+                                                <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(activeAsset.marketVal)}</span>
+                                            </motion.div>
+                                        ) : null;
+                                    })() : (
+                                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Toplam</span>
+                                            <span className="block text-sm font-black text-[#00008B] tracking-tight">{formatCurrency(totalValue)}</span>
+                                        </motion.div>
+                                    )}
                                 </div>
                             </div>
                         );
                     };
 
                     return (
-                        <div className="bg-white border border-slate-100 rounded-3xl p-5 sm:p-6 shadow-xl shadow-[#00008B]/5">
+                        <div className="bg-white border border-slate-100 rounded-3xl p-6 pb-8 shadow-xl shadow-[#00008B]/5">
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
                                     <PieChart className="w-4 h-4 text-[#00008B]" />
@@ -2224,7 +2191,7 @@ export default function PortfolioPage() {
                             </div>
 
                             {assets.length > 0 && totalValue > 0 ? (
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                     {distributionView === 'donut' && renderDonut()}
                                     {distributionView === 'heatmap' && renderTreemap()}
                                     {distributionView === 'sector' && renderSectorMap()}
@@ -2258,17 +2225,17 @@ export default function PortfolioPage() {
                                                 <div className="bg-white p-3 rounded-xl shadow-sm border border-sky-50">
                                                     {distributionView === 'donut' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Sepetinizdeki yumurtaların nerede olduğunu gösterir. Olası bir dalgalanmada en büyük dilime sahip hissenizin düşüşü tüm portföyünüzü ciddi şekilde sarsabilir.
+                                                            Sepetinizdeki yumurtaların nerede olduğunu gösterir. Olası bir dalgalanmada en büyük dilime sahip (örneğin %35 ağırlığındaki) hissenizin düşüşü, tüm portföyünüzü ciddi şekilde sarsabilir. Bu yüzden devasa tek bir dilim yerine, dengeli boyutlarda dilimlere sahip olmak riski azaltır.
                                                         </p>
                                                     )}
                                                     {distributionView === 'heatmap' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Kutuların büyüklüğü paranın miktarını, renklerin koyuluğu ise kâr/zarar şiddetini temsil eder.
+                                                            Kutuların büyüklüğü paranın miktarını, renklerin koyuluğu ise kâr/zarar şiddetini temsil eder. Örneğin çok büyük ve koyu kırmızı bir kutu görüyorsanız, portföyünüzün ana damarlarından biri ciddi kan kaybediyor demektir. Koyu yeşil ise güçlü kârlılık anlamına gelir.
                                                         </p>
                                                     )}
                                                     {distributionView === 'sector' && (
                                                         <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir.
+                                                            Hisselerinizin hangi iş kollarında toplandığını gösterir. Örneğin portföyünüzdeki 10 hissenin 4 tanesi (%40'ı) ulaştırma sektöründeyse, bu oran sektör dilimlerinde temsil edilir.
                                                         </p>
                                                     )}
                                                 </div>
@@ -2276,50 +2243,49 @@ export default function PortfolioPage() {
                                         </>
                                     )}
 
-                                    {/* Sektör veya Kazanç Modundayken ya da Odak Modundayken Lejant Kartları */}
-                                    {(distributionView !== 'donut' || isFocused) && (
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs max-h-56 overflow-y-auto pr-1">
-                                            {[...sortedAssets]
-                                                .sort((a, b) => {
-                                                    const sA = getAssetSector(a.symbol);
-                                                    const sB = getAssetSector(b.symbol);
-                                                    if (sA < sB) return -1;
-                                                    if (sA > sB) return 1;
-                                                    return b.marketVal - a.marketVal;
-                                                })
-                                                .map((group, idx) => {
-                                                    const weight = (group.marketVal / totalValue) * 100;
-                                                    const assetSector = getAssetSector(group.symbol);
-                                                    
-                                                    const hexColor = distributionView === 'sector'
-                                                        ? (SECTOR_COLORS_HEX[assetSector] || fallbackHex[idx % fallbackHex.length])
-                                                        : symbolColorMap[group.symbol];
-                                                    
-                                                    const isHovered = distributionView === 'sector'
-                                                        ? (hoveredSlice === group.symbol || hoveredSlice === `sector_${assetSector}`)
-                                                        : (hoveredSlice === group.symbol);
-                                                    
-                                                    return (
-                                                        <div 
-                                                            key={group.symbol} 
-                                                            onMouseEnter={() => setHoveredSlice(group.symbol)}
-                                                            onMouseLeave={() => setHoveredSlice(null)}
-                                                            style={{ backgroundColor: isHovered ? hexColor : '', borderColor: isHovered ? hexColor : '' }}
-                                                            className={cn("flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.03] z-10 text-white" : "bg-slate-50/70 border-slate-100 shadow-sm")}
-                                                        >
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <div className={cn("w-2 h-2 rounded-full shrink-0 shadow-sm", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : hexColor }} />
-                                                                    <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
-                                                                </div>
-                                                                <span className={cn("text-[9px] font-medium transition-colors ml-3.5", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
+                                    {/* LEJANT KARTLARI (VARLIKLAR - SEKTÖRE GÖRE GRUPLU VE SEKTÖR RENGİNDE) */}
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs pb-2">
+                                        {[...sortedAssets]
+                                            .sort((a, b) => {
+                                                const sA = getAssetSector(a.symbol);
+                                                const sB = getAssetSector(b.symbol);
+                                                if (sA < sB) return -1;
+                                                if (sA > sB) return 1;
+                                                return b.marketVal - a.marketVal;
+                                            })
+                                            .map((group, idx) => {
+                                                const weight = (group.marketVal / totalValue) * 100;
+                                                const assetSector = getAssetSector(group.symbol);
+                                                
+                                                // Sektör modunda sektörün canlı rengi, Donut modunda varlığın kendi renk kimliği
+                                                const hexColor = distributionView === 'sector'
+                                                    ? (SECTOR_COLORS_HEX[assetSector] || fallbackHex[idx % fallbackHex.length])
+                                                    : symbolColorMap[group.symbol];
+                                                
+                                                const isHovered = distributionView === 'sector'
+                                                    ? (hoveredSlice === group.symbol || hoveredSlice === `sector_${assetSector}`)
+                                                    : (hoveredSlice === group.symbol);
+                                                
+                                                return (
+                                                    <div 
+                                                        key={group.symbol} 
+                                                        onMouseEnter={() => setHoveredSlice(group.symbol)}
+                                                        onMouseLeave={() => setHoveredSlice(null)}
+                                                        style={{ backgroundColor: isHovered ? hexColor : '', borderColor: isHovered ? hexColor : '' }}
+                                                        className={cn("flex items-center justify-between p-2.5 rounded-xl border transition-all cursor-pointer relative overflow-hidden", isHovered ? "shadow-lg scale-[1.05] z-10 text-white" : "bg-slate-50/70 border-slate-100 shadow-sm")}
+                                                    >
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className={cn("w-2.5 h-2.5 rounded-full shrink-0 shadow-sm transition-transform", isHovered ? "border-2 border-white bg-white" : "")} style={{ backgroundColor: isHovered ? '#fff' : hexColor, transform: isHovered ? 'scale(1.2)' : 'scale(1)' }} />
+                                                                <span className={cn("font-bold text-xs transition-colors", isHovered ? "text-white" : "text-[#00008B]")}>{group.symbol}</span>
                                                             </div>
-                                                            <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
+                                                            <span className={cn("text-[9px] font-medium transition-colors ml-4", isHovered ? "text-white/80" : "text-slate-400")}>{assetSector}</span>
                                                         </div>
-                                                    );
-                                                })}
-                                        </div>
-                                    )}
+                                                        <span className={cn("font-black text-xs transition-colors", isHovered ? "text-white" : "text-slate-600")}>%{weight.toFixed(1)}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
                                 </div>
                             ) : (
                                 <p className="text-xs text-slate-400 py-6 text-center font-medium">Grafik için varlık verisi bekleniyor.</p>
