@@ -369,13 +369,21 @@ export default function PortfolioPage() {
     });
 
     // Delete Confirmation State
-    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; assetId: string | null; assetSymbol: string; isTransaction: boolean; idsToDelete?: string[] }>({
+    const [deleteConfirm, setDeleteConfirm] = useState<{
+        isOpen: boolean;
+        assetId: string | null;
+        assetSymbol: string;
+        assetType?: Asset["type"];
+        isTransaction: boolean;
+        idsToDelete?: string[];
+    }>({
         isOpen: false,
         assetId: null,
         assetSymbol: "",
         isTransaction: false,
         idsToDelete: []
     });
+    const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false);
 
     // Fiyat Analizi Zaman Periyodu, Sekme ve Sıralama State'leri
     const [extremesTimeframe, setExtremesTimeframe] = useState<'1W' | '1M' | '3M' | '6M' | '1Y'>('1Y');
@@ -1337,35 +1345,78 @@ export default function PortfolioPage() {
         }
     };
 
-    const confirmDelete = (assetId: string, symbol: string, isTransaction: boolean = false) => {
-        setDeleteConfirm({ isOpen: true, assetId, assetSymbol: symbol, isTransaction, idsToDelete: [] });
+    const confirmDelete = (assetId: string, symbol: string, isTransaction: boolean = false, assetType?: Asset["type"]) => {
+        setDeleteConfirm({ isOpen: true, assetId, assetSymbol: symbol, assetType, isTransaction, idsToDelete: [] });
     };
 
-    const confirmDeleteGroup = (symbol: string, txs: { id: string }[]) => {
+    const confirmDeleteGroup = (symbol: string, txs: { id: string }[], assetType?: Asset["type"]) => {
         const ids = txs.map(t => t.id);
         setDeleteConfirm({
             isOpen: true,
-            assetId: null,
+            assetId: ids[0] || null,
             assetSymbol: symbol,
+            assetType,
             isTransaction: false,
             idsToDelete: ids
         });
     };
 
     const handleDelete = async () => {
+        if (!deleteConfirm.assetSymbol && !deleteConfirm.assetId && (!deleteConfirm.idsToDelete || deleteConfirm.idsToDelete.length === 0)) {
+            return;
+        }
+
+        const symbolToDelete = deleteConfirm.assetSymbol;
+        const typeToDelete = deleteConfirm.assetType;
+
+        // Nakit koruması: Nakit hiçbir şekilde Sil aksiyonu ile silinemez
+        if (symbolToDelete === 'NAKİT' || symbolToDelete === 'TRY_CASH' || typeToDelete === 'CASH') {
+            setFeedback({ message: "Nakit varlıklar doğrudan silinemez. Lütfen Nakit Çekim işlemini kullanın.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+            setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false, idsToDelete: [] });
+            return;
+        }
+
         try {
+            setIsDeleteSubmitting(true);
+
+            // 1. Veritabanından güvenle kaldır (Finansal SAT değildir, bakiye/işlem geçmişi etkilenmez)
             if (deleteConfirm.idsToDelete && deleteConfirm.idsToDelete.length > 0) {
                 for (const id of deleteConfirm.idsToDelete) {
-                    await PortfolioService.removeAsset(id);
+                    await PortfolioService.removeAsset(id, typeToDelete);
                 }
             } else if (deleteConfirm.assetId) {
-                await PortfolioService.removeAsset(deleteConfirm.assetId);
+                await PortfolioService.removeAsset(deleteConfirm.assetId, typeToDelete);
+            } else if (symbolToDelete) {
+                await PortfolioService.removeAsset(symbolToDelete, typeToDelete);
             }
+
+            // 2. Anında UI Güncellemesi (Optimistic Update - Madde 6)
+            // Sayfa yenilenmeden asset listesi, toplam değer, günlük K/Z, maliyet anında güncellenir
+            setAssets(prev => prev.filter(a => {
+                if (deleteConfirm.idsToDelete && deleteConfirm.idsToDelete.length > 0) {
+                    return !deleteConfirm.idsToDelete.includes(a.id);
+                }
+                if (deleteConfirm.assetId) {
+                    return a.id !== deleteConfirm.assetId;
+                }
+                return a.symbol.toUpperCase() !== symbolToDelete.toUpperCase();
+            }));
+
             setDeleteConfirm({ isOpen: false, assetId: null, assetSymbol: "", isTransaction: false, idsToDelete: [] });
-            setFeedback({ message: `${deleteConfirm.assetSymbol} varlığı başarıyla silindi.`, type: 'success' });
+            setFeedback({ message: `${symbolToDelete} varlığı portföyden başarıyla kaldırıldı.`, type: 'success' });
             setTimeout(() => setFeedback(null), 3000);
+
+            // 3. Arka planda veritabanı senkronizasyonu
             await fetchPortfolioData();
-        } catch (error) { console.error(error); }
+            refreshDashboardData();
+        } catch (error: any) {
+            console.error("Varlık silme hatası:", error);
+            setFeedback({ message: error.message || "Varlık silinirken bir hata oluştu.", type: 'error' });
+            setTimeout(() => setFeedback(null), 3500);
+        } finally {
+            setIsDeleteSubmitting(false);
+        }
     };
 
     const handleAnalyze = async (symbol: string, type: Asset["type"]) => {
@@ -1824,7 +1875,7 @@ export default function PortfolioPage() {
                                                                                     <TrendingDown className="w-3.5 h-3.5" /> SAT
                                                                                 </button>
                                                                                 <button 
-                                                                                    onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }} 
+                                                                                    onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions, group.type); }} 
                                                                                     className="p-1.5 hover:bg-slate-100 text-slate-400 hover:text-rose-600 rounded-xl transition-colors"
                                                                                     title={`${displaySymbol} varlığını sil (pozisyon kaydını kaldır)`}
                                                                                 >
@@ -1854,7 +1905,7 @@ export default function PortfolioPage() {
                                                                                         </Link>
                                                                                     )}
                                                                                     <button 
-                                                                                        onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions); }}
+                                                                                        onClick={(e) => { e.stopPropagation(); confirmDeleteGroup(group.symbol, group.transactions, group.type); }}
                                                                                         className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1.5 hover:bg-rose-50 px-2 py-1 rounded-lg transition-all"
                                                                                         title="Varlığa ait tüm işlemleri tek tıkla sil"
                                                                                     >
@@ -1871,7 +1922,7 @@ export default function PortfolioPage() {
                                                                                             Birim: {formatCurrency(tx.avgCost)}
                                                                                         </span>
                                                                                     </div>
-                                                                                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(tx.id, group.symbol, true); }} className="text-slate-400 hover:text-rose-600 p-1 transition-colors" title="Bu işlemi sil"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                                                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(tx.id, group.symbol, true, group.type); }} className="text-slate-400 hover:text-rose-600 p-1 transition-colors" title="Bu işlemi sil"><Trash2 className="w-3.5 h-3.5" /></button>
                                                                                 </div>
                                                                             ))}
                                                                         </div>
@@ -3478,6 +3529,81 @@ export default function PortfolioPage() {
                                     {isCashSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Nakit İşlemini Tamamla"}
                                 </button>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* VARLIK SİLME ONAY MODALI (DELETE CONFIRMATION DIALOG) */}
+            <AnimatePresence>
+                {deleteConfirm.isOpen && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                        <div 
+                            className="absolute inset-0 bg-slate-900/50 backdrop-blur-md transition-opacity" 
+                            onClick={() => !isDeleteSubmitting && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))} 
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }} 
+                            animate={{ scale: 1, opacity: 1, y: 0 }} 
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }} 
+                            className="relative bg-white border border-slate-100 rounded-[2rem] p-6 sm:p-8 w-full max-w-md shadow-2xl text-slate-800 z-10"
+                        >
+                            <button 
+                                onClick={() => !isDeleteSubmitting && setDeleteConfirm(prev => ({ ...prev, isOpen: false }))} 
+                                className="absolute top-5 right-5 p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                                disabled={isDeleteSubmitting}
+                                aria-label="Kapat"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shadow-sm mb-4">
+                                    <Trash2 className="w-7 h-7" />
+                                </div>
+                                <h3 className="text-lg font-black text-slate-900 tracking-tight">
+                                    Varlığı Portföyden Sil
+                                </h3>
+                                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                                    <span className="font-extrabold text-[#00008B]">{deleteConfirm.assetSymbol}</span> varlığını portföyünüzden silmek istediğinize emin misiniz?
+                                </p>
+
+                                <div className="w-full bg-amber-50/80 border border-amber-200/70 rounded-2xl p-3.5 mt-4 text-left flex items-start gap-2.5">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                    <div className="text-[11px] text-amber-800 leading-relaxed font-medium">
+                                        <strong className="font-bold">Önemli Bilgi:</strong> Bu işlem finansal bir satış (SAT) değildir. Yalnızca varlık kaydını portföyünüzden kaldırır; nakit bakiyeniz değişmez ve geçmiş işlemler korunur.
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 w-full mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+                                        disabled={isDeleteSubmitting}
+                                        className="flex-1 py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors disabled:opacity-50"
+                                    >
+                                        İptal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        disabled={isDeleteSubmitting}
+                                        className="flex-1 py-3 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-900/20 transition-all flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+                                    >
+                                        {isDeleteSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                                <span>Siliniyor...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Trash2 className="w-4 h-4" />
+                                                <span>Evet, Sil</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
                 )}

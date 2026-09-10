@@ -89,16 +89,47 @@ export const PortfolioService = {
         }
     },
 
-    removeAsset: async (id: string) => {
+    /**
+     * Varlık Silme (Removal/Correction) Fonksiyonu
+     * ÖNEMLİ: Bu bir finansal SAT işlemi DEĞİLDİR.
+     * SELL transaction, CASH_DEPOSIT/WITHDRAW, realized_pnl oluşturmaz.
+     * Yalnızca oturum açmış kullanıcının user_portfolios kaydını kaldırır.
+     */
+    removeAsset: async (idOrSymbol: string, assetType?: string) => {
         try {
-            const { error } = await supabase
+            const { data: { user }, error: authError } = await supabase.auth.getUser();
+            if (authError || !user) throw new Error("Kullanıcı oturumu bulunamadı.");
+
+            const symUpper = (idOrSymbol || '').toUpperCase();
+            if (symUpper === 'NAKİT' || symUpper === 'TRY_CASH' || assetType === 'CASH') {
+                throw new Error("Nakit varlıklar doğrudan silinemez. Lütfen Nakit Çekim işlemini kullanın.");
+            }
+
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSymbol);
+
+            let query = supabase
                 .from('user_portfolios')
                 .delete()
-                .eq('id', id);
+                .eq('user_id', user.id);
 
+            if (isUuid) {
+                query = query.eq('id', idOrSymbol);
+            } else {
+                query = query.eq('symbol', symUpper);
+                if (assetType) {
+                    query = query.eq('asset_type', assetType.toUpperCase());
+                }
+            }
+
+            // Nakit kaydının silinmesini SQL düzeyinde de engelle
+            query = query.neq('asset_type', 'CASH').neq('symbol', 'NAKİT').neq('symbol', 'TRY_CASH');
+
+            const { data, error } = await query.select();
             if (error) throw error;
+            return data;
         } catch (error) {
             console.error('Error removing asset:', error);
+            throw error;
         }
     },
 
