@@ -1588,9 +1588,15 @@ export default function PortfolioPage() {
                             {/* OLAY LİSTESİ VEYA BOŞ DURUM */}
                             <div className="mt-4 space-y-3">
                                 {portfolioAgendaEvents.length === 0 ? (
-                                    <div className="py-12 text-center text-slate-400 text-xs font-bold bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
-                                        <p className="text-slate-500 font-extrabold text-sm mb-1">Yaklaşan önemli bir portföy gelişmesi bulunmuyor.</p>
-                                        <span className="text-[11px] text-slate-400 font-medium">Portföyünüzdeki şirketlere ait bilanço, temettü veya resmi haberler açıklandıkça burada listelenir.</span>
+                                    <div className="py-10 px-5 text-center bg-[#0b192c] text-white border border-[#1a2f4c] rounded-2xl sm:rounded-3xl shadow-lg shadow-black/20 relative overflow-hidden group">
+                                        {/* Ambient Glow */}
+                                        <div className="absolute -top-12 -right-12 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-blue-400/15 rounded-full blur-2xl pointer-events-none" />
+
+                                        <div className="relative z-10">
+                                            <p className="text-white font-extrabold text-sm sm:text-[15px] mb-1.5 tracking-tight">Yaklaşan önemli bir portföy gelişmesi bulunmuyor.</p>
+                                            <span className="text-[11px] sm:text-xs text-blue-200/70 font-medium block leading-relaxed">Portföyünüzdeki şirketlere ait bilanço, temettü veya resmi haberler açıklandıkça burada listelenir.</span>
+                                        </div>
                                     </div>
                                 ) : (
                                     portfolioAgendaEvents.map((item) => (
@@ -2850,8 +2856,12 @@ export default function PortfolioPage() {
 
                 {/* K/Z Kartları (İlk Fotoğraftaki Gibi Yatay 3 Sütunlu Panel) */}
                 <div className="lg:col-span-5">
-                    <div className="bg-white border border-slate-100 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-sm flex flex-col justify-center h-full min-h-0">
-                        <div className="grid grid-cols-3 divide-x divide-slate-100 h-full items-center">
+                    <div className="bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_55%,#ecfdf5_100%)] border border-emerald-100/80 hover:border-emerald-200/80 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 shadow-xs hover:shadow-sm transition-all duration-300 flex flex-col justify-center h-full min-h-0 relative overflow-hidden group">
+                        {/* Soft Yeşil Parıltı (Ajanda Stili Yeşil Varyantı) */}
+                        <div className="absolute -top-16 -right-16 w-48 h-48 bg-emerald-100/35 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute -bottom-16 -left-16 w-36 h-36 bg-emerald-50/50 rounded-full blur-2xl pointer-events-none" />
+
+                        <div className="grid grid-cols-3 divide-x divide-emerald-100/70 h-full items-center relative z-10">
                             {/* 1. Sütun: Günlük K/Z */}
                             <div className="px-2 sm:px-3 flex flex-col justify-center">
                                 <div className="flex items-center gap-2 mb-1.5">
