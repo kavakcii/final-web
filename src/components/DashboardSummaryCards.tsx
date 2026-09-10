@@ -13,7 +13,7 @@ const formatCurrency = (val: number) => {
     }).format(val);
 };
 
-export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "stacked" }) {
+export function DashboardSummaryCards({ layout = "grid", compact = false }: { layout?: "grid" | "stacked"; compact?: boolean }) {
     const { myAssets = [], prices = {}, isDataLoaded } = useUser();
     const [isBalanceHidden, setIsBalanceHidden] = useState(false);
 
@@ -44,13 +44,13 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
 
     if (!isDataLoaded) {
         return (
-            <div className="bg-[#0b192c] border border-[#1a2f4c] rounded-2xl sm:rounded-3xl p-5 min-h-[250px] flex flex-col justify-between animate-pulse">
+            <div className={`bg-[#0b192c] border border-[#1a2f4c] rounded-2xl p-4 flex flex-col justify-between animate-pulse ${compact ? 'min-h-[160px]' : 'min-h-[250px]'}`}>
                 <div className="flex items-center justify-between">
-                    <div className="h-5 w-36 bg-white/10 rounded-lg" />
-                    <div className="h-5 w-16 bg-white/10 rounded-lg" />
+                    <div className="h-4 w-32 bg-white/10 rounded-lg" />
+                    <div className="h-4 w-14 bg-white/10 rounded-lg" />
                 </div>
-                <div className="h-10 w-48 bg-white/10 rounded-xl my-auto" />
-                <div className="h-8 w-full bg-white/10 rounded-lg pt-2 border-t border-white/10" />
+                <div className="h-8 w-40 bg-white/10 rounded-xl my-auto" />
+                <div className="h-6 w-full bg-white/10 rounded-lg pt-1 border-t border-white/10" />
             </div>
         );
     }
@@ -58,7 +58,11 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
     const isPositive = totalProfit >= 0;
 
     return (
-        <div className="bg-[#0b192c] text-white border border-[#1a2f4c] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xl shadow-black/40 relative overflow-hidden flex flex-col justify-between min-h-[250px] h-full group">
+        <div className={`bg-[#0b192c] text-white border border-[#1a2f4c] shadow-xl shadow-black/40 relative overflow-hidden flex flex-col justify-between h-full group ${
+            compact 
+                ? 'rounded-2xl p-3.5 sm:p-4 min-h-0' 
+                : 'rounded-2xl sm:rounded-3xl p-4 sm:p-5 min-h-[250px]'
+        }`}>
             {/* Subtle Ambient Glow */}
             <div className="absolute -top-16 -right-16 w-48 h-48 bg-white/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
@@ -97,14 +101,14 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
             </div>
 
             <div className="relative z-10 flex flex-col justify-between h-full">
-                {/* 1. Üst Başlık (Zaman Dilimleri Kaldırıldı, Sadeleşti) */}
-                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-white/15">
+                {/* 1. Üst Başlık */}
+                <div className={`flex items-center justify-between gap-2 border-b border-white/15 ${compact ? 'pb-1.5' : 'pb-2.5'}`}>
                     <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0">
-                            <Wallet className="w-3.5 h-3.5 text-white" />
+                        <div className={`rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-white shrink-0 ${compact ? 'w-6 h-6' : 'w-7 h-7'}`}>
+                            <Wallet className={`${compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} text-white`} />
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <h3 className="text-xs sm:text-[13px] font-semibold text-white tracking-tight">
+                            <h3 className={`font-semibold text-white tracking-tight ${compact ? 'text-xs' : 'text-xs sm:text-[13px]'}`}>
                                 Toplam Varlık Değeri
                             </h3>
                             {/* Göz İkonu */}
@@ -124,21 +128,25 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
                     </div>
 
                     {/* Sağ Üst Sade Durum Rozeti */}
-                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-[10px] text-white font-medium">
+                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/10 border border-white/20 text-white font-medium ${compact ? 'text-[9px]' : 'text-[10px]'}`}>
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         <span>Canlı Portföy</span>
                     </div>
                 </div>
 
                 {/* 2. Büyük Rakam ve Değişim Rozeti (Orta Bölüm) */}
-                <div className="my-auto py-2">
-                    <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight truncate leading-none">
+                <div className={compact ? "py-1.5 my-auto" : "my-auto py-2"}>
+                    <h2 className={`font-extrabold text-white tracking-tight truncate leading-none ${
+                        compact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl lg:text-[42px]'
+                    }`}>
                         {isBalanceHidden ? "₺ ••••••••" : formatCurrency(totalValue)}
                     </h2>
 
                     {/* Değişim Rozeti */}
-                    <div className="flex items-center gap-1.5 mt-2.5">
-                        <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                    <div className={`flex items-center gap-1.5 ${compact ? 'mt-1.5' : 'mt-2.5'}`}>
+                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold ${
+                            compact ? 'text-[11px]' : 'text-xs'
+                        } ${
                             isPositive
                                 ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
                                 : "bg-rose-500/15 text-rose-400 border border-rose-500/25"
@@ -146,28 +154,28 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
                             {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                             <span>{isPositive ? "+" : ""}%{Math.abs(profitRatio).toFixed(2)}</span>
                         </div>
-                        <span className="text-[11px] text-blue-200/70 font-normal">
+                        <span className={`text-blue-200/70 font-normal ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                             (Net Getiri)
                         </span>
                     </div>
                 </div>
 
-                {/* 3. Alt Bilgi Şeridi: Referans Görseldeki 3 Sütunlu Metrik */}
-                <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-white/15 text-left">
+                {/* 3. Alt Bilgi Şeridi */}
+                <div className={`grid grid-cols-3 gap-2 border-t border-white/15 text-left ${compact ? 'pt-1.5' : 'pt-2.5'}`}>
                     <div>
-                        <span className="text-[11px] font-normal text-blue-200/70 block">
+                        <span className={`font-normal text-blue-200/70 block ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                             Toplam Yatırım
                         </span>
-                        <span className="text-xs sm:text-[13px] font-semibold text-white block mt-0.5 truncate">
+                        <span className={`font-semibold text-white block truncate ${compact ? 'text-xs mt-0.5' : 'text-xs sm:text-[13px] mt-0.5'}`}>
                             {isBalanceHidden ? "₺ ••••••" : formatCurrency(totalCost)}
                         </span>
                     </div>
 
                     <div>
-                        <span className="text-[11px] font-normal text-blue-200/70 block">
+                        <span className={`font-normal text-blue-200/70 block ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                             Toplam Kar / Zarar
                         </span>
-                        <span className={`text-xs sm:text-[13px] font-semibold block mt-0.5 truncate ${
+                        <span className={`font-semibold block truncate ${compact ? 'text-xs mt-0.5' : 'text-xs sm:text-[13px] mt-0.5'} ${
                             isPositive ? "text-emerald-300" : "text-rose-300"
                         }`}>
                             {isBalanceHidden
@@ -177,10 +185,10 @@ export function DashboardSummaryCards({ layout = "grid" }: { layout?: "grid" | "
                     </div>
 
                     <div>
-                        <span className="text-[11px] font-normal text-blue-200/70 block">
+                        <span className={`font-normal text-blue-200/70 block ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
                             Portföy Pozisyonu
                         </span>
-                        <span className="text-xs sm:text-[13px] font-semibold text-white block mt-0.5 truncate">
+                        <span className={`font-semibold text-white block truncate ${compact ? 'text-xs mt-0.5' : 'text-xs sm:text-[13px] mt-0.5'}`}>
                             {myAssets.length} Aktif Varlık
                         </span>
                     </div>
