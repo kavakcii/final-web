@@ -20,11 +20,102 @@ export interface EnrichedNewsItem {
     affectedAssets: string[];
     readTime?: string;
     isHot?: boolean;
+    imageUrl?: string | null;
 }
 
 // Memory Cache with 3 minutes TTL
 let cachedNews: { timestamp: number; items: EnrichedNewsItem[]; userId?: string | null } | null = null;
 const CACHE_TTL_MS = 3 * 60 * 1000;
+
+// Persistent in-memory cache for Open Graph image lookups (URL -> image URL)
+const ogImageCache = new Map<string, string | null>();
+
+function extractRssImage(item: any): string | null {
+    if (!item) return null;
+
+    // 1. item.image (string or object)
+    if (typeof item.image === 'string' && item.image.startsWith('http')) return item.image.trim();
+    if (item.image && typeof item.image.url === 'string' && item.image.url.startsWith('http')) return item.image.url.trim();
+    if (item.image && typeof item.image['@_url'] === 'string' && item.image['@_url'].startsWith('http')) return item.image['@_url'].trim();
+    if (item.image && typeof item.image['#text'] === 'string' && item.image['#text'].startsWith('http')) return item.image['#text'].trim();
+
+    // 2. enclosure
+    if (item.enclosure) {
+        const encUrl = item.enclosure['@_url'] || item.enclosure.url;
+        const encType = item.enclosure['@_type'] || item.enclosure.type || '';
+        if (typeof encUrl === 'string' && encUrl.startsWith('http') && (!encType || encType.includes('image') || /\.(jpg|jpeg|png|webp|avif)/i.test(encUrl))) {
+            return encUrl.trim();
+        }
+    }
+
+    // 3. media:content (single or array)
+    const mediaContent = item['media:content'];
+    if (mediaContent) {
+        if (Array.isArray(mediaContent)) {
+            for (const m of mediaContent) {
+                const url = m?.['@_url'] || m?.url;
+                if (typeof url === 'string' && url.startsWith('http')) return url.trim();
+            }
+        } else {
+            const url = mediaContent['@_url'] || mediaContent.url;
+            if (typeof url === 'string' && url.startsWith('http')) return url.trim();
+        }
+    }
+
+    // 4. media:thumbnail
+    const mediaThumb = item['media:thumbnail'];
+    if (mediaThumb) {
+        if (Array.isArray(mediaThumb)) {
+            for (const m of mediaThumb) {
+                const url = m?.['@_url'] || m?.url;
+                if (typeof url === 'string' && url.startsWith('http')) return url.trim();
+            }
+        } else {
+            const url = mediaThumb['@_url'] || mediaThumb.url;
+            if (typeof url === 'string' && url.startsWith('http')) return url.trim();
+        }
+    }
+
+    // 5. <img> tag in description or content:encoded
+    const htmlSources = [item.description, item['content:encoded']];
+    for (const html of htmlSources) {
+        if (typeof html === 'string' && html.includes('<img')) {
+            const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+            if (match && match[1] && match[1].startsWith('http')) {
+                return match[1].trim();
+            }
+        }
+    }
+
+    return null;
+}
+
+async function getOgImage(link: string): Promise<string | null> {
+    if (!link || !link.startsWith('http')) return null;
+    if (ogImageCache.has(link)) return ogImageCache.get(link) || null;
+
+    try {
+        const res = await fetch(link, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            },
+            signal: AbortSignal.timeout(2500)
+        });
+        if (!res.ok) {
+            ogImageCache.set(link, null);
+            return null;
+        }
+        const html = await res.text();
+        const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) 
+                   || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+        const imageUrl = match && match[1] && match[1].startsWith('http') ? match[1].trim() : null;
+        ogImageCache.set(link, imageUrl);
+        return imageUrl;
+    } catch {
+        ogImageCache.set(link, null);
+        return null;
+    }
+}
 
 // 1. Kapsamlı HTML Entity Decoder
 function decodeHtmlEntities(str: string): string {
@@ -322,6 +413,8 @@ export async function GET(request: Request) {
                     }
                     seenSlugs.add(uniqueSlug);
 
+                    const rssImage = extractRssImage(item);
+
                     const enriched: EnrichedNewsItem = {
                         id: uniqueSlug,
                         slug: uniqueSlug,
@@ -337,7 +430,8 @@ export async function GET(request: Request) {
                         tickers: affected,
                         affectedAssets: affected,
                         readTime: '3 dk okuma',
-                        isHot: isPortfolioMatch || sentiment !== 'neutral'
+                        isHot: isPortfolioMatch || sentiment !== 'neutral',
+                        imageUrl: rssImage
                     };
 
                     return enriched;
@@ -358,6 +452,19 @@ export async function GET(request: Request) {
 
         // Sort chronologically (En güncel haber en üstte)
         allItems.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+
+        // OG:Image Fallback: RSS'inde görsel bulunmayan öncelikli haberler için og:image çek
+        const itemsNeedingOg = allItems.slice(0, 15).filter(i => !i.imageUrl && i.link);
+        if (itemsNeedingOg.length > 0) {
+            await Promise.allSettled(
+                itemsNeedingOg.map(async (item) => {
+                    const ogImg = await getOgImage(item.link);
+                    if (ogImg) {
+                        item.imageUrl = ogImg;
+                    }
+                })
+            );
+        }
 
         // Update Cache
         cachedNews = {

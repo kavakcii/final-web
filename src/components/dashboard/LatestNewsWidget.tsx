@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
 import { Newspaper, ArrowRight, Clock, TrendingUp, TrendingDown } from "lucide-react";
 
@@ -20,6 +21,32 @@ function formatTimeAgo(dateStr: string): string {
     } catch {
         return "Bugün";
     }
+}
+
+function NewsThumbnail({ imageUrl, title }: { imageUrl?: string | null; title: string }) {
+    const [hasError, setHasError] = useState(false);
+
+    if (imageUrl && !hasError) {
+        return (
+            <div className="w-[88px] h-[64px] sm:w-[98px] sm:h-[68px] rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-100 relative shadow-2xs">
+                <img
+                    src={imageUrl}
+                    alt={title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={() => setHasError(true)}
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    // FinAi Fallback Placeholder (Kırık ikon veya rastgele stok görsel yerine zarif, nötr FinAi marka placeholder'ı)
+    return (
+        <div className="w-[88px] h-[64px] sm:w-[98px] sm:h-[68px] rounded-xl shrink-0 border border-slate-100/90 bg-gradient-to-br from-slate-50 to-blue-50/40 flex flex-col items-center justify-center text-slate-400 relative select-none shadow-2xs group-hover:border-blue-100 transition-colors">
+            <Newspaper className="w-5 h-5 text-slate-300 group-hover:text-blue-500 transition-colors" />
+            <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 mt-1">FinAi</span>
+        </div>
+    );
 }
 
 export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
@@ -71,18 +98,17 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                             <Link
                                 key={item.id || idx}
                                 href={href}
-                                className="group block -mx-2 px-2 py-2.5 rounded-xl hover:bg-slate-50/70 transition-colors"
+                                className="group flex items-start gap-3.5 -mx-2 px-2 py-2.5 rounded-xl hover:bg-slate-50/70 transition-colors"
                             >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                        {/* Haber Başlığı */}
-                                        <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-1.5">
-                                            {item.title}
-                                        </h4>
+                                {/* Görsel / Fallback */}
+                                <NewsThumbnail imageUrl={item.imageUrl} title={item.title} />
 
-                                        {/* Meta Bilgileri: Kaynak · Zaman · Ticker · Kategori */}
-                                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
-                                            <span className="font-medium text-slate-500">
+                                {/* İçerik */}
+                                <div className="min-w-0 flex-1 flex flex-col justify-between self-stretch">
+                                    <div>
+                                        {/* Meta Bilgileri: Kaynak · Zaman */}
+                                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mb-1">
+                                            <span className="font-semibold text-slate-600">
                                                 {item.source || "FinAi"}
                                             </span>
                                             <span>·</span>
@@ -90,53 +116,44 @@ export function LatestNewsWidget({ news }: LatestNewsWidgetProps) {
                                                 <Clock className="w-2.5 h-2.5 text-slate-400" />
                                                 {formatTimeAgo(item.pubDate)}
                                             </span>
-
-                                            {/* Kategori Badge */}
-                                            {item.categoryLabel && (
-                                                <>
-                                                    <span>·</span>
-                                                    <span className="text-[10px] font-medium text-slate-500 bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded">
-                                                        {item.categoryLabel}
-                                                    </span>
-                                                </>
-                                            )}
-
-                                            {/* Ticker Badges */}
-                                            {specificAssets.slice(0, 2).map((asset: string, aIdx: number) => (
-                                                <span
-                                                    key={aIdx}
-                                                    className="text-[10px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50"
-                                                >
-                                                    {asset}
-                                                </span>
-                                            ))}
-
-                                            {/* Sentiment (Bullish/Bearish) */}
-                                            {item.sentiment === "bullish" && (
-                                                <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded">
-                                                    <TrendingUp className="w-2.5 h-2.5" />
-                                                    Pozitif
-                                                </span>
-                                            )}
-                                            {item.sentiment === "bearish" && (
-                                                <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200/60 px-1.5 py-0.5 rounded">
-                                                    <TrendingDown className="w-2.5 h-2.5" />
-                                                    Negatif
-                                                </span>
-                                            )}
                                         </div>
+
+                                        {/* Haber Başlığı */}
+                                        <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-1.5">
+                                            {item.title}
+                                        </h4>
                                     </div>
 
-                                    {/* Görsel Alanı: SADECE gerçek bir görsel URL'si varsa render edilir */}
-                                    {item.imageUrl && (
-                                        <div className="w-16 h-12 sm:w-20 sm:h-14 rounded-lg overflow-hidden shrink-0 border border-slate-100 bg-slate-100">
-                                            <img
-                                                src={item.imageUrl}
-                                                alt={item.title}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        </div>
-                                    )}
+                                    {/* Rozetler: Kategori · Ticker · Sentiment */}
+                                    <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                                        {item.categoryLabel && (
+                                            <span className="font-medium text-slate-500 bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 rounded">
+                                                {item.categoryLabel}
+                                            </span>
+                                        )}
+
+                                        {specificAssets.slice(0, 2).map((asset: string, aIdx: number) => (
+                                            <span
+                                                key={aIdx}
+                                                className="font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/50"
+                                            >
+                                                {asset}
+                                            </span>
+                                        ))}
+
+                                        {item.sentiment === "bullish" && (
+                                            <span className="inline-flex items-center gap-0.5 font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded">
+                                                <TrendingUp className="w-2.5 h-2.5" />
+                                                Pozitif
+                                            </span>
+                                        )}
+                                        {item.sentiment === "bearish" && (
+                                            <span className="inline-flex items-center gap-0.5 font-semibold text-red-600 bg-red-50 border border-red-200/60 px-1.5 py-0.5 rounded">
+                                                <TrendingDown className="w-2.5 h-2.5" />
+                                                Negatif
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </Link>
                         );

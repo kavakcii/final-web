@@ -22,15 +22,22 @@ export default function DashboardPage() {
     const [news, setNews] = useState<any[]>([]);
 
     useEffect(() => {
-        const fetchNews = async () => {
-            if (!isDataLoaded || !user) return;
+        if (globalNews && globalNews.length > 0 && news.length === 0) {
+            setNews(globalNews);
+        }
+    }, [globalNews, news.length]);
 
+    useEffect(() => {
+        const fetchNews = async () => {
             try {
-                const res = await fetch(`/api/news?userId=${user.id}`);
+                const url = user?.id ? `/api/news?userId=${user.id}` : `/api/news`;
+                const res = await fetch(url);
                 const data = await res.json();
                 if (data.success) {
                     const items = data.news || data.data || [];
-                    setNews(items);
+                    if (items.length > 0) {
+                        setNews(items);
+                    }
                 } else if (globalNews && globalNews.length > 0) {
                     setNews(globalNews);
                 }
@@ -40,7 +47,7 @@ export default function DashboardPage() {
             }
         };
         fetchNews();
-    }, [isDataLoaded, user, globalNews]);
+    }, [user?.id, globalNews]);
 
     const [loadingStep, setLoadingStep] = useState(0);
     const loadingMessages = [

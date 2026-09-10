@@ -158,17 +158,32 @@ export function FeaturedNewsWidget({ news }: FeaturedNewsWidgetProps) {
                             </span>
                         </div>
 
-                        <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-1">
-                            {mainFeatured.title}
-                        </h4>
+                        <div className="flex items-start gap-3">
+                            <div className="min-w-0 flex-1">
+                                <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 leading-snug group-hover:text-blue-600 transition-colors line-clamp-2 mb-1">
+                                    {mainFeatured.title}
+                                </h4>
 
-                        <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                            <span className="font-medium text-slate-500">{mainFeatured.source || "FinAi"}</span>
-                            {mainFeatured.categoryLabel && (
-                                <>
-                                    <span>·</span>
-                                    <span>{mainFeatured.categoryLabel}</span>
-                                </>
+                                <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                    <span className="font-medium text-slate-500">{mainFeatured.source || "FinAi"}</span>
+                                    {mainFeatured.categoryLabel && (
+                                        <>
+                                            <span>·</span>
+                                            <span>{mainFeatured.categoryLabel}</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {mainFeatured.imageUrl && (
+                                <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0 border border-slate-100 bg-slate-100 relative">
+                                    <img
+                                        src={mainFeatured.imageUrl}
+                                        alt={mainFeatured.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        loading="lazy"
+                                    />
+                                </div>
                             )}
                         </div>
 
