@@ -275,14 +275,14 @@ function DashboardShell({
                         {/* Soldan Sağa #0b192c Arka Plan Efekti Overlay (Opak Beyaz Zemin Üzerinde) */}
                         <div className="absolute inset-0 bg-gradient-to-r from-[#0b192c]/[0.05] via-[#0b192c]/[0.015] to-transparent pointer-events-none z-0" />
 
-                        {/* FinAi Workspace Üst Başlık Alanı (#0b192c ile dolduruldu) */}
-                        <div className="p-3 md:px-5 md:py-4 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-[#1a2f4c] relative z-10 bg-[#0b192c] overflow-hidden">
-                            {/* Subtle Ambient Glow */}
-                            <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                            <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-blue-400/15 rounded-full blur-2xl pointer-events-none" />
+                        {/* FinAi Workspace Üst Başlık Alanı: Kapalıyken Beyaz, Açılınca #0b192c */}
+                        <div className="p-3 md:px-5 md:py-4 flex items-center justify-start h-14 md:h-20 shrink-0 border-b border-slate-100 md:group-hover:border-[#1a2f4c] md:group-focus-within:border-[#1a2f4c] relative z-10 bg-white md:group-hover:bg-[#0b192c] md:group-focus-within:bg-[#0b192c] transition-[background-color,border-color] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden">
+                            {/* Subtle Ambient Glow (Açılınca Belirir) */}
+                            <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity duration-250" />
+                            <div className="absolute -bottom-10 -left-10 w-28 h-28 bg-blue-400/15 rounded-full blur-2xl pointer-events-none opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity duration-250" />
 
-                            <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 rounded-xl relative z-10">
-                                <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none drop-shadow-sm brightness-110" />
+                            <Link href="/" className="flex items-center justify-start gap-3 w-full overflow-hidden group/logo focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00008B]/40 md:group-hover:focus-visible:ring-white/40 rounded-xl relative z-10">
+                                <FinAiLogo showText={false} className="h-8 w-8 md:h-10 md:w-10 shrink-0 transition-opacity duration-200 motion-reduce:transition-none drop-shadow-sm" />
                                 <span className="text-lg md:text-xl font-black tracking-tight text-white opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-[opacity,transform] duration-200 ease-out transform -translate-x-1.5 md:group-hover:translate-x-0 md:group-focus-within:translate-x-0 whitespace-nowrap hidden md:inline-block motion-reduce:transition-none">
                                     FinAi Workspace
                                 </span>
