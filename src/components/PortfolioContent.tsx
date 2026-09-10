@@ -2851,8 +2851,17 @@ export default function PortfolioPage() {
                 {/* K/Z Kartları (3 adet dikey) */}
                 <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-4">
                     {/* Günlük K/Z */}
-                    <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
-                        <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Günlük K/Z</span>
+                    <div className="relative overflow-hidden bg-[linear-gradient(135deg,#f0f6ff_0%,#e8f0fe_40%,#f8faff_100%)] border border-blue-100/60 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                        {/* Dekoratif arka plan bar chart SVG */}
+                        <svg className="absolute right-3 bottom-2 w-20 h-12 opacity-[0.07]" viewBox="0 0 80 48" fill="none">
+                            <rect x="0" y="24" width="10" height="24" rx="2" fill="#00008B"/>
+                            <rect x="14" y="16" width="10" height="32" rx="2" fill="#00008B"/>
+                            <rect x="28" y="8" width="10" height="40" rx="2" fill="#00008B"/>
+                            <rect x="42" y="18" width="10" height="30" rx="2" fill="#00008B"/>
+                            <rect x="56" y="4" width="10" height="44" rx="2" fill="#00008B"/>
+                            <rect x="70" y="10" width="10" height="38" rx="2" fill="#00008B"/>
+                        </svg>
+                        <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Günlük K/Z</span>
                         <span className={cn("text-2xl font-black", dailyProfit > 0 ? "text-[#10B981]" : dailyProfit < 0 ? "text-[#EF4444]" : "text-slate-500")}>
                             {dailyProfit > 0 ? "+" : ""}{formatCurrency(dailyProfit)}
                         </span>
@@ -2861,8 +2870,16 @@ export default function PortfolioPage() {
                         </span>
                     </div>
                     {/* Toplam K/Z */}
-                    <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
-                        <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Toplam K/Z</span>
+                    <div className="relative overflow-hidden bg-[linear-gradient(135deg,#f0f6ff_0%,#e8f0fe_40%,#f8faff_100%)] border border-blue-100/60 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                        <svg className="absolute right-3 bottom-2 w-20 h-12 opacity-[0.07]" viewBox="0 0 80 48" fill="none">
+                            <rect x="0" y="30" width="10" height="18" rx="2" fill="#00008B"/>
+                            <rect x="14" y="20" width="10" height="28" rx="2" fill="#00008B"/>
+                            <rect x="28" y="12" width="10" height="36" rx="2" fill="#00008B"/>
+                            <rect x="42" y="6" width="10" height="42" rx="2" fill="#00008B"/>
+                            <rect x="56" y="14" width="10" height="34" rx="2" fill="#00008B"/>
+                            <rect x="70" y="2" width="10" height="46" rx="2" fill="#00008B"/>
+                        </svg>
+                        <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Toplam K/Z</span>
                         <span className={cn("text-2xl font-black", totalProfit > 0 ? "text-[#10B981]" : totalProfit < 0 ? "text-[#EF4444]" : "text-slate-500")}>
                             {totalProfit > 0 ? "+" : ""}{formatCurrency(totalProfit)}
                         </span>
@@ -2871,8 +2888,16 @@ export default function PortfolioPage() {
                         </span>
                     </div>
                     {/* Gerçekleşmiş K/Z */}
-                    <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between">
-                        <span className="text-slate-400 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Gerçekleşmiş K/Z</span>
+                    <div className="relative overflow-hidden bg-[linear-gradient(135deg,#f0f6ff_0%,#e8f0fe_40%,#f8faff_100%)] border border-blue-100/60 p-5 rounded-3xl shadow-sm flex flex-col justify-between">
+                        <svg className="absolute right-3 bottom-2 w-20 h-12 opacity-[0.07]" viewBox="0 0 80 48" fill="none">
+                            <rect x="0" y="28" width="10" height="20" rx="2" fill="#00008B"/>
+                            <rect x="14" y="22" width="10" height="26" rx="2" fill="#00008B"/>
+                            <rect x="28" y="16" width="10" height="32" rx="2" fill="#00008B"/>
+                            <rect x="42" y="10" width="10" height="38" rx="2" fill="#00008B"/>
+                            <rect x="56" y="20" width="10" height="28" rx="2" fill="#00008B"/>
+                            <rect x="70" y="8" width="10" height="40" rx="2" fill="#00008B"/>
+                        </svg>
+                        <span className="text-slate-500 text-[10px] font-extrabold uppercase tracking-widest block mb-1">Gerçekleşmiş K/Z</span>
                         <span className={cn("text-2xl font-black", realizedPnlTotal > 0 ? "text-[#10B981]" : realizedPnlTotal < 0 ? "text-[#EF4444]" : "text-slate-500")}>
                             {realizedPnlTotal > 0 ? "+" : ""}{formatCurrency(realizedPnlTotal)}
                         </span>
@@ -2880,34 +2905,55 @@ export default function PortfolioPage() {
                     </div>
                 </div>
 
-                {/* Nakit Bakiyesi (Ayrı Widget) */}
+                {/* Nakit Bakiyesi (Koyu Lacivert Premium Widget) */}
                 <div className="lg:col-span-3">
-                    <div className="bg-white border border-slate-100 p-5 rounded-3xl shadow-md flex flex-col justify-between h-full min-h-[120px]">
-                        <div className="flex justify-between items-center mb-3">
+                    <div className="bg-[#0b192c] text-white border border-[#1a2f4c] rounded-3xl p-5 shadow-xl shadow-black/30 flex flex-col justify-between h-full min-h-[120px] relative overflow-hidden">
+                        {/* Ambient glow */}
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+                        {/* Cüzdan SVG */}
+                        <div className="absolute bottom-3 right-3 opacity-10 pointer-events-none">
+                            <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+                                <rect x="4" y="20" width="64" height="44" rx="8" fill="white"/>
+                                <path d="M4 32h64" stroke="#0b192c" strokeWidth="2"/>
+                                <rect x="46" y="38" width="16" height="12" rx="4" fill="#0b192c"/>
+                                <path d="M12 12h36a8 8 0 0 1 8 8H4a8 8 0 0 1 8-8z" fill="white" opacity="0.6"/>
+                                <circle cx="53" cy="44" r="2.5" fill="white"/>
+                            </svg>
+                        </div>
+                        {/* İnce dalga çizgisi */}
+                        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                            <svg viewBox="0 0 300 120" className="w-full h-full opacity-20" preserveAspectRatio="none">
+                                <path d="M 0,90 C 40,100 60,85 100,78 C 140,70 160,85 200,75 C 240,65 265,48 300,32"
+                                    fill="none" stroke="white" strokeWidth="1" strokeLinecap="round"/>
+                            </svg>
+                        </div>
+                        {/* Başlık ve buton */}
+                        <div className="flex justify-between items-center mb-3 relative z-10">
                             <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
-                                    <Coins className="w-4 h-4 text-emerald-600" />
+                                <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center">
+                                    <Coins className="w-3.5 h-3.5 text-white" />
                                 </div>
-                                <span className="text-slate-500 text-[11px] font-extrabold uppercase tracking-widest">Nakit Bakiyesi</span>
+                                <span className="text-white/80 text-[11px] font-extrabold uppercase tracking-widest">Nakit Bakiyesi</span>
                             </div>
                             <button
                                 onClick={() => setIsCashModalOpen(true)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-[11px] rounded-xl border border-emerald-200/60 transition-all active:scale-95"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white font-bold text-[10px] rounded-xl border border-white/20 transition-all active:scale-95"
                                 title="Nakit Yatır/Çek"
                             >
                                 Nakit İşlemleri
                             </button>
                         </div>
-                        <div>
-                            <span className="text-3xl font-black text-slate-800 block">{formatCurrency(Math.max(0, cashBalance))}</span>
-                            <span className="text-[11px] text-slate-400 font-medium block mt-1.5">Kullanılabilir nakit</span>
+                        {/* Bakiye */}
+                        <div className="relative z-10">
+                            <span className="text-3xl font-black text-white block">{formatCurrency(Math.max(0, cashBalance))}</span>
+                            <span className="text-[11px] text-blue-300/70 font-medium block mt-1.5">Kullanılabilir nakit</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* UNIFIED DIRECT CLICK FOCUS MODE LAYOUT */}
-            <div 
+            <div
                 onClick={(e) => {
                     if (focusedWidget && e.target === e.currentTarget) {
                         setFocusedWidget(null);
@@ -2923,10 +2969,10 @@ export default function PortfolioPage() {
                             {renderWidgetCard('table')}
                         </div>
 
-                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols) */}
+                        {/* SAĞ SÜTUN (~%30 - 4/12 Cols) - Varlık Dağılımı üstte, Gündem altta */}
                         <div className="w-full xl:col-span-4 flex flex-col justify-between space-y-6 order-1 xl:order-2">
-                            {renderWidgetCard('agenda')}
                             {renderWidgetCard('distribution')}
+                            {renderWidgetCard('agenda')}
                         </div>
                     </>
                 ) : (
