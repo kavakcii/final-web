@@ -1,6 +1,6 @@
 "use client";
 
-// Dashboard v1.3.0 - Redesigned Top Section with Toplam Varlık, Varlık Dağılımı & Finansal Rapor
+// Dashboard v1.3.1 - Refined Top Section Faithful to Design Reference
 import { AuthComponent } from "@/components/ui/sign-up";
 import { TrendingUp, Activity, Newspaper, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -100,15 +100,15 @@ export default function DashboardPage() {
 
                 {/* DESKTOP LAYOUT (≥1024px) */}
                 <div className="hidden lg:flex flex-col gap-6 w-full relative z-10">
-                    {/* 1. ÜST BÖLÜM: TOPLAM VARLIK, VARLIK DAĞILIMI, FİNANSAL RAPOR (3'lü Grid) */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 xl:gap-6 items-stretch w-full">
-                        <div className="col-span-12 lg:col-span-4 flex flex-col min-w-0">
+                    {/* 1. ÜST BÖLÜM: TOPLAM VARLIK (Hero), VARLIK DAĞILIMI, FİNANSAL RAPOR (Orantılı 3'lü Grid) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_0.95fr_1.15fr] gap-5 xl:gap-6 items-stretch w-full">
+                        <div className="flex flex-col min-w-0">
                             <DashboardSummaryCards />
                         </div>
-                        <div className="col-span-12 lg:col-span-4 flex flex-col min-w-0">
+                        <div className="flex flex-col min-w-0">
                             <TopAssetDistributionCard />
                         </div>
-                        <div className="col-span-12 lg:col-span-4 flex flex-col min-w-0">
+                        <div className="flex flex-col min-w-0">
                             <FinAiYesterdayReportWidget />
                         </div>
                     </div>
