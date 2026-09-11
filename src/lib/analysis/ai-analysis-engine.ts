@@ -291,10 +291,21 @@ export class AIAnalysisEngine {
       ],
       educationalTakeaway: 'Finansal analizde kâr rakamı tek başına yeterli bir gösterge değildir; kârın ne kadarının operasyonel faaliyetlerden, ne kadarının nakit olarak üretildiği birlikte incelenmelidir.',
       dataUncertainties: (pkg.dataQuality?.notes && pkg.dataQuality.notes.length > 0) ? pkg.dataQuality.notes : ['Eksik veri bulunmamaktadır.'],
-      sourceReferences: [
-        { source: 'KAP & Finansal Tablolar', details: 'Doğrulanmış BIST Mali Veritabanı' },
-        { source: 'Sektör Karşılaştırma Motoru', details: `${pkg.sector} akran medyanları` }
-      ],
+      sourceReferences: (() => {
+        if (pkg.standardProvenance && pkg.standardProvenance.length > 0) {
+          return pkg.standardProvenance
+            .filter(p => p.sourceStatus === 'VERIFIED')
+            .map(p => ({
+              source: p.sourceName,
+              details: p.notes?.[0] || `${p.provider} (${p.tierLabelTr})`,
+              url: p.url
+            }));
+        }
+        return [
+          { source: 'KAP & Finansal Tablolar', details: 'Doğrulanmış BIST Mali Veritabanı' },
+          { source: 'Sektör Karşılaştırma Motoru', details: `${pkg.sector} akran medyanları` }
+        ];
+      })(),
       isCached: false
     };
   }

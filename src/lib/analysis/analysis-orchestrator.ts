@@ -50,8 +50,9 @@ import {
 import { RelevanceFilter } from './relevance-filter';
 import { FactorExtractor } from './factor-extractor';
 import { FinancialImpactEngine } from './impact-engine';
+import { AnalysisProvenanceService } from './analysis-provenance-service';
 
-export const ORCHESTRATOR_VERSION = '1.0.0-phase3';
+export const ORCHESTRATOR_VERSION = '1.0.0-phase9';
 
 export class AnalysisOrchestrator {
   /**
@@ -319,6 +320,30 @@ export class AnalysisOrchestrator {
         provenance,
         conflicts
       };
+
+      // Phase 9: Standardized Provenance Items & Payload Hashes
+      const rawPayloads = {
+        companyProfile: profile,
+        historicalPrices: prices,
+        financialStatements: quarterly,
+        news: relevantNews,
+        calendarEvents: relevantCalendarEvents,
+        corporateActions: { dividends, splits },
+        fxCommodities: liveCommodities,
+        sectorPeers: sectorComp
+      };
+
+      const standardProvenance = AnalysisProvenanceService.buildStandardProvenanceItems(dataPackage, rawPayloads);
+      const rawPayloadHashes: Record<string, string> = {};
+      standardProvenance.forEach(item => {
+        rawPayloadHashes[item.id] = item.rawPayloadHash;
+      });
+
+      const provenancePackage = AnalysisProvenanceService.compileProvenanceAudit(dataPackage, factors);
+
+      dataPackage.standardProvenance = standardProvenance;
+      dataPackage.rawPayloadHashes = rawPayloadHashes;
+      dataPackage.provenancePackage = provenancePackage;
 
       // 14. Phase 3: Deterministic Financial Impact Engine Evaluation
       const impactAnalysis = FinancialImpactEngine.evaluate(dataPackage, factors);

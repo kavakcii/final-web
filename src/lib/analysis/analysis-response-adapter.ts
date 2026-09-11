@@ -14,7 +14,9 @@ import {
   FinAiAnalysisResponse,
   UIFactorDetail,
   UIUpcomingEvent,
-  ImpactTransmissionChannel
+  ImpactTransmissionChannel,
+  StandardProvenanceItem,
+  ProvenanceAuditPackage
 } from './types';
 
 export class AnalysisResponseAdapter {
@@ -68,7 +70,10 @@ export class AnalysisResponseAdapter {
         source: f.source,
         sourceUrl: f.sourceUrl,
         reliabilityScore: f.sourceReliability,
-        verified: true
+        verified: true,
+        sourceStatus: f.sourceStatus || 'VERIFIED',
+        primaryProvenanceId: f.primaryProvenanceId,
+        verificationBasis: f.verificationBasis
       };
     };
 
@@ -187,7 +192,7 @@ export class AnalysisResponseAdapter {
       peerComparison,
 
       dataQualityRating: pkg.dataQuality?.status || 'VALID',
-      confidenceScore: 0.94,
+      confidenceScore: undefined,
       dataFreshnessNotes: pkg.dataFreshness?.staleReasons || [],
       unavailableDataPoints: aiResult.dataUncertainties || [],
       snapshotAgeMinutes: 0,
@@ -195,7 +200,11 @@ export class AnalysisResponseAdapter {
       sourceReferences: aiResult.sourceReferences || [],
       provenance: (() => {
         const sources = new Set<string>();
-        if (pkg.provenance) {
+        if (pkg.standardProvenance && pkg.standardProvenance.length > 0) {
+          pkg.standardProvenance.forEach(p => {
+            if (p.sourceName) sources.add(p.sourceName);
+          });
+        } else if (pkg.provenance) {
           Object.values(pkg.provenance).forEach(p => {
             if (p.provider) sources.add(p.provider);
             else if (p.source) sources.add(p.source);
@@ -211,6 +220,8 @@ export class AnalysisResponseAdapter {
         }
         return Array.from(sources);
       })(),
+      standardProvenance: pkg.standardProvenance,
+      provenancePackage: pkg.provenancePackage,
 
       guardrail: {
         decision: aiResult.guardrailReport?.decision || 'PASS',
@@ -220,6 +231,8 @@ export class AnalysisResponseAdapter {
         warnings: aiResult.guardrailReport?.warnings || [],
         validatedClaimsCount: aiResult.guardrailReport?.validatedClaims?.length || 0
       },
+
+      qualityEvaluation: (aiResult as any).qualityEvaluation,
 
       snapshot: {
         fingerprint: pkg.fingerprint,

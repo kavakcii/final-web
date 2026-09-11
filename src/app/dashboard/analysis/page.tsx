@@ -808,39 +808,79 @@ function AnalysisContent() {
                                     </div>
                                 )}
 
-                                {/* RIGHT CARD 4: DOĞRULANMIŞ KAYNAKLAR (COMPACT, NO FAKE PERCENTAGES OR HEALTH SCORES) */}
-                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2.5 text-xs">
+                                {/* RIGHT CARD 4: DOĞRULANMIŞ KAYNAKLAR (COMPACT, TRANSPARENT PROVENANCE - NO NUMERIC SCORES) */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 text-xs">
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                            <span>Veri Doğrulama</span>
+                                            <span>Veri Kaynağı & İzlenebilirlik</span>
                                         </span>
                                         <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 text-[11px]">
                                             <CheckCircle2 className="w-3 h-3" /> Doğrulandı
                                         </span>
                                     </div>
 
-                                    <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                                        <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
-                                            Kullanılan Veri Kaynakları:
+                                    {/* Detailed Provenance Items if standardProvenance exists */}
+                                    {analysis.standardProvenance && analysis.standardProvenance.length > 0 ? (
+                                        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="text-[10px] font-semibold text-slate-400 uppercase">
+                                                Resmî Kaynak Hiyerarşisi:
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                {analysis.standardProvenance.map((item, idx) => {
+                                                    const tierColor = item.tier === 'PRIMARY_OFFICIAL'
+                                                        ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
+                                                        : item.tier === 'SECONDARY_VERIFIED'
+                                                        ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20'
+                                                        : 'bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20';
+
+                                                    return (
+                                                        <div 
+                                                            key={item.id || idx}
+                                                            className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-[11px] space-y-0.5"
+                                                        >
+                                                            <div className="flex items-center justify-between gap-1">
+                                                                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate" title={item.sourceName}>
+                                                                    {item.sourceName}
+                                                                </span>
+                                                                <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider border shrink-0 ${tierColor}`}>
+                                                                    {item.tier === 'PRIMARY_OFFICIAL' ? 'Resmî' : (item.tier === 'SECONDARY_VERIFIED' ? 'Doğrulanmış' : 'Piyasa')}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                                                <span className="truncate">{item.provider}</span>
+                                                                <span className="font-mono text-[9px] text-emerald-600 dark:text-emerald-400 shrink-0">
+                                                                    {item.sourceStatus === 'VERIFIED' ? '✓ Doğrulandı' : item.sourceStatus}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-1">
-                                            {genuineSources.length > 0 ? (
-                                                genuineSources.map((src, idx) => (
-                                                    <span 
-                                                        key={idx}
-                                                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-medium border border-slate-200/60 dark:border-slate-700/60"
-                                                    >
-                                                        {src}
+                                    ) : (
+                                        <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="text-[10px] font-semibold text-slate-400 uppercase mb-1">
+                                                Kullanılan Veri Kaynakları:
+                                            </div>
+                                            <div className="flex flex-wrap gap-1">
+                                                {genuineSources.length > 0 ? (
+                                                    genuineSources.map((src, idx) => (
+                                                        <span 
+                                                            key={idx}
+                                                            className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-medium border border-slate-200/60 dark:border-slate-700/60"
+                                                        >
+                                                            {src}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-[11px] text-slate-400 italic">
+                                                        Kaynak bilgisi mevcut değil
                                                     </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-[11px] text-slate-400 italic">
-                                                    Kaynak bilgisi mevcut değil
-                                                </span>
-                                            )}
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
 
                             </div>

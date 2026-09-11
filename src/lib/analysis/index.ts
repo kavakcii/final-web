@@ -14,3 +14,4 @@ export * from './ai-analysis-guardrail';
 export * from './analysis-response-adapter';
 export * from './analysis-pipeline';
 export * from './analysis-trigger-engine';
+export * from './analysis-change-diff';

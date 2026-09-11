@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AnalysisPipeline } from "@/lib/analysis/analysis-pipeline";
 
-// BIST symbol validation regex: 2 to 8 alphanumeric characters
-const BIST_SYMBOL_REGEX = /^[A-Z0-9]{2,8}$/;
+// BIST symbol validation regex: 3 to 8 uppercase letters or alphanumeric starting with letter
+const BIST_SYMBOL_REGEX = /^[A-Z][A-Z0-9]{2,7}$/;
+
+// In-memory rate limiting map for forceRefresh abuse protection (symbol -> timestamp)
+const forceRefreshRateLimits = new Map<string, number>();
+const FORCE_REFRESH_COOLDOWN_MS = 10000; // 10 seconds per symbol cooldown for forceRefresh
 
 /**
  * Handles analysis generation pipeline via POST
@@ -77,7 +81,23 @@ async function executeAnalysisPipeline(rawSymbol: string | null | undefined, for
     );
   }
 
-  // 2. Execute through unified AnalysisPipeline
+  // 2. Rate limit forceRefresh calls to prevent abuse
+  if (forceRefresh) {
+    const lastTime = forceRefreshRateLimits.get(cleanSymbol) || 0;
+    const now = Date.now();
+    if (now - lastTime < FORCE_REFRESH_COOLDOWN_MS) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `${cleanSymbol} için zorunlu yenileme isteği çok sık gönderildi. Lütfen ${Math.ceil((FORCE_REFRESH_COOLDOWN_MS - (now - lastTime)) / 1000)} saniye sonra tekrar deneyin.`
+        },
+        { status: 429 }
+      );
+    }
+    forceRefreshRateLimits.set(cleanSymbol, now);
+  }
+
+  // 3. Execute through unified AnalysisPipeline
   const pipelineResult = await AnalysisPipeline.execute(cleanSymbol, {
     forceRefresh,
     triggerReason: 'MANUAL_REFRESH',

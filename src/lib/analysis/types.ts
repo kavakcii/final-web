@@ -200,6 +200,11 @@ export interface AssembledDataPackage {
   provenance: Record<string, ProvenanceRecord>;
   conflicts: string[];
 
+  // Phase 9: Standardized Provenance & Data Payload Hashes
+  standardProvenance?: StandardProvenanceItem[];
+  rawPayloadHashes?: Record<string, string>;
+  provenancePackage?: ProvenanceAuditPackage;
+
   // Phase 3: Impact Engine Result (Optional for backward compatibility)
   impactAnalysis?: ImpactEngineResult;
 }
@@ -330,6 +335,12 @@ export interface AnalysisSnapshotRecord {
   trigger_type?: string;
   trigger_event_id?: string;
   previous_fingerprint?: string;
+  version?: number;
+  previous_snapshot_id?: string | null;
+  change_diff?: SnapshotComparisonResult | null;
+  change_summary?: CausalChangeNarrative | null;
+  standard_provenance?: StandardProvenanceItem[];
+  provenance_package?: ProvenanceAuditPackage;
 }
 
 /**
@@ -566,6 +577,9 @@ export interface UIFactorDetail {
   sourceUrl?: string;
   reliabilityScore: number;
   verified?: boolean;
+  sourceStatus?: SourceStatus;
+  primaryProvenanceId?: string;
+  verificationBasis?: string;
 }
 
 export interface UIUpcomingEvent {
@@ -659,6 +673,8 @@ export interface FinAiAnalysisResponse {
     url?: string;
   }[];
   provenance?: string[];
+  standardProvenance?: StandardProvenanceItem[];
+  provenancePackage?: ProvenanceAuditPackage;
 
   // Guardrail & Quality Audit
   guardrail: {
@@ -669,6 +685,9 @@ export interface FinAiAnalysisResponse {
     warnings: string[];
     validatedClaimsCount: number;
   };
+
+  // Phase 10: Quality Evaluator & Calibration
+  qualityEvaluation?: QualityEvaluationResult;
 
   // Snapshot Metadata
   snapshot: {
@@ -768,5 +787,280 @@ export interface ScheduledUpdateBatchSummary {
   results: TriggerEvaluationResult[];
 }
 
+// ============================================================================
+// PHASE 8: ANALYSIS HISTORY & VERSIONING TYPES
+// ============================================================================
 
+export type FactorChangeType = 'ADDED' | 'REMOVED' | 'CHANGED' | 'UNCHANGED';
 
+export interface FactorDiffItem {
+  factorId: string;
+  title: string;
+  changeType: FactorChangeType;
+  transmissionChannel: string;
+  previousDirection?: ImpactDirection | string | null;
+  currentDirection?: ImpactDirection | string | null;
+  previousMagnitude?: ImpactMagnitude | string | null;
+  currentMagnitude?: ImpactMagnitude | string | null;
+  directionChanged: boolean;
+  magnitudeChanged: boolean;
+  explanation: string;
+  source?: string;
+}
+
+export interface FinancialMetricDiff {
+  metric: string;
+  label: string;
+  previousValue: number | string | null;
+  currentValue: number | string | null;
+  absoluteChange: number | null;
+  percentageChange: number | null;
+  isMaterial: boolean;
+}
+
+export interface CausalChangeNarrative {
+  whatChanged: string;            // Ne değişti?
+  whyItChanged: string;           // Neden değişti?
+  implicationForAnalysis: string; // Analize etkisi
+  keyDriversSummary: string[];
+}
+
+export interface SnapshotComparisonResult {
+  symbol: string;
+  hasChanged: boolean;
+  baseSnapshotId: string | null;
+  baseVersion: number | null;
+  baseTimestamp: string | null;
+  baseFingerprint: string | null;
+  targetSnapshotId: string;
+  targetVersion: number;
+  targetTimestamp: string;
+  targetFingerprint: string;
+
+  // Impact Balance Shift (Qualitative only - NO numerical scores)
+  impactBalanceShift: {
+    previousBalance: ImpactBalanceRating | string | null;
+    currentBalance: ImpactBalanceRating | string | null;
+    hasShifted: boolean;
+    explanation: string;
+  };
+
+  // Data Differences
+  dataChanges: {
+    priceDiff?: {
+      previous: number | null;
+      current: number | null;
+      changePercent: number | null;
+    };
+    isNewFinancialPeriod: boolean;
+    previousPeriodEnd?: string | null;
+    currentPeriodEnd?: string | null;
+    financialMetricsDiff: FinancialMetricDiff[];
+    newNewsCount: number;
+    newNewsHeadlines: string[];
+    dividendChangesCount: number;
+    macroEventsDiff: string[];
+  };
+
+  // Factor Differences
+  factorChanges: {
+    added: FactorDiffItem[];
+    removed: FactorDiffItem[];
+    changed: FactorDiffItem[];
+    unchanged: FactorDiffItem[];
+    totalAdded: number;
+    totalRemoved: number;
+    totalChanged: number;
+    totalUnchanged: number;
+  };
+
+  // Causal Narrative
+  causalNarrative: CausalChangeNarrative;
+
+  // Trigger Metadata Connection
+  triggerContext?: {
+    triggerType?: string;
+    triggerReason?: string;
+    triggerEventId?: string;
+  };
+
+  comparedAt: string;
+}
+
+export interface AnalysisHistoryItem {
+  id: string;
+  version: number;
+  symbol: string;
+  companyName: string;
+  createdAt: string;
+  dataTimestamp: string;
+  fingerprint: string;
+  previousSnapshotId: string | null;
+  status: string;
+  triggerReason?: string;
+  triggerType?: string;
+  impactBalance?: string;
+  guardrailStatus?: string;
+  changeSummary?: CausalChangeNarrative | null;
+  price?: number | null;
+  periodEnd?: string | null;
+}
+
+export interface AnalysisHistoryResponse {
+  success: boolean;
+  symbol: string;
+  companyName: string;
+  totalSnapshots: number;
+  currentVersion: number;
+  snapshots: AnalysisHistoryItem[];
+  limit: number;
+  offset: number;
+  hasMore: boolean;
+}
+
+// ============================================================================
+// PHASE 9: PROVENANCE & TRANSPARENCY (VERİ KAYNAĞI İZLENEBİLİRLİĞİ)
+// ============================================================================
+
+/**
+ * Qualitative operational verification status for a data source.
+ * Strict Rule: No numeric reliability scores!
+ */
+export type SourceStatus = 'VERIFIED' | 'STALE' | 'MISSING' | 'UNAVAILABLE' | 'CONFLICT';
+
+/**
+ * Official source hierarchy tier for deterministic conflict resolution
+ * Tier 1: KAP, Audited Financials, Official Corporate Registry
+ * Tier 2: Borsa Istanbul (BIST), Central Bank (TCMB), TURKSTAT (TÜİK)
+ * Tier 3: Market Data Providers (Yahoo Finance, TradingView, Google News RSS, Finnet)
+ */
+export type SourceHierarchyTier = 'PRIMARY_OFFICIAL' | 'SECONDARY_VERIFIED' | 'MARKET_DATA_PROVIDER';
+
+export type RelatedDataType =
+  | 'FINANCIAL_STATEMENTS'
+  | 'HISTORICAL_PRICES'
+  | 'COMPANY_PROFILE'
+  | 'NEWS'
+  | 'MACRO_CALENDAR'
+  | 'FX_COMMODITY'
+  | 'CORPORATE_ACTIONS'
+  | 'SECTOR_PEERS';
+
+/**
+ * Standardized, fully traceable provenance item representing a single verified input feed.
+ */
+export interface StandardProvenanceItem {
+  id: string; // Unique source identifier (e.g., 'kap_consolidated_statements', 'bist_daily_prices')
+  sourceName: string; // Human readable official name
+  provider: string; // Underlying provider / gateway
+  tier: SourceHierarchyTier;
+  tierLabelTr: string; // 'Birincil Resmî Bildirim' | 'Doğrulanmış İkincil Kaynak' | 'Piyasa Veri Sağlayıcısı'
+  url?: string; // Verified public URL or search portal (NEVER fabricated)
+  fetchedAt: string; // ISO 8601 timestamp when fetched
+  dataTimestamp?: string | null; // Period end or market trade date
+  freshness: FactorFreshness;
+  sourceStatus: SourceStatus;
+  rawPayloadHash: string; // Deterministic SHA-256 hash of the exact raw payload
+  relatedDataType: RelatedDataType;
+  recordCount?: number;
+  notes?: string[];
+}
+
+/**
+ * Traceable link connecting an extracted qualitative factor to verified data inputs
+ */
+export interface FactorProvenanceMapping {
+  factorId: string;
+  factorTitle: string;
+  primaryProvenanceId: string;
+  secondaryProvenanceIds?: string[];
+  sourceStatus: SourceStatus;
+  verificationBasis: string; // Concrete verifiable field or formula (e.g., 'quarterly[0].revenueYoY')
+}
+
+/**
+ * Deterministic resolution record when two sources provide differing data points
+ */
+export interface DataConflictResolution {
+  metric: string;
+  sources: string[];
+  values: Record<string, any>;
+  selectedSource: string;
+  resolvedValue: any;
+  resolutionBasis: string; // Justification based on official hierarchy
+  resolvedAt: string;
+}
+
+/**
+ * Full provenance audit package attached to an analysis package or response
+ */
+export interface ProvenanceAuditPackage {
+  symbol: string;
+  assembledAt: string;
+  overallStatus: SourceStatus;
+  items: StandardProvenanceItem[];
+  factorMappings: FactorProvenanceMapping[];
+  conflictsResolved: DataConflictResolution[];
+  unverifiedDataPoints: string[];
+}
+
+/**
+ * Phase 10: Quality Evaluator & Production Hardening Contracts
+ */
+export type QualityDecision = 'PASS' | 'WARN' | 'REJECT';
+
+export type QualityIssueCode =
+  | 'MISSING_EVIDENCE'
+  | 'BROKEN_CAUSAL_CHAIN'
+  | 'UNSUPPORTED_SPECULATION'
+  | 'IMPACT_BALANCE_MISMATCH'
+  | 'SOURCE_MISMATCH'
+  | 'DUPLICATE_FACTOR'
+  | 'DEGRADED_DATA_ASSERTION'
+  | 'UNVERIFIED_PRICE_TARGET'
+  | 'INVESTMENT_ADVICE_PATTERN';
+
+export interface QualityIssue {
+  code: QualityIssueCode;
+  severity: 'CRITICAL' | 'WARNING';
+  message: string;
+  factorId?: string;
+  channel?: string;
+  snippet?: string;
+}
+
+export interface FactorDeduplicationReport {
+  originalFactorCount: number;
+  deduplicatedFactorCount: number;
+  groupedFactors: {
+    eventKey: string;
+    channel: string;
+    mergedCount: number;
+    survivingTitle: string;
+  }[];
+}
+
+export interface CausalChainValidationReport {
+  totalFactorsChecked: number;
+  validChainsCount: number;
+  brokenChainsCount: number;
+  details: {
+    factorTitle: string;
+    hasTrigger: boolean;
+    hasChannel: boolean;
+    hasFinancialImplication: boolean;
+    isComplete: boolean;
+  }[];
+}
+
+export interface QualityEvaluationResult {
+  evaluatorVersion: string;
+  evaluatedAt: string;
+  decision: QualityDecision;
+  isPublishable: boolean;
+  issues: QualityIssue[];
+  warnings: string[];
+  causalChainReport: CausalChainValidationReport;
+  deduplicationReport: FactorDeduplicationReport;
+  degradedDataNotice?: string;
+}

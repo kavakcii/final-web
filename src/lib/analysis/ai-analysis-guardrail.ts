@@ -454,7 +454,23 @@ export class AIAnalysisGuardrail {
       'finnhub',
       'opec',
       'şirket bildirimi',
-      'faaliyet raporu'
+      'faaliyet raporu',
+      'haber',
+      'basın',
+      'döviz',
+      'emtia',
+      'künye',
+      'takvim',
+      'ekonomi',
+      'akran',
+      'konsolide',
+      'gösterge',
+      'finansal rasyo',
+      'kurumsal eylem',
+      'temettü',
+      'piyasa',
+      'rasyo',
+      'bilişim'
     ];
 
     // Check sourceReferences
@@ -462,12 +478,24 @@ export class AIAnalysisGuardrail {
       const srcName = (ref.source || '').toLowerCase();
       const isKnown = verifiedSourcesKeywords.some(kw => srcName.includes(kw));
 
-      // Check for fabricated URLs
+      // Check for fabricated URLs (only official authorized domains or verified article URLs)
       if (ref.url) {
         try {
           const parsed = new URL(ref.url);
           const domain = parsed.hostname.toLowerCase();
-          const allowedDomains = ['kap.org.tr', 'borsaistanbul.com', 'tcmb.gov.tr', 'matriksdata.com', 'finnhub.io'];
+          const allowedDomains = [
+            'kap.org.tr',
+            'borsaistanbul.com',
+            'tcmb.gov.tr',
+            'matriksdata.com',
+            'finnhub.io',
+            'google.com',
+            'bloomberght.com',
+            'aa.com.tr',
+            'dunya.com',
+            'trthaber.com',
+            'reuters.com'
+          ];
           if (!allowedDomains.some(ad => domain.includes(ad))) {
             violations.push({
               code: 'SOURCE_MISMATCH',

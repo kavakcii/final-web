@@ -15,8 +15,11 @@ import {
   AssembledDataPackage,
   AnalysisFactor,
   AnalysisSnapshotRecord,
-  SnapshotDiffResult
+  SnapshotDiffResult,
+  SnapshotComparisonResult,
+  CausalChangeNarrative
 } from './types';
+import { AnalysisChangeDiffEngine } from './analysis-change-diff';
 
 // In-memory fallback repository for development/test environments
 const inMemorySnapshotStore: AnalysisSnapshotRecord[] = [];
@@ -37,7 +40,7 @@ function getSupabaseAdmin(): SupabaseClient | null {
 
 export class AnalysisSnapshotService {
   /**
-   * Saves a new analysis snapshot with deduplication protection and diff tracking
+   * Saves a new analysis snapshot with deduplication protection, versioning and diff tracking
    */
   public static async saveSnapshot(
     dataPackage: AssembledDataPackage,
@@ -53,9 +56,10 @@ export class AnalysisSnapshotService {
     snapshot: AnalysisSnapshotRecord;
     isDuplicate: boolean;
     diff?: SnapshotDiffResult;
+    richDiff?: SnapshotComparisonResult;
     error?: string;
   }> {
-    const symbol = dataPackage.symbol;
+    const symbol = dataPackage.symbol.toUpperCase();
     const fingerprint = dataPackage.fingerprint;
 
     // 1. Check if an identical snapshot already exists for this symbol & fingerprint
@@ -64,23 +68,45 @@ export class AnalysisSnapshotService {
       return {
         success: true,
         snapshot: existing,
-        isDuplicate: true
+        isDuplicate: true,
+        richDiff: existing.change_diff ?? undefined
       };
     }
 
-    // 2. Fetch the latest previous snapshot to compute change diff
+    // 2. Fetch the latest previous snapshot to compute version and change diff
     const previousSnapshot = await this.getLatestSnapshot(symbol);
+    const newVersion = (previousSnapshot?.version ?? 0) + 1;
+    const previousSnapshotId = previousSnapshot ? previousSnapshot.id : null;
+
+    // Backward-compatible simple diff
     const diff = previousSnapshot
       ? this.computeChangeDiff(dataPackage, factors, previousSnapshot)
       : undefined;
 
+    // Phase 8: Rich deterministic change diff & causal narrative
+    const richDiff = AnalysisChangeDiffEngine.computeDiff(
+      previousSnapshot,
+      dataPackage,
+      factors,
+      {
+        currentVersion: newVersion,
+        triggerContext: {
+          triggerType: triggerMetadata?.triggerType,
+          triggerReason: triggerMetadata?.updateReason,
+          triggerEventId: triggerMetadata?.triggerEventId
+        }
+      }
+    );
+
     const newSnapshot: AnalysisSnapshotRecord = {
-      id: crypto.randomUUID(),
+      id: richDiff.targetSnapshotId || crypto.randomUUID(),
       symbol,
       company_name: dataPackage.companyName,
       created_at: new Date().toISOString(),
       data_timestamp: dataPackage.assembledAt,
       snapshot_version: 1,
+      version: newVersion,
+      previous_snapshot_id: previousSnapshotId,
       orchestrator_version: dataPackage.orchestratorVersion,
       fingerprint,
       data_package: dataPackage,
@@ -96,7 +122,11 @@ export class AnalysisSnapshotService {
       update_reason: triggerMetadata?.updateReason,
       trigger_type: triggerMetadata?.triggerType,
       trigger_event_id: triggerMetadata?.triggerEventId,
-      previous_fingerprint: triggerMetadata?.previousFingerprint || previousSnapshot?.fingerprint
+      previous_fingerprint: triggerMetadata?.previousFingerprint || previousSnapshot?.fingerprint,
+      change_diff: richDiff,
+      change_summary: richDiff.causalNarrative,
+      standard_provenance: dataPackage.standardProvenance,
+      provenance_package: dataPackage.provenancePackage
     };
 
     // 3. Persist to Supabase or in-memory fallback
@@ -118,7 +148,11 @@ export class AnalysisSnapshotService {
           data_freshness: newSnapshot.data_freshness,
           data_quality: newSnapshot.data_quality,
           relevant_events: newSnapshot.relevant_events,
-          status: newSnapshot.status
+          status: newSnapshot.status,
+          version: newSnapshot.version,
+          previous_snapshot_id: newSnapshot.previous_snapshot_id,
+          change_diff: newSnapshot.change_diff,
+          change_summary: newSnapshot.change_summary
         };
 
         if (newSnapshot.update_reason) insertPayload.update_reason = newSnapshot.update_reason;
@@ -126,7 +160,39 @@ export class AnalysisSnapshotService {
         if (newSnapshot.trigger_event_id) insertPayload.trigger_event_id = newSnapshot.trigger_event_id;
         if (newSnapshot.previous_fingerprint) insertPayload.previous_fingerprint = newSnapshot.previous_fingerprint;
 
-        const { error } = await sb.from('analysis_snapshots').insert(insertPayload);
+        let { error } = await sb.from('analysis_snapshots').insert(insertPayload);
+
+        if (error && (error.message.includes('column') || error.message.includes('schema') || error.message.includes('does not exist'))) {
+          // Fallback: If version or trigger columns are not yet in Supabase schema,
+          // store them safely inside data_package JSONB and insert baseline record
+          const fallbackPayload: any = {
+            id: newSnapshot.id,
+            symbol: newSnapshot.symbol,
+            company_name: newSnapshot.company_name,
+            created_at: newSnapshot.created_at,
+            data_timestamp: newSnapshot.data_timestamp,
+            snapshot_version: newSnapshot.snapshot_version,
+            orchestrator_version: newSnapshot.orchestrator_version,
+            fingerprint: newSnapshot.fingerprint,
+            data_package: {
+              ...newSnapshot.data_package,
+              version: newSnapshot.version,
+              previousSnapshotId: newSnapshot.previous_snapshot_id,
+              changeDiff: newSnapshot.change_diff,
+              changeSummary: newSnapshot.change_summary,
+              updateReason: newSnapshot.update_reason,
+              triggerType: newSnapshot.trigger_type
+            },
+            factors: newSnapshot.factors,
+            source_provenance: newSnapshot.source_provenance,
+            data_freshness: newSnapshot.data_freshness,
+            data_quality: newSnapshot.data_quality,
+            relevant_events: newSnapshot.relevant_events,
+            status: newSnapshot.status
+          };
+          const fallbackRes = await sb.from('analysis_snapshots').insert(fallbackPayload);
+          error = fallbackRes.error;
+        }
 
         if (error) {
           console.warn('[AnalysisSnapshotService] Supabase insert warning, falling back to memory store:', error.message);
@@ -144,7 +210,8 @@ export class AnalysisSnapshotService {
       success: true,
       snapshot: newSnapshot,
       isDuplicate: false,
-      diff
+      diff,
+      richDiff
     };
   }
 
@@ -164,23 +231,75 @@ export class AnalysisSnapshotService {
     if (!rec.trigger_type && (rec.data_package as any)?.triggerType) {
       rec.trigger_type = (rec.data_package as any).triggerType;
     }
+    if (rec.version == null) {
+      rec.version = (rec.data_package as any)?.version ?? 1;
+    }
+    if (rec.previous_snapshot_id === undefined && (rec.data_package as any)?.previousSnapshotId) {
+      rec.previous_snapshot_id = (rec.data_package as any).previousSnapshotId;
+    }
+    if (!rec.change_diff && (rec.data_package as any)?.changeDiff) {
+      rec.change_diff = (rec.data_package as any).changeDiff;
+    }
+    if (!rec.change_summary && (rec.data_package as any)?.changeSummary) {
+      rec.change_summary = (rec.data_package as any).changeSummary;
+    }
     return rec;
   }
 
   /**
-   * Retrieves the latest snapshot for a symbol
+   * Retrieves a snapshot by its unique ID
    */
-  public static async getLatestSnapshot(symbol: string): Promise<AnalysisSnapshotRecord | null> {
+  public static async getSnapshotById(id: string): Promise<AnalysisSnapshotRecord | null> {
     const sb = getSupabaseAdmin();
     if (sb) {
       try {
         const { data, error } = await sb
           .from('analysis_snapshots')
           .select('*')
-          .eq('symbol', symbol)
+          .eq('id', id)
+          .maybeSingle();
+
+        if (!error && data) {
+          return this.unpackRecord(data as AnalysisSnapshotRecord);
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
+    const memMatch = inMemorySnapshotStore.find(s => s.id === id);
+    return memMatch ? this.unpackRecord(memMatch) : null;
+  }
+
+  /**
+   * Retrieves the latest snapshot for a symbol
+   */
+  public static async getLatestSnapshot(symbol: string): Promise<AnalysisSnapshotRecord | null> {
+    const cleanSymbol = symbol.toUpperCase().trim();
+    const sb = getSupabaseAdmin();
+    if (sb) {
+      try {
+        let { data, error } = await sb
+          .from('analysis_snapshots')
+          .select('*')
+          .eq('symbol', cleanSymbol)
+          .order('version', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
+
+        // Schema-safe fallback if 'version' column doesn't exist in Supabase yet
+        if (error) {
+          const fallbackRes = await sb
+            .from('analysis_snapshots')
+            .select('*')
+            .eq('symbol', cleanSymbol)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          data = fallbackRes.data;
+          error = fallbackRes.error;
+        }
 
         if (!error && data) {
           return this.unpackRecord(data as AnalysisSnapshotRecord);
@@ -190,34 +309,75 @@ export class AnalysisSnapshotService {
       }
     }
 
-    const memMatch = inMemorySnapshotStore.find(s => s.symbol === symbol);
-    return memMatch ? this.unpackRecord(memMatch) : null;
+    const memMatches = inMemorySnapshotStore.filter(s => s.symbol === cleanSymbol);
+    if (memMatches.length === 0) return null;
+    memMatches.sort((a, b) => ((b.version ?? 1) - (a.version ?? 1)));
+    return this.unpackRecord(memMatches[0]);
   }
 
   /**
-   * Retrieves history of snapshots for a symbol
+   * Retrieves history of snapshots for a symbol with pagination
    */
-  public static async getSnapshotHistory(symbol: string, limit: number = 10): Promise<AnalysisSnapshotRecord[]> {
+  public static async getSnapshotHistory(
+    symbol: string,
+    options: { limit?: number; offset?: number } | number = 10
+  ): Promise<{ snapshots: AnalysisSnapshotRecord[]; totalCount: number }> {
+    const cleanSymbol = symbol.toUpperCase().trim();
+    const limit = typeof options === 'number' ? options : (options.limit ?? 10);
+    const offset = typeof options === 'number' ? 0 : (options.offset ?? 0);
+
     const sb = getSupabaseAdmin();
     if (sb) {
       try {
-        const { data, error } = await sb
+        let { data, error, count } = await sb
           .from('analysis_snapshots')
-          .select('*')
-          .eq('symbol', symbol)
+          .select('*', { count: 'exact' })
+          .eq('symbol', cleanSymbol)
+          .order('version', { ascending: false, nullsFirst: false })
           .order('created_at', { ascending: false })
-          .limit(limit);
+          .range(offset, offset + limit - 1);
+
+        // Schema-safe fallback if 'version' column doesn't exist in Supabase yet
+        if (error) {
+          const fallbackRes = await sb
+            .from('analysis_snapshots')
+            .select('*', { count: 'exact' })
+            .eq('symbol', cleanSymbol)
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1);
+          data = fallbackRes.data;
+          error = fallbackRes.error;
+          count = fallbackRes.count;
+        }
 
         if (!error && data && data.length > 0) {
-          return (data as AnalysisSnapshotRecord[]).map(rec => this.unpackRecord(rec));
+          return {
+            snapshots: (data as AnalysisSnapshotRecord[]).map(rec => this.unpackRecord(rec)),
+            totalCount: count ?? data.length
+          };
         }
       } catch {
         // Fall through
       }
     }
 
-    return inMemorySnapshotStore.filter(s => s.symbol === symbol).slice(0, limit).map(rec => this.unpackRecord(rec));
+    const memMatches = inMemorySnapshotStore.filter(s => s.symbol === cleanSymbol);
+    memMatches.sort((a, b) => ((b.version ?? 1) - (a.version ?? 1)));
+    const paginated = memMatches.slice(offset, offset + limit).map(rec => this.unpackRecord(rec));
+
+    return {
+      snapshots: paginated,
+      totalCount: memMatches.length
+    };
   }
+
+  /**
+   * Clears the in-memory fallback store (useful for clean unit tests)
+   */
+  public static clearInMemoryStore(): void {
+    inMemorySnapshotStore.length = 0;
+  }
+
 
   /**
    * Finds snapshot by exact fingerprint
