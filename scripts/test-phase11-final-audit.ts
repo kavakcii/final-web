@@ -65,16 +65,31 @@ async function runPhase11FinalAudit() {
     assert(res.status === 400, 'S1.2: Empty body rejected with 400 Bad Request');
   }
 
-  // S1.3: forceRefresh rate limiting protection
+  // S1.3: Concurrency and Duplicate AI Prevention (React Strict Mode Simulation)
   {
+    console.log('  [AUDIT] S1.3: Testing concurrent requests deduplication (React Strict Mode simulation)...');
     const req1 = new NextRequest('http://localhost:3000/api/finai/analysis?symbol=RATEA&forceRefresh=true');
-    const p1 = analysisGET(req1);
-    // Immediate second call with forceRefresh should hit the rate limiter
-    const req2 = new NextRequest('http://localhost:3000/api/finai/analysis?symbol=RATEA&forceRefresh=true');
-    const res2 = await analysisGET(req2);
-    assert(res2.status === 429, 'S1.3: Rapid forceRefresh call rate-limited with 429 Too Many Requests', `Got status ${res2.status}`);
-    // Ensure p1 resolves
-    await p1.catch(() => {});
+    const req2 = new NextRequest('http://localhost:3000/api/finai/analysis?symbol=RATEA&forceRefresh=false');
+    const req3 = new NextRequest('http://localhost:3000/api/finai/analysis?symbol=RATEA&forceRefresh=false');
+    
+    const [res1, res2, res3] = await Promise.all([
+      analysisGET(req1),
+      analysisGET(req2),
+      analysisGET(req3)
+    ]);
+    
+    assert(res1.status === 200 || res1.status === 404, 'S1.3: Req 1 resolved properly without LOCKED error');
+    assert(res2.status === res1.status, 'S1.3: Req 2 deduplicated and returned same result (no LOCKED error)');
+    assert(res3.status === res1.status, 'S1.3: Req 3 deduplicated and returned same result');
+    assert(!AnalysisPipeline.isLocked('RATEA'), 'S1.3: Lock successfully cleaned up after all concurrent requests');
+  }
+
+  // S1.4: Lock Cleanup on Failure
+  {
+    console.log('  [AUDIT] S1.4: Testing lock cleanup on pipeline failure...');
+    const reqBad = new NextRequest('http://localhost:3000/api/finai/analysis?symbol=INVALIDBIST&forceRefresh=true');
+    await analysisGET(reqBad);
+    assert(!AnalysisPipeline.isLocked('INVALIDBIST'), 'S1.4: Lock completely cleaned up after failure');
   }
 
   // -------------------------------------------------------------------------

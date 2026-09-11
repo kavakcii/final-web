@@ -100,23 +100,15 @@ export class AnalysisPipeline {
     const cleanSymbol = rawSymbol.toUpperCase().replace(/\.IS$/, '').trim();
 
     // 1. Concurrency Check: If an update is currently in-flight for this symbol,
-    // wait for existing promise or report locked
+    // wait for existing promise and return its result instead of throwing a LOCKED error.
+    // This handles React Strict Mode double-fetches and duplicate UI clicks gracefully.
     const existingLock = inFlightLocks.get(cleanSymbol);
     if (existingLock && Date.now() - existingLock.timestamp <= DEFAULT_LOCK_TIMEOUT_MS) {
-      if (options.forceRefresh) {
-        // Wait for the in-flight execution to finish rather than throwing
-        try {
-          const res = await existingLock.promise;
-          return res;
-        } catch {
-          // If in-flight failed, proceed with new run
-        }
-      } else {
-        return {
-          success: false,
-          status: 'LOCKED',
-          error: cleanSymbol + ' icin su anda bir analiz guncellemesi calisiyor. Lutfen birkac saniye sonra tekrar deneyin.'
-        };
+      try {
+        const res = await existingLock.promise;
+        return res;
+      } catch {
+        // If in-flight failed, proceed with new run
       }
     }
 
