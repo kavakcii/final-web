@@ -107,7 +107,7 @@ export function TopAssetDistributionCard() {
 
     if (!isDataLoaded) {
         return (
-            <div className="bg-white border border-slate-100/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 min-h-[250px] flex flex-col justify-between animate-pulse">
+            <div className="bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_55%,#f0f6fe_100%)] border border-slate-200/70 rounded-2xl sm:rounded-3xl p-4 sm:p-5 min-h-[250px] flex flex-col justify-between animate-pulse">
                 <div className="flex items-center justify-between">
                     <div className="h-5 w-28 bg-slate-100 rounded-lg" />
                     <div className="h-4 w-4 bg-slate-100 rounded-md" />
@@ -123,7 +123,7 @@ export function TopAssetDistributionCard() {
     let cumulativeOffset = 0;
 
     return (
-        <div className="bg-white border border-slate-100 hover:border-slate-200 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-sm transition-all duration-300 min-h-[250px] h-full flex flex-col justify-between group">
+        <div className="bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_55%,#f0f6fe_100%)] border border-slate-200/70 hover:border-blue-200/70 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs hover:shadow-sm transition-all duration-300 min-h-[250px] h-full flex flex-col justify-between group">
             {/* 1. Üst Başlık (Referans Görsel: İkon + Başlık + Sağda Chevron >) */}
             <div className="flex items-center justify-between pb-2 border-b border-slate-100/80">
                 <div className="flex items-center gap-2">
