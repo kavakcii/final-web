@@ -291,7 +291,8 @@ function AnalysisContent() {
     const handleSelectSymbol = (newSymbol: string) => {
         const clean = newSymbol.toUpperCase().trim();
         setSymbol(clean);
-        router.push(`/dashboard/analysis?q=${clean}`);
+        // Use relative query to safely push without absolute path conflicts in Vercel/Next.js
+        router.push(`?q=${clean}`);
         loadAnalysis(clean, false);
     };
 

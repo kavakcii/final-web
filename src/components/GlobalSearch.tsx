@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Search, Loader2, X, Building2, ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface SearchResultItem {
@@ -80,12 +80,19 @@ export function GlobalSearch({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const pathname = usePathname();
+
   const handleSelect = (item: SearchResultItem) => {
     const cleanSym = item.symbol.toUpperCase().replace(/\.IS$/, '');
     setIsOpen(false);
     setQuery("");
     if (onSelect) onSelect();
-    router.push(`/varlik/${cleanSym}`);
+    
+    if (pathname === '/dashboard/analysis') {
+      router.push(`?q=${cleanSym}`);
+    } else {
+      router.push(`/varlik/${cleanSym}`);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
